@@ -29,6 +29,15 @@ import com.shawnkowalchuk.milo.core.util.sumOfTenths
 val Trip.isCounted: Boolean get() = status == TripStatus.FINISHED
 
 /**
+ * Whether this is a trip MilO recorded: one that counts ([isCounted]) and that was not typed in
+ * by hand. A trip that was typed in is one MilO missed. Business and Personal both count, and
+ * so does a recorded trip whose figures were edited afterwards. Google Play is asked for its
+ * review card by the number of these (`core/review/`); the query that counts them is
+ * `TripDao.observeRecordedCount`.
+ */
+val Trip.isRecordedTrip: Boolean get() = isCounted && !addedByHand
+
+/**
  * A number of trips and what they add up to.
  *
  * @param tenths the total in tenths of the unit it was asked for in: the sum of the trips' own

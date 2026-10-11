@@ -33,6 +33,8 @@ import com.shawnkowalchuk.milo.feature.greeting.greeting
 import com.shawnkowalchuk.milo.feature.onboarding.OnboardingScreen
 import com.shawnkowalchuk.milo.feature.onboarding.OnboardingViewModel
 import com.shawnkowalchuk.milo.feature.party.PartyViewModel
+import com.shawnkowalchuk.milo.feature.party.homeIsDrawn
+import com.shawnkowalchuk.milo.feature.review.homeIsFree
 import com.shawnkowalchuk.milo.feature.whatsnew.WhatsNewNoticeViewModel
 import java.time.YearMonth
 
@@ -53,8 +55,8 @@ import java.time.YearMonth
  * (`feature/greeting`); [onGreetingDone] says that it has.
  *
  * TODO(debt): this Composable is over the 200 lines the standards ask for (section 3). It stood
- *  at 199 before the one-year party, which added the thirteen it needs. See docs/FINDINGS_LOG.md,
- *  2026-10-10.
+ *  at 199 before the one-year party, which added the thirteen it needs, and Google Play's
+ *  review card added eleven more. See docs/FINDINGS_LOG.md, 2026-10-10 and 2026-10-11.
  */
 @Composable
 fun MiloApp(
@@ -164,6 +166,17 @@ fun MiloApp(
             LaunchedEffect(greeting) {
                 if (greeting == Greeting.DROPPED) onGreetingDone()
             }
+
+            // Google Play's review card (2026-10-11; `ReviewObjects.kt`, ADR-009) is asked for
+            // over a Home that nothing else has, and on the Report screen after "I sent it".
+            val opening = whatsNewDue || reportToOpen != null || homeAsked
+            val homeDrawn = homeIsDrawn(onHome, firstRun)
+            ReviewWatch(
+                container = container,
+                homeFree =
+                    homeIsFree(homeDrawn, greeting == Greeting.NONE, partyHasTheScreen, opening),
+                onReport = backStack.lastOrNull() is ReportKey,
+            )
 
             when (firstRun) {
                 null -> Unit

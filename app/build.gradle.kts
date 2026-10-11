@@ -263,6 +263,10 @@ dependencies {
     implementation(libs.androidx.car.app.projected)
     implementation(libs.androidx.lifecycle.runtime)
 
+    // Google Play's review card (platform/review/, ADR-009): the one library of Google Play's
+    // in the app. MilO asks, and Google Play decides whether its card appears.
+    implementation(libs.play.review)
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
 }

@@ -2,6 +2,7 @@ package com.shawnkowalchuk.milo.data.settings
 
 import com.shawnkowalchuk.milo.core.allowance.DEFAULT_CENTS_PER_KM
 import com.shawnkowalchuk.milo.core.odometer.OdometerReading
+import com.shawnkowalchuk.milo.core.review.ReviewsStored
 import com.shawnkowalchuk.milo.core.schedule.DEFAULT_WORK_SCHEDULE
 import com.shawnkowalchuk.milo.core.schedule.WorkSchedule
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
@@ -36,8 +37,8 @@ enum class ConfirmedStep(val key: String) {
 /**
  * Everything the settings store holds, read in one piece.
  *
- * Thirteen fields are not settings Shawn chooses: [tripVehiclesFilled], [parkedTruck],
- * [drivenOffTripId], [whatsNewSeenVersion], [greetingsShown], [partyOwedSinceMs],
+ * Fourteen fields are not settings Shawn chooses: [tripVehiclesFilled], [parkedTruck],
+ * [drivenOffTripId], [whatsNewSeenVersion], [greetingsShown], [partyOwedSinceMs], [reviews],
  * [lastDrivingAlertAtMs], [reportHandOver], [reminderShown], [lastExport] and the last three;
  * and one value inside [nothingRecorded] is not either. They are small pieces of state that must
  * outlive the process, and the settings store is where such values live.
@@ -80,6 +81,9 @@ enum class ConfirmedStep(val key: String) {
  * @param partyOwedSinceMs when the newest trip started, on the day of MilO's one-year party,
  * that the mascot's party has not been shown for, or null if nothing is owed (since 2026-10-10;
  * kept in `PartyStorage.kt`). It counts on that day only. Not a setting.
+ * @param reviews what MilO remembers about asking Google Play for its review card: where each
+ * of the three moments stands, and when it last went to Google Play for the card (since
+ * 2026-10-11; kept in `ReviewStorage.kt`, ADR-009). Not a setting.
  * @param homeWidgetCentsPerKm the rate, in cents a kilometre, at which the widget prices the
  * Business kilometres for reference (since 2026-10-07; kept in `WidgetStorage.kt`). 70¢ until
  * Shawn sets another in Settings.
@@ -154,6 +158,7 @@ data class MiloSettings(
     val whatsNewSeenVersion: String? = null,
     val greetingsShown: Int? = null,
     val partyOwedSinceMs: Long? = null,
+    val reviews: ReviewsStored = ReviewsStored(),
     val distanceUnit: DistanceUnit = DistanceUnit.KILOMETRES,
     val schedule: WorkSchedule = DEFAULT_WORK_SCHEDULE,
     val ignoreTripsOutsideSchedule: Boolean = false,

@@ -59,6 +59,10 @@ class FakeTripDao : TripDao {
     override suspend fun findStarts(): List<TripStart> =
         rows.map { TripStart(it.startedAtMs, it.recordedStartedAtMs, it.addedByHand) }
 
+    // As the SQL has it: the status the query names, and not typed in by hand.
+    override fun observeRecordedCount(finished: TripStatus): Flow<Int> =
+        flowOf(rows.count { it.status == finished && !it.addedByHand })
+
     override fun observeStartedBetween(fromMs: Long, untilMs: Long): Flow<List<Trip>> =
         flowOf(rows.filter { it.startedAtMs in fromMs until untilMs }.reversed())
 

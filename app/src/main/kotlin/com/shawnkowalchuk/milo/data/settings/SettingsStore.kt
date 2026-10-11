@@ -242,6 +242,7 @@ class SettingsStore(internal val dataStore: DataStore<Preferences>) {
             whatsNewSeenVersion = preferences.readWhatsNewSeenVersion(),
             greetingsShown = preferences.readGreetingsShown(),
             partyOwedSinceMs = preferences.readPartyOwedSinceMs(),
+            reviews = preferences.readReviews(),
             distanceUnit = preferences.readDistanceUnit(),
             schedule = preferences.readSchedule(),
             ignoreTripsOutsideSchedule =

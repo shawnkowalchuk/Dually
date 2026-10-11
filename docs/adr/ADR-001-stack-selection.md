@@ -64,6 +64,7 @@ A pin is a choice of library. Each one is added to the build only when code need
 | WorkManager | 2.12.0 | V20 |
 | play-services-location | 21.4.0 | V21 |
 | `androidx.car.app` (`app` and `app-projected`) | 1.7.0 at the start. **1.8.0-rc01 since 2026-10-06**, a release candidate: the one exception to "stable only" (below) | V22 for 1.7.0; the live Maven metadata of 2026-10-06 for 1.8.0-rc01 |
+| Google Play In-App Review, `com.google.android.play:review` | 2.0.2, **added on 2026-10-11** for Google Play's review card (ADR-009), without its Kotlin extensions | Google's Maven metadata of 2026-10-11: the newest release, published on 2024-10-18, and no pre-release after it |
 | kotlinx-coroutines | 1.11.0 | V23 |
 | kotlinx-serialization-json | 1.11.0 | V24 |
 | JUnit | 4.13.2 | V25 |

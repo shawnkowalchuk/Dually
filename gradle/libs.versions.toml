@@ -44,6 +44,10 @@ junit = "4.13.2"
 lifecycle = "2.11.0"
 # Navigation 3: the back stack of screens and the display that shows its top entry.
 navigation3 = "1.2.0"
+# Google Play's In-App Review library (ADR-009): MilO asks Google Play to show its review card at
+# three moments, and Google Play decides whether it appears. The library only talks to the Play
+# Store app on the phone; it brings no permission, so MilO still has no INTERNET permission.
+playReview = "2.0.2"
 # Google Play services' fused location provider: the GPS fixes of a trip.
 playServicesLocation = "21.4.0"
 # Room's runtime, its KSP compiler and its Gradle plugin are released together under one version.
@@ -107,6 +111,11 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serializationJson" }
+
+# The review library itself, without its Kotlin extensions ("review-ktx"): with those the release
+# build does not get through R8, because they name a class no library holds (ADR-009). What they
+# would save is some fifteen lines, which platform/review/PlayReviewCard.kt has instead.
+play-review = { module = "com.google.android.play:review", version.ref = "playReview" }
 
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 
