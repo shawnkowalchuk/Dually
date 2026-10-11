@@ -1,5 +1,6 @@
 package com.shawnkowalchuk.milo.platform.review
 
+import com.shawnkowalchuk.milo.core.review.DAYS_BETWEEN_LAUNCHES
 import com.shawnkowalchuk.milo.core.review.NotAskedWhy
 import com.shawnkowalchuk.milo.core.review.ReviewMoment
 import com.shawnkowalchuk.milo.core.review.ReviewOccasion
@@ -31,7 +32,8 @@ internal fun askedLine(moments: Set<ReviewMoment>, recordedTrips: Int): String {
     val forAll = if (moments.size > 1) ", once for all of them" else ""
     return "$REVIEW_LINE: ${reachedInWords(moments, recordedTrips)}. MilO asked Google Play to " +
         "show its review card$forAll. Google Play decides whether the card appears, and MilO " +
-        "is not told. MilO does not ask for this again"
+        "is not told. MilO does not ask for this again, and asks for nothing else for " +
+        "$DAYS_BETWEEN_LAUNCHES days"
 }
 
 /** Google Play gave no flow to launch. */
@@ -46,12 +48,18 @@ internal fun passedLine(moments: Set<ReviewMoment>, recordedTrips: Int): String 
         "ready, but by then MilO had left that screen or a drive may have begun, so MilO did " +
         "not have it shown. Nothing counts as asked, and MilO asks at the next such moment"
 
-/** A moment was reached and MilO did not go to Google Play at all. */
+/**
+ * A moment was reached and MilO did not go to Google Play at all.
+ *
+ * @param reached what was reached, in words ([reachedInWords]).
+ * @param daysToWait how many days are left of the [DAYS_BETWEEN_LAUNCHES] after the last
+ * launch, counted up to whole days. Read only where they are the reason.
+ */
 internal fun notAskedLine(
     occasion: ReviewOccasion,
-    moments: Set<ReviewMoment>,
-    recordedTrips: Int,
+    reached: String,
     why: NotAskedWhy,
+    daysToWait: Int,
 ): String {
     val reason =
         when (why) {
@@ -64,19 +72,38 @@ internal fun notAskedLine(
                 "a trip is being recorded or a vehicle is connected, and MilO never asks " +
                     "while a drive may be under way. Nothing is used up. ${nextTime(occasion)}"
 
+            NotAskedWhy.ASKED_WITHIN_THIRTY_DAYS ->
+                "it asked Google Play to show the card less than $DAYS_BETWEEN_LAUNCHES days " +
+                    "ago, and leaves $DAYS_BETWEEN_LAUNCHES days between two requests, because " +
+                    "Google Play does not show its card more often. Nothing is used up. " +
+                    nextTime(occasion, ": ${inDays(daysToWait)} at the earliest")
+
             NotAskedWhy.ONCE_TODAY_ALREADY ->
                 "it went to Google Play for the card once already today, and never does twice " +
-                    "in one day. Nothing is used up. ${nextTime(occasion)}"
+                    "in one day. Nothing is used up. ${nextTime(occasion, onAnotherDay = true)}"
         }
-    return "$REVIEW_LINE: ${reachedInWords(moments, recordedTrips)}. MilO asked Google Play " +
-        "for nothing: $reason"
+    return "$REVIEW_LINE: $reached. MilO asked Google Play for nothing: $reason"
 }
 
-private fun nextTime(occasion: ReviewOccasion): String = when (occasion) {
-    ReviewOccasion.HOME ->
-        "MilO asks the next time Home is open on another day, with no trip being recorded " +
-            "and no vehicle connected"
+private fun inDays(days: Int): String = if (days == 1) "in 1 day" else "in $days days"
+
+/**
+ * When MilO asks next.
+ *
+ * @param notBefore what is added about the time until then, or nothing.
+ * @param onAnotherDay whether Home has to be open on another day than today.
+ */
+private fun nextTime(
+    occasion: ReviewOccasion,
+    notBefore: String = "",
+    onAnotherDay: Boolean = false,
+): String = when (occasion) {
+    ReviewOccasion.HOME -> {
+        val day = if (onAnotherDay) " on another day" else ""
+        "MilO asks the next time Home is open$day, with no trip being recorded and no vehicle " +
+            "connected$notBefore"
+    }
 
     ReviewOccasion.REPORT_SENT ->
-        "MilO asks after the next report that is recorded as sent with \"I sent it\""
+        "MilO asks after the next report that is recorded as sent with \"I sent it\"$notBefore"
 }

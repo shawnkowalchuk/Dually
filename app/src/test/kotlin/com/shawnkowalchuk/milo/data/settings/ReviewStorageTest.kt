@@ -29,6 +29,7 @@ class ReviewStorageTest {
 
         for (moment in ReviewMoment.entries) assertEquals(MomentStanding.OPEN, reviews.of(moment))
         assertNull(reviews.lastAttemptAtMs)
+        assertNull(reviews.lastLaunchAtMs)
         assertEquals(MiloSettings(), store.current())
     }
 
@@ -43,6 +44,7 @@ class ReviewStorageTest {
         assertEquals(MomentStanding.ASKED, after.of(ReviewMoment.HUNDRED_TRIPS))
         assertEquals(MomentStanding.OPEN, after.of(ReviewMoment.REPORT_SENT))
         assertEquals(1_791_700_000_000L, after.lastAttemptAtMs)
+        assertEquals(1_791_700_000_000L, after.lastLaunchAtMs)
         assertEquals(MiloSettings(reviews = after), store.current())
     }
 
@@ -57,10 +59,21 @@ class ReviewStorageTest {
         assertEquals(MomentStanding.OPEN, reviews.of(ReviewMoment.HUNDRED_TRIPS))
         assertEquals(MomentStanding.ASKED, reviews.of(ReviewMoment.REPORT_SENT))
         assertEquals(1_791_800_000_000L, reviews.lastAttemptAtMs)
+        assertEquals(1_791_800_000_000L, reviews.lastLaunchAtMs)
     }
 
     @Test
-    fun `the three moments are stored under three names that must never change`() = runTest {
+    fun `a request Google Play gave no flow for leaves the last launch as it was`() = runTest {
+        store.changeReviews { it.afterLaunch(setOf(ReviewMoment.FIVE_TRIPS), 1_791_700_000_000L) }
+        store.changeReviews { it.afterNoFlow(1_794_400_000_000L) }
+
+        val reviews = store.current().reviews
+        assertEquals(1_794_400_000_000L, reviews.lastAttemptAtMs)
+        assertEquals(1_791_700_000_000L, reviews.lastLaunchAtMs)
+    }
+
+    @Test
+    fun `the moments and the two times are stored under names that must never change`() = runTest {
         store.changeReviews { it.afterLaunch(ReviewMoment.entries.toSet(), 5L) }
 
         val stored = file.data.first()
@@ -68,6 +81,7 @@ class ReviewStorageTest {
         assertEquals("asked", stored[stringPreferencesKey("review_hundred_trips")])
         assertEquals("asked", stored[stringPreferencesKey("review_report_sent")])
         assertEquals(5L, stored[longPreferencesKey("review_last_attempt_at_ms")])
+        assertEquals(5L, stored[longPreferencesKey("review_last_launch_at_ms")])
     }
 
     @Test
@@ -95,10 +109,17 @@ class ReviewStorageTest {
         assertThrows(IllegalArgumentException::class.java) {
             runBlocking { store.changeReviews { it.copy(lastAttemptAtMs = -1L) } }
         }
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { store.changeReviews { it.copy(lastLaunchAtMs = -1L) } }
+        }
         assertEquals(MiloSettings(), store.current())
-        file.edit { it[longPreferencesKey("review_last_attempt_at_ms")] = -5L }
+        file.edit {
+            it[longPreferencesKey("review_last_attempt_at_ms")] = -5L
+            it[longPreferencesKey("review_last_launch_at_ms")] = -5L
+        }
 
         assertNull(store.current().reviews.lastAttemptAtMs)
+        assertNull(store.current().reviews.lastLaunchAtMs)
     }
 
     @Test
