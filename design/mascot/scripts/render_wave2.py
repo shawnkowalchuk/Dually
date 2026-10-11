@@ -1,13 +1,14 @@
-# render_wave2.py - draws the wave, walked through, as pictures, for a preview of it: the mascot
-# walking in from the left, stopping in the middle with his brake lights coming on, turning to
-# the viewer and waving, turning away to the right and walking off, his back and its brake
-# lights to the viewer. Run it after the other scripts, with Blender WITHOUT its window, and
-# name a folder for the frames:
+# render_wave2.py - draws the app's first greeting, the wave, as pictures: the mascot walking in
+# from the left, stopping in the middle with his brake lights coming on, turning to the viewer
+# and waving, turning away to the right and walking off, his back and its brake lights to the
+# viewer. (The wave as it has been since 2026-10-11, "walked through": the one before it is
+# render_greeting.py's own.) Run it after the other scripts, with Blender WITHOUT its window,
+# and name a folder for the frames:
 #
 #   blender -b design/mascot/milo_mascot.blend --python design/mascot/scripts/render_wave2.py -- <folder> [<pixels to the dp>] [--plain] [--measure] [--every <n>]
 #
-# It draws into <folder>. preview_wave2.py lays that over a picture of Home as a film, and
-# pack_wave2.py packs it as the app's pictures are packed, to say what it would weigh:
+# It draws into <folder>. pack_wave2.py makes the two pictures the app carries out of that, and
+# preview_wave2.py lays it over a picture of Home as the films Shawn was shown:
 #
 #   in/0000.png ...          one cycle of the clip "WalkIn", drawn on the spot. The frame after
 #                            the last is the first again
@@ -22,11 +23,12 @@
 #                            far a cycle of the walk carries him, and where each shoe stands on
 #                            the floor in every frame. Both other scripts read it
 #
-# SHAWN IS TO CHOOSE BETWEEN TWO WAYS WITH THE LIGHTS, and both are drawn. In both they come on
-# as he stops and stay on while he waves, where they are behind him. In A, which is what the
-# clips say, they go out as he lifts his foot for the first step off: middle/ and out/. In B
-# they stay lit all the way off the screen: middle/ with the frames of middle-lit/ in place of
-# their twins, and out-lit/.
+# SHAWN CHOSE BETWEEN TWO WAYS WITH THE LIGHTS, and both are still drawn. In both they come on
+# as he stops and stay on while he waves, where they are behind him. In A, which he chose on
+# 2026-10-11, which the clips say and which the app plays, they go out as he lifts his foot for
+# the first step off: middle/ and out/. In B they stay lit all the way off the screen: middle/
+# with the frames of middle-lit/ in place of their twins, and out-lit/. pack_wave2.py reads A's
+# folders only.
 #
 # He is drawn as the greeting draws him: MASCOT_DP high from the studio's camera, under its
 # lights, on a see-through background, the dials' black faces dulled. The rig is not turned:
@@ -46,7 +48,7 @@
 # shine is taken off for the two or three frames in which the whole of his flat front mirrors
 # it. In memory, like everything here.
 #
-# THE APP DOES NOT SHOW THIS. Nothing here writes into the app. NOTHING IS SAVED.
+# Nothing here writes into the app: pack_wave2.py does that. NOTHING IS SAVED.
 
 import json
 import os

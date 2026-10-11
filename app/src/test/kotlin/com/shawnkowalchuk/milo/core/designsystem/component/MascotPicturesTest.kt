@@ -11,8 +11,8 @@ import org.junit.Test
 
 /**
  * The mascot's six pictures, two for each greeting and two for the one-year party, are made by
- * hand, by scripts outside the build (`design/mascot/scripts/`: `render_greeting.py` and
- * `pack_greeting.py` for the wave, `render_moonwalk.py` and `pack_moonwalk.py` for the
+ * hand, by scripts outside the build (`design/mascot/scripts/`: `render_wave2.py` and
+ * `pack_wave2.py` for the wave, `render_moonwalk.py` and `pack_moonwalk.py` for the
  * moonwalk, `render_party.py` and `pack_party.py` for the party), and committed. This holds the
  * files to what the code expects ([MascotPicture], [MoonwalkPicture], [MascotPartyPicture]): a
  * picture that is made again with another size, a frame more or another way of repeating fails
@@ -97,14 +97,14 @@ class MascotPicturesTest {
             ((get(at + 2).toInt() and 0xFF) shl 16)
     }
 
-    private val walk = Picture(File("$PICTURES/mascot_walk.webp"))
-    private val turnAndWave = Picture(File("$PICTURES/mascot_turn_and_wave.webp"))
+    private val walks = Picture(File("$PICTURES/mascot_walk_in_and_off.webp"))
+    private val stopAndWave = Picture(File("$PICTURES/mascot_stop_and_wave.webp"))
     private val glide = Picture(File("$PICTURES/mascot_moonwalk.webp"))
     private val middle = Picture(File("$PICTURES/mascot_stop_and_spin.webp"))
     private val popper = Picture(File("$PICTURES/mascot_party_popper.webp"))
     private val pop = Picture(File("$PICTURES/mascot_party_pop.webp"))
 
-    /** One frame of the wave, as the code draws it: 600 by 420 pixels. */
+    /** One frame of the wave, as the code draws it: 540 by 440 pixels. */
     private val frameWidth = (MascotPicture.WIDTH * MascotPicture.PIXELS_PER_DP).roundToInt()
     private val frameHeight = (MascotPicture.HEIGHT * MascotPicture.PIXELS_PER_DP).roundToInt()
 
@@ -113,55 +113,85 @@ class MascotPicturesTest {
     private val moonHeight = (MoonwalkPicture.HEIGHT * MascotPicture.PIXELS_PER_DP).roundToInt()
 
     @Test
-    fun `a frame is 600 by 420 pixels`() {
-        assertEquals(600, frameWidth)
-        assertEquals(420, frameHeight)
+    fun `a frame of the wave is 540 by 440 pixels`() {
+        assertEquals(540, frameWidth)
+        assertEquals(440, frameHeight)
     }
 
     @Test
-    fun `the walk is a still, see-through sheet of twelve frames, four across and three down`() {
-        // The app steps through the walk by its own clock; an animated picture would play by
+    fun `the two walks are one still, see-through sheet of 24 frames, four across and six down`() {
+        // The app steps through a walk by its own clock; an animated picture would play by
         // Android's, and the mascot's place could not follow its step.
-        assertFalse("the walk is not animated", walk.animated)
-        assertTrue("the walk is see-through", walk.seeThrough)
+        assertFalse("the walks are not animated", walks.animated)
+        assertTrue("the walks are see-through", walks.seeThrough)
+        // One cycle of the walk in, and one of the walk off, in which he is seen from behind.
         assertEquals(12, MascotPicture.WALK_FRAMES)
-        assertEquals(4, MascotPicture.WALK_COLUMNS)
-        assertEquals(3, MascotPicture.WALK_ROWS)
-        assertEquals(MascotPicture.WALK_COLUMNS * frameWidth, walk.width)
-        assertEquals(MascotPicture.WALK_ROWS * frameHeight, walk.height)
+        assertEquals(24, MascotPicture.SHEET_FRAMES)
+        assertEquals(4, MascotPicture.SHEET_COLUMNS)
+        assertEquals(6, MascotPicture.FRAMES.sheetRows)
+        assertEquals(MascotPicture.SHEET_COLUMNS * frameWidth, walks.width)
+        assertEquals(MascotPicture.FRAMES.sheetRows * frameHeight, walks.height)
+        // No phone's graphics chip refuses a picture of up to 4,096 pixels a side.
+        assertTrue("the sheet is ${walks.width} pixels wide", walks.width <= 4_096)
+        assertTrue("the sheet is ${walks.height} pixels high", walks.height <= 4_096)
     }
 
     @Test
-    fun `the turn and wave is an animated, see-through picture the size of one frame`() {
-        assertTrue("the turn and wave is animated", turnAndWave.animated)
-        assertTrue("the turn and wave is see-through", turnAndWave.seeThrough)
-        assertTrue("every frame is see-through", turnAndWave.frames.all { it.seeThrough })
-        // So it lies exactly over the walk's last frame.
-        assertEquals(frameWidth, turnAndWave.width)
-        assertEquals(frameHeight, turnAndWave.height)
-        // Every frame is the whole picture: none is a patch laid over the one before.
-        assertTrue(turnAndWave.frames.all { it.width == frameWidth && it.height == frameHeight })
+    fun `the wave's middle part is an animated, see-through picture the size of one frame`() {
+        assertTrue("the wave's middle part is animated", stopAndWave.animated)
+        assertTrue("the wave's middle part is see-through", stopAndWave.seeThrough)
+        assertTrue("every frame is see-through", stopAndWave.frames.all { it.seeThrough })
+        // So it lies exactly over the walk in's last frame, and the walk off's first over it.
+        assertEquals(frameWidth, stopAndWave.width)
+        assertEquals(frameHeight, stopAndWave.height)
     }
 
     @Test
-    fun `the turn and wave is sixty frames of 42 milliseconds, and plays once`() {
-        assertEquals(MascotPicture.TURN_AND_WAVE_FRAMES, turnAndWave.frames.size)
-        assertEquals(60, turnAndWave.frames.size)
-        assertEquals(1, turnAndWave.plays)
-        // The walk's frames are shown for as long, each: the two are one film.
+    fun `the wave's middle part plays once and takes eighty frames' time`() {
+        assertEquals(1, stopAndWave.plays)
+        assertEquals(80, MascotPicture.MIDDLE_FRAMES)
+        // The walks' frames are shown for as long, each: the three are one film.
         assertEquals(42, MascotPicture.FRAME_MS)
-        assertTrue(turnAndWave.frames.all { it.millis == MascotPicture.FRAME_MS })
-        assertEquals(2_520, MascotPicture.TURN_AND_WAVE_MS)
+        // Fewer frames are stored than are played: one that is the frame before is not stored,
+        // and the frame before is shown for two frames' time.
+        assertTrue("${stopAndWave.frames.size} frames stored", stopAndWave.frames.size <= 80)
+        assertTrue(
+            stopAndWave.frames.all { it.millis > 0 && it.millis % MascotPicture.FRAME_MS == 0 },
+        )
+        assertEquals(MascotPicture.MIDDLE_MS, stopAndWave.frames.sumOf { it.millis })
+        assertEquals(3_360, MascotPicture.MIDDLE_MS)
+        // The frames a walk meets are whole frames' time, no longer: the first, which follows
+        // the walk in's last, and the last, which the walk off's first follows.
+        assertEquals(MascotPicture.FRAME_MS, stopAndWave.frames.first().millis)
+        assertEquals(MascotPicture.FRAME_MS, stopAndWave.frames.last().millis)
     }
 
     @Test
-    fun `the wave's two stay under a megabyte together`() {
-        assertTrue("the walk: ${walk.bytes} bytes", walk.bytes < MOST_WALK_BYTES)
-        assertTrue(
-            "the turn and wave: ${turnAndWave.bytes} bytes",
-            turnAndWave.bytes < MOST_WAVE_BYTES,
+    fun `a frame of the wave's middle part is the whole picture, or a patch on the one before`() {
+        // The first is the whole picture: there is nothing before it to lie on.
+        val first = stopAndWave.frames.first()
+        assertEquals(
+            listOf(0, 0, frameWidth, frameHeight),
+            first.run { listOf(left, top, width, height) },
         )
-        assertTrue(MOST_WALK_BYTES + MOST_WAVE_BYTES <= 1_000_000L)
+        for ((number, frame) in stopAndWave.frames.withIndex()) {
+            assertTrue("frame $number", frame.left + frame.width <= frameWidth)
+            assertTrue("frame $number", frame.top + frame.height <= frameHeight)
+            // As in the moonwalk's middle part, below: it replaces what is under it, and stays.
+            assertTrue("frame $number replaces what is under it", frame.replaces)
+            assertFalse("frame $number is left for the next", frame.clearedAfter)
+        }
+    }
+
+    @Test
+    fun `the wave's two stay under a megabyte and a fifth together`() {
+        assertTrue("the two walks: ${walks.bytes} bytes", walks.bytes < MOST_WALKS_BYTES)
+        assertTrue(
+            "the wave's middle part: ${stopAndWave.bytes} bytes",
+            stopAndWave.bytes < MOST_STOP_AND_WAVE_BYTES,
+        )
+        assertTrue(MOST_WALKS_BYTES + MOST_STOP_AND_WAVE_BYTES <= MOST_WAVE_BYTES)
+        assertEquals(1_200_000L, MOST_WAVE_BYTES)
     }
 
     // ------------------------------------------------------------ the moonwalk's two
@@ -237,12 +267,13 @@ class MascotPicturesTest {
     }
 
     @Test
-    fun `the moonwalk's two stay under a megabyte together, and all four under two`() {
+    fun `the moonwalk's two stay under a megabyte together, and all four under two and a fifth`() {
         assertTrue("the glide: ${glide.bytes} bytes", glide.bytes < MOST_GLIDE_BYTES)
         assertTrue("the middle part: ${middle.bytes} bytes", middle.bytes < MOST_MIDDLE_BYTES)
         assertTrue(MOST_GLIDE_BYTES + MOST_MIDDLE_BYTES <= 1_000_000L)
-        val all = walk.bytes + turnAndWave.bytes + glide.bytes + middle.bytes
+        val all = walks.bytes + stopAndWave.bytes + glide.bytes + middle.bytes
         assertTrue("all four: $all bytes", all < MOST_BYTES)
+        assertEquals(MOST_WAVE_BYTES + 1_000_000L, MOST_BYTES)
     }
 
     // ------------------------------------------------------------ the party's two
@@ -371,22 +402,37 @@ class MascotPicturesTest {
         const val NO_BLEND_FLAG = 0x02
         const val DISPOSE_FLAG = 0x01
 
-        /** Measured on 2026-10-09: 98 KB and 782 KB. */
-        const val MOST_WALK_BYTES = 150_000L
-        const val MOST_WAVE_BYTES = 850_000L
+        /** Measured on 2026-10-11: 184 KB and 942 KB. */
+        const val MOST_WALKS_BYTES = 210_000L
+        const val MOST_STOP_AND_WAVE_BYTES = 990_000L
+
+        /**
+         * The wave's two pictures together. **It was one megabyte, as the moonwalk's still is,
+         * until the wave was walked through on 2026-10-11:** he now walks off as well, seen
+         * from behind, and stops and turns away before he does. That is 104 frames where the
+         * wave had 72 (24 on the sheet where there were 12, and 80 played where there were 60),
+         * and a frame of the mascot at this size is 10 to 12 KB however it is packed. Packed as
+         * the wave was, with colour at 60 of 100, it came to 1.19 MB; it is packed as the
+         * moonwalk is, at 50, and weighs 1.13 MB. At 45 it would be 1.09 MB and at 40, where
+         * the dials' numbers smear, 1.05 MB: no setting that still looks like the film Shawn
+         * approved brings it under a megabyte (FINDINGS_LOG, 2026-10-11: what was tried).
+         */
+        const val MOST_WAVE_BYTES = 1_200_000L
 
         /** Measured on 2026-10-10: 130 KB and 768 KB. */
         const val MOST_GLIDE_BYTES = 160_000L
         const val MOST_MIDDLE_BYTES = 840_000L
 
         /**
-         * The mascot's pictures together. It was one megabyte while there was one greeting.
-         * **A second greeting is a second megabyte, and that is why this limit is two:** the
-         * moonwalk is 94 more frames, and a frame of the mascot at this size is about 10 KB
-         * however it is packed (FINDINGS_LOG, 2026-10-10: what was tried). Each greeting is
-         * still held under one megabyte, so a third would have to ask for a third.
+         * The greetings' four pictures together. It was one megabyte while there was one
+         * greeting, and two from the moonwalk on: a second greeting is a second megabyte,
+         * because the moonwalk is 94 more frames, and a frame of the mascot at this size is
+         * about 10 KB however it is packed (FINDINGS_LOG, 2026-10-10: what was tried). **Since
+         * 2026-10-11 it is the wave's limit and the moonwalk's megabyte:** the wave grew by a
+         * walk off and a turn ([MOST_WAVE_BYTES]). A third greeting would still have to ask
+         * for its own.
          */
-        const val MOST_BYTES = 2_000_000L
+        const val MOST_BYTES = 2_200_000L
 
         /** Measured on 2026-10-10: 885 KB and 1,426 KB. */
         const val MOST_POPPER_BYTES = 920_000L

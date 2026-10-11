@@ -246,45 +246,43 @@ class MascotMoonwalkTest {
         assertEquals(MoonwalkPicture.FRAMES, MascotGreetingKind.MOONWALK.frames)
 
         val wave = MascotPicture.FRAMES
-        assertEquals(3, wave.sheetRows)
-        assertEquals(2_520L, wave.playedMillis)
-        // The wave's mascot turns about the middle of its frames.
-        assertEquals(120f, wave.axis, exact)
+        // The wave's sheet holds two cycles, one for each of its walks.
+        assertEquals(24, wave.sheetFrames)
+        assertEquals(6, wave.sheetRows)
+        assertEquals(3_360L, wave.playedMillis)
+        assertEquals(3_360, MascotPicture.MIDDLE_MS)
+        assertEquals(118.4f, wave.axis, exact)
 
         val moonwalk = MoonwalkPicture.FRAMES
+        assertEquals(14, moonwalk.sheetFrames)
         assertEquals(2, moonwalk.sheetRows)
         assertEquals(3_360L, moonwalk.playedMillis)
         assertEquals(3_360, MoonwalkPicture.MIDDLE_MS)
-        // The moonwalk's does not: he is drawn half turned, with room for the kick.
+        // He is drawn half turned, with room for the kick: not in the middle of his frames.
         assertEquals(89.2f, moonwalk.axis, exact)
     }
 
     @Test
-    fun `the wave comes in and fades where it stands, the moonwalk comes in and glides out`() {
+    fun `the wave crosses from the left to the right, the moonwalk from the right to the left`() {
         for (width in looked) {
             val wave = MascotGreetingKind.WAVE.wayAcross(width)
-            assertNull(wave.going)
-            assertEquals(MascotWalk(width).frames, wave.coming.frames)
+            val walk = MascotWalk(width)
+            assertEquals(walk.framesIn, wave.coming.frames)
+            assertEquals(walk.framesOut + 1, wave.going.frames)
+            assertTrue(wave.coming.poseIn(0).axis < 0f)
+            assertTrue(wave.going.poseIn(wave.going.frames).axis > width)
 
             val moonwalk = MascotGreetingKind.MOONWALK.wayAcross(width)
             val glide = MascotGlide(width)
             assertEquals(glide.framesIn, moonwalk.coming.frames)
-            assertEquals(glide.framesOut + 1, checkNotNull(moonwalk.going).frames)
-            // Both do their middle part in the middle of the screen.
+            assertEquals(glide.framesOut + 1, moonwalk.going.frames)
+            assertTrue(moonwalk.coming.poseIn(0).axis > width)
+            assertTrue(moonwalk.going.poseIn(moonwalk.going.frames).axis < 0f)
+            // Both do their middle part in the middle of the screen, and go on from there.
             assertEquals(width / 2, wave.coming.poseIn(wave.coming.frames).axis, exact)
+            assertEquals(width / 2, wave.going.poseIn(0).axis, exact)
             assertEquals(width / 2, moonwalk.coming.poseIn(moonwalk.coming.frames).axis, exact)
+            assertEquals(width / 2, moonwalk.going.poseIn(0).axis, exact)
         }
-    }
-
-    @Test
-    fun `the walk's poses are its frames and its places, and the turn once it is over`() {
-        val walk = MascotWalk(393f)
-        for (frame in 0 until walk.frames) {
-            val pose = walk.poseIn(frame)
-            assertEquals(frame % MascotPicture.WALK_FRAMES, pose.sheetFrame)
-            assertEquals(walk.middleIn(frame), pose.axis, exact)
-        }
-        assertEquals(MascotPose(sheetFrame = null, axis = 196.5f), walk.poseIn(walk.frames))
-        assertEquals(walk.poseIn(0), walk.poseIn(-3))
     }
 }

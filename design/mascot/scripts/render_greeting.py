@@ -1,14 +1,19 @@
-# render_greeting.py - draws the app's greeting as pictures: the mascot walking toward the left,
-# and the mascot turning to face the viewer and waving. Run it after the other scripts, with
-# Blender WITHOUT its window, and name two folders for the frames:
+# render_greeting.py - the camera, the stage and the halo every script that draws a picture of
+# the mascot reads from here; and, run by itself, the wave as the app had it until 2026-10-11:
+# the mascot walking toward the left, and the mascot turning to face the viewer and waving.
+#
+# THE APP NO LONGER CARRIES WHAT THIS DRAWS BY ITSELF. Since 2026-10-11 the wave is the one
+# render_wave2.py draws and pack_wave2.py packs: in at the left, off at the right. What follows
+# is how the wave before it was drawn, and nothing packs those frames for the app any more
+# (pack_greeting.py did). Run it after the other scripts, with Blender WITHOUT its window, and
+# name two folders for the frames:
 #
 #   blender -b design/mascot/milo_mascot.blend --python design/mascot/scripts/render_greeting.py -- <folder for the walk> <folder for the turn and wave>
 #
 # Each folder gets numbered PNG frames with a see-through background, all of one size, from the
-# studio's camera and under the studio's lights. pack_greeting.py then makes the two pictures
-# the app carries out of them. What this script prints at the end (the picture's size,
-# the frames, the stride, how far the mascot reaches ahead, where its soles are) is what the
-# app's code is told, in core/designsystem/component/MascotWalk.kt.
+# studio's camera and under the studio's lights. What this script prints at the end (the
+# picture's size, the frames, the stride, how far the mascot reaches ahead, where its soles are)
+# is what the app's code was told while it played this wave.
 #
 #   the walk           every second frame of the clip "Walk", so one cycle is WALK_FRAMES frames,
 #                      with the mascot turned WALK_ANGLE degrees so that it walks to the left

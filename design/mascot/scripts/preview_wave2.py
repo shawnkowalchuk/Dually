@@ -41,7 +41,8 @@
 # frame of the film to the next while it stays on the floor, at most, over the whole film and
 # at the two seams; and how like the frames on each side of a seam are.
 #
-# THE APP DOES NOT PLAY THIS. It is a preview to decide by.
+# THESE ARE THE PREVIEWS Shawn was shown on 2026-10-11, before the wave was built into the app.
+# He chose A, and the app plays what film A showed (MascotWalk.kt).
 
 import json
 import math
