@@ -5,9 +5,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The mascot's walk into the screen, and a greeting's course from stage to stage: which frame
- * of the walk is due at each moment and where the mascot is in it, that its step and its place
- * cannot come apart, and that a greeting ends once.
+ * The mascot's walk into the screen, for the wave, and a greeting's course from stage to stage:
+ * which frame of the walk is due at each moment and where the mascot is in it, that its step
+ * and its place cannot come apart, and that a greeting ends once. The moonwalk's glides are in
+ * `MascotMoonwalkTest`.
  */
 class MascotWalkTest {
     private val exact = 0.001f
@@ -151,13 +152,13 @@ class MascotWalkTest {
     private val inOrder =
         listOf(
             GreetingEvent.PICTURES_READ,
-            GreetingEvent.WALK_OVER,
-            GreetingEvent.WAVE_OVER,
-            GreetingEvent.FADED,
+            GreetingEvent.ARRIVED,
+            GreetingEvent.MIDDLE_OVER,
+            GreetingEvent.GONE,
         )
 
     @Test
-    fun `a greeting goes from reading to walking, waving and leaving, and is over once`() {
+    fun `a greeting goes from reading to coming, the middle and leaving, and is over once`() {
         val told = Told()
         assertEquals(GreetingStage.READING, told.course.stage)
 
@@ -165,14 +166,30 @@ class MascotWalkTest {
 
         assertEquals(
             listOf(
-                GreetingStage.WALKING,
-                GreetingStage.WAVING,
+                GreetingStage.COMING,
+                GreetingStage.IN_THE_MIDDLE,
                 GreetingStage.LEAVING,
                 GreetingStage.OVER,
             ),
             told.stages,
         )
         assertEquals(1, told.done)
+    }
+
+    @Test
+    fun `the mascot is first drawn once, when the pictures are read, and never if they are not`() {
+        // That stage is what "shown" means: the greeting's turn is taken from it.
+        val shown = Told()
+        inOrder.forEach(shown.course::on)
+        shown.course.on(GreetingEvent.PICTURES_READ)
+        assertEquals(1, shown.stages.count { it == GreetingStage.COMING })
+
+        // Animations off, or no picture that can be read: over with nothing drawn.
+        val never = Told()
+        never.course.on(GreetingEvent.CUT_SHORT)
+        never.course.on(GreetingEvent.PICTURES_READ)
+        assertEquals(0, never.stages.count { it == GreetingStage.COMING })
+        assertEquals(1, never.done)
     }
 
     @Test
@@ -192,9 +209,9 @@ class MascotWalkTest {
     @Test
     fun `an event that does not belong to the stage changes nothing`() {
         val told = Told()
-        told.course.on(GreetingEvent.WAVE_OVER)
-        told.course.on(GreetingEvent.FADED)
-        told.course.on(GreetingEvent.WALK_OVER)
+        told.course.on(GreetingEvent.MIDDLE_OVER)
+        told.course.on(GreetingEvent.GONE)
+        told.course.on(GreetingEvent.ARRIVED)
         assertEquals(GreetingStage.READING, told.course.stage)
         assertEquals(emptyList<GreetingStage>(), told.stages)
         assertEquals(0, told.done)

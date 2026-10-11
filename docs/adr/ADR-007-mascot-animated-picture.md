@@ -1,6 +1,6 @@
 # ADR-007: The mascot is two pictures, drawn beforehand and read by Android
 Date: 2026-10-09
-Status: Accepted. Supersedes ADR-005.
+Status: Accepted. Supersedes ADR-005. Addendum of 2026-10-10 at the end: a second greeting, the moonwalk, as two more pictures.
 
 ## Context
 
@@ -87,3 +87,58 @@ The native libraries left in the APK are AndroidX's, as before the mascot: the d
 **It has run on an emulator only** (Android 16, without a graphics chip), not on the phone. Device checks MG-1 to MG-9.
 
 **Going back to 3D stays possible.** The model, its skeleton and its clips are still in `design/mascot/`, and `export/milo_mascot.glb` is still written from them. It would cost what ADR-005 measured.
+
+## Addendum, 2026-10-10: a second greeting, the moonwalk
+
+### Context
+
+The day after this record, Shawn asked for a second greeting: "i want to have a animation with him moon walking on to the screen stops mid way. adoes some hip thrusts than spins and continues moon walking ... if we can add a hat for this animation it would be cool", to "take turns with the wave", and "show me a preview first". The model got a hat, brake lights and four clips for it. He was shown a film of the moonwalk over a picture of Home and said: "it looks good".
+
+This record said what a further clip would cost: "Every further clip is another picture of about this size". That was the price to be paid or not.
+
+### Decision
+
+**The moonwalk is built as this record built the wave: two more pictures, drawn in Blender, committed, and read by Android.** No other way was weighed again. The reasons that took the 3D engine out stand, and a second greeting drawn live would have brought it back for a hat.
+
+**The two pictures** (`app/src/main/res/drawable-nodpi/`), WebP with a see-through background, 2.5 pixels to the dp and 42 ms a frame, as the wave's are. A frame is 480 by 480 pixels, 192 dp: higher than the wave's because of the hat.
+
+| Picture | What it is | Frames | Who plays it | Size |
+|---|---|---|---|---|
+| `mascot_moonwalk.webp` | a still picture, 3,360 by 960 pixels: the frames side by side, seven across and two down | 14: one cycle of the glide, a slide of each foot | the app, by its own clock, on the way in and on the way out | 130 KB |
+| `mascot_stop_and_spin.webp` | an animated picture | 80: the skid with the brake lights, the pose and three hip thrusts, the kick and the turn, and the way back into the glide | Android, once; it keeps its last frame | 768 KB |
+
+Together 898 KB. They are drawn by `design/mascot/scripts/render_moonwalk.py` and packed by `pack_moonwalk.py`.
+
+**One course plays both greetings.** What was decided for the walk and the turn holds for the glide and the middle part, word for word: the sheet is the app's to step through, the frame and the place come from one number, the animated picture takes the sheet's place in the same drawing of the screen, and its first frame is the frame the sheet would have shown next. The moonwalk adds one thing: **after the animated picture the app plays the sheet again,** from its first frame, until the mascot has left at the left edge. Android says that it shows a picture's last frame when it draws it, not when the frame's time is up; so that frame is given its 42 ms before the sheet takes over.
+
+**The greetings take turns,** by a count of greetings shown in the settings file (APP_ENCYCLOPEDIA, The greeting). Only the pictures of the greeting that is due are read.
+
+**Four things are done to these pictures that are not done to the wave's.** Each is in `pack_moonwalk.py`, with its reason:
+
+1. **The frames are cut down** to what is drawn in any of them. The room the drawing leaves round the mascot for the halo of his brake lights is mostly empty; it cost no bytes, and a third of the sheet's memory.
+2. **A frame with a glow in it keeps its see-through channel almost whole.** The wave's pictures store that channel in twelve steps, which is right for an edge. A soft halo stored so is drawn as rings. Twenty of the 80 frames have the glow.
+3. **A frame that is the frame before is not stored;** the frame before is shown twice as long. Two frames.
+4. **A frame in which only the needles move is stored as the small box that changed,** laid over the frame before. Five frames. So this picture holds 78 stored frames, and, unlike the wave's, a frame of it may depend on the one before.
+
+Colour is packed at 50 of 100 where the wave's is at 60: the mascot is never still in these pictures.
+
+### Consequences
+
+**What it costs, measured:**
+
+| | Before | With the moonwalk |
+|---|---|---|
+| The mascot's pictures | 880 KB, two | 1,778 KB, four |
+| The release APK (built unsigned, the same way both times) | 12.13 MB | 13.05 MB |
+
+The APK grows by 915 KB, 7.5 %: the two pictures, and 19 KB of code. The bundle for Google Play was not built here; it carries the same two files more.
+
+- **About 10 KB a frame is what the mascot costs at this size, however he is packed.** The moonwalk is 94 frames in 898 KB. What was tried, both pictures together: as committed, 898 KB; without the patches 933; with every frame stored whole 953; colour at 60 as in the wave 955; colour at 40, where the dials' numbers and the lines between his fingers smear, 838; the see-through channel kept whole on every frame 991. Packed exactly as the wave is, they came to 939 KB with the halo in rings. A first trial, before the frames were cut and looked at, had come to 1.17 MB.
+- **`MascotPicturesTest` held the mascot's pictures under one megabyte. It now holds each greeting under one, and all four under two.** A second greeting is a second megabyte; there was no honest way to keep the old limit. A third greeting would have to ask for a third.
+- **The halo is right on a dark ground only.** A see-through picture cannot store light that is added to what lies behind. The halo is stored as red that covers a part, which over Home's dark page is the glow, and over the lime tile is an orange mist that darkens the lime. On a phone held upright the mascot stands in front of dark tiles. On its side, or in a very narrow window, he stands in front of the lime tile. `[DEBT]`, FINDINGS_LOG 2026-10-10.
+- **The moonwalk's animated picture cannot be cut at any frame,** because of the patches. Nothing cuts it today.
+- **Memory:** the glide's sheet takes 12.9 MB of graphics memory while the moonwalk is on the screen, the walk's 12.1 MB while the wave is. Never both.
+- **The moonwalk is not slower than the wave:** about 7.3 seconds on Shawn's phone, where the wave is about 7. The glide's stride is more than twice the walk's, so he crosses the whole screen in the time the wave walks half of it.
+- **Every further greeting is two more pictures and about this much again.** The course that plays them is there.
+
+**It has run on an emulator only** (Android 16, without a graphics chip), at four widths and on its side. Device checks MW-1 to MW-11. The phone runs Android 14; whether its decoder lays the five patches as the emulator's does is MW-3.

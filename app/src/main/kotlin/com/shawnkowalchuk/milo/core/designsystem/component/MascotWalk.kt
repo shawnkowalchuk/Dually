@@ -3,14 +3,15 @@ package com.shawnkowalchuk.milo.core.designsystem.component
 import kotlin.math.ceil
 import kotlin.math.max
 
-// The greeting's course, apart from its drawing (ADR-007): which frame of the walk is due at any
-// moment, where the mascot is in it, and which stage follows which. Plain Kotlin with unit tests;
-// `MascotGreeting.kt` draws what this works out.
+// The wave's course, apart from its drawing (ADR-007): which frame of the walk is due at any
+// moment, where the mascot is in it, and which stage of a greeting follows which. Plain Kotlin
+// with unit tests; `MascotGreeting.kt` draws what this works out. What every greeting is made
+// of is in `MascotGreetingKind.kt`, and the moonwalk's numbers and glides in `MascotMoonwalk.kt`.
 
 /**
- * What the greeting's two pictures hold, as `design/mascot/scripts/render_greeting.py` printed
- * it when it drew them. Lengths are in dp: the pictures are drawn at this size on every phone,
- * whatever its density. `MascotPicturesTest` holds the two files to the sizes and the frames.
+ * What the wave's two pictures hold, as `design/mascot/scripts/render_greeting.py` printed
+ * it when it drew them. Lengths are in dp. `MascotPicturesTest` holds the two files to the
+ * sizes and the frames. The moonwalk's are in [MoonwalkPicture].
  */
 internal object MascotPicture {
     /** Every frame is this wide and this high, and the mascot turns about its middle. */
@@ -29,7 +30,7 @@ internal object MascotPicture {
     /** One cycle of the walk, two steps, carries the mascot this far. */
     const val STRIDE = 36.89f
 
-    /** Every frame of both pictures is shown for this long: 24 frames a second. */
+    /** Every frame of every picture of the mascot is shown for this long: 24 frames a second. */
     const val FRAME_MS = 42
 
     /**
@@ -43,11 +44,23 @@ internal object MascotPicture {
     /** The other picture, the turn and the wave, plays once and keeps its last frame. */
     const val TURN_AND_WAVE_FRAMES = 60
     const val TURN_AND_WAVE_MS = TURN_AND_WAVE_FRAMES * FRAME_MS
+
+    /** The same, for whoever draws them. */
+    val FRAMES =
+        MascotFrames(
+            width = WIDTH,
+            height = HEIGHT,
+            axis = WIDTH / 2,
+            soles = SOLES,
+            sheetFrames = WALK_FRAMES,
+            sheetColumns = WALK_COLUMNS,
+            playedFrames = TURN_AND_WAVE_FRAMES,
+        )
 }
 
 /**
- * How long the turn and wave is waited for past the time it should have taken, if it does not
- * say it has ended. Android moves that picture on by itself, and only while it is being drawn.
+ * How long an animated picture is waited for past the time it should have taken, if it does not
+ * say it has ended. Android moves such a picture on by itself, and only while it is being drawn.
  */
 internal const val PICTURE_PATIENCE_MS = 1_000L
 
@@ -78,7 +91,7 @@ internal class MascotWalk(
     private val stride: Float = MascotPicture.STRIDE,
     reach: Float = MascotPicture.REACH,
     private val frameMillis: Int = MascotPicture.FRAME_MS,
-) {
+) : MascotLeg {
     /** Where the mascot stops: the middle of the screen's width. */
     val end: Float = screenWidth / 2
 
@@ -86,7 +99,7 @@ internal class MascotWalk(
     val cycles: Int = max(1, ceil((screenWidth - end + reach) / stride).toInt())
 
     /** How many frames the walk shows, one after the other. */
-    val frames: Int = cycles * MascotPicture.WALK_FRAMES
+    override val frames: Int = cycles * MascotPicture.WALK_FRAMES
 
     /** Where the mascot starts: nothing of it is on the screen. */
     val start: Float = end + cycles * stride
@@ -98,25 +111,34 @@ internal class MascotWalk(
      * The frame of the walk that is due at [atMillis], counted from 0 through all its cycles.
      * [frames] once the walk is over: the last frame has then had its time, and the turn begins.
      */
-    fun frameAt(atMillis: Long): Int = (atMillis.coerceIn(0, millis) / frameMillis).toInt()
+    override fun frameAt(atMillis: Long): Int = (atMillis.coerceIn(0, millis) / frameMillis).toInt()
 
     /** Where the mascot is in [frame]: at [start] in the first, at [end] once the walk is over. */
     fun middleIn(frame: Int): Float =
         start - stride * frame.coerceIn(0, frames) / MascotPicture.WALK_FRAMES
+
+    /**
+     * The step and the place of [frame]. Once the walk is over it is the turn and wave, in the
+     * middle; the sheet's frame after its last is its first again.
+     */
+    override fun poseIn(frame: Int): MascotPose = MascotPose(
+        sheetFrame = frame.coerceAtLeast(0).takeIf { it < frames }?.mod(MascotPicture.WALK_FRAMES),
+        axis = middleIn(frame),
+    )
 }
 
-/** How far a greeting has come. */
+/** How far a greeting has come. Each of the greetings goes through the same stages. */
 internal enum class GreetingStage {
     /** The pictures are being read. Nothing is drawn. */
     READING,
 
-    /** The mascot walks in from the right. */
-    WALKING,
+    /** The mascot comes in from the right: he walks, or he glides backward. */
+    COMING,
 
-    /** It stands in the middle, turns to the viewer and waves. */
-    WAVING,
+    /** He is in the middle of the screen, and Android plays the animated picture. */
+    IN_THE_MIDDLE,
 
-    /** It fades away. */
+    /** He goes: he fades away where he stands, or he glides on and out at the left. */
     LEAVING,
 
     /** The greeting has ended, in whichever way. Nothing is drawn, and nothing follows. */
@@ -130,10 +152,11 @@ internal enum class GreetingStage {
  * @property to the stage it leads to.
  */
 internal enum class GreetingEvent(val from: GreetingStage?, val to: GreetingStage) {
-    PICTURES_READ(GreetingStage.READING, GreetingStage.WALKING),
-    WALK_OVER(GreetingStage.WALKING, GreetingStage.WAVING),
-    WAVE_OVER(GreetingStage.WAVING, GreetingStage.LEAVING),
-    FADED(GreetingStage.LEAVING, GreetingStage.OVER),
+    /** The mascot is about to be drawn for the first time: from here on he has been shown. */
+    PICTURES_READ(GreetingStage.READING, GreetingStage.COMING),
+    ARRIVED(GreetingStage.COMING, GreetingStage.IN_THE_MIDDLE),
+    MIDDLE_OVER(GreetingStage.IN_THE_MIDDLE, GreetingStage.LEAVING),
+    GONE(GreetingStage.LEAVING, GreetingStage.OVER),
 
     /**
      * The greeting ends where it stands: the phone's animations are off, a picture could not
