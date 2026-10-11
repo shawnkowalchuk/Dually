@@ -45,7 +45,15 @@ private val REPORT = setOf(ReviewMoment.REPORT_SENT)
 
 private const val DECIDES =
     "Google Play decides whether the card appears, and MilO is not told. MilO does not ask " +
-        "for this again"
+        "for this again, and asks for nothing else for 30 days"
+
+private const val DAY_MS = 24 * 3_600_000L
+
+/** Why a moment waits inside the thirty days after a launch, as the Log says it. */
+private const val WAITS =
+    "MilO asked Google Play for nothing: it asked Google Play to show the card less than 30 " +
+        "days ago, and leaves 30 days between two requests, because Google Play does not " +
+        "show its card more often. Nothing is used up. "
 
 /** A settings file that reads as [file] does and refuses every write, as a full disk would. */
 private class ReadOnlyFile(private val file: FakeSettingsFile) : DataStore<Preferences> {
@@ -120,6 +128,7 @@ class ReviewPromptsTest {
         assertEquals(MomentStanding.ASKED, stored().of(ReviewMoment.FIVE_TRIPS))
         assertEquals(MomentStanding.OPEN, stored().of(ReviewMoment.HUNDRED_TRIPS))
         assertEquals(nowMs, stored().lastAttemptAtMs)
+        assertEquals(nowMs, stored().lastLaunchAtMs)
         assertEquals(
             listOf(
                 "Review card: MilO holds 5 recorded trips, and asks at 5. MilO asked " +
@@ -183,25 +192,71 @@ class ReviewPromptsTest {
     }
 
     @Test
-    fun `a hundred trips are asked for when they come, after the five`() = runTest {
-        val prompts = promptsOn()
-        trips.value = 5
-        prompts.askAt(ReviewOccasion.HOME)
+    fun `a hundred trips reached inside the thirty days wait, and are asked for after them`() =
+        runTest {
+            val prompts = promptsOn()
+            trips.value = 5
+            val launchedAt = nowMs
+            prompts.askAt(ReviewOccasion.HOME)
 
-        nowMs = at(25, 17)
-        trips.value = 99
-        assertEquals(emptySet<ReviewMoment>(), prompts.look(ReviewOccasion.HOME))
-        trips.value = 100
-        assertEquals(HUNDRED, prompts.look(ReviewOccasion.HOME))
-        prompts.askAt(ReviewOccasion.HOME)
+            // A fortnight on, the hundredth trip: reached, and held.
+            nowMs = at(25, 17)
+            trips.value = 99
+            assertEquals(emptySet<ReviewMoment>(), prompts.look(ReviewOccasion.HOME))
+            trips.value = 100
+            assertEquals(emptySet<ReviewMoment>(), prompts.look(ReviewOccasion.HOME))
+            prompts.askAt(ReviewOccasion.HOME)
+            assertEquals(1, card.requests)
+            assertEquals(MomentStanding.OPEN, stored().of(ReviewMoment.HUNDRED_TRIPS))
+            assertEquals(launchedAt, stored().lastLaunchAtMs)
+            assertEquals(
+                "Review card: MilO holds 100 recorded trips, and asks at 100. $WAITS" +
+                    "MilO asks the next time Home is open, with no trip being recorded and no " +
+                    "vehicle connected: in 16 days at the earliest",
+                lines().last(),
+            )
 
-        assertEquals(2, card.launches)
-        assertEquals(
-            "Review card: MilO holds 100 recorded trips, and asks at 100. MilO asked " +
-                "Google Play to show its review card. $DECIDES",
-            lines().last(),
-        )
-    }
+            // The day before the thirty days are over: still held. The day after: asked.
+            nowMs = launchedAt + 29 * DAY_MS
+            assertEquals(emptySet<ReviewMoment>(), prompts.look(ReviewOccasion.HOME))
+            nowMs = launchedAt + 31 * DAY_MS
+            trips.value = 131
+            assertEquals(HUNDRED, prompts.look(ReviewOccasion.HOME))
+            prompts.askAt(ReviewOccasion.HOME)
+
+            assertEquals(2, card.launches)
+            assertEquals(nowMs, stored().lastLaunchAtMs)
+            assertEquals(
+                "Review card: MilO holds 131 recorded trips, and asks at 100. MilO asked " +
+                    "Google Play to show its review card. $DECIDES",
+                lines().last(),
+            )
+        }
+
+    @Test
+    fun `both numbers reached inside the thirty days after a report are asked for once`() =
+        runTest {
+            val prompts = promptsOn()
+            val launchedAt = nowMs
+            prompts.askAt(ReviewOccasion.REPORT_SENT)
+
+            nowMs = at(14, 17)
+            trips.value = 5
+            assertEquals(emptySet<ReviewMoment>(), prompts.look(ReviewOccasion.HOME))
+            nowMs = at(30, 17)
+            trips.value = 100
+            assertEquals(emptySet<ReviewMoment>(), prompts.look(ReviewOccasion.HOME))
+            prompts.askAt(ReviewOccasion.HOME)
+            assertEquals(1, card.requests)
+
+            nowMs = launchedAt + 30 * DAY_MS
+            assertEquals(BOTH, prompts.look(ReviewOccasion.HOME))
+            prompts.askAt(ReviewOccasion.HOME)
+
+            assertEquals(2, card.launches)
+            assertEquals(MomentStanding.ASKED, stored().of(ReviewMoment.FIVE_TRIPS))
+            assertEquals(MomentStanding.ASKED, stored().of(ReviewMoment.HUNDRED_TRIPS))
+        }
 
     @Test
     fun `after I sent it Google Play is asked once, with any number of trips`() = runTest {
@@ -385,10 +440,10 @@ class ReviewPromptsTest {
             assertEquals(1, card.launches)
         }
 
-    // ---- Never twice in one day -----------------------------------------------------------------
+    // ---- Thirty days after a launch -------------------------------------------------------------
 
     @Test
-    fun `the same day's second moment is held, and the Log says why`() = runTest {
+    fun `a report sent inside the thirty days is held, and the Log says why`() = runTest {
         val prompts = promptsOn()
         trips.value = 5
         nowMs = at(11, 8)
@@ -402,22 +457,27 @@ class ReviewPromptsTest {
         assertEquals(1, card.requests)
         assertEquals(MomentStanding.OPEN, stored().of(ReviewMoment.REPORT_SENT))
         assertEquals(at(11, 8), stored().lastAttemptAtMs)
+        assertEquals(at(11, 8), stored().lastLaunchAtMs)
         assertEquals(
-            "Review card: A report was recorded as sent with \"I sent it\". MilO asked Google " +
-                "Play for nothing: it went to Google Play for the card once already today, and " +
-                "never does twice in one day. Nothing is used up. MilO asks after the next " +
-                "report that is recorded as sent with \"I sent it\"",
+            "Review card: A report was recorded as sent with \"I sent it\". $WAITS" +
+                "MilO asks after the next report that is recorded as sent with \"I sent it\": " +
+                "in 30 days at the earliest",
             lines().last(),
         )
-        // The next report is sent on another day: asked.
+        // A report sent the next day is held too, and says so again: that moment passes as well.
         nowMs = at(12, 9)
+        assertEquals(emptySet<ReviewMoment>(), prompts.look(ReviewOccasion.REPORT_SENT))
+        assertEquals(3, lines().size)
+        assertTrue(lines().last().endsWith("in 29 days at the earliest"))
+        // The report that is sent once the thirty days are over: asked.
+        nowMs = at(11, 8) + 30 * DAY_MS
         assertEquals(REPORT, prompts.look(ReviewOccasion.REPORT_SENT))
         prompts.askAt(ReviewOccasion.REPORT_SENT)
         assertEquals(2, card.launches)
     }
 
     @Test
-    fun `at Home the day's hold is said once a day, however often Home is opened`() = runTest {
+    fun `at Home the wait is said once in a run of MilO, however often Home is opened`() = runTest {
         val prompts = promptsOn()
         nowMs = at(11, 8)
         prompts.askAt(ReviewOccasion.REPORT_SENT)
@@ -425,19 +485,48 @@ class ReviewPromptsTest {
 
         nowMs = at(11, 17)
         repeat(5) { assertEquals(emptySet<ReviewMoment>(), prompts.look(ReviewOccasion.HOME)) }
+        // The days after, in the same run of MilO: not a word more.
+        for (day in 12..31) {
+            nowMs = at(day, 7)
+            assertEquals(emptySet<ReviewMoment>(), prompts.look(ReviewOccasion.HOME))
+        }
 
         assertEquals(2, lines().size)
         assertEquals(
-            "Review card: MilO holds 5 recorded trips, and asks at 5. MilO asked Google " +
-                "Play for nothing: it went to Google Play for the card once already today, and " +
-                "never does twice in one day. Nothing is used up. MilO asks the next time Home " +
-                "is open on another day, with no trip being recorded and no vehicle connected",
+            "Review card: MilO holds 5 recorded trips, and asks at 5. $WAITS" +
+                "MilO asks the next time Home is open, with no trip being recorded and no " +
+                "vehicle connected: in 30 days at the earliest",
             lines().last(),
         )
         assertEquals(1, card.requests)
-        // The next morning: asked.
-        nowMs = at(12, 7)
-        assertEquals(FIVE, prompts.look(ReviewOccasion.HOME))
+        // A new run of MilO says it once more, with the days that are left then.
+        nowMs = at(20, 7)
+        val nextRun = promptsOn()
+        repeat(3) { assertEquals(emptySet<ReviewMoment>(), nextRun.look(ReviewOccasion.HOME)) }
+        assertEquals(3, lines().size)
+        assertTrue(lines().last().endsWith("in 22 days at the earliest"))
+        // Thirty days after the launch: asked.
+        nowMs = at(11, 8) + 30 * DAY_MS
+        assertEquals(FIVE, nextRun.look(ReviewOccasion.HOME))
+    }
+
+    @Test
+    fun `a moment that waits for a second launch's thirty days is said again`() = runTest {
+        val prompts = promptsOn()
+        val first = nowMs
+        prompts.askAt(ReviewOccasion.REPORT_SENT)
+        trips.value = 5
+        prompts.look(ReviewOccasion.HOME)
+        nowMs = first + 30 * DAY_MS
+        prompts.askAt(ReviewOccasion.HOME)
+        assertEquals(2, card.launches)
+
+        trips.value = 100
+        repeat(3) { assertEquals(emptySet<ReviewMoment>(), prompts.look(ReviewOccasion.HOME)) }
+
+        assertEquals(4, lines().size)
+        assertTrue(lines().last().startsWith("Review card: MilO holds 100 recorded trips"))
+        assertTrue(lines().last().endsWith("in 30 days at the earliest"))
     }
 
     // ---- Google Play gives no flow --------------------------------------------------------------
@@ -481,6 +570,29 @@ class ReviewPromptsTest {
             assertEquals(2, card.requests)
             assertEquals(1, card.launches)
             assertEquals(MomentStanding.ASKED, stored().of(ReviewMoment.FIVE_TRIPS))
+        }
+
+    @Test
+    fun `a new run of MilO on the day of a failed request says once that the day is held`() =
+        runTest {
+            trips.value = 5
+            card.answer = { ReviewFlow.NotGiven("Google Play reported an error of its own") }
+            promptsOn().askAt(ReviewOccasion.HOME)
+
+            nowMs = at(11, 20)
+            val nextRun = promptsOn()
+            repeat(3) { assertEquals(emptySet<ReviewMoment>(), nextRun.look(ReviewOccasion.HOME)) }
+
+            assertEquals(1, card.requests)
+            assertEquals(2, lines().size)
+            assertEquals(
+                "Review card: MilO holds 5 recorded trips, and asks at 5. MilO asked Google " +
+                    "Play for nothing: it went to Google Play for the card once already today, " +
+                    "and never does twice in one day. Nothing is used up. MilO asks the next " +
+                    "time Home is open on another day, with no trip being recorded and no " +
+                    "vehicle connected",
+                lines().last(),
+            )
         }
 
     @Test
@@ -583,7 +695,13 @@ class ReviewPromptsTest {
         }
         nowMs = at(12, 9)
         assertEquals(emptySet<ReviewMoment>(), prompts.look(ReviewOccasion.HOME))
+        // Nor for another moment inside the thirty days of the launch the file did not take.
+        trips.value = 100
+        assertEquals(emptySet<ReviewMoment>(), prompts.look(ReviewOccasion.HOME))
+        prompts.askAt(ReviewOccasion.HOME)
         assertEquals(1, card.requests)
+        nowMs = at(11, 12) + 30 * DAY_MS
+        assertEquals(HUNDRED, prompts.look(ReviewOccasion.HOME))
     }
 
     @Test

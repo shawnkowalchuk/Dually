@@ -57,10 +57,14 @@ enum class MomentStanding {
  * @property standing where each moment stands. One that is not in the map is [MomentStanding.OPEN].
  * @property lastAttemptAtMs when MilO last went to Google Play for the card, whether the flow
  * was launched or Google Play gave none, or null if it never did.
+ * @property lastLaunchAtMs when Google Play's flow was last launched, or null if it never was.
+ * Kept apart from [lastAttemptAtMs]: a launch holds every moment back for
+ * [DAYS_BETWEEN_LAUNCHES] days, a request Google Play gave no flow for only for the day.
  */
 data class ReviewsStored(
     val standing: Map<ReviewMoment, MomentStanding> = emptyMap(),
     val lastAttemptAtMs: Long? = null,
+    val lastLaunchAtMs: Long? = null,
 ) {
     fun of(moment: ReviewMoment): MomentStanding = standing[moment] ?: MomentStanding.OPEN
 }
@@ -77,7 +81,16 @@ enum class NotAskedWhy {
     /** A trip is being recorded, or a paired vehicle is connected: he may be driving. */
     MAY_BE_DRIVING,
 
-    /** MilO has gone to Google Play for the card once already today. Never twice in one day. */
+    /**
+     * Google Play's flow was launched less than [DAYS_BETWEEN_LAUNCHES] days ago. Google Play
+     * would probably show nothing, and the moment would be spent on it.
+     */
+    ASKED_WITHIN_THIRTY_DAYS,
+
+    /**
+     * MilO has gone to Google Play for the card once already today, and Google Play gave no
+     * flow to launch. Never twice in one day.
+     */
     ONCE_TODAY_ALREADY,
 }
 
@@ -142,8 +155,11 @@ fun mayBeDriving(
  *   occasion looks at its own moments only: three moments are three requests.
  * - **Only a copy from Google Play asks.** Anywhere else nothing is asked and nothing used up.
  * - **Never while he may be driving.**
- * - **Never twice in one day,** whatever came of the first time: a flow that was launched, or
- *   a request Google Play did not answer with one.
+ * - **Not for [DAYS_BETWEEN_LAUNCHES] days after a launch** ([launchedLately]). A number of
+ *   trips that is reached in those days stays reached, and is asked for at the first look
+ *   after them; the report's moment has passed, as whenever it is held back, and comes again
+ *   with the next "I sent it".
+ * - **Never twice in one day,** if Google Play gave no flow to launch the first time.
  */
 fun judgeReview(facts: ReviewFacts): ReviewJudgement {
     val reached = reachedNow(facts.occasion, facts.recordedTrips, facts.stored)
@@ -153,6 +169,9 @@ fun judgeReview(facts: ReviewFacts): ReviewJudgement {
         !facts.fromGooglePlay -> ReviewJudgement.NotAsked(reached, NotAskedWhy.NOT_FROM_GOOGLE_PLAY)
 
         facts.mayBeDriving -> ReviewJudgement.NotAsked(reached, NotAskedWhy.MAY_BE_DRIVING)
+
+        launchedLately(facts.stored, facts.nowMs) ->
+            ReviewJudgement.NotAsked(reached, NotAskedWhy.ASKED_WITHIN_THIRTY_DAYS)
 
         attemptedToday(facts.stored, facts.nowMs, facts.zone) ->
             ReviewJudgement.NotAsked(reached, NotAskedWhy.ONCE_TODAY_ALREADY)
@@ -181,14 +200,39 @@ private fun reachedNow(
 }
 
 /**
- * Whether MilO has gone to Google Play for the card today already.
+ * How long MilO leaves between two launches of Google Play's flow. Google Play limits how
+ * often it shows its card and does not say by how much; the example in its documentation is
+ * an app that asks more than once within a month and is shown nothing (ADR-009). A moment
+ * that fell inside that time would be launched, count as asked, and show no card.
+ */
+const val DAYS_BETWEEN_LAUNCHES = 30
+
+private const val MILLIS_IN_DAY = 24 * 60 * 60 * 1000L
+
+/**
+ * Whether Google Play's flow was launched less than [DAYS_BETWEEN_LAUNCHES] days ago: thirty
+ * times 24 hours by MilO's own clock (ADR-006), whatever the zone and whatever hour a change of
+ * the clocks adds or takes.
  *
- * TODO(debt): a day is MilO's own rule, and Google Play's limit on how often it shows the card
- *  is longer (its own example is a month). Two moments that fall within that time are
- *  both launched and both count as asked, and the second will probably show nothing. A longer
- *  gap after a launch needs the time of the last launch stored apart from the time of the
- *  last try. See docs/adr/ADR-009-play-review-card.md, "Left open", and docs/FINDINGS_LOG.md,
- *  2026-10-11.
+ * **A launch that lies ahead of now is not believed,** for [attemptedToday]'s reason.
+ */
+fun launchedLately(stored: ReviewsStored, nowMs: Long): Boolean = daysToWait(stored, nowMs) > 0
+
+/**
+ * How many days are left until MilO asks again after its last launch, counted up to whole
+ * days: 0 if nothing holds it back, and [DAYS_BETWEEN_LAUNCHES] in the moment after a launch.
+ */
+fun daysToWait(stored: ReviewsStored, nowMs: Long): Int {
+    val lastMs = stored.lastLaunchAtMs ?: return 0
+    if (lastMs > nowMs) return 0
+    val leftMs = lastMs + DAYS_BETWEEN_LAUNCHES * MILLIS_IN_DAY - nowMs
+    return if (leftMs <= 0) 0 else ((leftMs + MILLIS_IN_DAY - 1) / MILLIS_IN_DAY).toInt()
+}
+
+/**
+ * Whether MilO has gone to Google Play for the card today already. After a launch the
+ * [DAYS_BETWEEN_LAUNCHES] days hold every moment back, so this is what holds the rest of a day
+ * on which Google Play gave no flow.
  *
  * **A moment that lies ahead of now is not believed,** as everywhere in MilO (ADR-006, decision
  * 5): its own clock does not go back by itself, so such a moment was written by another
@@ -207,11 +251,12 @@ fun attemptedToday(stored: ReviewsStored, nowMs: Long, zone: ZoneId): Boolean {
 fun ReviewsStored.afterLaunch(moments: Set<ReviewMoment>, nowMs: Long): ReviewsStored = copy(
     standing = standing + moments.associateWith { MomentStanding.ASKED },
     lastAttemptAtMs = nowMs,
+    lastLaunchAtMs = nowMs,
 )
 
 /**
  * What is stored when Google Play gave no flow to launch (no Play Store, no network): no moment
- * counts as asked, and MilO does not try again today.
+ * counts as asked, and MilO does not try again today. The last launch stays what it was.
  */
 fun ReviewsStored.afterNoFlow(nowMs: Long): ReviewsStored = copy(lastAttemptAtMs = nowMs)
 

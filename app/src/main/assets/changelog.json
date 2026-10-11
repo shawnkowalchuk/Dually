@@ -5,6 +5,11 @@
       "date": null,
       "changes": [
         {
+          "kind": "new",
+          "title": "A run across the screen when a report is sent",
+          "body": "When you come back from your email app and answer \"I sent it\", MilO's mascot runs in from the left along the foot of the Report screen, runs on the spot for two seconds with his shoes smoking, then brakes with his brake lights on and slides out to the right. Wheels whirr while he runs on the spot, and tyres squeal as he slides. The two sounds play like the phone's own screen sounds: a phone on silent or on vibrate stays silent. They are also silent when both sounds are switched off in Settings. He does not run after \"Mark as sent\". Everything under him can be pressed while he is there, and he is gone at once if you leave the screen."
+        },
+        {
           "kind": "improved",
           "title": "MilO stays upright",
           "body": "MilO no longer turns on its side when you turn the phone. Every screen stays upright. On a tablet or an unfolded phone Android still turns it."
@@ -12,7 +17,7 @@
         {
           "kind": "new",
           "title": "Google Play may ask for a review",
-          "body": "In a copy of MilO installed from Google Play, Google Play may show its own review card over MilO at three moments: once MilO holds 5 trips it recorded, once it holds 100, and after you answer \"I sent it\" for a report. MilO asks for the card once for each of the three and never twice in one day. It never asks while a trip is being recorded or a vehicle is connected. Google Play decides whether the card appears, and MilO is not told whether it did or what you wrote. A copy installed from the website asks for nothing."
+          "body": "In a copy of MilO installed from Google Play, Google Play may show its own review card over MilO at three moments: once MilO holds 5 trips it recorded, once it holds 100, and after you answer \"I sent it\" for a report. MilO asks for the card once for each of the three, and leaves 30 days between two requests. It never asks while a trip is being recorded or a vehicle is connected. Google Play decides whether the card appears, and MilO is not told whether it did or what you wrote. A copy installed from the website asks for nothing."
         },
         {
           "kind": "new",

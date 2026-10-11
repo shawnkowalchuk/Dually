@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -20,6 +21,7 @@ import com.shawnkowalchuk.milo.platform.review.ReviewPrompts
 import com.shawnkowalchuk.milo.platform.review.playReviewCards
 import com.shawnkowalchuk.milo.platform.system.installedFromGooglePlay
 import java.time.ZoneId
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 
 /**
@@ -89,7 +91,7 @@ internal fun ReviewWatch(container: AppContainer, homeFree: Boolean, onReport: B
     val activity = LocalActivity.current
     val now = due
     if (now != null && activity != null) {
-        CelebrationThenCard(now) {
+        CelebrationThenCard(now, sentRunViewModel(container).running, onReport) {
             review.onCelebrationOver(now, container.review.cardOn(activity))
         }
     }
@@ -98,16 +100,31 @@ internal fun ReviewWatch(container: AppContainer, homeFree: Boolean, onReport: B
 /**
  * **Where what MilO plays for a moment belongs: before Google Play's card, never with it.**
  *
- * A moment is due, and nothing has been asked of Google Play yet. Whatever is played for it
- * (a short animation of the mascot is planned for the two numbers of trips) is drawn from
- * here, and [onOver] is called when it has ended, however it ended. Until then the card is not
- * asked for; if the screen is left meanwhile, this leaves the composition and [onOver] is not
- * called at all. What is played must ask nothing and promise nothing about a review: Google's
- * rules for the card allow no question and no call to action before it (ADR-009).
+ * A moment is due, and nothing has been asked of Google Play yet. [onOver] is called when
+ * whatever is played for it has ended, however it ended ([afterCelebration]). Until then the
+ * card is not asked for; if the screen is left meanwhile, this leaves the composition and
+ * [onOver] is not called at all. What is played must ask nothing and promise nothing about a
+ * review: Google's rules for the card allow no question and no call to action before it
+ * (ADR-009).
  *
- * Nothing is played yet, so it is over at once.
+ * **For a report that was sent, the mascot's run across the Report screen is played**
+ * (2026-10-11; `SentRunObjects.kt`). It is drawn by [SentRunOverReport], not from here, because
+ * it plays after every "I sent it", and a moment is due for one of them at most. For the two
+ * numbers of trips a short animation of the mascot is planned; nothing is played for them yet,
+ * so that is over at once.
+ *
+ * @param runPlaying whether the mascot's run is asked for or playing.
+ * @param onReport whether the Report screen is the screen on top.
  */
 @Composable
-private fun CelebrationThenCard(due: ReviewDue, onOver: () -> Unit) {
-    LaunchedEffect(due) { onOver() }
+private fun CelebrationThenCard(
+    due: ReviewDue,
+    runPlaying: StateFlow<Boolean>,
+    onReport: Boolean,
+    onOver: () -> Unit,
+) {
+    // Written down as this is composed, which is before a run that ends with the screen can
+    // say that it has ended.
+    val stillOnReport by rememberUpdatedState(onReport)
+    LaunchedEffect(due) { afterCelebration(due, runPlaying, { stillOnReport }, onOver) }
 }

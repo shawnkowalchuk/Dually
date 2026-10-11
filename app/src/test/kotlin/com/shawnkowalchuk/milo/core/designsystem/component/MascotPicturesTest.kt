@@ -10,14 +10,15 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The mascot's six pictures, two for each greeting and two for the one-year party, are made by
- * hand, by scripts outside the build (`design/mascot/scripts/`: `render_wave2.py` and
- * `pack_wave2.py` for the wave, `render_moonwalk.py` and `pack_moonwalk.py` for the
- * moonwalk, `render_party.py` and `pack_party.py` for the party), and committed. This holds the
- * files to what the code expects ([MascotPicture], [MoonwalkPicture], [MascotPartyPicture]): a
- * picture that is made again with another size, a frame more or another way of repeating fails
- * here and not on the phone, where the mascot would be drawn in pieces or turn in the middle of
- * a step.
+ * The mascot's nine pictures, two for each greeting, two for the one-year party and three for
+ * the run across the Report screen, are made by hand, by scripts outside the build
+ * (`design/mascot/scripts/`: `render_wave2.py` and `pack_wave2.py` for the wave,
+ * `render_moonwalk.py` and `pack_moonwalk.py` for the moonwalk, `render_party.py` and
+ * `pack_party.py` for the party, `render_run_slide.py` and `pack_run_slide.py` for the run),
+ * and committed. This holds the files to what the code expects ([MascotPicture],
+ * [MoonwalkPicture], [MascotPartyPicture], [RunPicture]): a picture that is made again with
+ * another size, a frame more or another way of repeating fails here and not on the phone, where
+ * the mascot would be drawn in pieces or turn in the middle of a step.
  *
  * A WebP file is a list of named chunks. "VP8X" says what the file holds and how large its
  * picture is. In an animated one "ANIM" says how often it plays, and each "ANMF" is one frame:
@@ -103,6 +104,9 @@ class MascotPicturesTest {
     private val middle = Picture(File("$PICTURES/mascot_stop_and_spin.webp"))
     private val popper = Picture(File("$PICTURES/mascot_party_popper.webp"))
     private val pop = Picture(File("$PICTURES/mascot_party_pop.webp"))
+    private val runIn = Picture(File("$PICTURES/mascot_run_in.webp"))
+    private val onTheSpot = Picture(File("$PICTURES/mascot_run_on_the_spot.webp"))
+    private val brakeAndSlide = Picture(File("$PICTURES/mascot_brake_and_slide.webp"))
 
     /** One frame of the wave, as the code draws it: 540 by 440 pixels. */
     private val frameWidth = (MascotPicture.WIDTH * MascotPicture.PIXELS_PER_DP).roundToInt()
@@ -380,6 +384,102 @@ class MascotPicturesTest {
         assertEquals(2_400_000L, MOST_PARTY_BYTES)
     }
 
+    // ------------------------------------------------------------ the run's three
+
+    /** Lengths of the run's pictures are in dp, at the greetings' 2.5 pixels to the dp. */
+    private fun pixels(dp: Float): Int = (dp * MascotPicture.PIXELS_PER_DP).roundToInt()
+
+    @Test
+    fun `the run in is a still, see-through sheet of sixteen frames, four across and four down`() {
+        assertFalse(runIn.animated)
+        assertTrue(runIn.seeThrough)
+        assertEquals(650, pixels(RunPicture.SHEET_WIDTH))
+        assertEquals(430, pixels(RunPicture.SHEET_HEIGHT))
+        assertEquals(16, RunPicture.SHEET_FRAMES)
+        assertEquals(4, RunPicture.SHEET_COLUMNS)
+        assertEquals(RunPicture.SHEET_COLUMNS * pixels(RunPicture.SHEET_WIDTH), runIn.width)
+        assertEquals(RunPicture.SHEET.sheetRows * pixels(RunPicture.SHEET_HEIGHT), runIn.height)
+        // Two cycles of the run, so that the frame after the last is the first again.
+        assertEquals(2 * RunPicture.RUN_CYCLE, RunPicture.SHEET_FRAMES)
+        assertEquals(RunPicture.RUN_CYCLE, RunPicture.REACH_AHEAD.size)
+        // Under the 4,096 pixels a side that every phone's graphics chip takes as one picture.
+        assertTrue(runIn.width <= 4_096 && runIn.height <= 4_096)
+    }
+
+    @Test
+    fun `the run's two animated pictures are see-through and of one size`() {
+        for ((name, picture) in listOf("on the spot" to onTheSpot, "the slide" to brakeAndSlide)) {
+            assertTrue("$name is animated", picture.animated)
+            assertTrue("$name is see-through", picture.seeThrough)
+            assertTrue("$name: every frame is see-through", picture.frames.all { it.seeThrough })
+            // So the second lies exactly over the first, and nothing moves when it takes over.
+            assertEquals(name, pixels(RunPicture.WIDTH), picture.width)
+            assertEquals(name, pixels(RunPicture.HEIGHT), picture.height)
+        }
+        assertEquals(1_170, pixels(RunPicture.WIDTH))
+        assertEquals(450, pixels(RunPicture.HEIGHT))
+        // The spot lies on a whole pixel of them, and the slide's reach inside them.
+        assertEquals(390, pixels(RunPicture.SPOT))
+        assertTrue(RunPicture.SPOT + RunPicture.SLIDE_REACH <= RunPicture.WIDTH)
+    }
+
+    @Test
+    fun `on the spot it plays once for 57 frames' time, and from the brake for 45`() {
+        assertEquals(1, onTheSpot.plays)
+        assertEquals(1, brakeAndSlide.plays)
+        assertEquals(57, RunPicture.SPOT_FRAMES)
+        assertEquals(2_394, RunPicture.SPOT_MS)
+        assertEquals(45, RunPicture.SLIDE_FRAMES)
+        for (picture in listOf(onTheSpot, brakeAndSlide)) {
+            assertTrue(
+                picture.frames.all {
+                    it.millis > 0 && it.millis % MascotPicture.FRAME_MS == 0
+                },
+            )
+            // Each one's first frame is one frame's time: the app shows it before the picture
+            // plays, and a sound is laid on it.
+            assertEquals(MascotPicture.FRAME_MS, picture.frames.first().millis)
+        }
+        assertEquals(RunPicture.SPOT_MS, onTheSpot.frames.sumOf { it.millis })
+        val slideMillis = RunPicture.SLIDE_FRAMES * MascotPicture.FRAME_MS
+        assertEquals(slideMillis, brakeAndSlide.frames.sumOf { it.millis })
+        // With the film's sixteen frames of the run in: its 118 frames from the first he is
+        // seen in to the last that was drawn.
+        assertEquals(118, 16 + RunPicture.SPOT_FRAMES + RunPicture.SLIDE_FRAMES)
+    }
+
+    @Test
+    fun `a frame of the run is the whole picture, or a box laid on the one before`() {
+        val whole = listOf(0, 0, pixels(RunPicture.WIDTH), pixels(RunPicture.HEIGHT))
+        for ((name, picture) in listOf("on the spot" to onTheSpot, "the slide" to brakeAndSlide)) {
+            // The first is the whole picture: there is nothing before it to lie on, and the
+            // slide's first takes the place of everything the picture before it left.
+            val first = picture.frames.first()
+            assertEquals(name, whole, first.run { listOf(left, top, width, height) })
+            for ((number, frame) in picture.frames.withIndex()) {
+                val which = "$name, frame $number"
+                assertTrue(which, frame.left + frame.width <= pixels(RunPicture.WIDTH))
+                assertTrue(which, frame.top + frame.height <= pixels(RunPicture.HEIGHT))
+                // As in the moonwalk's middle part: it replaces what is under it, and stays.
+                assertTrue("$which replaces what is under it", frame.replaces)
+                assertFalse("$which is left for the next", frame.clearedAfter)
+            }
+        }
+    }
+
+    @Test
+    fun `the run's three stay under a megabyte and six tenths together`() {
+        assertTrue("the run in: ${runIn.bytes} bytes", runIn.bytes < MOST_RUN_IN_BYTES)
+        assertTrue("on the spot: ${onTheSpot.bytes} bytes", onTheSpot.bytes < MOST_ON_SPOT_BYTES)
+        assertTrue(
+            "the slide: ${brakeAndSlide.bytes} bytes",
+            brakeAndSlide.bytes < MOST_SLIDE_BYTES,
+        )
+        assertTrue(MOST_RUN_IN_BYTES + MOST_ON_SPOT_BYTES + MOST_SLIDE_BYTES <= MOST_RUN_BYTES)
+        // The greetings' and the party's limits above are as they were: the run is counted apart.
+        assertEquals(1_600_000L, MOST_RUN_BYTES)
+    }
+
     private companion object {
         const val PICTURES = "src/main/res/drawable-nodpi"
 
@@ -449,5 +549,24 @@ class MascotPicturesTest {
          * over four (FINDINGS_LOG, 2026-10-10: what was tried, and what was given up for it).
          */
         const val MOST_PARTY_BYTES = 2_400_000L
+
+        /** Measured on 2026-10-11: 152 KB, 641 KB and 732 KB. */
+        const val MOST_RUN_IN_BYTES = 165_000L
+        const val MOST_ON_SPOT_BYTES = 665_000L
+        const val MOST_SLIDE_BYTES = 765_000L
+
+        /**
+         * The run's three pictures together, counted apart from the greetings' four and the
+         * party's two. **It is half as much again as a greeting because it is half as many
+         * frames again, and has his smoke in every one:** 118 frames where a greeting has about
+         * 100, the 102 that Android plays on a picture three times a greeting's width, because
+         * he moves in it and the smoke he leaves stays where it was made. The trial of the
+         * preview came to 1.55 MB for less: the run in without its dust, no shadow, and a
+         * slide that ended at the edge of a screen 411 dp wide. From the brake on a frame is
+         * 16 KB where a greeting's is 10 to 12: the whole trail of smoke changes in every
+         * frame, and every frame there has the brake lights' glow, whose see-through channel
+         * is stored almost whole (FINDINGS_LOG, 2026-10-11: what was tried).
+         */
+        const val MOST_RUN_BYTES = 1_600_000L
     }
 }

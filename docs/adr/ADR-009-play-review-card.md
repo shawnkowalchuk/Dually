@@ -1,5 +1,6 @@
 # ADR-009: MilO asks Google Play for its review card, with Google's own library
 Date: 2026-10-11
+Changed: 2026-10-11, later the same day: decision 4. After a launch MilO waits 30 days before it asks again, where it had waited for the next day ("Decided on 2026-10-11, after the first build", below).
 Status: Accepted (built and unit tested; run on an emulator with the real library and the real Play Store app, in the debug build and in the minified release build, where Google Play was asked and showed nothing; **the card itself has not been seen anywhere,** and can only be seen in a copy installed from Google Play)
 
 ## Context
@@ -30,7 +31,7 @@ MilO has had no library of Google Play's until now, no INTERNET permission, and 
    - **5 recorded trips,** and **100 recorded trips.** A recorded trip is one that counts on the Trips screen (finished: not being recorded, not discarded, not deleted) and that MilO recorded itself. A trip typed in by hand is one MilO missed, and does not count. Business and Personal both count.
    - **A report recorded as sent with "I sent it",** after the email app. Not "Mark as sent".
 3. **Never while he may be driving.** The two numbers of trips are acted on the next time Home is in front with no trip being recorded **and no paired vehicle connected,** and not while something else has that moment: the first start's page, Setup or any screen on top of Home, the opening greeting, the one-year party, What's new about to open, a tapped notification. The report's moment is acted on on the Report screen, a second after "I sent it" has been stored, under the same rule about driving; if it is held back there, it has passed, and comes again with the next report. Each waits until the screen has been in front for a second.
-4. **Never twice in one day,** by MilO's own clock (ADR-006), whatever came of the first time. A MilO that is updated with 20 trips stored has reached "5 trips" and asks once at its next fitting moment. One with 150 has reached both numbers: it asks once, and both count as asked.
+4. **Not for 30 days after MilO has asked,** by MilO's own clock (ADR-006): once Google Play's flow has been launched, the next moment is not acted on until 30 times 24 hours have passed (`DAYS_BETWEEN_LAUNCHES`, `launchedLately`). A number of trips that is reached in those days stays reached, and is asked for at the first fitting moment after them. The report's moment has passed, as it does whenever it is held back, and comes again with the next "I sent it". **And never twice in one day** when Google Play gave no flow to launch the first time (decision 6). A MilO that is updated with 20 trips stored has reached "5 trips" and asks once at its next fitting moment. One with 150 has reached both numbers: it asks once, and both count as asked. (Until later on 2026-10-11 the whole rule was "never twice in one day, whatever came of the first time".)
 5. **Only a copy of MilO that Google Play installed asks** (`installedFromGooglePlay`, the test ADR-004 made for the coffee tile). Any other copy (the APK from GitHub, a build from the Mac) asks nothing and uses nothing up: if Google Play later updates that copy, it asks then.
 6. **Launched is what counts as asked.** From the moment MilO has launched Google Play's flow, the moment counts as asked, whether or not Google Play then shows its card: MilO cannot know. If Google Play gives no flow (no Play Store, an error, no answer within 10 seconds), nothing counts, and MilO tries again at the next fitting moment, not before the next day.
 7. **One line in the event log for each time MilO goes to Google Play,** and one for a moment that is reached and not asked for (`platform/review/ReviewLogText.kt`). Every such line begins "Review card:".
@@ -65,7 +66,7 @@ The website's privacy page has a sentence for this (`website/privacy.html`), and
 
 ## How it is removed
 
-Take `play-review` out of `gradle/libs.versions.toml` and `app/build.gradle.kts`, and delete `platform/review/PlayReviewCard.kt`, the only file that names the library. What is left is MilO's own and goes with it: `core/review/`, `platform/review/`, `feature/review/`, `app/ReviewObjects.kt`, the call of `ReviewWatch` in `MiloApp`, `container.review`, the argument `onSentByAnswer` in `MiloReportEntry` and `ReportRecords`, `data/settings/ReviewStorage.kt` with `MiloSettings.reviews`, and `TripDao.observeRecordedCount`. The four entries it leaves in a phone's settings file do no harm.
+Take `play-review` out of `gradle/libs.versions.toml` and `app/build.gradle.kts`, and delete `platform/review/PlayReviewCard.kt`, the only file that names the library. What is left is MilO's own and goes with it: `core/review/`, `platform/review/`, `feature/review/`, `app/ReviewObjects.kt`, the call of `ReviewWatch` in `MiloApp`, `container.review`, the argument `onSentByAnswer` in `MiloReportEntry` and `ReportRecords`, `data/settings/ReviewStorage.kt` with `MiloSettings.reviews`, and `TripDao.observeRecordedCount`. The five entries it leaves in a phone's settings file do no harm.
 
 ## Consequences
 
@@ -78,7 +79,7 @@ Take `play-review` out of `gradle/libs.versions.toml` and `app/build.gradle.kts`
 - **MilO has a library of Google Play's in it,** for the first time (until now ARCHITECTURE said "no Play SDK"), under Google's terms.
 - **"Nothing leaves the phone unless you send it" has one more exception to explain:** Google Play is told that MilO asked.
 - **MilO cannot know whether any of this works.** A moment counts as asked when the flow is launched. If Google Play shows nothing, the moment is spent all the same.
-- **Google Play's own limit is longer than MilO's.** MilO never asks twice in a day; Google Play's own example is a month. A tradesman who reaches 5 trips in his first week and 100 in his third, or sends his first report soon after his fifth trip, will probably see one card and not two or three. This was known when "once a day" was decided for Shawn, and is left as it is (below).
+- **The second and the third request can come weeks after their moment.** MilO leaves 30 days between two launches, because Google Play's own example of too often is twice within a month. A tradesman who reaches 5 trips in his first week and 100 in his third is asked for the hundred a month after the five, over a Home he opens then. One who sends his first report soon after his fifth trip is not asked for that report at all: the moment passes, and the first report he answers "I sent it" once the 30 days are over is asked for. **Nobody knows Google Play's real limit:** 30 days is its documentation's example, not a published number, and MilO still cannot tell whether a card appeared.
 - **The APK grows** by what the release build keeps of the library (FINDINGS_LOG, 2026-10-11, has the figure).
 - **A copy that was sideloaded over one from Google Play asks nothing,** although Google Play could show the card there (the app is in the account's library). That is the price of decision 5, which keeps every other sideloaded copy from spending its three moments on a card that cannot appear.
 
@@ -88,9 +89,19 @@ Take `play-review` out of `gradle/libs.versions.toml` and `app/build.gradle.kts`
 
 **Left open, and Shawn's to decide**
 
-- **A longer gap than a day between two requests,** to fit Google Play's limit: with 30 days, the second and third moments would wait for a time when the card can appear. It needs a second stored time (the last launch, apart from the last try) and is a change to one rule.
 - **A "Rate MilO" button in Settings** that opens MilO's page in the Play Store, which Google allows where it forbids a button for the card.
 - **A switch in Settings.** Not built: three requests in the life of an installation need none. If Google's review or a user asks for one, it is one stored value and one more condition in `judgeReview`.
+
+## Decided on 2026-10-11, after the first build
+
+The first build never asked twice in one day and had nothing longer. Under "Left open" this document listed a longer gap, to fit Google Play's limit, as Shawn's to decide. It was decided the same day, for him: **30 days after a launch.**
+
+- **Why.** With a day between them, two moments that fell close together were both launched and both counted as asked, and Google Play, by its own example, would have shown a card for one. A moment is asked for once, ever: one that is launched into Google Play's silence is lost.
+- **What is counted.** 30 times 24 hours from the moment of the last launch, by MilO's own clock. Not days of the calendar: no zone and no change of the clocks comes into it.
+- **What it needed.** A fifth value in the settings file, `review_last_launch_at_ms`: the time of the last launch, apart from the time MilO last went to Google Play at all (`review_last_attempt_at_ms`), which a request without a flow also sets. A failed request holds its day and no more, and neither begins the 30 days nor moves them.
+- **A number of trips waits; a report's moment passes.** That was so before, for the day, and is the same rule over a longer time: the trips are still there when the 30 days are over, and "I sent it" is a moment on a screen.
+- **The Log** says why a moment waits and how many days are left at the earliest, once for each run of MilO's process while a number of trips waits over Home, and each time a report's moment passes.
+- **No phone holds the first build's values.** That build was in an open pull request and in no release. A copy that had launched under it would have no time of its last launch and would wait for nothing.
 
 ## How it was decided
 

@@ -10,8 +10,9 @@ import com.shawnkowalchuk.milo.core.review.ReviewMoment
 import com.shawnkowalchuk.milo.core.review.ReviewsStored
 
 // What MilO remembers about asking Google Play for its review card (2026-10-11, ADR-009): where
-// each of the three moments stands, and when MilO last went to Google Play for the card. Each
-// moment is asked for once, ever, and that has to outlive the process and every update.
+// each of the three moments stands, when MilO last went to Google Play for the card, and when
+// it last launched Google Play's flow. Each moment is asked for once, ever, and thirty days lie
+// between two launches: both have to outlive the process and every update.
 // Not settings Shawn chooses, and not in an export file: they are this phone's, like the count
 // of greetings. Android's backup carries them with the rest of the settings file, so a phone
 // that is restored from a backup does not ask again for what it asked for before.
@@ -28,6 +29,7 @@ private val ReviewMoment.key: Preferences.Key<String>
         )
 
 private val REVIEW_LAST_ATTEMPT_AT_MS = longPreferencesKey("review_last_attempt_at_ms")
+private val REVIEW_LAST_LAUNCH_AT_MS = longPreferencesKey("review_last_launch_at_ms")
 
 /** What a standing is stored as. A moment nothing has happened for has no entry. */
 private val MomentStanding.stored: String?
@@ -52,12 +54,17 @@ internal fun Preferences.readReviews(): ReviewsStored {
                 put(moment, known ?: MomentStanding.ASKED)
             }
         }
-    return ReviewsStored(standing, this[REVIEW_LAST_ATTEMPT_AT_MS]?.takeIf { it >= 0 })
+    return ReviewsStored(
+        standing = standing,
+        lastAttemptAtMs = this[REVIEW_LAST_ATTEMPT_AT_MS]?.takeIf { it >= 0 },
+        lastLaunchAtMs = this[REVIEW_LAST_LAUNCH_AT_MS]?.takeIf { it >= 0 },
+    )
 }
 
 private fun MutablePreferences.writeReviews(reviews: ReviewsStored) {
     for (moment in ReviewMoment.entries) setOrRemove(moment.key, reviews.of(moment).stored)
     setOrRemove(REVIEW_LAST_ATTEMPT_AT_MS, reviews.lastAttemptAtMs)
+    setOrRemove(REVIEW_LAST_LAUNCH_AT_MS, reviews.lastLaunchAtMs)
 }
 
 /**
@@ -70,8 +77,9 @@ suspend fun SettingsStore.changeReviews(change: (ReviewsStored) -> ReviewsStored
     var after = ReviewsStored()
     dataStore.edit { stored ->
         after = change(stored.readReviews())
-        val lastMs = after.lastAttemptAtMs
-        require(lastMs == null || lastMs >= 0) { "A moment cannot be negative: $lastMs ms" }
+        for (lastMs in listOfNotNull(after.lastAttemptAtMs, after.lastLaunchAtMs)) {
+            require(lastMs >= 0) { "A moment cannot be negative: $lastMs ms" }
+        }
         stored.writeReviews(after)
     }
     return after

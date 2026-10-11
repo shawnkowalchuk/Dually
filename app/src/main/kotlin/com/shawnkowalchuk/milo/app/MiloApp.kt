@@ -55,8 +55,9 @@ import java.time.YearMonth
  * (`feature/greeting`); [onGreetingDone] says that it has.
  *
  * TODO(debt): this Composable is over the 200 lines the standards ask for (section 3). It stood
- *  at 199 before the one-year party, which added the thirteen it needs, and Google Play's
- *  review card added eleven more. See docs/FINDINGS_LOG.md, 2026-10-10 and 2026-10-11.
+ *  at 199 before the one-year party, which added the thirteen it needs, Google Play's review
+ *  card added eleven more, and the run across the Report screen three. See
+ *  docs/FINDINGS_LOG.md, 2026-10-10 and 2026-10-11.
  */
 @Composable
 fun MiloApp(
@@ -171,11 +172,12 @@ fun MiloApp(
             // over a Home that nothing else has, and on the Report screen after "I sent it".
             val opening = whatsNewDue || reportToOpen != null || homeAsked
             val homeDrawn = homeIsDrawn(onHome, firstRun)
+            val onReport = backStack.lastOrNull() is ReportKey
             ReviewWatch(
                 container = container,
                 homeFree =
                     homeIsFree(homeDrawn, greeting == Greeting.NONE, partyHasTheScreen, opening),
-                onReport = backStack.lastOrNull() is ReportKey,
+                onReport = onReport,
             )
 
             when (firstRun) {
@@ -256,6 +258,8 @@ fun MiloApp(
                 )
             }
             PartyOverHome(party)
+            // The mascot's run when a report has been sent (2026-10-11; `SentRunObjects.kt`).
+            SentRunOverReport(container, onReport, bottomBarHeight)
 
             if (unsavedWork.asking) {
                 ConfirmDialog(

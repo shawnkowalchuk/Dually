@@ -389,7 +389,7 @@ class ReviewViewModelTest {
     }
 
     @Test
-    fun `the same day's second moment is held on the Report screen, and passes`() = runTest {
+    fun `a report sent inside the thirty days is held on its screen, and passes`() = runTest {
         trips.value = 5
         val viewModel = screens()
         viewModel.homeInFront()
@@ -407,7 +407,7 @@ class ReviewViewModelTest {
         assertFalse(prompts.reportJustSent.value)
         assertEquals(1, card.requests)
         assertEquals(MomentStanding.OPEN, settings.current().reviews.of(ReviewMoment.REPORT_SENT))
-        assertTrue(log.entries.last().message.contains("once already today"))
+        assertTrue(log.entries.last().message.contains("less than 30 days ago"))
     }
 
     // ---- When Home is free ----------------------------------------------------------------------

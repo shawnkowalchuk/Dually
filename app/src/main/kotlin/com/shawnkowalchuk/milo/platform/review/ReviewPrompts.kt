@@ -10,6 +10,7 @@ import com.shawnkowalchuk.milo.core.review.ReviewsStored
 import com.shawnkowalchuk.milo.core.review.afterLaunch
 import com.shawnkowalchuk.milo.core.review.afterNoFlow
 import com.shawnkowalchuk.milo.core.review.afterSaidNotFromGooglePlay
+import com.shawnkowalchuk.milo.core.review.daysToWait
 import com.shawnkowalchuk.milo.core.review.judgeReview
 import com.shawnkowalchuk.milo.core.util.localDateOf
 import com.shawnkowalchuk.milo.data.crash.CrashFileStore
@@ -18,7 +19,6 @@ import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.changeReviews
 import java.io.IOException
-import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.NonCancellable
@@ -57,7 +57,8 @@ import kotlinx.coroutines.withTimeoutOrNull
  * (`core/review`, `mayBeDriving`).
  * @param fromGooglePlay whether Google Play installed this copy of MilO.
  * @param crashFileStore where a failure goes if the event log itself cannot be written.
- * @param clock MilO's own clock (ADR-006): "once a day" is a day by it.
+ * @param clock MilO's own clock (ADR-006): the thirty days after a launch and "once a day" are
+ * counted by it.
  * @param zone the zone the phone is in now.
  */
 class ReviewPrompts(
@@ -82,14 +83,8 @@ class ReviewPrompts(
      */
     private var notStored = ReviewsStored()
 
-    /**
-     * The day this process last said, at Home, that it has been to Google Play today.
-     *
-     * TODO(debt): in memory only, so a day on which a moment is held at Home can have that
-     *  line once for each run of MilO's process, not once. Storing the day would take a fifth
-     *  value in the settings file. See docs/FINDINGS_LOG.md, 2026-10-11.
-     */
-    private var saidOnceTodayOn: LocalDate? = null
+    /** What this run of MilO has said, at Home, of a moment that waits (`ReviewNotes.kt`). */
+    private val saidAtHome = SaidAtHome()
 
     private val reportSent = MutableStateFlow(false)
 
@@ -152,7 +147,7 @@ class ReviewPrompts(
      *
      * - Google Play gives a flow and the screen is still [stillFitting]: the flow is launched,
      *   and from that moment every moment it was for **counts as asked**, whatever Google Play
-     *   then shows.
+     *   then shows. MilO asks for nothing else for thirty days.
      * - Google Play gives none, or does not answer in time: nothing counts as asked, and MilO
      *   does not try again today.
      * - The screen was left meanwhile, or a drive may have begun: nothing is launched and
@@ -228,7 +223,7 @@ class ReviewPrompts(
             val nowMs = clock()
             store { it.afterNoFlow(nowMs) }
             // The line below says "not before tomorrow": Home need not say it again today.
-            saidOnceTodayOn = localDateOf(nowMs, zone())
+            saidAtHome.notBeforeTomorrow(localDateOf(nowMs, zone()))
             notes.write(EventCategory.PROCESS, noFlowLine(moments, trips, flow.why), flow.detail)
         }
     }
@@ -239,6 +234,8 @@ class ReviewPrompts(
      *   settings file without the moment being used up;
      * - **a drive may be under way:** nothing at Home, where the card only waits for the drive
      *   to be over; one line after "I sent it", where the moment passes;
+     * - **asked within thirty days:** at Home once for that launch in each run of MilO's
+     *   process, and each time after "I sent it", where the moment passes;
      * - **once today already:** at Home once a day in each run of MilO's process, and each
      *   time after "I sent it".
      */
@@ -251,12 +248,9 @@ class ReviewPrompts(
 
                 NotAskedWhy.MAY_BE_DRIVING -> judged.moments.takeUnless { atHome }.orEmpty()
 
-                NotAskedWhy.ONCE_TODAY_ALREADY -> {
-                    val today = localDateOf(facts.nowMs, facts.zone)
-                    val said = atHome && saidOnceTodayOn == today
-                    if (atHome) saidOnceTodayOn = today
-                    judged.moments.takeUnless { said }.orEmpty()
-                }
+                NotAskedWhy.ASKED_WITHIN_THIRTY_DAYS, NotAskedWhy.ONCE_TODAY_ALREADY ->
+                    judged.moments.takeUnless { atHome && saidAtHome.already(facts, judged.why) }
+                        .orEmpty()
             }
         if (moments.isEmpty()) return
         // Not to be cut short: what is remembered and what the Log says belong together.
@@ -264,7 +258,9 @@ class ReviewPrompts(
             if (judged.why == NotAskedWhy.NOT_FROM_GOOGLE_PLAY) {
                 store { it.afterSaidNotFromGooglePlay(moments) }
             }
-            val line = notAskedLine(facts.occasion, moments, facts.recordedTrips, judged.why)
+            val reached = reachedInWords(moments, facts.recordedTrips)
+            val wait = daysToWait(facts.stored, facts.nowMs)
+            val line = notAskedLine(facts.occasion, reached, judged.why, wait)
             notes.write(EventCategory.PROCESS, line)
         }
     }
@@ -286,6 +282,7 @@ class ReviewPrompts(
     private fun ReviewsStored.withNotStored(): ReviewsStored = copy(
         standing = standing + notStored.standing.filterValues { it == MomentStanding.ASKED },
         lastAttemptAtMs = listOfNotNull(lastAttemptAtMs, notStored.lastAttemptAtMs).maxOrNull(),
+        lastLaunchAtMs = listOfNotNull(lastLaunchAtMs, notStored.lastLaunchAtMs).maxOrNull(),
     )
 
     /** Stores a change to what MilO remembers; one the file refuses is kept in [notStored]. */
