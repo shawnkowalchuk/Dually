@@ -116,6 +116,11 @@ internal fun PartyWatch(
     val drawn = homeIsDrawn(onHome, firstRun)
     LaunchedEffect(party, drawn) {
         val scale = coroutineContext[MotionDurationScale]
+        // The factor is asked for once before it is followed. Compose begins to follow the
+        // phone's setting at the first asking, and writes down what it finds; inside
+        // snapshotFlow nothing may be written. With the phone's animations switched off there
+        // is something to write, and MilO stopped at every start from nothing (2026-10-11).
+        scale?.run { scaleFactor }
         snapshotFlow { scale?.scaleFactor != 0f }.collect { animationsOn ->
             party.onHomeReady(drawn && animationsOn)
             if (drawn && !animationsOn) party.onAskedDropped()
