@@ -118,7 +118,7 @@ class ClockJumpService(private val clock: () -> Long, elapsedNow: () -> Long) :
         handOver.forEach { controller.onServiceStarted(this, it) }
     }
 
-    override fun record(checkAtMs: Long?, sounds: List<TripSound>) {
+    override fun record(checkAtMs: Long?, sounds: List<TripSound>, tripStarts: Boolean) {
         recording = true
         watchingParked = false
         this.sounds += sounds

@@ -54,6 +54,8 @@ internal fun WhatsNewEntry(container: AppContainer, backStack: NavBackStack<NavK
                 },
             ),
         onBack = { backStack.closeIfOnTop(WhatsNewKey) },
+        // MilO's one-year party, on demand. MiloApp leads to Home and plays it there.
+        onVersionHeld = container.party.oneYear::askFor,
     )
 }
 

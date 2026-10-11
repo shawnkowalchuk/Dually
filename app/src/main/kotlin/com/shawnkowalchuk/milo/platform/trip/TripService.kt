@@ -38,7 +38,7 @@ private const val MINUTE_CHECK = "minute check"
  * The foreground service that records a trip (ADR-002, "The service"). It is the part of the app
  * Android keeps alive during a drive, and everything that only makes sense while a trip is open
  * lives in it: the GPS fixes, the timers, the watch on Android Auto and on the truck's Bluetooth
- * broadcasts, the notification and the two sounds. It stays up, doing less, while MilO
+ * broadcasts, the notification and the sounds. It stays up, doing less, while MilO
  * waits beside a truck that is connected and parked ([Work.WATCHING_PARKED]).
  *
  * It decides nothing. It reports to the [TripController] (a fix, a timer running out, Android
@@ -170,11 +170,11 @@ class TripService :
 
     // ---- What the controller asks for (called from its worker thread) ---------------------------
 
-    override fun record(checkAtMs: Long?, sounds: List<TripSound>) {
+    override fun record(checkAtMs: Long?, sounds: List<TripSound>, tripStarts: Boolean) {
         mainExecutor.execute {
             if (destroyed) return@execute
             turnTo(Work.RECORDING)
-            if (sounds.isNotEmpty()) announce(sounds)
+            if (sounds.isNotEmpty()) announce(sounds, tripStarts)
             checkTimer.set(checkAtMs)
         }
     }
@@ -275,11 +275,16 @@ class TripService :
     /**
      * Recording has really begun, or the trip has been seen driving off: the moments for the
      * connect sound and the trip-start sound, each once per trip. One coroutine for both, so
-     * they keep their order when they come together.
+     * they keep their order when they come together. On the day of MilO's one-year party the
+     * trip's first sound gives way to the party's pop (`playAtMoment`).
      */
-    private fun announce(sounds: List<TripSound>) {
+    private fun announce(sounds: List<TripSound>, tripStarts: Boolean) {
         val unreadable = { what: String -> controller.note(EventCategory.ERROR, what) }
-        scope.launch { sound.playAsSet(sounds, container.settingsStore, mainExecutor, unreadable) }
+        scope.launch {
+            val party = container.party.oneYear
+            val settings = container.settingsStore
+            sound.playAtMoment(sounds, tripStarts, party, settings, mainExecutor, unreadable)
+        }
     }
 
     // The debt of this timer and of the check timer, which can both fire late while the phone

@@ -25,7 +25,9 @@ enum class Greeting {
  *   have the screen to themselves;
  * - **not unless Home is the screen on top:** What's new, which opens by itself after an
  *   update, comes first, and so does any screen a notification opened;
- * - **not after a tap on a notification:** that tap asked for something, and gets it at once.
+ * - **not after a tap on a notification:** that tap asked for something, and gets it at once;
+ * - **not when MilO's one-year party has the screen** (2026-10-10): the party plays instead,
+ *   and the greeting that was due keeps its turn, because it was never drawn.
  *
  * A greeting that is dropped does not come later. One that is showing is dropped as well when
  * any of this changes under it, which is how What's new, opening a moment late, ends it.
@@ -38,6 +40,9 @@ enum class Greeting {
  * too, and nothing is shown or dropped before it is there.
  * @param onHome true while Home is the screen on top.
  * @param notificationTapped true while a tapped notification waits to be dealt with.
+ * @param party whether MilO's one-year party has the screen or is about to
+ * (`feature/party`, `PartyFacts.hasTheScreen`), or null while that is not known yet. It is read
+ * from the settings as well, and nothing is shown or dropped before it is there.
  */
 fun greeting(
     asked: Boolean,
@@ -45,9 +50,10 @@ fun greeting(
     turnRead: Boolean,
     onHome: Boolean,
     notificationTapped: Boolean,
+    party: Boolean?,
 ): Greeting = when {
     !asked -> Greeting.NONE
-    firstRun == null || !turnRead -> Greeting.WAITING
-    firstRun == FirstRunStage.DONE && onHome && !notificationTapped -> Greeting.SHOWING
+    firstRun == null || !turnRead || party == null -> Greeting.WAITING
+    firstRun == FirstRunStage.DONE && onHome && !notificationTapped && !party -> Greeting.SHOWING
     else -> Greeting.DROPPED
 }

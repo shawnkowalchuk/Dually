@@ -96,8 +96,13 @@ interface TripRecorder {
      * (`TripTransition.tripReallyBegan`); [TripSound.DRIVING_OFF] exactly once per trip, when it
      * is first seen driving (`TripProgress.drivenAtMs`). Both in one order when the two moments
      * fall together, the connect sound first.
+     * @param tripStarts true when [sounds] holds the trip's first sound: the connect sound, or,
+     * for a trip that a parked truck's moving started and that has no connect sound, the
+     * trip-start sound. It changes nothing about [sounds]. On the one day a year of MilO's
+     * party the service plays the party's pop in place of that first sound
+     * (`TripStartSounds.kt`).
      */
-    fun record(checkAtMs: Long?, sounds: List<TripSound>)
+    fun record(checkAtMs: Long?, sounds: List<TripSound>, tripStarts: Boolean)
 
     /**
      * No trip is open, and the truck is connected and parked: stay in the foreground, stop

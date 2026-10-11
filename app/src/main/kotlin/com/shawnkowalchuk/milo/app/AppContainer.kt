@@ -286,12 +286,13 @@ class AppContainer(context: Context, private val trustedClock: TrustedClock) {
         )
     }
 
-    // Seven parts of this container, each in a class of its own because this file is at its
+    // Eight parts of this container, each in a class of its own because this file is at its
     // size limit: the report for the accountant with the monthly reminder to send it; Android's
     // backup with the export and import of all data; the watch on Android Auto outside trips;
     // the daily check that a work day has a trip; the home-screen widget; the version with its
-    // list of changes; and what MilO's clock does beside telling the time. None of the last
-    // five can touch a trip; the widget's buttons reach the trip controller as any button does.
+    // list of changes; what MilO's clock does beside telling the time; and the one-year party.
+    // None of the last six can touch a trip; the widget's buttons reach the trip controller as
+    // any button does.
     val reports: ReportObjects by lazy { ReportObjects(appContext, this) }
     val transfer: TransferObjects by lazy {
         val main = miloDatabase.mainTransferDao()
@@ -302,6 +303,7 @@ class AppContainer(context: Context, private val trustedClock: TrustedClock) {
     val widgets: WidgetObjects by lazy { WidgetObjects(appContext, this) }
     val whatsNew: WhatsNewObjects by lazy { WhatsNewObjects(appContext) }
     val clocks: ClockObjects by lazy { ClockObjects(this, trustedClock) }
+    val party: PartyObjects by lazy { PartyObjects(appContext, this) }
 
     /**
      * Makes an audio file Shawn picked the connect sound or the trip-start sound, by copying it

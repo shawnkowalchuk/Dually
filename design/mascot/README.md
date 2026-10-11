@@ -1,8 +1,8 @@
 # The mascot
 
-MilO's mascot: a green block with a speedometer and a rev counter for eyes, the app's "M" for a mouth, hose arms and legs, white gloves and green shoes. Built in Blender 5.2 on 2026-10-09 from the picture in `reference.webp`. It is a 3D model here. The app carries no model: it shows four pictures of it, two for each of its greetings, drawn here once (`docs/adr/ADR-007-mascot-animated-picture.md`). The website shows three more, drawn the same way.
+MilO's mascot: a green block with a speedometer and a rev counter for eyes, the app's "M" for a mouth, hose arms and legs, white gloves and green shoes. Built in Blender 5.2 on 2026-10-09 from the picture in `reference.webp`. It is a 3D model here. The app carries no model: it shows six pictures of it, two for each of its greetings and two for its one-year party, drawn here once (`docs/adr/ADR-007-mascot-animated-picture.md`). The website shows three more, drawn the same way.
 
-Nothing in this folder is part of the app's build. The four pictures the app carries are written from here into `app/src/main/res/drawable-nodpi/`, the website's three into `website/mascot/`, and all seven are committed.
+Nothing in this folder is part of the app's build. The six pictures the app carries are written from here into `app/src/main/res/drawable-nodpi/`, the website's three into `website/mascot/`, and all nine are committed.
 
 | File | What it is |
 |---|---|
@@ -20,8 +20,9 @@ Nothing in this folder is part of the app's build. The four pictures the app car
 | `scripts/render_moonwalk.py` | Draws the frames of the app's second greeting, the moonwalk: the glide, and the middle part (below) |
 | `scripts/pack_moonwalk.py` | Packs those frames into the moonwalk's two pictures. Plain Python, not run in Blender |
 | `scripts/preview_moonwalk.py` | Lays the same frames over a picture of Home and writes a film of it: the preview Shawn was shown. Plain Python, not run in Blender |
-| `scripts/render_party.py` | Draws the frames of the party: with its confetti, without it, or the confetti alone, for a preview of it (below) |
-| `scripts/preview_party.py` | Makes a film of those frames on a phone's screen, with sound if it is given any. Plain Python, not run in Blender |
+| `scripts/render_party.py` | Draws the frames of the party: with its confetti, without it, or the confetti alone (below) |
+| `scripts/preview_party.py` | Makes a film of those frames on a phone's screen, with sound if it is given any: the preview Shawn was shown. Plain Python, not run in Blender |
+| `scripts/pack_party.py` | Packs those frames into the party's two pictures. Plain Python, not run in Blender |
 | `export/milo_mascot.glb` | The model with every clip, without the hat, the party cap, the popper and the confetti (3.00 MB), for whatever comes later. Nothing uses it today |
 | `renders/milo_thumbs_up.png` | The mascot as Blender draws it, in the pose of the reference picture |
 | `renders/milo_flex.webp`, `milo_peace.webp`, `milo_rock_on.webp` | Three clips as animated pictures with a see-through background, for whatever comes later (below) |
@@ -51,7 +52,7 @@ The same command without `-b` and without its last part opens Blender's window a
 
 Each is one action, at 24 frames a second, starting on frame 0. Every clip but the loops, `WaveUp`, the moonwalk's four and `OneYear` begins and ends in the same standing pose, so one can follow another. `OneYear` begins in it, in his party cap, and ends with both arms up. The needles move in every clip.
 
-`Flex`, `Peace` and `RockOn` were added on 2026-10-09 for pictures to come ("future content ideas or use on the website"); nothing plays them yet. `WaveUp` and `WaveLoop` were added on 2026-10-10 for the website, where he waves for as long as a pointer is on him. The four clips of the moonwalk were added the same day for a second greeting Shawn asked for; the app plays them since then, in turn with the wave (see "The hat and the moonwalk"). `OneYear` was added the same day for the day the app has been used for a year, with the confetti's own clip beside it; **it is a preview, and nothing plays it yet** (see "The party").
+`Flex`, `Peace` and `RockOn` were added on 2026-10-09 for pictures to come ("future content ideas or use on the website"); nothing plays them yet. `WaveUp` and `WaveLoop` were added on 2026-10-10 for the website, where he waves for as long as a pointer is on him. The four clips of the moonwalk were added the same day for a second greeting Shawn asked for; the app plays them since then, in turn with the wave (see "The hat and the moonwalk"). `OneYear` was added the same day for the day the app has been used for a year, with the confetti's own clip beside it; the app plays it since then, on that day and on demand (see "The party").
 
 | Clip | Length | What happens |
 |---|---|---|
@@ -78,7 +79,7 @@ The two gauge clips move one bone each and nothing else, so they can be laid ove
 
 ## The app's pictures
 
-The app has two greetings, which take turns, and each is two pictures: a still sheet of frames the app steps through while it moves the mascot, and an animated picture Android plays while he stays where he is. All are WebP with a see-through background, 24 frames a second, 2.5 pixels to the dp. The moonwalk's two are in "The hat and the moonwalk", below; the wave's are these. A frame of theirs is 600 by 420 pixels:
+The app has two greetings, which take turns, and each is two pictures: a still sheet of frames the app steps through while it moves the mascot, and an animated picture Android plays while he stays where he is. All are WebP with a see-through background, 24 frames a second, 2.5 pixels to the dp. The moonwalk's two are in "The hat and the moonwalk", below; the wave's are these. (The one-year party's two are of another kind, both animated and with fewer pixels to the dp: "The party", below.) A frame of theirs is 600 by 420 pixels:
 
 | Picture | What it shows | Size |
 |---|---|---|
@@ -264,7 +265,7 @@ python3 design/mascot/scripts/pack_moonwalk.py /tmp/milo-moonwalk-app
 
 ## The party: a year of use
 
-**A preview. The app does not play it.** Shawn, 2026-10-10: "a one year use animation. After the person has used the app for a year this one will come up that day every time he starts a trip. i want it to fade in with the mascot in the center with a birthday cap. i want him to put his hand behind his back and pull out a party popper and pull it and shoot confetti above his head. i want sound effects for this". What is here is the cap, the popper, the confetti, the clip and the two scripts that make the preview; nothing under `app/` was changed for it, and no sound is in the repository.
+**The app plays it since 2026-10-10:** on the day of the first recorded trip, a year on and every year after, and on demand (APP_ENCYCLOPEDIA, "The one-year party"). Shawn, 2026-10-10: "a one year use animation. After the person has used the app for a year this one will come up that day every time he starts a trip. i want it to fade in with the mascot in the center with a birthday cap. i want him to put his hand behind his back and pull out a party popper and pull it and shoot confetti above his head. i want sound effects for this". He was shown the preview below, with sound, and approved it; the app plays what it showed. What is here is the cap, the popper, the confetti, the clip, the two scripts that make the preview and the script that packs the app's pictures. The pop itself is not made here: `tools/make_party_pop.py` writes it.
 
 **The cap** is a paper cone in the app's lime with stripes of his own green that wind round it, a white rolled rim and a red pom-pom (`build_cap_bm` in `build_milo.py`; the object `Party_Cap`).
 
@@ -310,7 +311,7 @@ python3 design/mascot/scripts/preview_party.py /tmp/milo-party /tmp/milo-party-p
 - **The first step draws the frames** (three and a half minutes): he and the confetti, 600 pixels high in a picture of 1080 by 1380, on a see-through background. The picture is a fixed room round him, not measured from what is in it: confetti that drifts out of it is to drift out of it. `--confetti without` draws him alone and `--confetti alone` the confetti alone, into folders of their own beside the first, in the same picture; `--every 3` and `--frames 60-84` draw a part, for a quick look, and `--turn 40` turns him and the confetti to look from the side. It writes `party.json`, which says what the third step needs: the picture's size, where he stands in it, and the frame of the pop; and it prints, and writes there too, where the popper's mouth is in the picture in that frame.
 - **The second draws two stills of the cap,** from the front and three quarters on, into the same folder.
 - **The third writes** `party-preview-A.mp4` (a phone's screen of 1080 by 2400, the app's dark page, he in the middle of it, the app's soft shadow under his feet), `party-preview.gif` (the middle of the screen, smaller, no sound), three sheets (a frame from every quarter second; every frame of the reach behind his back; every frame round the pop) and the cap's stills on the dark page and on white. He fades in over the half second he stands still and out over the clip's last half second. 5.71 seconds in all.
-- **The sounds are given to it, and it lays them:** `--pop` is the bang, and the script finds where the file is loudest and lays that on the frame of the pop, to the sample; `--before` is a rustle that begins as the hand comes out from behind his back, `--after` a horn or a cheer that begins seven frames after the bang. A colon and a number after a file makes it that many decibels louder. Without any, the film is silent. **No sound is kept in this repository.** The ones the preview was made with were generated (ElevenLabs), and their licence is not confirmed.
+- **The sounds are given to it, and it lays them:** `--pop` is the bang, and the script finds where the file is loudest and lays that on the frame of the pop, to the sample; `--before` is a rustle that begins as the hand comes out from behind his back, `--after` a horn or a cheer that begins seven frames after the bang. A colon and a number after a file makes it that many decibels louder. Without any, the film is silent. The first previews were made with generated sounds (ElevenLabs), whose free plan does not allow them to be shipped; none of them is in this repository. **The film Shawn approved has one sound, the pop, made by arithmetic alone,** and that is the sound the app carries (`tools/make_party_pop.py`, `app/src/main/res/raw/party_pop.wav`).
 - **Nothing of the preview is committed** but the four pictures in `renders/`, which are drawn small and packed like this (2.9 MB together):
 
 ```
@@ -327,7 +328,35 @@ python3 design/mascot/scripts/pack_clips.py party /tmp/milo-party-small
 
 `render_clips.py` draws `OneYear` too, like any clip: him alone, in a picture measured from how far he reaches.
 
-**What the app would need, if this is built in:** the clip as one animated picture that plays once, as the turn and wave is, and a larger one than the greeting's 240 by 168 dp: drawn 150 dp high he reaches 109 dp to one side of the point he stands on and 89 dp to the other, and 210 dp above his soles. Packed as the greeting's pictures are, with 2.5 pixels to the dp, he alone came to 1.95 MB in a trial and the confetti alone to 1.13 MB (131 frames each, in the fixed room, 676 by 862 pixels; cut down to him the first weighs much the same, because what weighs is him). The app's pictures of the mascot are 0.9 MB together today, and `MascotPicturesTest` holds them under one. So either the app carries about 3 MB more, or it carries him alone and throws the confetti itself: for that it needs the frame of the pop, 73 of 24 a second, and where the popper's mouth then is in the picture, which `render_party.py` prints. Then a sound whose licence is settled, laid on that frame, and a rule for when the phone's and the app's sound settings let it be heard. And the rule for the day itself: a year after what, how the app remembers it, and what becomes of the greeting that day.
+**The app's two pictures** are made from the film's own frames, he 600 pixels high, which is what `render_party.py` draws when it is told nothing else:
+
+```
+blender -b design/mascot/milo_mascot.blend --python design/mascot/scripts/render_party.py -- /tmp/milo-party
+python3 design/mascot/scripts/pack_party.py /tmp/milo-party
+```
+
+| Picture | What it shows | Size |
+|---|---|---|
+| `app/src/main/res/drawable-nodpi/mascot_party_popper.webp` | From the frame he stands still in to the last one before the popper goes off: the clip's frames 12 to 72, 61 of them. An animated picture, which Android plays once | 885 KB |
+| `app/src/main/res/drawable-nodpi/mascot_party_pop.webp` | From the frame the popper goes off on: frames 73 to 129, 57 of them. An animated picture, which Android plays once | 1,426 KB |
+
+Together 2.31 MB. A frame is 675 by 800 pixels.
+
+- **The first step draws the frames** (three and a half minutes), the second packs them, in twenty seconds, and needs Pillow (`pip3 install pillow`), `cwebp` and `webpmux` (`brew install webp`).
+- **The app's code has to be told what the second step prints:** `MascotPartyPicture` in `core/designsystem/component/MascotPartyPicture.kt` holds those numbers: a frame's pixels, how many pixels it has to the dp, where he stands in it, how high he is, and how many frames each picture is. `MascotPicturesTest` fails if the pictures' sizes, frames, times or how often they play are not what stands there. Where he stands is not in the files, and no test can check it.
+- **The clip is cut in two at the frame of the pop.** Android plays an animated picture by its own clock and does not say which frame it shows. The app starts the second picture itself, and that moment is the pop: the sound is asked for in the same drawing of the screen.
+- **What `pack_party.py` does to the frames,** and says why at its top:
+  - **It makes them smaller.** The film's frames have him 600 pixels high, a phone's own pixels. In the app's pictures he is 375 pixels high, as many as the greetings' mascot, and the app shows them larger: as large as the film showed him. That is 1.64 pixels to the dp where the greetings have 2.5, and he is a little softer for it. `APP_PIXELS` at the script's top is that number: at 450 the two pictures weigh 2.87 MB, and at the film's own 600, 3.29 MB (`MascotPartyPicture` then has to be told the new pixels).
+  - **It cuts the room's top off,** the 100 pixels of the film's frame in which nothing is ever drawn. That cost no bytes, but it cost the phone memory.
+  - **It leaves the clip's last frame out:** the app has faded him out by then.
+  - **It leaves out the frames he stands still in, but the last.** The clip's first thirteen frames are one picture. Stored once and to be shown for thirteen frames' time, Android let it go after about a tenth of a second (seen on an emulator), and the popper went off half a second early. So the app shows the first picture's first frame itself for that long, and then lets Android play the picture.
+  - **A frame that is the frame before is not stored, and a frame that barely changes is stored as a patch,** as `pack_moonwalk.py` does: 1 and 15 of the first picture's 61, 1 of the second's 57.
+  - **The confetti's frames are packed harder than his:** colour at 28 of 100 and the see-through channel at 30, where the frames before the pop have 40 and 50. Paper in the air is small, bright and gone in a twenty-fourth of a second.
+  - **A frame that is fading is packed harder still,** in proportion to how strongly the app shows it.
+- **The script checks itself,** as `pack_moonwalk.py` does: it plays each packed picture back and holds every frame against the one that was drawn, over the app's dark page.
+- **What was tried for the weight** is in FINDINGS_LOG, 2026-10-10: other sizes, other qualities, and him and the confetti as two pictures laid over each other, which weighed the same and was not his film.
+- **He faces the viewer and no brake light is lit,** so there is no halo, and these pictures are right on any ground: over Home's lime tile as over its dark ones.
+- **A change to the clip, the cap, the popper or the confetti** means both steps again, the numbers into `MascotPartyPicture` if any changed, a look at the party on a phone or an emulator, and a new film for Shawn if what he approved has changed.
 
 ## What to know before writing a clip
 

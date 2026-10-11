@@ -187,7 +187,7 @@ private fun BoxWithConstraintsScope.GreetingOnScreen(
                     .graphicsLayer {
                         translationX = (pose.axis - frames.axis).dp.toPx()
                         alpha = fade.value
-                    }.drawBehind { groundShadow(shadow, frames) },
+                    }.drawBehind { groundShadow(shadow, frames.axis.dp, frames.soles.dp) },
         ) {
             Mascot(shown, sheetFrame = { pose.sheetFrame })
         }
@@ -232,13 +232,20 @@ private suspend fun step(leg: MascotLeg, onFrame: (Int) -> Unit) {
     } while (frame < leg.frames)
 }
 
-/** A faint, soft patch of dark on the ground under the mascot's feet, where he stands. */
-private fun DrawScope.groundShadow(darkest: Color, frames: MascotFrames) {
-    val radius = SHADOW_WIDTH.toPx() / 2
+/**
+ * A faint, soft patch of dark on the ground under the mascot's feet, where he stands. The
+ * greetings and the one-year party draw it.
+ *
+ * @param axis where he stands, from the left edge of what is being drawn.
+ * @param soles how far his soles are above its lower edge.
+ * @param times how many times as high he is drawn as in the greetings.
+ */
+internal fun DrawScope.groundShadow(darkest: Color, axis: Dp, soles: Dp, times: Float = 1f) {
+    val radius = SHADOW_WIDTH.toPx() * times / 2
     val centre =
         Offset(
-            x = frames.axis.dp.toPx(),
-            y = size.height - (frames.soles.dp + SHADOW_ABOVE_SOLES).toPx(),
+            x = axis.toPx(),
+            y = size.height - soles.toPx() - SHADOW_ABOVE_SOLES.toPx() * times,
         )
     val fading = Brush.radialGradient(listOf(darkest, Color.Transparent), centre, radius)
     scale(scaleX = 1f, scaleY = SHADOW_HEIGHT / SHADOW_WIDTH, pivot = centre) {
@@ -259,4 +266,4 @@ private val SHADOW_HEIGHT = 14.dp
 private val SHADOW_ABOVE_SOLES = 3.4.dp
 
 /** How dark the shadow is in its middle. It fades to nothing at its rim. */
-private const val SHADOW_DARKEST = 0.5f
+internal const val SHADOW_DARKEST = 0.5f

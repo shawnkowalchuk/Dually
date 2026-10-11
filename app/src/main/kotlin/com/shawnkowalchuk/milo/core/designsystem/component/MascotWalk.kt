@@ -21,6 +21,9 @@ internal object MascotPicture {
     /** The pictures have this many pixels to the dp. */
     const val PIXELS_PER_DP = 2.5f
 
+    /** The standing mascot is this high, in both greetings. */
+    const val TALL = 150f
+
     /** While it walks, the mascot's soles are this far above the frame's lower edge. */
     const val SOLES = 1.6f
 

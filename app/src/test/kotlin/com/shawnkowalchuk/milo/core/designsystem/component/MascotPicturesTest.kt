@@ -10,12 +10,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The mascot's four pictures, two for each greeting, are made by hand, by scripts outside the
- * build (`design/mascot/scripts/`: `render_greeting.py` and `pack_greeting.py` for the wave,
- * `render_moonwalk.py` and `pack_moonwalk.py` for the moonwalk), and committed. This holds the
- * files to what the code expects ([MascotPicture], [MoonwalkPicture]): a picture that is made
- * again with another size, a frame more or another way of repeating fails here and not on the
- * phone, where the mascot would be drawn in pieces or turn in the middle of a step.
+ * The mascot's six pictures, two for each greeting and two for the one-year party, are made by
+ * hand, by scripts outside the build (`design/mascot/scripts/`: `render_greeting.py` and
+ * `pack_greeting.py` for the wave, `render_moonwalk.py` and `pack_moonwalk.py` for the
+ * moonwalk, `render_party.py` and `pack_party.py` for the party), and committed. This holds the
+ * files to what the code expects ([MascotPicture], [MoonwalkPicture], [MascotPartyPicture]): a
+ * picture that is made again with another size, a frame more or another way of repeating fails
+ * here and not on the phone, where the mascot would be drawn in pieces or turn in the middle of
+ * a step.
  *
  * A WebP file is a list of named chunks. "VP8X" says what the file holds and how large its
  * picture is. In an animated one "ANIM" says how often it plays, and each "ANMF" is one frame:
@@ -99,6 +101,8 @@ class MascotPicturesTest {
     private val turnAndWave = Picture(File("$PICTURES/mascot_turn_and_wave.webp"))
     private val glide = Picture(File("$PICTURES/mascot_moonwalk.webp"))
     private val middle = Picture(File("$PICTURES/mascot_stop_and_spin.webp"))
+    private val popper = Picture(File("$PICTURES/mascot_party_popper.webp"))
+    private val pop = Picture(File("$PICTURES/mascot_party_pop.webp"))
 
     /** One frame of the wave, as the code draws it: 600 by 420 pixels. */
     private val frameWidth = (MascotPicture.WIDTH * MascotPicture.PIXELS_PER_DP).roundToInt()
@@ -241,6 +245,110 @@ class MascotPicturesTest {
         assertTrue("all four: $all bytes", all < MOST_BYTES)
     }
 
+    // ------------------------------------------------------------ the party's two
+
+    @Test
+    fun `the party's two are animated, see-through pictures of one size`() {
+        for ((name, picture) in listOf("before the pop" to popper, "from the pop" to pop)) {
+            assertTrue("$name is animated", picture.animated)
+            assertTrue("$name is see-through", picture.seeThrough)
+            assertTrue("$name: every frame is see-through", picture.frames.all { it.seeThrough })
+            // So the second lies exactly over the first, and the mascot does not move.
+            assertEquals(name, MascotPartyPicture.PIXELS_WIDE, picture.width)
+            assertEquals(name, MascotPartyPicture.PIXELS_HIGH, picture.height)
+        }
+        assertEquals(675, MascotPartyPicture.PIXELS_WIDE)
+        assertEquals(800, MascotPartyPicture.PIXELS_HIGH)
+    }
+
+    @Test
+    fun `a frame of the party is shown in the shape it was drawn in, he as large as in the film`() {
+        // The lengths the code draws by are the pixels, at one number of pixels to the dp: the
+        // film's 2.625, times the five eighths its frames were made smaller by.
+        val toTheDp = MascotPartyPicture.PIXELS_PER_DP
+        assertEquals(2.625f * 5 / 8, toTheDp, 0f)
+        assertEquals(MascotPartyPicture.PIXELS_WIDE / toTheDp, MascotPartyPicture.WIDTH, 0.01f)
+        assertEquals(MascotPartyPicture.PIXELS_HIGH / toTheDp, MascotPartyPicture.HEIGHT, 0.01f)
+        assertEquals(411.43f, MascotPartyPicture.WIDTH, 0.01f)
+        assertEquals(487.62f, MascotPartyPicture.HEIGHT, 0.01f)
+        // He is as many pixels high as the greetings' mascot: 150 dp at 2.5 pixels to the dp.
+        val pixelsHigh = MascotPicture.TALL * MascotPicture.PIXELS_PER_DP
+        assertEquals(375f, pixelsHigh, 0f)
+        assertEquals(pixelsHigh / toTheDp, MascotPartyPicture.TALL, 0.01f)
+        // The film's screen was 1080 pixels wide at 2.625 to the dp, and he 600 pixels high.
+        assertEquals(1080 / 2.625f, MascotPartyPicture.WIDTH, 0.01f)
+        assertEquals(600 / 2.625f, MascotPartyPicture.TALL, 0.01f)
+        // He stands in the middle of the frame's width.
+        assertEquals(MascotPartyPicture.WIDTH / 2, MascotPartyPicture.AXIS, 0.01f)
+    }
+
+    @Test
+    fun `before the pop it plays once for 61 frames' time, after the app held its first frame`() {
+        assertEquals(1, popper.plays)
+        assertEquals(61, MascotPartyPicture.POPPER_FRAMES)
+        assertEquals(2_562, MascotPartyPicture.POPPER_MS)
+        assertTrue(popper.frames.all { it.millis > 0 && it.millis % MascotPicture.FRAME_MS == 0 })
+        assertEquals(MascotPartyPicture.POPPER_MS, popper.frames.sumOf { it.millis })
+        // Its first frame is one frame's time, no longer. He stands still in it for twelve
+        // frames more, and those are the app's to show: Android does not keep a picture's
+        // first frame on the screen for a longer time the file gives it.
+        assertEquals(MascotPicture.FRAME_MS, popper.frames.first().millis)
+        assertEquals(12, MascotPartyPicture.STILL_FRAMES)
+        assertEquals(504, MascotPartyPicture.STILL_MS)
+        assertEquals(13 * MascotPicture.FRAME_MS, MascotPartyPicture.FIRST_FRAME_MS)
+        // He is faded in while he stands still, and no longer.
+        assertEquals(MascotPartyPicture.STILL_MS, MascotPartyPicture.FADE_MS)
+        // Its last frame is one frame's time too: the pop follows it.
+        assertEquals(MascotPicture.FRAME_MS, popper.frames.last().millis)
+        // The popper goes off 73 frames after he is first drawn, as in the film.
+        assertEquals(73 * MascotPicture.FRAME_MS, MascotPartyPicture.POP_AT_MS)
+    }
+
+    @Test
+    fun `from the pop it plays once for 57 frames' time, the pop first`() {
+        assertEquals(1, pop.plays)
+        assertEquals(57, MascotPartyPicture.POP_FRAMES)
+        assertEquals(2_394, MascotPartyPicture.POP_MS)
+        assertTrue(pop.frames.all { it.millis > 0 && it.millis % MascotPicture.FRAME_MS == 0 })
+        assertEquals(MascotPartyPicture.POP_MS, pop.frames.sumOf { it.millis })
+        // The frame of the pop is one frame's time: the sound is laid on it.
+        assertEquals(MascotPicture.FRAME_MS, pop.frames.first().millis)
+        // The still frames and the two pictures together are the clip without its last frame,
+        // in which nothing of him is left to see: 131 frames in the film, 130 here.
+        val frames = MascotPartyPicture.run { STILL_FRAMES + POPPER_FRAMES + POP_FRAMES }
+        assertEquals(130, frames)
+        // He is faded out over the second picture's last frames, and it is long enough for that.
+        assertTrue(MascotPartyPicture.POP_MS > 2 * MascotPartyPicture.FADE_MS)
+    }
+
+    @Test
+    fun `a frame of the party is the whole picture, or a patch laid on the one before`() {
+        val whole =
+            listOf(0, 0, MascotPartyPicture.PIXELS_WIDE, MascotPartyPicture.PIXELS_HIGH)
+        for ((name, picture) in listOf("before the pop" to popper, "from the pop" to pop)) {
+            // The first is the whole picture: there is nothing before it to lie on.
+            val first = picture.frames.first()
+            assertEquals(name, whole, first.run { listOf(left, top, width, height) })
+            for ((number, frame) in picture.frames.withIndex()) {
+                val which = "$name, frame $number"
+                assertTrue(which, frame.left + frame.width <= MascotPartyPicture.PIXELS_WIDE)
+                assertTrue(which, frame.top + frame.height <= MascotPartyPicture.PIXELS_HIGH)
+                // As in the moonwalk's middle part: it replaces what is under it, and stays.
+                assertTrue("$which replaces what is under it", frame.replaces)
+                assertFalse("$which is left for the next", frame.clearedAfter)
+            }
+        }
+    }
+
+    @Test
+    fun `the party's two stay under two megabytes and four tenths together`() {
+        assertTrue("before the pop: ${popper.bytes} bytes", popper.bytes < MOST_POPPER_BYTES)
+        assertTrue("from the pop: ${pop.bytes} bytes", pop.bytes < MOST_POP_BYTES)
+        assertTrue(MOST_POPPER_BYTES + MOST_POP_BYTES <= MOST_PARTY_BYTES)
+        // The greetings' limits above are as they were: the party is counted apart from them.
+        assertEquals(2_400_000L, MOST_PARTY_BYTES)
+    }
+
     private companion object {
         const val PICTURES = "src/main/res/drawable-nodpi"
 
@@ -279,5 +387,21 @@ class MascotPicturesTest {
          * still held under one megabyte, so a third would have to ask for a third.
          */
         const val MOST_BYTES = 2_000_000L
+
+        /** Measured on 2026-10-10: 885 KB and 1,426 KB. */
+        const val MOST_POPPER_BYTES = 920_000L
+        const val MOST_POP_BYTES = 1_480_000L
+
+        /**
+         * The party's two pictures together, counted apart from the greetings' four.
+         * **The party was to add no more than two and a half megabytes to MilO, sound and code
+         * and all, and this is the pictures' share of that.** It is more than a greeting's
+         * megabyte because it is more picture: 130 frames where a greeting has about 80, a
+         * frame two and a half times as large (the film's whole screen width, for the confetti
+         * to fly in), and 57 of them full of paper, which packs worse than he does. Packed as
+         * the greetings' pictures are it weighed three megabytes, and at the film's own pixels
+         * over four (FINDINGS_LOG, 2026-10-10: what was tried, and what was given up for it).
+         */
+        const val MOST_PARTY_BYTES = 2_400_000L
     }
 }

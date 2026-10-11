@@ -1,5 +1,6 @@
 package com.shawnkowalchuk.milo.data.trip
 
+import com.shawnkowalchuk.milo.core.party.TripStart
 import com.shawnkowalchuk.milo.core.schedule.TripCategory
 import com.shawnkowalchuk.milo.core.schedule.TripClassification
 import com.shawnkowalchuk.milo.core.schedule.TripFiling
@@ -43,6 +44,12 @@ class TripRepository(private val dao: TripDao) {
      * keep quiet just after a trip.
      */
     suspend fun findNewestTripEndMs(): Long? = dao.findNewestEndedAtMs(TripStatus.OPEN)
+
+    /**
+     * When each stored trip started, whatever became of it, with what says whether MilO
+     * recorded it. The day of MilO's party is worked out from them (`core/party/`).
+     */
+    suspend fun findTripStarts(): List<TripStart> = dao.findStarts()
 
     /** Finished trips, newest first. Discarded and deleted trips are left out. */
     fun observeFinishedTrips(): Flow<List<Trip>> = dao.observeWithStatus(TripStatus.FINISHED)
