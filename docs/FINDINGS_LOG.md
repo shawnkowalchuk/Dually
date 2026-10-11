@@ -24,6 +24,25 @@
 
 ### 2026-10-11
 
+**`[FINDING]` An outside review of the code, and what held up**
+Shawn had another AI model (DeepSeek) read the project on 2026-10-11 and passed on its five findings. Each was checked against the code before anything was done; this entry is here so that the one that was wrong is not tried again.
+- **Files over 300 lines (STANDARDS section 3): true.** Its counts were exact. The `[DEBT]` entry below.
+- **"The `@OptIn(ExperimentalCoroutinesApi::class)` marks are dead weight since kotlinx-coroutines 1.7": false.** With every one of them taken out, `compileDebugKotlin` fails on 1.11.0 with seven errors ("This declaration needs opt-in"), one for each `flatMapLatest`: in `HomeViewModel` (three), `TripsViewModel`, `ReportSources`, `EventLogViewModel` and `HomeWidget`. The comment in `HomeViewModel` says the same. They stay until the library drops the mark.
+- **`error("A row without a fix has no button")` in `SetupTexts.kt`: true, and out of reach.** Its one caller asks only for a row that has a fix. The `[CHANGE]` entry below.
+- **`runBlocking` in `PairedTruck.now()`: true, and meant** (ADR-002; the comment on the class). Up to one second on the thread of a Bluetooth broadcast, once per process; after that the answer is in memory. Nothing changed.
+- **"The mascot's pictures are the largest part of the download": true, with old numbers.** On 2026-10-11 they are 4.1 MB of a 15.6 MB release file on `main` (the party 2.31 MB, the moonwalk 0.90, the wave 0.88), and about 4.3 MB with the wave's new pictures. Each weight was accepted with its animation. If the download's size ever matters this is where to take it from, the party first: it is the heaviest and plays one day a year.
+- What it found in order: exact pinned dependencies, secrets outside the repository, the one clock, one inbox for the trip's triggers.
+
+**`[CHANGE]` A Setup row without a fix can no longer ask for a button's words**
+No behaviour changes. `SetupRow.fixLabelRes()` read the row's fix and stopped MilO with `error(...)` if there was none. It is `fixLabelRes(fix)` now: the fix is handed in, the `when` has no branch for "none", and the mistake cannot be written. The outside review proposed returning an empty label there. That was not done: a button without words would have hidden the mistake where the compiler now prevents it. `SetupTextsTest` holds the same words as before.
+
+**`[DEBT]` Twelve files of the app are over the 300 lines of STANDARDS section 3**
+Counted on 2026-10-11 on this branch: `ReportBlocks.kt` (456), `TripWorker.kt` (381), `TripService.kt` (379), `TripStatusScreen.kt` (378), `TripLedger.kt` (351), `Color.kt` (344), `AppContainer.kt` (342), `TripDao.kt` (341), `TripLogText.kt` (336), `SettingsStore.kt` (326), `SettingsViewModel.kt` (324), `ReviewPrompts.kt` (301). The review counted eleven on `main`; the twelfth, `ReviewPrompts.kt`, came with the review card and is over by one line. An earlier entry of 2026-10-07 names four of them at fewer lines; they have grown with nearly every feature since.
+- **Leave alone:** `Color.kt` (the palette and its tokens in one place) and `AppContainer.kt` (the one list of what is built from what). Splitting either makes it harder to read.
+- **Split after 0.3.1 is out, each in a branch of its own (STANDARDS section 6), with no behaviour change:** `ReportBlocks.kt`, `TripStatusScreen.kt` (also over the 200 lines of a Composable's file), `TripLogText.kt`, `TripDao.kt`, `SettingsStore.kt`, `SettingsViewModel.kt`, `ReviewPrompts.kt`.
+- **Wait with the three that record a trip:** `TripWorker.kt`, `TripService.kt`, `TripLedger.kt`. They are 50 to 80 lines over, they are the reviewed engine (ADR-002), and the phone has driven with them for a week. Moving their code about for a line count, before trip detection has had more days in the truck, risks the one thing the app is for. Split them with the next change that has to open them anyway.
+
+
 **`[CHANGE]` MilO stays upright when the phone is turned**
 Phone only; the Android Auto screen is not touched. **Built, not yet proven on the phone.** Shawn: "can we please make the app allways portrait fixed. I dont like when i flip my phone and it goes landscape". One line in the manifest, `android:screenOrientation="portrait"` on MilO's one activity.
 - **What is not obvious.** Lint fails the build on that line twice (`LockedOrientationActivity`, `DiscouragedApi`), and a lint warning is an error here. Both are answered on the activity itself with `tools:ignore` and a comment that says why, so the two checks stay on for anything added later.
