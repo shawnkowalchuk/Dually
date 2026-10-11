@@ -1,5 +1,5 @@
 # pack_clips.py - makes pictures out of the frames render_clips.py drew. Run it with plain
-# Python, not inside Blender. It has two uses:
+# Python, not inside Blender. It has three uses:
 #
 #   python3 design/mascot/scripts/pack_clips.py poses <folder>
 #
@@ -32,6 +32,14 @@
 # one is not (his hanging arm, most of all), the frame is filled with the lime of the tile he
 # stands on. That lime is read from --accent in website/styles.css. CHANGE THAT COLOUR, OR
 # STAND HIM ON ANOTHER, AND waving.webp HAS TO BE PACKED AGAIN.
+#
+#   python3 design/mascot/scripts/pack_clips.py lights <folder>
+#
+# <folder> holds what render_lights.py drew: the brake lights from behind. It writes into
+# design/mascot/renders/ three stills on a see-through background (milo_back.png, lights off;
+# milo_back_lit.png; milo_back_three_quarter_lit.png), the same three on the app's dark page
+# with the halo (..._on_dark.png), and the turn-around on the dark page as an animated picture
+# that starts again for ever (milo_turn_around_on_dark.webp).
 #
 # A VISITOR'S BROWSER KEEPS THESE PICTURES FOR A WEEK AND THE STYLESHEET FOR AN HOUR
 # (firebase.json). A picture that changes in a way the stylesheet counts on, another number of
@@ -92,6 +100,13 @@ FADE = 3
 THROUGH_GLASS = 0.95
 DIALS_CWEBP = ["-q", "85", "-alpha_q", "100", "-sharp_yuv", "-af", "-m", "6"]
 NEEDLES = ("speed", "rpm")
+
+# The brake lights' pictures: the three stills render_lights.py drew, in its order, and the
+# turn-around, shown twelve frames to the second. It is finer than the app's pictures: the halo
+# is a soft slope of red on a dark ground, and a coarse picture breaks it into steps.
+LIGHTS_STILLS = ("milo_back", "milo_back_lit", "milo_back_three_quarter_lit")
+TURN_MS = 83
+TURN_CWEBP = ["-q", "78", "-sharp_yuv", "-af", "-m", "6"]
 
 
 def size_of(frame):
@@ -210,10 +225,26 @@ def website(folder):
     print("on the page: %g x %g, half of the picture" % (width / 2, height / 2))
 
 
+def lights(folder):
+    os.makedirs(RENDERS, exist_ok=True)
+    total = 0
+    for where, ending in (("see-through", ""), ("dark", "_on_dark")):
+        for frame, name in enumerate(LIGHTS_STILLS):
+            out = os.path.join(RENDERS, name + ending + ".png")
+            shutil.copyfile(os.path.join(folder, where, "%04d.png" % frame), out)
+            total += os.path.getsize(out)
+            print("%s%s.png: %d x %d pixels, %d bytes" % (name, ending, *size_of(out), os.path.getsize(out)))
+    out = os.path.join(RENDERS, "milo_turn_around_on_dark.webp")
+    said = pack_animated(os.path.join(folder, "dark", "turn"), out, plays=0, shown=TURN_MS, settings=TURN_CWEBP)
+    total += os.path.getsize(out)
+    print("milo_turn_around_on_dark.webp: %s, %d bytes" % (said, os.path.getsize(out)))
+    print("together: %d bytes" % total)
+
+
 def main():
-    uses = {"poses": poses, "website": website}
+    uses = {"poses": poses, "website": website, "lights": lights}
     if len(sys.argv) != 3 or sys.argv[1] not in uses:
-        raise SystemExit("Say 'poses' or 'website', then the folder render_clips.py drew into.")
+        raise SystemExit("Say 'poses', 'website' or 'lights', then the folder the frames were drawn into.")
     for tool, formula in (("cwebp", "webp"), ("webpmux", "webp"), ("ffmpeg", "ffmpeg")):
         if shutil.which(tool) is None:
             raise SystemExit("%s is not installed. On a Mac: brew install %s" % (tool, formula))

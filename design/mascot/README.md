@@ -15,11 +15,15 @@ Nothing in this folder is part of the app's build. The two pictures the app carr
 | `scripts/pack_greeting.py` | Packs those frames into the app's two pictures |
 | `scripts/render_clips.py` | Draws the frames of any clip, at any size |
 | `scripts/render_dials.py` | Draws the two dials without their needles, and the needles' blades alone, for the website |
+| `scripts/render_lights.py` | Draws the brake lights to be shown: his back with them off and lit, and a turn-around |
 | `scripts/pack_clips.py` | Packs those frames into the pictures in `renders/`, and into the website's three |
-| `export/milo_mascot.glb` | The model with every clip (2.28 MB), for whatever comes later. Nothing uses it today |
+| `export/milo_mascot.glb` | The model with every clip (2.40 MB), for whatever comes later. Nothing uses it today |
 | `renders/milo_thumbs_up.png` | The mascot as Blender draws it, in the pose of the reference picture |
 | `renders/milo_flex.webp`, `milo_peace.webp`, `milo_rock_on.webp` | Three clips as animated pictures with a see-through background, for whatever comes later (below) |
 | `renders/milo_flex.png`, `milo_peace.png`, `milo_rock_on.png` | A still of the pose each of them holds |
+| `renders/milo_back.png`, `milo_back_lit.png`, `milo_back_three_quarter_lit.png` | His back with the brake lights off and lit, and from behind and to one side with them lit, on a see-through background (below) |
+| `renders/milo_back_on_dark.png`, `milo_back_lit_on_dark.png`, `milo_back_three_quarter_lit_on_dark.png` | The same three on the app's dark page, with the halo round the lit lights |
+| `renders/milo_turn_around_on_dark.webp` | A turn-around on the dark page, the lights coming on while his back is to the viewer: an animated picture that starts again for ever |
 | `reference.webp` | The picture the mascot was built from |
 
 **The scripts are the source, the `.blend` is their result.** To change the mascot, change a script and run the first four again, in the order above, rather than editing the Blender file by hand: what is done by hand is gone at the next run. Each of them only rebuilds its own collections (`MilO_Mascot`, `MilO_Studio`, `MilO_Reference`). After a change to the model, or to a clip that a picture is drawn from, that picture has to be drawn again too (below).
@@ -139,10 +143,49 @@ The second step is given the same height and clips as the first, so that it meas
 
 - The character faces Blender's −Y and stands on z = 0, about 2 units tall. `.L` is its own left.
 - **The needles are driven by two sliders on the skeleton** (`speed_kmh`, `rpm`). A clip keys the sliders, never the needle bones.
+- **The brake lights are driven by a third slider, `brake`,** from 0, unlit, to 1, full on. A clip keys the slider, never the lenses' material. No stored clip keys it yet (see "The brake lights").
 - **Arms and legs are hoses.** Their four bones on each side are bendy bones that carry no mesh; rows of short `hose.*` bones follow them and carry it. A `.glb` file cannot hold a bendy bone, and this is what keeps the hoses round in the export.
 - **`Walk` walks on the spot,** with a short stride: each foot goes 0.30 of a unit back while it is planted, on a mascot 2 units high. The greeting moves the picture by that much, so a longer or shorter stride here changes how long the walk across the screen takes.
 - **The feet lead the legs.** Move a foot and its leg follows; lower the body and the knees bend.
 - The "M" is the app's own mark: its outline is read from `app/src/main/res/drawable/ic_launcher_foreground.xml`, and the numbers on the dials are set in the app's `sora.ttf`.
+
+## The brake lights
+
+Two round red domes low on his back, close together and proud of the body, where a truck has its tail lights and he would have his behind (Shawn, 2026-10-10: "add brake light to his back side like a butt. I would like these to be able to light up"). He chose them from three designs drawn for him ("use A for the brake lights"); the other two are not in the script (FINDINGS_LOG, 2026-10-10). Nothing shows from the front, and nothing in the app or on the website shows them yet.
+
+- **The lenses are one object, `Brake_Lights`, and their red is one material of its own, `MilO_Brake_Lens`:** a dark, glossy red while it is unlit, in thin rims of the black rubber.
+- **They cast no shadow,** like the glass over the dials. The studio's rim light stands behind him; with a shadow, the lights darkened the top of a shoe by a few hundred pixels in every picture taken from the front.
+- **None of the pictures there were changes.** Rays cast from the camera to every point of the lenses, in every frame of every clip as it is drawn, reach none of them; and the greeting's and the website's frames, drawn again, are the committed ones to within what two runs of the renderer differ by.
+- **Lit, the lens glows:** the material's emission strength follows the slider `brake`, from 0 to 4 (`BRAKE_GLOW`), in a red kept so pure that a lit lens is drawn red and not pink (`lens_material`). The light also falls on the body round the lens.
+- **A clip that lights them keys the slider itself.** In `animate_milo.py` it calls `set_brake(how far)` at every frame and `key_brake(frame)` after `key_pose(frame)`. The slider is not part of `key_pose`: that would add a curve to every clip there is. No stored clip does it yet; `render_lights.py` does it in clips of its own, in memory. When a clip is drawn, the lights are put out first, so one that does not key the slider is not drawn with what the last one left on it.
+
+**The halo.** Blender's renderer draws no glow round a light. `on_ground` in `render_greeting.py` adds one when a picture is drawn: from what the frame emits and from nothing else, so that no highlight on the chrome or the gloss gets one; and it is added to the frame and to a flat ground under it, as light is. It has to be asked for:
+
+```
+blender -b design/mascot/milo_mascot.blend --python design/mascot/scripts/render_clips.py -- 400 /tmp/milo-lit <clip> --ground 121316
+```
+
+- **`--ground` and a colour** draws the frames on that colour (`121316` is the app's dark page) instead of see-through, with the halo wherever a clip lights the lights, and with a fifth of his height more margin so that the halo has faded before the picture ends.
+- **Without `--ground` nothing of it happens.** The greeting's and the website's pictures are drawn without it and are what they always were; that was checked by drawing them again (FINDINGS_LOG, 2026-10-10).
+- **There is no halo in a see-through picture.** Light is added to whatever lies behind, and a see-through picture cannot store that. On the dark page a red with some see-through comes close; on a light ground it would be a red mist instead of a glow. The app's pictures are see-through: before a lit clip goes into the app, this has to be decided and built.
+- **The halo shows on a dark ground.** On the lime and on white it all but disappears, and the lights then read as lit by their own brightness and by the warm light on the body.
+
+**The pictures in `renders/`** are drawn and packed like this, 2.7 MB in all:
+
+```
+blender -b design/mascot/milo_mascot.blend --python design/mascot/scripts/render_lights.py -- /tmp/milo-lights
+python3 design/mascot/scripts/pack_clips.py lights /tmp/milo-lights
+```
+
+| Picture | What it shows | Size |
+|---|---|---|
+| `milo_back.png`, `milo_back_lit.png`, `milo_back_three_quarter_lit.png` | His back with the lights off; lit; and from behind and to one side, lit. See-through, 552 by 584 pixels, no halo | 0.3 MB each |
+| `milo_back_on_dark.png`, `milo_back_lit_on_dark.png`, `milo_back_three_quarter_lit_on_dark.png` | The same three on the dark page with the halo, 776 by 808 pixels | 0.4 to 0.5 MB each |
+| `milo_turn_around_on_dark.webp` | Once round in 36 frames and 3 seconds, on the dark page, the lights coming on while his back is to the viewer. 464 by 488 pixels, starts again for ever | 242 KB |
+
+The turn-around is a turntable, not an animation: the whole mascot is turned about the point he stands on, feet and all, as `render_greeting.py` turns him for the walk. No stored clip turns him round.
+
+**In the `.glb`.** A `.glb` holds meshes, materials, a skeleton and the skeleton's movement. It holds neither a slider nor the rule that ties a material to one, and Blender's exporter does not write a glow that follows a slider (tried with its "pointer animation" switched on: no difference). So a bone, `brake`, which carries no mesh, grows with the slider from size 1 to size 2, and that is in the file for every clip that keys the slider. The lens's lit colour is not in the file: unlit is how it is exported. Whoever plays the `.glb` reads the bone's size and lights the material `MilO_Brake_Lens` itself: emissive colour (1.0, 0.004, 0.002) times 4 times (size less 1).
 
 ## What to know before writing a clip
 

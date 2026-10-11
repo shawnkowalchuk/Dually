@@ -57,6 +57,12 @@ HOP = 0.06
 WAVE_FRAMES = 48
 FPS = 24
 
+# The halo round the brake lights where they are lit (on_ground). What glows more strongly than
+# HALO_FROM gets one, and white is 1: so a lit lens does, and nothing else the mascot is made of.
+HALO_FROM = 1.0
+HALO_STRENGTH = 1.6
+HALO_SIZE = 0.5
+
 
 def here():
     """This script's folder: from its own path, or beside the .blend when it is run from
@@ -216,6 +222,54 @@ def dull_the_dials():
         for slot in bpy.data.objects[name].material_slots:
             if slot.material == glossy:
                 slot.material = dull
+
+
+def on_ground(colour):
+    """Draws this run's pictures on a flat ground of one colour, given as "rrggbb", instead of
+    see-through, and with a soft halo round the brake lights where they are lit. Blender's
+    renderer draws no such glow by itself. The halo is made from what the frame EMITS and from
+    nothing else, so that no highlight on the chrome or the gloss gets one, and it is laid over
+    the frame and its ground as light is: added to them. All in memory.
+
+    It has to be asked for (render_clips.py's --ground, render_lights.py). The greeting and the
+    website's pictures do not ask, and nothing here is touched for them: they are drawn as they
+    always were. A halo in a see-through picture is not drawn: light that is added to whatever
+    lies behind cannot be stored in a see-through picture as it is. Call it after set_stage,
+    which makes the picture see-through again."""
+    def lin(c):
+        c /= 255.0
+        return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+    # The frame's emission is asked for before the nodes are made: only then do they offer it.
+    bpy.context.view_layer.use_pass_emit = True
+    old = bpy.data.node_groups.get("MilO_Halo")
+    if old:
+        bpy.data.node_groups.remove(old)
+    tree = bpy.data.node_groups.new("MilO_Halo", "CompositorNodeTree")
+    tree.interface.new_socket(name="Image", in_out="OUTPUT", socket_type="NodeSocketColor")
+    frame = tree.nodes.new("CompositorNodeRLayers")
+    over = tree.nodes.new("CompositorNodeAlphaOver")
+    over.inputs["Background"].default_value = (*(lin(int(colour[i:i + 2], 16)) for i in (0, 2, 4)), 1.0)
+    glare = tree.nodes.new("CompositorNodeGlare")
+    glare.inputs["Type"].default_value = "Bloom"
+    glare.inputs["Quality"].default_value = "High"
+    glare.inputs["Threshold"].default_value = HALO_FROM
+    glare.inputs["Strength"].default_value = HALO_STRENGTH
+    glare.inputs["Size"].default_value = HALO_SIZE
+    add = tree.nodes.new("ShaderNodeMix")
+    add.data_type = "RGBA"
+    add.blend_type = "ADD"
+    add.inputs["Factor"].default_value = 1.0
+    done = tree.nodes.new("NodeGroupOutput")
+    colours = [socket for socket in add.inputs if socket.type == "RGBA"]
+    tree.links.new(frame.outputs["Image"], over.inputs["Foreground"])
+    tree.links.new(frame.outputs["Emission"], glare.inputs["Image"])
+    tree.links.new(over.outputs["Image"], colours[0])
+    tree.links.new(glare.outputs["Glare"], colours[1])
+    tree.links.new(next(socket for socket in add.outputs if socket.type == "RGBA"), done.inputs[0])
+    scene.compositing_node_group = tree
+    scene.render.use_compositing = True
+    scene.render.image_settings.color_mode = "RGB"
 
 
 def slide_view(shift, off):

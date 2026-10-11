@@ -76,19 +76,21 @@ def pack_sheet(folder, out):
     return "%d frames on one sheet, %d across and %d down" % (len(frames), WALK_COLUMNS, rows)
 
 
-def pack_animated(folder, out):
+def pack_animated(folder, out, plays=1, shown=FRAME_MS, settings=CWEBP):
     """The turn and wave: one animated picture, each frame shown for FRAME_MS, played once.
-    Every frame is the whole picture and replaces the one before it, so none depends on another."""
+    Every frame is the whole picture and replaces the one before it, so none depends on another.
+    pack_clips.py packs other pictures with it and may ask for another number of plays (0 is for
+    ever), another time for a frame, or other settings."""
     frames = frames_in(folder)
     with tempfile.TemporaryDirectory() as packed:
         join = ["webpmux"]
         for name in frames:
             frame = os.path.join(packed, name[:-4] + ".webp")
-            run(["cwebp", "-quiet", *CWEBP, os.path.join(folder, name), "-o", frame])
-            join += ["-frame", frame, "+%d+0+0+0-b" % FRAME_MS]
-        # "-loop 1" is once; 0 would be for ever.
-        run(join + ["-loop", "1", "-bgcolor", "0,0,0,0", "-o", out])
-    return "%d frames of %d ms, plays once" % (len(frames), FRAME_MS)
+            run(["cwebp", "-quiet", *settings, os.path.join(folder, name), "-o", frame])
+            join += ["-frame", frame, "+%d+0+0+0-b" % shown]
+        # "-loop 1" is once; 0 is for ever.
+        run(join + ["-loop", str(plays), "-bgcolor", "0,0,0,0", "-o", out])
+    return "%d frames of %d ms, %s" % (len(frames), shown, "plays once" if plays == 1 else "starts again for ever")
 
 
 def main():

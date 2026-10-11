@@ -20,6 +20,11 @@
 # so they can follow one another. The needles move in every clip: each clip keys the rig's two sliders
 # ("speed_kmh", "rpm") and the needle bones follow through their drivers.
 #
+# The brake lights on his back have a slider too, "brake", from 0 (unlit) to 1. None of these
+# clips lights them, and none keys the slider: a clip that does calls set_brake at every frame
+# and key_brake after key_pose. It is not part of key_pose, which would add a curve to every
+# clip there is.
+#
 # A clip is a function of time that sets the whole pose; it is keyed on every frame.
 
 import bpy
@@ -241,6 +246,16 @@ def set_eyes(twist_speedo=0.0, twist_rpm=0.0, pop_speedo=0.0, pop_rpm=0.0):
 def set_gauges(speed=0.0, rpm=IDLE_RPM):
     rig["speed_kmh"] = clamp(speed, 0.0, 240.0)
     rig["rpm"] = clamp(rpm, 0.0, 8.0)
+
+
+def set_brake(on=0.0):
+    """How far the brake lights are on: 0 is unlit, 1 is full on. Only for a clip that lights
+    them, which also keys the slider with key_brake; the others leave it alone, at 0."""
+    rig["brake"] = clamp(on)
+
+
+def key_brake(frame):
+    rig.keyframe_insert('["brake"]', frame=frame)
 
 
 def neutral(t=0.0):

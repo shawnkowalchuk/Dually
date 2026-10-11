@@ -8,7 +8,8 @@
 # pose in the file is the rest pose (arms straight out); every clip stashed on the rig's NLA
 # tracks becomes one named animation, sampled on every frame so that everything the rig works
 # out for itself (legs following the feet, hoses following their bones, needles following the
-# sliders) is written as plain bone movement.
+# sliders, the bone "brake" growing with the brake lights' slider) is written as plain bone
+# movement. The lenses' glow itself is not: a .glb cannot hold a material that follows a slider.
 
 import os
 import json
