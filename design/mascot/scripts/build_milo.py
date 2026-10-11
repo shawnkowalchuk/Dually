@@ -1,6 +1,7 @@
 # build_milo.py - rebuilds the MilO mascot (model + rig) from scratch inside the "MilO_Mascot"
-# collection, and the confetti of his party popper inside "MilO_Confetti". Run it inside Blender.
-# It only ever touches objects in those two collections.
+# collection, the confetti of his party popper inside "MilO_Confetti" and the smoke of his shoes
+# inside "MilO_Smoke". Run it inside Blender. It only ever touches objects in those three
+# collections.
 #
 # The character faces -Y, stands on z = 0 and is about 2 units tall. ".L" is the character's own
 # left (+X). Everything is built in a neutral rest pose: arms straight out, hands open, palms down.
@@ -16,6 +17,9 @@ COLL = "MilO_Mascot"
 # The confetti of the party popper: a collection of its own, so that a picture can be drawn
 # with it, without it, or of it alone. It is hidden wherever it is not asked for.
 CONFETTI = "MilO_Confetti"
+# The smoke his shoes make when he runs on the spot and when he slides: a collection of its
+# own for the same reason, and hidden in the same way.
+SMOKE = "MilO_Smoke"
 def here():
     """This script's folder: from its own path, or beside the .blend when it is run from
     Blender's text editor."""
@@ -141,6 +145,20 @@ CONFETTI_COLOURS = (("Lime", "#C6F432"), ("White", "#F2F3F5"), ("Red", "#FF3B30"
 # A streamer: its length, the radius it is curled to, how many curls, and its ribbon's width.
 STREAMER = (0.62, 0.034, 3.5, 0.034)
 
+# The smoke: this many puffs, each a few round lumps grown into one another, shaped by a seed,
+# so that every build makes the same ones. animate_milo.py lets them go, and stops if it needs
+# more than there are. A puff is built about as large as a ball of radius 1; the size of its
+# bone is how large it is drawn.
+SMOKE_PUFFS = 112
+SMOKE_SEED = 58
+# A puff's colour in its middle and at its edge. Pale, for the app's dark page, but not white,
+# and a good deal greyer at its edge: on a white page a puff is then a pale grey shape with an
+# outline, and each of its lumps has one.
+SMOKE_COLOURS = ("#D2D6DC", "#727B89")
+# How much of that it glows by itself, and how much it takes from the lights: the lights make
+# the top of a puff paler than its underside, and no more.
+SMOKE_GLOWS, SMOKE_LIT = 0.62, 0.42
+
 
 # ---------------------------------------------------------------- small helpers
 def arc(a0, a1, n):
@@ -254,6 +272,33 @@ def wool_material(name):
     for key, value in (("Sheen Weight", 1.0), ("Sheen Roughness", 0.5)):
         if key in bsdf.inputs:
             bsdf.inputs[key].default_value = value
+    return m
+
+
+def smoke_material(name):
+    """The smoke: matt, pale in the middle of each lump and greyer where its surface turns away
+    from the viewer, which gives every lump of a puff an edge. Most of its colour it glows by
+    itself, so that it is the same on any ground and under any light; the lights add a paler top.
+    It glows too faintly to get a halo (render_greeting.py)."""
+    pale, grey = (srgb(colour) for colour in SMOKE_COLOURS)
+    m = principled(name, pale, rough=1.0)
+    tree = m.node_tree
+    for node in list(tree.nodes):  # the material is kept from one build to the next
+        if node.type not in ("BSDF_PRINCIPLED", "OUTPUT_MATERIAL"):
+            tree.nodes.remove(node)
+    shader = next(n for n in tree.nodes if n.type == "BSDF_PRINCIPLED")
+    shader.inputs["Specular IOR Level"].default_value = 0.0
+    edge = tree.nodes.new("ShaderNodeLayerWeight")
+    edge.inputs["Blend"].default_value = 0.5
+    for socket, part in (("Emission Color", SMOKE_GLOWS), ("Base Color", SMOKE_LIT)):
+        mix = tree.nodes.new("ShaderNodeMix")
+        mix.data_type = "RGBA"
+        colours = [s for s in mix.inputs if s.type == "RGBA"]
+        for colour, value in zip(colours, (pale, grey)):
+            colour.default_value = (*(c * part for c in value[:3]), 1.0)
+        tree.links.new(edge.outputs["Facing"], mix.inputs["Factor"])
+        tree.links.new(next(s for s in mix.outputs if s.type == "RGBA"), shader.inputs[socket])
+    shader.inputs["Emission Strength"].default_value = 1.0
     return m
 
 
@@ -980,6 +1025,74 @@ def build_confetti(rig):
     return len(bones)
 
 
+# ---------------------------------------------------------------- the smoke
+def build_smoke(rig):
+    """The puffs his shoes make: SMOKE_PUFFS of them in the collection SMOKE, one mesh on a
+    skeleton of its own, a bone to a puff, every puff built at that skeleton's foot, as the
+    confetti is: animate_milo.py lets them go. A puff is three to five round lumps grown into
+    one another, like a small cloud. Nothing of the collection is drawn or shown unless a
+    script asks for it."""
+    coll = reset_collection(SMOKE)
+    coll.hide_viewport = coll.hide_render = False
+    rnd = random.Random(SMOKE_SEED)
+    bm = bmesh.new()
+    layer = bm.verts.layers.int.new("part")
+    bones = []
+    for i in range(SMOKE_PUFFS):
+        # one large lump, and smaller ones round it, more to its sides than above and below
+        lumps = [(Vector((0.0, 0.0, 0.0)), rnd.uniform(0.66, 0.78))]
+        first = rnd.uniform(0.0, 2 * pi)
+        more = rnd.choice((2, 3, 3, 4))
+        for k in range(more):
+            round_, r = first + 2 * pi * (k + rnd.uniform(-0.25, 0.25)) / more, rnd.uniform(0.40, 0.58)
+            lumps.append((Vector((cos(round_), rnd.uniform(-0.5, 0.5), 0.7 * sin(round_))) * rnd.uniform(0.50, 0.66), r))
+        made = []
+        for at, r in lumps:
+            # A ball of twenty faces, which the object rounds when it is drawn (below); rounding
+            # takes a quarter off its width, which is put on here.
+            ball = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=r * 1.28)["verts"]
+            bmesh.ops.translate(bm, vec=at, verts=ball)
+            made += ball
+        bones.append("puff.%03d" % i)
+        for v in made:
+            v[layer] = len(bones)
+
+    mesh = finish(coll, "Smoke", bm, [smoke_material("MilO_Smoke")], sharp=None, recalc=False)
+    # Smoke casts no shadow: a picture of him alone with one of the smoke alone laid over it is
+    # then nearly the picture of both, and no puff darkens his shoes.
+    mesh.visible_shadow = False
+
+    data = bpy.data.armatures.new("MilO_Smoke_Rig")
+    arm = bpy.data.objects.new("MilO_Smoke_Rig", data)
+    coll.objects.link(arm)
+    for o in bpy.context.view_layer.objects:
+        try:
+            o.select_set(False)
+        except RuntimeError:
+            pass
+    bpy.context.view_layer.objects.active = arm
+    arm.select_set(True)
+    bpy.ops.object.mode_set(mode="EDIT")
+    for name in bones:
+        b = data.edit_bones.new(name)
+        b.head, b.tail = (0.0, 0.0, 0.0), (0.0, 0.1, 0.0)
+        b.align_roll(Vector((0, 0, 1)))
+    bpy.ops.object.mode_set(mode="OBJECT")
+    for pb in arm.pose.bones:
+        pb.rotation_mode = "XYZ"
+    skin_by_part(mesh, arm, dict(enumerate(bones, 1)))
+    # After the skeleton has moved the puffs, each lump is rounded: the file keeps twelve
+    # points to a lump, and a picture is drawn from a few hundred.
+    rounded = mesh.modifiers.new("Round", "SUBSURF")
+    rounded.levels, rounded.render_levels = 2, 3
+    # It goes where he goes, and is turned with him when a script turns him for a picture.
+    arm.parent = rig
+    arm.select_set(False)
+    bpy.context.view_layer.objects.active = rig
+    coll.hide_viewport = coll.hide_render = True
+    return len(bones)
+
+
 def mirrored(coll, ob, name):
     me = ob.data.copy()
     me.name = name
@@ -1322,9 +1435,10 @@ def build():
         skin_parts(hand, rig, side)
 
     pieces = build_confetti(rig)
+    puffs = build_smoke(rig)
     bpy.context.view_layer.update()
-    print("built %d objects, %d bones, M faces painted black: %d; confetti: %d pieces"
-          % (len(coll.objects), len(rig.data.bones), black_faces, pieces))
+    print("built %d objects, %d bones, M faces painted black: %d; confetti: %d pieces; smoke: %d puffs"
+          % (len(coll.objects), len(rig.data.bones), black_faces, pieces, puffs))
     return rig
 
 

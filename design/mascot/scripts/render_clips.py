@@ -87,6 +87,8 @@ def write(name):
             clips.key_dance(frame)
         if name in clips.PARTY:  # the party's clip: the party cap, the popper and its string
             clips.key_party(frame)
+        if name in clips.RUNS:  # the run and the slide: the brake lights and the turn
+            clips.key_run(frame)
     return frames + 1
 
 

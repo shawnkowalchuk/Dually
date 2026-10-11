@@ -18,13 +18,19 @@
 #   KickSpin     1.08 s        a kick, one fast turn on the spot, and down onto his toes, brake lights off
 #   MoonwalkOn   0.42 s        from his toes back into the moonwalk
 #   OneYear      5.42 s        a year of use: in his party cap, brings a party popper out from behind his back and fires it
+#   Run          0.33 s, loops runs, on the spot as Walk walks: whoever shows it moves the picture
+#   SpinUp       0.25 s        from the run into the run on the spot: his feet lose their grip
+#   Burnout      0.25 s, loops runs on the spot, his shoes scuffing back like spinning tyres
+#   BrakeSlide   0.92 s        crouches back, bolts, brakes: brake lights on, his back end swings round into a slide
+#   Slide        0.33 s, loops the slide, held, brake lights on
 #   Gauge_Speed  2 s           the speed needle alone, 0 to 240: seek to speed / 240 of its length
 #   Gauge_RPM    2 s           the RPM needle alone, 0 to 8: seek to rpm / 8 of its length
 #
-# Every clip but the loops, WaveUp, the moonwalk's four and OneYear starts and ends in the same
-# standing pose (NEUTRAL), so they can follow one another. The moonwalk's four follow one another
-# in the order above, each starting where the last one ended, and the last ends where Moonwalk
-# begins. OneYear starts in the standing pose, in his cap, and ends with both arms up.
+# Every clip but the loops, WaveUp, the moonwalk's four, OneYear and the five of the run starts
+# and ends in the same standing pose (NEUTRAL), so they can follow one another. The moonwalk's
+# four follow one another in the order above, each starting where the last one ended, and the
+# last ends where Moonwalk begins. OneYear starts in the standing pose, in his cap, and ends
+# with both arms up. The five of the run follow one another in the order above: he never stands.
 # The needles move in every clip: each clip keys the rig's two sliders
 # ("speed_kmh", "rpm") and the needle bones follow through their drivers.
 #
@@ -35,11 +41,14 @@
 # of that name) and for turning the whole mascot round (the bone "root"): the moonwalk's clips
 # set and key them (key_clip), no other clip does, and reset_pose takes the hat off again.
 # And the same for the party: the sliders "party_hat", "popper" and "pull" and the party cap's
-# bone are set by set_party and keyed by key_party, in OneYear and in no other clip.
+# bone are set by set_party and keyed by key_party, in OneYear and in no other clip. The five
+# clips of the run key the brake lights and the turn of the whole mascot, and not the hat (key_run).
 #
-# One clip is not the mascot's: OneYear_Confetti, on the skeleton of the confetti
-# (MilO_Confetti_Rig, in a collection of its own). It is written last, from where OneYear has
-# the popper's mouth in the frame it goes off on (write_confetti).
+# Two clips are not the mascot's: OneYear_Confetti, on the skeleton of the confetti
+# (MilO_Confetti_Rig, in a collection of its own), written from where OneYear has the popper's
+# mouth in the frame it goes off on (write_confetti); and RunSlide_Smoke, on the skeleton of
+# the smoke (MilO_Smoke_Rig, in a collection of its own), written for the five clips of the run
+# shown one after the other, from where they have his shoes (write_smoke).
 #
 # A clip is a function of time that sets the whole pose; it is keyed on every frame.
 
@@ -310,6 +319,12 @@ def key_dance(frame):
     key_brake(frame)
     rig.keyframe_insert('["hat"]', frame=frame)
     pb["hat"].keyframe_insert("rotation_euler", frame=frame)
+    pb["root"].keyframe_insert("rotation_euler", frame=frame)
+
+
+def key_run(frame):
+    """What the clips of the run and the slide key and no other clip does."""
+    key_brake(frame)
     pb["root"].keyframe_insert("rotation_euler", frame=frame)
 
 
@@ -1052,10 +1067,442 @@ def write_confetti(name="OneYear_Confetti"):
     return mouth, way
 
 
+# ---------------------------------------------------------------- the run and the slide
+# He runs onto the screen; runs on the spot for two seconds, his shoes smoking like spinning
+# tyres; bolts, brakes, and slides out: his back end swings round towards the viewer, three
+# quarters of the way and no further, and the brake lights come on. Five clips, all drawn on
+# the spot, as Walk and Moonwalk are: whoever shows them moves the picture.
+#
+#   Run         one cycle of the run. A foot is on the floor for RUN_DUTY of it and goes back
+#               under him at the floor's pace: a picture moved RUN_STRIDE / RUN_FRAMES on with
+#               every frame keeps a planted foot where it is
+#   SpinUp      from Run's first frame into Burnout's: his feet lose their grip and he stalls
+#   Burnout     one cycle of the run on the spot: faster, leaning further, his shoes scuffing back
+#   BrakeSlide  from Burnout's first frame. He crouches back, bolts, and on frame BRAKE_ON
+#               brakes: the lights come on, and he swings round and leans back against the slide
+#   Slide       the slide, held: its first frame is BrakeSlide's last
+#
+# Like the moonwalk he does not go straight ahead but RUN_SLANT degrees to his left of it,
+# and his feet go that way under him: he is drawn turned to the viewer (RUN_ANGLE in
+# render_run_slide.py) and the picture is moved level across the screen.
+#
+# How far he has gone is not in the clips, which are drawn on the spot, but it is said here,
+# because the smoke has to stay where it was made: run_travel below.
+RUN_FRAMES, SPIN_UP_FRAMES, BURN_FRAMES = 8, 6, 6
+BRAKE_FRAMES, SLIDE_FRAMES = 22, 8
+BRAKE_ON = 9  # the frame of BrakeSlide the brake lights come on in
+RUN_STRIDE = 1.80  # how far one cycle of the run carries him
+RUN_DUTY = 3 / 8  # the part of a cycle a foot is on the floor
+RUN_LAND = 0.34  # where a foot lands: this far ahead of where its way is level with the middle of him
+RUN_SLANT = 38.5
+RUN_APART = 0.07  # each foot's way is this far out to its own side
+RUN_SQUARE = 0.5  # how far his hips are as if square to the way he goes, while he runs (placed)
+# The left foot is the one farther from the viewer and is drawn smaller: it goes this part
+# further and the right foot this part less, as in the moonwalk.
+RUN_FAR = 0.05
+# How far his shoes point to his left of straight ahead while he runs: most of the way to
+# where he is going.
+RUN_TOES = 28.0
+# And while he slides: a little, so that they go nearly broadside on.
+SLIDE_TOES = 8.0
+# How far round his back end swings, in degrees to his own left of the way he faces while he
+# runs. With RUN_ANGLE that is short of a full back view by about 40 degrees.
+SLIDE_TURN = 80.0
+# The bolt: how far he pulls back as he crouches, where he is when he brakes, how fast he is
+# going then and how fast he slides in the end (each a frame), and how many frames it takes
+# him to lose most of the difference.
+BOLT_BACK, BOLT_TO, BRAKE_SPEED, SLIDE_SPEED, SLIDE_EASES = 0.10, 0.62, 0.23, 0.10, 5.0
+RUN_SPEED, RUN_RPM, BURN_SPEED, BURN_RPM = 150.0, 5.4, 232.0, 7.5  # what the dials show
+# How much of an arm's swing forward each arm makes while he runs (run_arm): his right arm is
+# the one nearer the viewer.
+RUN_ARMS = {"L": 1.0, "R": 0.12}
+HIP = rig.data.bones["foot.L"].head_local.x  # how far each foot's own place is from the middle of him
+
+
+def through(t, *keys):
+    """A value that goes smoothly through the (t, value) pairs given, in order."""
+    if t <= keys[0][0]:
+        return keys[0][1]
+    for (t0, v0), (t1, v1) in zip(keys, keys[1:]):
+        if t <= t1:
+            return v0 + (v1 - v0) * smooth((t - t0) / (t1 - t0))
+    return keys[-1][1]
+
+
+def run_way(turned_by=0.0):
+    """Which way he is going, as he sees it: x to his left, y behind him. `turned_by` is how far
+    the whole of him has been turned to his left since he ran (set_turn)."""
+    a = radians(RUN_SLANT - turned_by)
+    return V(sin(a), -cos(a), 0.0)
+
+
+def lean_to(way, degrees):
+    """set_body's lean and tilt_left for a body that leans `degrees` towards `way`."""
+    return -degrees * way.y, degrees * way.x
+
+
+def placed(side, along, way, up=0.0, toes=0.0, toe_up=0.0, square=0.0, apart=RUN_APART):
+    """set_foot's five numbers for a foot that is `along` from its own place under him in the
+    direction `way`, its shoe pointing `toes` degrees to his left of straight ahead.
+
+    He is drawn half turned to the viewer, so one hip is further along the way he goes than the
+    other, and its foot with it: with every other step his shoes would be drawn far apart, and
+    close together with the steps between. `square` 1 takes that out: `along` is then from the
+    middle of him, for both feet, as if his hips were square to the way he goes."""
+    flip = 1.0 if side == "L" else -1.0
+    along -= flip * square * (HIP + apart) * way.x
+    return (apart + flip * along * way.x, -along * way.y, up, flip * toes, toe_up)
+
+
+def run_foot(q):
+    """One foot at the part q of the run's cycle: how far along its way it is, how high its
+    lowest point is, and how far its toe is up. For the first RUN_DUTY of the cycle it is on the
+    floor, going back at the floor's pace; then it is brought forward, heel up."""
+    q %= 1.0
+    if q < RUN_DUTY:
+        s = q / RUN_DUTY
+        return RUN_LAND - RUN_STRIDE * q, 0.0, through(s, (0.0, 12.0), (0.45, 0.0), (1.0, -22.0))
+    s = (q - RUN_DUTY) / (1 - RUN_DUTY)
+    back = RUN_LAND - RUN_STRIDE * RUN_DUTY
+    along = back + (RUN_LAND - back) * smooth(s) - 0.10 * bump(s, 0.0, 0.45) + 0.05 * bump(s, 0.6, 1.0)
+    return along, 0.13 * sin(pi * s) ** 0.8, through(s, (0.0, -22.0), (0.3, -20.0), (0.72, -6.0), (1.0, 12.0))
+
+
+def burn_foot(q):
+    """One foot at the part q of the run on the spot: it goes round like a wheel, forward over
+    the top and back along the floor, where it scuffs on its toe."""
+    turn = radians(-40.0) - 2 * pi * (q % 1.0)
+    return (-0.03 + 0.32 * cos(turn), max(0.0, 0.07 + 0.13 * sin(turn)),
+            -10.0 + 24.0 * cos(turn - radians(10.0)))
+
+
+def run_arm(reach, bend=0.0, forward=1.0):
+    """An arm of the run, written for the left arm: bent, the fist beside him, swung forward
+    (reach 1) or back (-1). `bend` straightens it (below 0) or bends it further. `forward` is
+    how much of the swing forward it makes: the arm nearer the viewer makes little of it and
+    keeps its fist low, beside him, or it would go across the M and the dials with every step."""
+    a = radians(36.0 * (reach if reach < 0 else reach * forward) + 2.0)
+    # Bent at a right angle while it is back, which keeps the fist above his shoe; less as it
+    # comes forward, which keeps it under the small dial. The elbow is well out to the side:
+    # closer in, the fist's fingers are in his body as it passes.
+    b = a + radians(95.0 + 22.0 * bend - (30.0 + 25.0 * (1 - forward)) * max(reach, 0.0))
+    palm = V(-1.0, 0.0, 0.1)
+    out = 0.68 + 0.10 * max(-reach, 0.0)  # further out as it goes back, past the foot of his body
+    return arm_pose(V(out, -sin(a), -cos(a)), palm, V(0.34, -sin(b), -cos(b)), palm,
+                    V(0.12, -sin(b + 0.14), -cos(b + 0.14)), palm, FIST, THUMB_ACROSS)
+
+
+def run_stance(p, spin=0.0, lurch=0.0):
+    """The body and the feet at the part p of a cycle: of the run (spin 0), of the run on the
+    spot (spin 1), or of something between the two. `lurch` throws the top of him forward."""
+    w = 2 * pi * p
+    way = run_way()
+    feet = {}
+    for side, q, far in (("L", p, 1.0), ("R", p + 0.5, -1.0)):
+        along, up, toe_up = (a + (b - a) * spin for a, b in zip(run_foot(q), burn_foot(q)))
+        feet[side] = placed(side, along * (1 + far * RUN_FAR), way, up, RUN_TOES + far * 6.0, toe_up, RUN_SQUARE)
+    flight = cos(2 * w - 1.5 * pi)  # 1 while both feet are off the floor, -1 in the middle of a step
+    lean, tilt = lean_to(way, 15.0 + 5.0 * spin + 13.0 * lurch + 2.0 * flight)
+    ahead = 0.04 + 0.05 * spin + 0.10 * lurch
+    # He is carried high, his legs stretched: leaning the way he goes, the corner of his body
+    # comes down over the shoe that is in front, and lower he would be standing in it.
+    up = (1 - spin) * (0.10 + 0.04 * flight) + spin * (0.08 + 0.018 * cos(2 * w)) - 0.02 * lurch
+    return dict(body=(-ahead * way.x, up, -ahead * way.y, lean, 6.0 * cos(w), tilt + 2.0 * sin(w),
+                      (1 - spin) * 0.03 * flight + spin * 0.012 * cos(2 * w)), **feet)
+
+
+def running(p, spin=0.0, lurch=0.0):
+    """The whole pose of the run or of the run on the spot."""
+    w = 2 * pi * p
+    body = stand(run_stance(p, spin, lurch))
+    for side, reach in (("L", -cos(w - 0.3)), ("R", cos(w - 0.3))):
+        set_arm(side, run_arm(reach * (1 + 0.15 * spin), 0.0, RUN_ARMS[side]), body)
+    tremble = spin * sin(4 * w)
+    set_eyes(twist_speedo=3 * sin(w) + 2 * tremble, twist_rpm=3 * sin(w) - 2 * tremble,
+             pop_speedo=0.015 * cos(2 * w) + 0.03 * spin + 0.05 * lurch, pop_rpm=-0.015 * cos(2 * w) + 0.04 * spin + 0.05 * lurch)
+    # flat out as he comes; on the spot the wheels spin free, and both needles go to the top
+    set_gauges(speed=RUN_SPEED + (BURN_SPEED - RUN_SPEED) * spin + 6 * sin(2 * w),
+               rpm=RUN_RPM + (BURN_RPM - RUN_RPM) * spin + 0.35 * sin(2 * w + 1.0) + 0.15 * tremble)
+    set_brake(0.0)
+    set_turn(0.0)
+
+
+def run(t):
+    running(t * FPS / RUN_FRAMES)
+
+
+def spin_up(t):
+    """From the run's first frame into the first of the run on the spot, in one turn of his
+    legs: they speed up as the floor stops going by, and the top of him is thrown forward."""
+    f = t * FPS
+    running(f / SPIN_UP_FRAMES, spin=ease(f, 0, SPIN_UP_FRAMES - 1), lurch=bump(f, 0, SPIN_UP_FRAMES))
+
+
+def burnout(t):
+    running(t * FPS / BURN_FRAMES, spin=1.0)
+
+
+# The arms of the slide, written for the left arm like every pose. The right arm, the one that
+# leads, is held up and out towards where he is sliding, the hand open against it; the left
+# trails, out and low.
+SLIDE_LEADS = arm_pose(V(0.86, -0.36, 0.30), V(-0.5, -0.8, 0.0), V(0.74, -0.48, 0.48), V(-0.6, -0.8, 0.0),
+                       V(0.45, -0.25, 0.86), V(-0.65, -0.75, 0.1), CHEER["curl"], CHEER["thumb"], spread=(15.0, 0.0, -15.0))
+SLIDE_TRAILS = arm_pose(V(0.88, 0.30, -0.36), V(0.3, -0.9, 0.2), V(0.95, 0.24, -0.10), V(0.4, -0.9, 0.1),
+                        V(0.90, 0.10, 0.42), V(0.5, -0.85, 0.1), CHEER["curl"], CHEER["thumb"], spread=(15.0, 0.0, -15.0))
+
+
+def brake_slide(t):
+    """From the first frame of the run on the spot. His feet bite: he crouches back for four
+    frames, bolts for five, and on frame BRAKE_ON he brakes: both feet go down ahead of him, the
+    brake lights come on, his back end swings round towards the viewer, SLIDE_TURN degrees and a
+    little too far, and he leans back against the slide. From frame BRAKE_FRAMES on it is the
+    slide, held, which goes round every SLIDE_FRAMES frames: the clip Slide is this, carried on."""
+    f = t * FPS
+    n = f - BRAKE_ON  # frames since he braked
+    coiled, bolted = ease(f, 0, 3), ease(f, 4, 6)
+    braked, held = ease(f, BRAKE_ON - 1.5, BRAKE_ON), ease(f, BRAKE_ON + 2, BRAKE_ON + 8)
+    settled = ease(f, BRAKE_FRAMES - 7, BRAKE_FRAMES - 1)
+    # he rocks on his feet as he brakes, and shudders for as long as he slides
+    rock = exp(-0.35 * max(n, 0.0)) * sin(0.95 * max(n, 0.0)) * (1 - settled)
+    shudder = cos(2 * pi * (f - BRAKE_FRAMES) / 4.0) * ease(f, BRAKE_ON + 3, BRAKE_ON + 7)
+    sway = sin(2 * pi * (f - BRAKE_FRAMES) / SLIDE_FRAMES) * settled
+    # the swing is quick at first, goes a little too far and comes to rest
+    g = max(f - (BRAKE_ON - 1), 0.0)
+    swung = (1 - (1 - clamp(g / 6.0)) ** 3) + 0.09 * exp(-0.5 * max(g - 6, 0.0)) * sin(1.1 * max(g - 6, 0.0)) * (1 - settled)
+    turned_by = SLIDE_TURN * swung
+    way = run_way(turned_by)
+    toes = RUN_TOES + (SLIDE_TOES - RUN_TOES) * swung
+
+    def stance(back, up, lean, stretch, left, right, square):
+        """A stance said by where things are along the way he is going: the body `back` behind
+        its place and leaning `lean` degrees the way he goes, and each foot's place, height and toe."""
+        tip, tilt = lean_to(way, lean)
+        return dict(body=(back * way.x, up, back * way.y, tip, 0.0, tilt, stretch),
+                    L=placed("L", left[0], way, left[1], toes + 6.0, left[2], square),
+                    R=placed("R", right[0], way, right[1], toes - 6.0, right[2], square))
+
+    # Crouched back, his weight over the foot behind; the leap off that foot, the other reaching
+    # ahead; and then both feet down ahead of him, each from its own hip: the right one leads.
+    coil = stance(0.14, -0.09, -10.0, -0.08, (0.24, 0.0, 6.0), (-0.32, 0.0, 0.0), RUN_SQUARE)
+    dash = stance(-0.14, 0.14, 30.0, 0.11, (0.60, 0.06, 16.0), (-0.26, 0.16, -30.0), 0.0)
+    brake = stance(0.16, -0.11, -25.0, -0.11, (-0.06, 0.0, 6.0), (0.27, 0.0, 15.0), 0.0)
+    slide = stance(0.10, -0.07 + 0.012 * shudder, -15.0 + 1.0 * sway, -0.03, (-0.10, 0.0, 0.0), (0.21, 0.0, 9.0), 0.0)
+    now = blend(blend(blend(blend(run_stance(0.0, spin=1.0), coil, coiled), dash, bolted), brake, braked), slide, held)
+    right, up, forward, lean, turn_left, tilt_left, stretch = now["body"]
+    tip, tilt = lean_to(way, -6.0 * rock)
+    now["body"] = (right, up + 0.035 * rock, forward, lean + tip, turn_left, tilt_left + tilt, stretch + 0.03 * rock)
+    body = stand(now)
+
+    # the arms: drawn back as he crouches, thrown straight back behind him as he bolts, and
+    # flung out as he brakes
+    for side, first, flung in (("L", -cos(-0.3), SLIDE_TRAILS), ("R", cos(-0.3), SLIDE_LEADS)):
+        arm = blend_arms(run_arm(first * 1.15, 0.0, RUN_ARMS[side]), run_arm(-0.9, 0.5), coiled)
+        arm = blend_arms(arm, run_arm(-2.1, -4.5), bolted)  # straight back and level: clear of his shoes
+        out = turned(flung, "Y", 5 * rock + 3 * sway, 8 * rock + 4 * sway, 12 * rock + 6 * sway)
+        set_arm(side, blend_arms(arm, out, ease(f, BRAKE_ON - 2, BRAKE_ON + 1)), body)
+
+    # The dials and the needles begin where the first frame of the run on the spot has them
+    # (running): the dials a little large, the revs a little over BURN_RPM.
+    hit = exp(-0.4 * n) * (1 - settled) if n >= 0 else 0.0
+    set_eyes(twist_speedo=-6 * coiled * (1 - bolted) + 5 * rock, twist_rpm=6 * coiled * (1 - bolted) + 5 * rock,
+             pop_speedo=0.045 * (1 - braked) - 0.04 * coiled * (1 - bolted) + 0.05 * bolted * (1 - braked) + 0.10 * hit,
+             pop_rpm=0.025 * (1 - braked) - 0.04 * coiled * (1 - bolted) + 0.05 * bolted * (1 - braked) + 0.12 * hit)
+    # the revs dip as his feet bite and jump as he bolts; when he brakes both needles fall
+    falls = ease(n, 0, 9)
+    set_gauges(speed=BURN_SPEED + (26.0 + 4.0 * sway - BURN_SPEED) * falls,
+               rpm=(BURN_RPM + 0.35 * sin(1.0) * (1 - coiled) - 1.6 * coiled * (1 - bolted) + 0.5 * bolted * (1 - falls)
+                    + (1.3 + 0.1 * shudder * settled - BURN_RPM) * falls))
+    set_brake(1.0 if n >= 0 else 0.0)  # at once, as a car's are
+    set_turn(turned_by)
+
+
+def slide(t):
+    brake_slide((BRAKE_FRAMES + (t * FPS) % SLIDE_FRAMES) / FPS)
+
+
+def spin_up_travel(f):
+    """How far he still is from the spot he runs on, f frames into SpinUp: he arrives at the
+    run's pace and has stopped going by its fourth frame."""
+    return -RUN_STRIDE / RUN_FRAMES * 4 / 3 * (1 - clamp(f / 4.0)) ** 3
+
+
+def brake_travel(f):
+    """How far he has gone from the spot he ran on, f frames into BrakeSlide, and on into the
+    slide for as long as it is held: back a little as he crouches, then the bolt, and from the
+    frame he brakes on slower and slower, down to SLIDE_SPEED a frame."""
+    if f <= 4:
+        return -BOLT_BACK * smooth(f / 3.0)
+    if f <= BRAKE_ON:
+        return -BOLT_BACK + (BOLT_TO + BOLT_BACK) * ((f - 4) / (BRAKE_ON - 4.0)) ** 1.6
+    n = f - BRAKE_ON
+    return BOLT_TO + SLIDE_SPEED * n + (BRAKE_SPEED - SLIDE_SPEED) * SLIDE_EASES * (1 - exp(-n / SLIDE_EASES))
+
+
+# The whole of it, as it is shown: the run for RUN_IN frames, which bring him to the spot;
+# SpinUp; BURNOUTS cycles of Burnout, which with SpinUp is two seconds on the spot; BrakeSlide;
+# and Slide for SLIDE_OUT frames, by which he has left a phone's screen. It is what the smoke's
+# clip is written for and what render_run_slide.py draws.
+RUN_IN, BURNOUTS, SLIDE_OUT = 24, 7, 32
+ACT_SPIN = RUN_IN  # the frame of the whole on which each part begins
+ACT_BURN = ACT_SPIN + SPIN_UP_FRAMES
+ACT_BRAKE = ACT_BURN + BURNOUTS * BURN_FRAMES
+ACT_SLIDE = ACT_BRAKE + BRAKE_FRAMES
+ACT_FRAMES = ACT_SLIDE + SLIDE_OUT
+ACT_BRAKE_ON = ACT_BRAKE + BRAKE_ON  # the frame of the whole the brake lights come on in
+
+
+def act_part(frame):
+    """Which clip the whole shows in a frame, and which frame of that clip."""
+    if frame < ACT_SPIN:
+        return "Run", frame % RUN_FRAMES
+    if frame < ACT_BURN:
+        return "SpinUp", frame - ACT_SPIN
+    if frame < ACT_BRAKE:
+        return "Burnout", (frame - ACT_BURN) % BURN_FRAMES
+    if frame < ACT_SLIDE:
+        return "BrakeSlide", frame - ACT_BRAKE
+    return "Slide", (frame - ACT_SLIDE) % SLIDE_FRAMES
+
+
+def act_pose(frame):
+    """Sets the pose the whole shows in a frame."""
+    name, f = act_part(frame)
+    {"Run": run, "SpinUp": spin_up, "Burnout": burnout, "BrakeSlide": brake_slide, "Slide": slide}[name](f / FPS)
+
+
+def run_travel(frame):
+    """How far he is from the spot he runs on in a frame of the whole, the way he goes: whoever
+    shows the clips moves the picture by this, and the smoke is left behind by it."""
+    if frame < ACT_SPIN:
+        return spin_up_travel(0) - RUN_STRIDE / RUN_FRAMES * (ACT_SPIN - frame)
+    if frame < ACT_BURN:
+        return spin_up_travel(frame - ACT_SPIN)
+    if frame < ACT_BRAKE:
+        return 0.0
+    return brake_travel(frame - ACT_BRAKE)
+
+
+# ---------------------------------------------------------------- the smoke
+# The puffs build_milo.py made are let go here: every puff is a bone of the smoke's own
+# skeleton, and what it does is worked out, not simulated by Blender, from one seed, so that
+# every run makes the same smoke. A puff comes from a shoe, is kicked away, slows, rises a
+# little, swells, and then shrinks to nothing. It stays where it was made: the clips are drawn
+# on the spot, so in them the smoke goes back past him as fast as he goes forward (run_travel).
+#
+#   the run       a little dust at every footfall
+#   on the spot   a puff or two a frame from the shoe that scuffs, kicked back like the smoke
+#                 of a spinning tyre, larger and longer-lived as the two seconds go by
+#   the bolt      a burst where he pushes off, which he leaves behind
+#   the brake     dust thrown up ahead of the leading shoe, and from then on a trail from
+#                 both shoes for as long as he is on any screen
+SMOKE_SEED = 58
+SMOKE_TRAIL = 30  # frames from the brake on in which the shoes leave a trail
+
+
+def shoe_at(side):
+    """Where a shoe is as the rig is posed now: the point of the floor under its ankle, in the
+    rig's own room."""
+    foot, rest = pb["foot." + side], rig.data.bones["foot." + side].head_local
+    return Matrix.Rotation(pb["root"].rotation_euler.z, 3, "Z") @ V(rest.x - foot.location.x, -foot.location.y, 0.0)
+
+
+def make_smoke():
+    """Every puff there is: the frame of the whole it is made in, how many frames it lasts,
+    where it is made, how fast it is kicked away (a frame) and how soon that is lost, how fast
+    it rises, how large it gets, how it is turned and how it turns."""
+    rnd = random.Random(SMOKE_SEED)
+    way = run_way()
+    across = V(-way.y, way.x, 0.0)
+    puffs = []
+
+    def puff(frame, side, life, size, back, kick, up, spread=0.05, drag=0.80, rise=0.010, ahead=0.0):
+        act_pose(frame)
+        at = shoe_at(side) + way * (ahead - back) + across * rnd.uniform(-spread, spread) + V(0.0, 0.0, 0.03 + 0.45 * size)
+        speed = way * kick + across * rnd.uniform(-0.6, 0.6) * spread + V(0.0, 0.0, up)
+        puffs.append(dict(born=frame, life=max(4, round(life)), at=at, speed=speed, drag=drag, rise=rise, size=size,
+                          turn=V(rnd.uniform(0.0, 2 * pi), rnd.uniform(0.0, 2 * pi), rnd.uniform(0.0, 2 * pi)),
+                          spin=V(rnd.uniform(-0.05, 0.05), rnd.uniform(-0.05, 0.05), rnd.uniform(-0.09, 0.09))))
+
+    for frame in range(0, ACT_SPIN, RUN_FRAMES // 2):  # a footfall: the left foot first
+        for _ in range(2):
+            puff(frame, "L" if frame % RUN_FRAMES == 0 else "R", rnd.uniform(8, 11), rnd.uniform(0.09, 0.14), 0.10,
+                 -rnd.uniform(0.02, 0.06), rnd.uniform(0.015, 0.035), spread=0.08)
+    for frame in range(ACT_SPIN, ACT_BRAKE):  # the left shoe scuffs in a cycle's first two frames, the right in its fourth and fifth
+        step, build = (frame - ACT_SPIN) % BURN_FRAMES, (frame - ACT_SPIN) / (ACT_BRAKE - ACT_SPIN)
+        if step % 3 == 2:
+            continue
+        for _ in range(1 + step % 3):
+            puff(frame, "L" if step < 3 else "R", (12 + 8 * build) * rnd.uniform(0.85, 1.15), (0.14 + 0.15 * build) * rnd.uniform(0.8, 1.25),
+                 0.16, -rnd.uniform(0.15, 0.27), rnd.uniform(0.035, 0.085), spread=0.07, rise=0.018)
+    for i in range(8):  # where he pushes off
+        puff(ACT_BRAKE + 5, "LR"[i % 2], rnd.uniform(17, 24), rnd.uniform(0.25, 0.38), rnd.uniform(0.0, 0.3),
+             -rnd.uniform(0.06, 0.22), rnd.uniform(0.03, 0.075), spread=0.12, drag=0.84)
+    for i in range(6):  # thrown up ahead of the shoe that leads as it bites
+        puff(ACT_BRAKE_ON + i // 3, "R", rnd.uniform(8, 11), rnd.uniform(0.13, 0.20), 0.0,
+             rnd.uniform(0.10, 0.20), rnd.uniform(0.02, 0.045), spread=0.10, ahead=0.34)
+    for n in range(SMOKE_TRAIL):  # the trail: from both shoes while he is fast, then from each in turn
+        for side in "LR" if n < 6 else "LR"[n % 2]:
+            puff(ACT_BRAKE_ON + n, side, rnd.uniform(12, 18), rnd.uniform(0.10, 0.24) * (1.25 if n < 4 else 1.0), 0.30,
+                 -rnd.uniform(0.0, 0.03), rnd.uniform(0.010, 0.026), spread=0.07, rise=0.008)
+    return puffs
+
+
+def smoke_at(puff, frame):
+    """Where a puff is in a frame of the whole, how it is turned and how large it is, in the
+    rig's own room: so, seen from where he is, not from where it was made."""
+    age = frame - puff["born"]
+    part = age / puff["life"]
+    gone = puff["speed"] * ((1 - puff["drag"] ** age) / (1 - puff["drag"])) + V(0.0, 0.0, puff["rise"] * age)
+    at = puff["at"] + gone - run_way() * (run_travel(frame) - run_travel(puff["born"]))
+    size = puff["size"] * (0.4 + 0.6 * (1 - (1 - clamp(part / 0.3)) ** 2)) * (1 + 0.2 * part) * (1 - smooth((part - 0.5) / 0.5))
+    return at, tuple(puff["turn"] + puff["spin"] * age), (size,) * 3
+
+
+def write_smoke(name="RunSlide_Smoke"):
+    """Writes the smoke's clip, on the smoke's skeleton, for the whole of the run and the slide
+    (act_pose): frame 0 is the first frame of the run in. A puff has no size before it is made
+    and none once it is gone. Returns how many puffs there are."""
+    blown = bpy.data.objects["MilO_Smoke_Rig"]
+    old = bpy.data.actions.get(name)
+    if old:
+        bpy.data.actions.remove(old)
+    action = bpy.data.actions.new(name)
+    blown.animation_data_create()
+    blown.animation_data.action = action
+    action.use_fake_user = True
+    action.use_frame_range = True
+    action.frame_start = 0
+    action.frame_end = ACT_FRAMES
+    puffs = make_smoke()
+    bones = list(blown.pose.bones)
+    if len(puffs) > len(bones):
+        raise SystemExit("The smoke needs %d puffs and build_milo.py made %d: make SMOKE_PUFFS larger." % (len(puffs), len(bones)))
+    for bone, puff in zip(bones, puffs + [None] * (len(bones) - len(puffs))):
+        bone.location, bone.rotation_euler, bone.scale = (0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)
+        bone.keyframe_insert("scale", frame=0)
+        if puff is None:  # one that is not needed stays nothing
+            continue
+        first, last = puff["born"], min(puff["born"] + puff["life"], ACT_FRAMES)
+        for frame in range(first, last + 1):
+            bone.location, bone.rotation_euler, bone.scale = smoke_at(puff, frame)
+            if frame == first and first > 0:  # it is nothing, and where it will be, until then
+                size, bone.scale = tuple(bone.scale), (0.0, 0.0, 0.0)
+                for path in ("location", "rotation_euler", "scale"):
+                    bone.keyframe_insert(path, frame=first - 1)
+                bone.scale = size
+            for path in ("location", "rotation_euler", "scale"):
+                bone.keyframe_insert(path, frame=frame)
+    if getattr(blown.animation_data, "action_slot", True) is None and action.slots:
+        blown.animation_data.action_slot = action.slots[0]
+    return len(puffs)
+
+
 # The clips that also key the hat, the brake lights and the turn of the whole mascot.
 DANCE = ("Moonwalk", "MoonwalkStop", "KickSpin", "MoonwalkOn")
 # The clips that also key the party cap, the popper and its string.
 PARTY = ("OneYear",)
+# The clips that also key the brake lights and the turn of the whole mascot, and not the hat.
+RUNS = ("Run", "SpinUp", "Burnout", "BrakeSlide", "Slide")
 
 CLIPS = [("Idle", 4.0, idle, True), ("Wave", 2.0, wave, False), ("ThumbsUp", 2.0, thumbs_up, False),
          ("Walk", 1.0, walk, True), ("Celebrate", 3.0, celebrate, False),
@@ -1063,7 +1510,10 @@ CLIPS = [("Idle", 4.0, idle, True), ("Wave", 2.0, wave, False), ("ThumbsUp", 2.0
          ("WaveUp", 0.5, wave_up, False), ("WaveLoop", 0.5, wave_loop, True),
          ("Moonwalk", MOON_SECONDS, moonwalk, True), ("MoonwalkStop", STOP_FRAMES / FPS, moonwalk_stop, False),
          ("KickSpin", KICK_FRAMES / FPS, kick_spin, False), ("MoonwalkOn", ON_FRAMES / FPS, moonwalk_on, False),
-         ("OneYear", PARTY_FRAMES / FPS, one_year, False)]
+         ("OneYear", PARTY_FRAMES / FPS, one_year, False),
+         ("Run", RUN_FRAMES / FPS, run, True), ("SpinUp", SPIN_UP_FRAMES / FPS, spin_up, False),
+         ("Burnout", BURN_FRAMES / FPS, burnout, True), ("BrakeSlide", BRAKE_FRAMES / FPS, brake_slide, False),
+         ("Slide", SLIDE_FRAMES / FPS, slide, True)]
 NEEDLE_CLIPS = [("Gauge_Speed", "speed_kmh", 240.0), ("Gauge_RPM", "rpm", 8.0)]
 NEEDLE_SECONDS = 2.0
 
@@ -1115,6 +1565,8 @@ def key_clip(name, frame):
         key_dance(frame)
     if name in PARTY:
         key_party(frame)
+    if name in RUNS:
+        key_run(frame)
 
 
 def all_curves(action):
@@ -1168,6 +1620,8 @@ def animate():
     # The confetti's clip is thrown from where the party's clip has the popper's mouth.
     show("OneYear")
     write_confetti()
+    # And the smoke's clip is let go from where the run and the slide have his shoes.
+    write_smoke()
     show("Idle")
     print("clips:", {a.name: "%d frames%s" % (a.frame_end, ", loops" if a.use_cyclic else "")
                      for a in bpy.data.actions})
