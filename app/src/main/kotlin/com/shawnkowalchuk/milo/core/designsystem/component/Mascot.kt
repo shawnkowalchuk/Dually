@@ -36,11 +36,12 @@ import kotlinx.coroutines.withContext
  * wave and in [MoonwalkPicture] for the moonwalk.
  *
  * @property kind the greeting these are the pictures of.
- * @property sheet one cycle of the walk, or of the glide, toward the left: a still picture with
- * its frames side by side. The app draws the frame it wants, because the mascot's place has to
+ * @property sheet the frames in which the app moves the mascot, drawn on the spot: one cycle of
+ * the walk in and one of the walk off, or one cycle of the glide. A still picture with its
+ * frames side by side. The app draws the frame it wants, because the mascot's place has to
  * change with its step, and an animated picture does not say which frame it shows.
- * @property played an animated picture, from the frame that follows the sheet's last one: the
- * turn and the wave, or the moonwalk's middle part. The mascot stands where it is, so Android
+ * @property played an animated picture, from the frame that follows the last one of the leg
+ * in: the wave's middle part, or the moonwalk's. The mascot stands where it is, so Android
  * plays it.
  */
 internal class MascotPictures(
@@ -140,9 +141,9 @@ private val MascotGreetingKind.files: MascotFiles
     get() = when (this) {
         MascotGreetingKind.WAVE ->
             MascotFiles(
-                sheet = R.drawable.mascot_walk,
-                played = R.drawable.mascot_turn_and_wave,
-                playedName = "mascot_turn_and_wave",
+                sheet = R.drawable.mascot_walk_in_and_off,
+                played = R.drawable.mascot_stop_and_wave,
+                playedName = "mascot_stop_and_wave",
             )
 
         MascotGreetingKind.MOONWALK ->

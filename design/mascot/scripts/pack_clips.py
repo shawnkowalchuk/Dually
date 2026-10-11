@@ -1,5 +1,5 @@
 # pack_clips.py - makes pictures out of the frames render_clips.py drew. Run it with plain
-# Python, not inside Blender. It has four uses:
+# Python, not inside Blender. It has six uses:
 #
 #   python3 design/mascot/scripts/pack_clips.py poses <folder>
 #
@@ -49,6 +49,31 @@
 # the party as an animated picture that plays once and keeps its last frame
 # (milo_one_year.webp), and a still of him cheering under the confetti (milo_one_year.png).
 # Nothing uses them: they are there to show the party without drawing it again.
+#
+#   python3 design/mascot/scripts/pack_clips.py run-slide <folder> <preview>
+#
+# <folder> holds what render_run_slide.py drew: every frame of him and the smoke, every frame
+# of him without it, and the still of the slide without a halo (--plain). <preview> holds what
+# preview_run_slide.py made of that. It writes into design/mascot/renders/ one cycle of the run
+# as an animated picture that starts again for ever (milo_run.webp), a still of the slide with
+# the brake lights lit, he alone on a see-through background (milo_slide.png), the same moment
+# of the film on the app's dark page with the smoke and the halo (milo_slide_on_dark.png), and
+# the whole film at half its size, the part of the screen he is in, as an animated picture that
+# starts again for ever (milo_run_slide_on_dark.webp). Nothing uses them either.
+#
+#   python3 design/mascot/scripts/pack_clips.py wave2 <folder> <preview>
+#
+# <folder> holds what render_wave2.py drew for the preview, with 2.625 pixels to the dp: the
+# wave, walked through, and its walk off with the lights lit and no halo (--plain). <preview>
+# holds what preview_wave2.py made of that. It writes into design/mascot/renders/ one cycle of
+# the walk in and one of the walk off, each on the spot, as animated pictures that start again
+# for ever (milo_walk_in.webp, milo_walk_off.webp); a still of him walking off with the brake
+# lights lit, he alone on a see-through background and without a halo (milo_walk_off_lit.png);
+# the same moment on the app's dark page with the halo (milo_walk_off_lit_on_dark.png); and
+# the two films at half their size, the foot of the screen, as animated pictures that start
+# again for ever (milo_wave2_a_on_home.webp, milo_wave2_b_on_home.webp). Nothing uses them.
+# The films are packed by img2webp, which comes with cwebp: behind him the picture of Home
+# stands still, and img2webp stores for each frame only what has changed since the one before.
 #
 # A VISITOR'S BROWSER KEEPS THESE PICTURES FOR A WEEK AND THE STYLESHEET FOR AN HOUR
 # (firebase.json). A picture that changes in a way the stylesheet counts on, another number of
@@ -121,6 +146,25 @@ TURN_CWEBP = ["-q", "78", "-sharp_yuv", "-af", "-m", "6"]
 # the frame of the party that is its still: both arms up, the confetti over his head.
 PARTY_CAPS = ("milo_party_cap", "milo_party_cap_three_quarter")
 PARTY_STILL = 84
+
+# The run and the slide's pictures: how many frames one cycle of the run is (the first frames
+# render_run_slide.py draws); how many frames after the brake lights come on the still of the
+# slide is, which is the still preview_run_slide.py takes (STILL_AFTER there); what is kept of
+# a picture round him, in parts of his height: to each side of his axis, above his soles and
+# below them; and the screen preview_run_slide.py shows him on.
+RUN_SLIDE_CYCLE, RUN_SLIDE_STILL = 8, 9
+RUN_SLIDE_ROOM = (0.76, 1.24, 0.06)
+RUN_SLIDE_SCREEN = (1080, 2400)
+
+# The wave, walked through: what is kept of a picture round him in the two walks' pictures, in
+# parts of his height: to each side of his axis, above his soles and below them; the frame of
+# the walk off that is its still, which is the one preview_wave2.py takes (STILL there); how
+# wide the two films are made, in pixels, which is half their width; and how img2webp is told
+# to pack them: colour at 55 of 100, each frame as small as it can be made.
+WAVE2_ROOM = (0.62, 1.22, 0.10)
+WAVE2_STILL = 8
+WAVE2_FILM = 540
+WAVE2_IMG2WEBP = ["-lossy", "-q", "55", "-m", "6", "-min_size"]
 
 
 def size_of(frame):
@@ -274,14 +318,113 @@ def party(folder):
     print("together: %d bytes" % total)
 
 
+def run_slide(folder, preview):
+    os.makedirs(RENDERS, exist_ok=True)
+    with open(os.path.join(folder, "run-slide.json")) as f:
+        told = json.load(f)
+    pixels, axis, floor = told["pixels"], told["axis"], told["height"] - told["soles"]
+    run_frames = RUN_SLIDE_CYCLE
+    still = told["brake_frame"] + RUN_SLIDE_STILL
+    # What is kept of a picture round him: so far to each side of his axis, above his soles and below them.
+    side, up, down = (2 * round(part * pixels / 2) for part in RUN_SLIDE_ROOM)
+    look = "crop=%d:%d:%d:%d" % (2 * side, up + down, axis - side, floor - up)
+    total = 0
+    with tempfile.TemporaryDirectory() as cut:
+        os.makedirs(os.path.join(cut, "run"))
+        for frame in range(run_frames):
+            run(["ffmpeg", "-v", "error", "-y", "-i", os.path.join(folder, "without", "%04d.png" % frame), "-vf", look,
+                 "-pix_fmt", "rgba", os.path.join(cut, "run", "%04d.png" % frame)])
+        out = os.path.join(RENDERS, "milo_run.webp")
+        said = pack_animated(os.path.join(cut, "run"), out, plays=0)
+        total += os.path.getsize(out)
+        print("milo_run.webp: %s, %d x %d pixels, %d bytes" % (said, 2 * side, up + down, os.path.getsize(out)))
+
+        out = os.path.join(RENDERS, "milo_slide.png")
+        run(["ffmpeg", "-v", "error", "-y", "-i", os.path.join(folder, "without-plain", "%04d.png" % still), "-vf", look,
+             "-pix_fmt", "rgba", out])
+        total += os.path.getsize(out)
+        print("milo_slide.png: frame %d of the whole, %d x %d pixels, %d bytes" % (still, *size_of(out), os.path.getsize(out)))
+
+        out = os.path.join(RENDERS, "milo_slide_on_dark.png")
+        shutil.copyfile(os.path.join(preview, "run-slide-lights-on-dark.png"), out)
+        total += os.path.getsize(out)
+        print("milo_slide_on_dark.png: %d x %d pixels, %d bytes" % (*size_of(out), os.path.getsize(out)))
+
+        # The film: the rows of the screen the still shows, which are the rows he is in.
+        width, rows = size_of(out)
+        screen = 2 * round(RUN_SLIDE_SCREEN[1] * width / RUN_SLIDE_SCREEN[0] / 2)
+        top = max(0, round(screen / 2 + pixels / 2 + told["soles"] - told["height"]))
+        os.makedirs(os.path.join(cut, "film"))
+        run(["ffmpeg", "-v", "error", "-y", "-i", os.path.join(preview, "run-slide-preview-silent.mp4"), "-vf",
+             "crop=%d:%d:0:%d,scale=%d:-2:flags=lanczos" % (width, rows, top, width // 2), os.path.join(cut, "film", "%04d.png")])
+        out = os.path.join(RENDERS, "milo_run_slide_on_dark.webp")
+        said = pack_animated(os.path.join(cut, "film"), out, plays=0, settings=TURN_CWEBP)
+        total += os.path.getsize(out)
+        print("milo_run_slide_on_dark.webp: %s, %d x %d pixels, %d bytes"
+              % (said, *size_of(os.path.join(cut, "film", "0001.png")), os.path.getsize(out)))
+    print("together: %d bytes" % total)
+
+
+def wave2(folder, preview):
+    os.makedirs(RENDERS, exist_ok=True)
+    with open(os.path.join(folder, "wave2.json")) as f:
+        told = json.load(f)
+    pixels = round(150 * told["pixels_to_the_dp"])  # he is 150 dp high (MASCOT_DP in render_greeting.py)
+    axis, floor = told["axis"], told["height"] - round(told["soles"]["in"])
+    side, up, down = (2 * round(part * pixels / 2) for part in WAVE2_ROOM)
+    look = "crop=%d:%d:%d:%d" % (2 * side, up + down, axis - side, floor - up)
+    total = 0
+    with tempfile.TemporaryDirectory() as cut:
+        for part, name in (("in", "milo_walk_in.webp"), ("out", "milo_walk_off.webp")):
+            os.makedirs(os.path.join(cut, part))
+            for frame in range(told["cycle_frames"]):
+                run(["ffmpeg", "-v", "error", "-y", "-i", os.path.join(folder, part, "%04d.png" % frame), "-vf", look,
+                     "-pix_fmt", "rgba", os.path.join(cut, part, "%04d.png" % frame)])
+            out = os.path.join(RENDERS, name)
+            said = pack_animated(os.path.join(cut, part), out, plays=0)
+            total += os.path.getsize(out)
+            print("%s: %s, %d x %d pixels, %d bytes" % (name, said, 2 * side, up + down, os.path.getsize(out)))
+
+        out = os.path.join(RENDERS, "milo_walk_off_lit.png")
+        run(["ffmpeg", "-v", "error", "-y", "-i", os.path.join(folder, "out-lit-plain", "%04d.png" % WAVE2_STILL), "-vf", look,
+             "-pix_fmt", "rgba", out])
+        total += os.path.getsize(out)
+        print("milo_walk_off_lit.png: frame %d of the walk off, %d x %d pixels, %d bytes" % (WAVE2_STILL, *size_of(out), os.path.getsize(out)))
+
+        out = os.path.join(RENDERS, "milo_walk_off_lit_on_dark.png")
+        shutil.copyfile(os.path.join(preview, "wave2-away-lit-on-dark.png"), out)
+        total += os.path.getsize(out)
+        print("milo_walk_off_lit_on_dark.png: %d x %d pixels, %d bytes" % (*size_of(out), os.path.getsize(out)))
+
+        # The films: the foot of the screen, which is what preview_wave2.py's GIFs show too.
+        with open(os.path.join(preview, "wave2-preview.json")) as f:
+            foot = json.load(f)["foot_of_screen"]
+        for lights in ("a", "b"):
+            os.makedirs(os.path.join(cut, lights))
+            run(["ffmpeg", "-v", "error", "-y", "-i", os.path.join(preview, "wave2-preview-%s.mp4" % lights.upper()), "-vf",
+                 "crop=iw:ih-%d:0:%d,scale=%d:-2:flags=lanczos" % (foot, foot, WAVE2_FILM), os.path.join(cut, lights, "%04d.png")])
+            out = os.path.join(RENDERS, "milo_wave2_%s_on_home.webp" % lights)
+            frames = [os.path.join(cut, lights, name) for name in frames_in(os.path.join(cut, lights))]
+            # "-loop 0" is for ever; "-d" is how long a frame is shown, in milliseconds
+            run(["img2webp", *WAVE2_IMG2WEBP, "-loop", "0", "-d", "42", *frames, "-o", out])
+            total += os.path.getsize(out)
+            print("milo_wave2_%s_on_home.webp: %d frames of 42 ms, starts again for ever, %d x %d pixels, %d bytes"
+                  % (lights, len(frames), *size_of(frames[0]), os.path.getsize(out)))
+    print("together: %d bytes" % total)
+
+
 def main():
-    uses = {"poses": poses, "website": website, "lights": lights, "party": party}
-    if len(sys.argv) != 3 or sys.argv[1] not in uses:
-        raise SystemExit("Say 'poses', 'website', 'lights' or 'party', then the folder the frames were drawn into.")
-    for tool, formula in (("cwebp", "webp"), ("webpmux", "webp"), ("ffmpeg", "ffmpeg")):
+    uses = {"poses": poses, "website": website, "lights": lights, "party": party, "run-slide": run_slide, "wave2": wave2}
+    folders = 3 if len(sys.argv) > 1 and sys.argv[1] in ("run-slide", "wave2") else 2
+    if len(sys.argv) != 1 + folders or sys.argv[1] not in uses:
+        raise SystemExit("Say 'poses', 'website', 'lights' or 'party', then the folder the frames were drawn into; "
+                         "or 'run-slide', that folder, and the folder preview_run_slide.py wrote into; "
+                         "or 'wave2', the folder render_wave2.py drew into, and the folder preview_wave2.py wrote into.")
+    tools = [("cwebp", "webp"), ("webpmux", "webp"), ("ffmpeg", "ffmpeg")] + ([("img2webp", "webp")] if sys.argv[1] == "wave2" else [])
+    for tool, formula in tools:
         if shutil.which(tool) is None:
             raise SystemExit("%s is not installed. On a Mac: brew install %s" % (tool, formula))
-    uses[sys.argv[1]](os.path.abspath(sys.argv[2]))
+    uses[sys.argv[1]](*(os.path.abspath(folder) for folder in sys.argv[2:]))
 
 
 if __name__ == "__main__":

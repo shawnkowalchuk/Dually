@@ -79,13 +79,13 @@ internal object MoonwalkPicture {
  *
  * **The foot that is up on its toe stays where it is on the screen,** because each frame of the
  * glide stands a fourteenth of [stride] to the left of the one before it: that is how far the
- * toe has gone forward under him in it. As in the walk ([MascotWalk]), the frame and the place
- * come from one number, so a phone that draws too slowly leaves frames out and cannot show him
- * in one place with the step of another.
+ * toe has gone forward under him in it. As in the wave's walks ([MascotWalk]), the frame and
+ * the place come from one number, so a phone that draws too slowly leaves frames out and cannot
+ * show him in one place with the step of another.
  *
  * **The glide in ends on the last frame of a cycle,** because the middle part begins with the
  * frame that follows it. So it begins partway into a cycle, with the mascot just beyond the
- * edge: he is seen at once. (The walk begins a cycle and is up to half a second out of sight.)
+ * edge: he is seen at once.
  *
  * **The glide out begins with the first frame of a cycle,** where the mascot stands: the frame
  * that follows the middle part's last one.
@@ -130,7 +130,7 @@ internal class MascotGlide(
      * the middle part plays, in the middle.
      */
     val coming: MascotLeg =
-        Leg(frames = framesIn) { frame ->
+        SteppedLeg(framesIn, frameMillis) { frame ->
             val toGo = framesIn - frame
             MascotPose(
                 sheetFrame = (-toGo).takeIf { it < 0 }?.mod(MoonwalkPicture.GLIDE_FRAMES),
@@ -145,19 +145,11 @@ internal class MascotGlide(
      * cycle, and once the leg is over the mascot is wholly beyond the left edge.
      */
     val going: MascotLeg =
-        Leg(frames = framesOut + 1) { frame ->
+        SteppedLeg(framesOut + 1, frameMillis) { frame ->
             val glided = frame - 1
             MascotPose(
                 sheetFrame = glided.takeIf { it >= 0 }?.mod(MoonwalkPicture.GLIDE_FRAMES),
                 axis = middle - perFrame * max(glided, 0),
             )
         }
-
-    private inner class Leg(override val frames: Int, private val pose: (Int) -> MascotPose) :
-        MascotLeg {
-        override fun frameAt(atMillis: Long): Int =
-            (atMillis.coerceIn(0, frames.toLong() * frameMillis) / frameMillis).toInt()
-
-        override fun poseIn(frame: Int): MascotPose = pose(frame.coerceIn(0, frames))
-    }
 }

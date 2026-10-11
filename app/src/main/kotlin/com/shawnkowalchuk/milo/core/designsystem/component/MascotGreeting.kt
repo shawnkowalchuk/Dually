@@ -1,8 +1,6 @@
 package com.shawnkowalchuk.milo.core.designsystem.component
 
 import android.content.res.Resources
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
@@ -40,19 +38,24 @@ import kotlinx.coroutines.withTimeoutOrNull
 /**
  * MilO's greeting, one of two ([MascotGreetingKind]).
  *
- * **The wave** (Shawn, 2026-10-09: "walked from the right side of the screen to the center at
- * the bottom of the screen. walking just above the bottom navigation than turned and waved").
- * The mascot comes in from beyond the right edge and walks to the left along the top of the
- * bottom bar; in the middle of the screen it turns to the viewer, waves once and fades away.
+ * **The wave** (Shawn, 2026-10-11: "i want to use the model with the lights on his butt. and
+ * also after he turns and waves for him to continue walking off the screen. can we have hime
+ * start from the left side of the screeen walking off the right side"). The mascot comes in
+ * from beyond the left edge and walks to the right along the top of the bottom bar; in the
+ * middle of the screen he stops, his brake lights coming on behind him, turns to the viewer and
+ * waves once, turns away to the right, and walks on until he is wholly beyond the right edge.
+ * (Until that day he came in from the right, as Shawn had asked on 2026-10-09, and faded away
+ * where he stood.)
  *
  * **The moonwalk** (Shawn, 2026-10-10: "moon walking on to the screen stops mid way. adoes some
- * hip thrusts than spins and continues moon walking", in a hat). He glides in backward along
- * the same line, does the middle part in the middle of the screen, and glides on until he is
- * wholly beyond the left edge. It does not fade.
+ * hip thrusts than spins and continues moon walking", in a hat). He glides in backward from
+ * the right along the same line, does the middle part in the middle of the screen, and glides
+ * on until he is wholly beyond the left edge.
  *
  * Both are played the same way: the app steps through a sheet of frames by its own clock and
  * moves the mascot with every one, Android plays an animated picture while he stays where he
- * is, and the one takes the other's place in the same drawing of the screen.
+ * is, and the one takes the other's place in the same drawing of the screen. Neither fades: a
+ * greeting is over when the last of the mascot has left the screen.
  *
  * **It takes nothing from the screen under it.** It is a drawing and no more: no press, no
  * Back and no screen reader ever meets it, the screen is not dimmed, and every button under
@@ -128,7 +131,6 @@ private fun BoxWithConstraintsScope.GreetingOnScreen(
     // What is drawn of the mascot, and where. His step and his place are one value, and both
     // are read from it while drawing: they cannot come apart.
     var pose by remember { mutableStateOf(MascotPose(sheetFrame = 0, axis = 0f)) }
-    val fade = remember { Animatable(1f) }
 
     LaunchedEffect(Unit) {
         val animationsOff = coroutineContext[MotionDurationScale]?.scaleFactor == 0f
@@ -156,11 +158,7 @@ private fun BoxWithConstraintsScope.GreetingOnScreen(
                 played.await()
             }
             course.on(GreetingEvent.MIDDLE_OVER)
-            if (way.going == null) {
-                fade.animateTo(0f, tween(LEAVE_MS))
-            } else {
-                step(way.going) { frame -> pose = way.going.poseIn(frame) }
-            }
+            step(way.going) { frame -> pose = way.going.poseIn(frame) }
             course.on(GreetingEvent.GONE)
         } finally {
             // Also when the greeting is cut short, or leaves the screen in the middle.
@@ -184,10 +182,8 @@ private fun BoxWithConstraintsScope.GreetingOnScreen(
                     .offset(y = frames.soles.dp - solesAboveFoot)
                     // Read while drawing, so a step moves the mascot and nothing is composed
                     // or laid out again.
-                    .graphicsLayer {
-                        translationX = (pose.axis - frames.axis).dp.toPx()
-                        alpha = fade.value
-                    }.drawBehind { groundShadow(shadow, frames.axis.dp, frames.soles.dp) },
+                    .graphicsLayer { translationX = (pose.axis - frames.axis).dp.toPx() }
+                    .drawBehind { groundShadow(shadow, frames.axis.dp, frames.soles.dp) },
         ) {
             Mascot(shown, sheetFrame = { pose.sheetFrame })
         }
@@ -252,9 +248,6 @@ internal fun DrawScope.groundShadow(darkest: Color, axis: Dp, soles: Dp, times: 
         drawCircle(fading, radius, centre)
     }
 }
-
-/** How long the waving mascot takes to fade away. */
-private const val LEAVE_MS = 260
 
 private const val NANOS_IN_MILLI = 1_000_000L
 

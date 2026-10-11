@@ -2,8 +2,8 @@ package com.shawnkowalchuk.milo.core.designsystem.component
 
 // What every greeting is made of, apart from its drawing (ADR-007): which greetings there are,
 // what their pictures are like, and the words for where the mascot is at a moment. Plain Kotlin
-// with unit tests. The wave's own numbers and its walk are in `MascotWalk.kt`, the moonwalk's in
-// `MascotMoonwalk.kt`.
+// with unit tests. The wave's own numbers and its two walks are in `MascotWalk.kt`, the moonwalk's
+// in `MascotMoonwalk.kt`.
 
 /**
  * The greetings MilO has (since 2026-10-10 there are two). Which of them plays at a start is
@@ -11,8 +11,9 @@ package com.shawnkowalchuk.milo.core.designsystem.component
  */
 enum class MascotGreetingKind {
     /**
-     * The mascot walks in from the right, turns to the viewer in the middle of the screen,
-     * waves once and fades away.
+     * The mascot walks in from the left, stops in the middle of the screen with his brake
+     * lights coming on behind him, turns to the viewer and waves once, turns away to the right,
+     * and walks on and off at the right as the lights go out.
      */
     WAVE,
 
@@ -37,7 +38,7 @@ enum class MascotGreetingKind {
 
     /** This greeting's way across a screen [screenWidth] dp wide. */
     internal fun wayAcross(screenWidth: Float): MascotWay = when (this) {
-        WAVE -> MascotWay(coming = MascotWalk(screenWidth), going = null)
+        WAVE -> MascotWalk(screenWidth).let { MascotWay(it.coming, it.going) }
         MOONWALK -> MascotGlide(screenWidth).let { MascotWay(it.coming, it.going) }
     }
 }
@@ -51,7 +52,8 @@ enum class MascotGreetingKind {
  * @property width and [height] the size of one frame.
  * @property axis how far from a frame's left edge the mascot stands: the line he turns about.
  * @property soles how far above a frame's lower edge his soles are while the app moves him.
- * @property sheetFrames how many frames the sheet holds: one cycle of his walk or his glide.
+ * @property sheetFrames how many frames the sheet holds: one cycle of his glide, or one cycle
+ * of each of his two walks, the walk in's and then the walk off's.
  * @property sheetColumns how many of them lie side by side in a row of the sheet.
  * @property playedFrames how many frames long the animated picture is.
  */
@@ -101,8 +103,25 @@ internal interface MascotLeg {
 }
 
 /**
- * A greeting's way across the screen: the leg that brings the mascot in, to where Android plays
- * the animated picture, and the leg that takes him out again. The wave has no leg out: he fades
- * away where he stands.
+ * A leg of [frames] frames, each shown for [frameMillis]: the walk in and the walk off, the
+ * glide in and the glide out.
+ *
+ * @param pose what is drawn in a frame from 0 to [frames], and where.
  */
-internal class MascotWay(val coming: MascotLeg, val going: MascotLeg?)
+internal class SteppedLeg(
+    override val frames: Int,
+    private val frameMillis: Int,
+    private val pose: (Int) -> MascotPose,
+) : MascotLeg {
+    override fun frameAt(atMillis: Long): Int =
+        (atMillis.coerceIn(0, frames.toLong() * frameMillis) / frameMillis).toInt()
+
+    override fun poseIn(frame: Int): MascotPose = pose(frame.coerceIn(0, frames))
+}
+
+/**
+ * A greeting's way across the screen: the leg that brings the mascot in, to where Android plays
+ * the animated picture, and the leg that takes him out again at the other edge. No greeting
+ * fades: it is over when the last of him has left the screen.
+ */
+internal class MascotWay(val coming: MascotLeg, val going: MascotLeg)

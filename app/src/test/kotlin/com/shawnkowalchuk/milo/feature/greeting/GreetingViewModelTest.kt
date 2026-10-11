@@ -199,7 +199,7 @@ class GreetingViewModelTest {
         val viewModel = freshStart(FakeSettingsFile())
         assertEquals(0, log.entries.size)
 
-        val why = "mascot_turn_and_wave is not an animated picture"
+        val why = "mascot_stop_and_wave is not an animated picture"
         viewModel.onUnreadable(MascotGreetingKind.WAVE, IOException(why))
         runCurrent()
 

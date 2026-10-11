@@ -1,6 +1,6 @@
 # ADR-007: The mascot is two pictures, drawn beforehand and read by Android
 Date: 2026-10-09
-Status: Accepted. Supersedes ADR-005. Two addenda of 2026-10-10 at the end: a second greeting, the moonwalk, as two more pictures; and the one-year party, as two more again.
+Status: Accepted. Supersedes ADR-005. Three addenda at the end. Two of 2026-10-10: a second greeting, the moonwalk, as two more pictures; and the one-year party, as two more again. One of 2026-10-11: the wave has another course and two other pictures, and what the Decision below says of the wave is how it was until then.
 
 ## Context
 
@@ -198,3 +198,52 @@ The APK grows by 2,466 KB, 18.9 %: the two pictures, the pop's 88 KB, and 70 KB 
 - **Every further thing of this kind is this much again,** and one with as much paper in the air weighs more than one without.
 
 **It has run on an emulator only** (Android 16), on the day itself and on demand. Device checks OY-1 to OY-14.
+
+## Addendum, 2026-10-11: the wave, walked through
+
+### Context
+
+Two days after this record, Shawn asked for its greeting again: "can we redo the first animation of the one where he walks onto the screen and waves. i want to use the model with the lights on his butt. and also after he turns and waves for him to continue walking off the screen. can we have hime start from the left side of the screeen walking off the right side". The model got four clips for it, a walk in and a walk off round the clip `Wave`. He was shown two films over a picture of Home, which differed in when the brake lights go out, chose the one in which they go out as he steps off, and asked for no change to it.
+
+The wave of the Decision above came in from the right, stopped, waved and faded. The new one crosses the screen, as the moonwalk does. And he is seen from two sides: three quarters from the front as he comes, three quarters from behind as he goes.
+
+### Decision
+
+**The new wave takes the old one's place: two other pictures, drawn in Blender, committed, and read by Android.** `mascot_walk.webp` and `mascot_turn_and_wave.webp` are out of the app. MilO still has two greetings, and they take turns as before.
+
+**The two pictures** (`app/src/main/res/drawable-nodpi/`), WebP with a see-through background, 2.5 pixels to the dp and 42 ms a frame. A frame is 540 by 440 pixels, 216 by 176 dp:
+
+| Picture | What it is | Frames | Who plays it | Size |
+|---|---|---|---|---|
+| `mascot_walk_in_and_off.webp` | a still picture, 2,160 by 2,640 pixels: the frames side by side, four across and six down | 24: one cycle of the walk in, then one cycle of the walk off | the app, by its own clock: the first twelve on the way in, the other twelve on the way off | 184 KB |
+| `mascot_stop_and_wave.webp` | an animated picture | 80: the stop with the brake lights coming on, the turn to the viewer, the wave, the turn away with the lights lit, and the foot lifted for the first step as they go out | Android, once; it keeps its last frame | 942 KB |
+
+Together 1,125 KB. They are drawn by `design/mascot/scripts/render_wave2.py` and packed by `pack_wave2.py`, with `pack_moonwalk.py`'s functions and at its settings.
+
+**It is played by the course the first addendum made for both greetings,** the other way across: the walk in ends on its cycle's last frame, the animated picture takes its place in the same drawing of the screen, and after it the app plays the sheet again until he has left at the right edge. **No greeting fades any more.** A greeting is over when the last of the mascot has left the screen.
+
+**Both walks are on one sheet.** The course knows one sheet to a greeting, which the app reads before anything is shown and steps through. A sheet for each walk would have been a third picture in every place that knows two; the weight is the same. The walk off's frames are the sheet's second half, and the leg out asks for those.
+
+**Colour is packed at 50 of 100,** as the moonwalk's, where the old wave's had 60. Beside the film at a phone's size the two could not be told apart.
+
+### Consequences
+
+**What it costs, measured:**
+
+| | Before | With the new wave |
+|---|---|---|
+| The wave's pictures | 880 KB, two | 1,125 KB, two |
+| The greetings' pictures | 1,778 KB, four | 2,023 KB, four |
+| The release APK (built unsigned, the same way both times) | 15.55 MB | 15.79 MB |
+
+The APK grows by 245 KB, 1.6 %, which is the pictures.
+
+- **The wave is 104 frames where it was 72,** and a frame of the mascot at this size is 10 to 12 KB however it is packed. At colour 60 it weighed 1,195 KB, at 45 1,095 KB, and at 40, where the dials' numbers smear, 1,052 KB.
+- **`MascotPicturesTest` held each greeting under a megabyte and both under two. It now holds the wave under 1.2 MB and both under 2.2 MB;** the moonwalk's megabyte is as it was. The first addendum said a third greeting would have to ask for a third megabyte. This is not a third greeting, and it asked for a fifth of one.
+- **The sheet takes 22.8 MB of graphics memory** while the wave is on the screen, where the old wave's took 12.1 MB and the moonwalk's takes 12.9 MB. It could be halved by reading the walk off's frames as a picture of their own while the middle part plays. `[DEBT]`, FINDINGS_LOG 2026-10-11.
+- **The halo is right on a dark ground only,** in this greeting too: for the half second after the turn away in which the lights are lit and in view. `[DEBT]`, FINDINGS_LOG 2026-10-11.
+- **The wave's animated picture may now hold a frame for longer than 42 ms** (one of its 80 frames is the frame before it, and is not stored). It holds no patch.
+- **What the Consequences above say of the wave's walk is of the old one:** the short stride of the clip `Walk`, the four seconds to the middle, the whole cycles. The new walk has a stride of its own, nearly twice as long, and he crosses the whole screen in the seven seconds the old wave took to reach the middle, wave and fade.
+- **The old wave's frames can still be drawn** (`render_greeting.py`), and nothing packs them for the app.
+
+**It has run on an emulator only** (Android 16), at four widths and on its side, and was laid beside the film at every quarter second. Device checks WW-1 to WW-10.
