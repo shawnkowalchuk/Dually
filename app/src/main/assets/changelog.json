@@ -5,6 +5,11 @@
       "date": null,
       "changes": [
         {
+          "kind": "new",
+          "title": "A second greeting: the moonwalk",
+          "body": "MilO's mascot has a second way to say hello. In a hat, he moonwalks in from the right, skids to a stop in the middle with his brake lights on, thrusts his hips, spins once and moonwalks off to the left. He takes turns with the wave: one time you open MilO he waves, the next he moonwalks. After this update the moonwalk comes first. As before, everything under him can be pressed while he is there."
+        },
+        {
           "kind": "fixed",
           "title": "The odometer after a reading typed before driving off",
           "body": "A reading typed in the truck before you drive off no longer loses that drive. MilO starts the trip when the phone connects, so the reading was typed during the trip, and the whole trip was left out of the odometer. Now what you drive after the reading is added. If your odometer is short from a reading typed before this version, type the dashboard's figure once more."

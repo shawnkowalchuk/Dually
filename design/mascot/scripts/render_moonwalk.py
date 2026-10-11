@@ -1,10 +1,11 @@
-# render_moonwalk.py - draws the moonwalk as pictures, for a preview of it as a greeting: the
-# mascot gliding backward in his hat, and what he does in the middle of the screen. Run it after
-# the other scripts, with Blender WITHOUT its window, and name a folder for the frames:
+# render_moonwalk.py - draws the app's second greeting, the moonwalk, as pictures: the mascot
+# gliding backward in his hat, and what he does in the middle of the screen. Run it after the
+# other scripts, with Blender WITHOUT its window, and name a folder for the frames:
 #
 #   blender -b design/mascot/milo_mascot.blend --python design/mascot/scripts/render_moonwalk.py -- <folder> [<pixels to the dp>] [--every <n>]
 #
-# It draws into <folder>, and preview_moonwalk.py lays that over a picture of Home:
+# It draws into <folder>. pack_moonwalk.py makes the two pictures the app carries out of that,
+# and preview_moonwalk.py lays it over a picture of Home as a film:
 #
 #   glide/0000.png ...    one cycle of the clip "Moonwalk", drawn on the spot. The frame after
 #                         the last is the first again
@@ -12,19 +13,19 @@
 #                         other. Its first frame is the frame the glide would show next, and the
 #                         frame after its last is the glide's first
 #   moonwalk.json         what the frames are: the picture's size, where he stands in it, how far
-#                         one cycle of the glide carries him. preview_moonwalk.py reads it
+#                         one cycle of the glide carries him. Both other scripts read it
 #
 # He is drawn as the greeting draws him: MASCOT_DP high from the studio's camera, under its
 # lights, on a see-through background, turned GLIDE_ANGLE degrees from the viewer. He glides to
 # the left and faces the way he came from, so he is turned to the right. With no pixels to the
-# dp named there are 2.5 of them, as in the app's pictures; the preview asks for what its
-# picture of Home has. --every 3 draws only every third frame of the middle, for a quick look.
+# dp named there are 2.5 of them, which is what the app's pictures have and what pack_moonwalk.py
+# asks for; the preview asks for what its picture of Home has. --every 3 draws only every third
+# frame of the middle, for a quick look.
 #
 # The pictures hold the halo round the brake lights where they are lit (halo_see_through in
 # render_greeting.py), so they are for a dark ground.
 #
-# THE APP DOES NOT SHOW THIS. It is the drawing step for a preview; nothing here is packed into
-# pictures the app carries. NOTHING IS SAVED.
+# NOTHING IS SAVED, and nothing here writes into the app: that is pack_moonwalk.py's step.
 
 import json
 import os

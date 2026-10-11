@@ -14,6 +14,7 @@ internal fun greetingViewModelFactory(container: AppContainer): ViewModelProvide
     viewModelFactory {
         initializer {
             GreetingViewModel(
+                settings = container.settingsStore,
                 eventLog = container.eventLogRepository,
                 clock = container.clock,
             )

@@ -1,8 +1,8 @@
 # The mascot
 
-MilO's mascot: a green block with a speedometer and a rev counter for eyes, the app's "M" for a mouth, hose arms and legs, white gloves and green shoes. Built in Blender 5.2 on 2026-10-09 from the picture in `reference.webp`. It is a 3D model here. The app carries no model: it shows two pictures of it, drawn here once (`docs/adr/ADR-007-mascot-animated-picture.md`). The website shows three more, drawn the same way.
+MilO's mascot: a green block with a speedometer and a rev counter for eyes, the app's "M" for a mouth, hose arms and legs, white gloves and green shoes. Built in Blender 5.2 on 2026-10-09 from the picture in `reference.webp`. It is a 3D model here. The app carries no model: it shows four pictures of it, two for each of its greetings, drawn here once (`docs/adr/ADR-007-mascot-animated-picture.md`). The website shows three more, drawn the same way.
 
-Nothing in this folder is part of the app's build. The two pictures the app carries are written from here into `app/src/main/res/drawable-nodpi/`, the website's three into `website/mascot/`, and all five are committed.
+Nothing in this folder is part of the app's build. The four pictures the app carries are written from here into `app/src/main/res/drawable-nodpi/`, the website's three into `website/mascot/`, and all seven are committed.
 
 | File | What it is |
 |---|---|
@@ -11,14 +11,15 @@ Nothing in this folder is part of the app's build. The two pictures the app carr
 | `scripts/studio_milo.py` | Builds the camera, the lights and the backdrop, and stands the reference picture beside the model |
 | `scripts/animate_milo.py` | Writes the clips |
 | `scripts/export_milo.py` | Writes the `.glb` file and prints what is in it |
-| `scripts/render_greeting.py` | Draws the frames of the app's greeting: the walk, and the turn and wave |
-| `scripts/pack_greeting.py` | Packs those frames into the app's two pictures |
+| `scripts/render_greeting.py` | Draws the frames of the app's first greeting, the wave: the walk, and the turn and wave |
+| `scripts/pack_greeting.py` | Packs those frames into the wave's two pictures |
 | `scripts/render_clips.py` | Draws the frames of any clip, at any size |
 | `scripts/render_dials.py` | Draws the two dials without their needles, and the needles' blades alone, for the website |
 | `scripts/render_lights.py` | Draws the brake lights to be shown: his back with them off and lit, and a turn-around |
 | `scripts/pack_clips.py` | Packs those frames into the pictures in `renders/`, and into the website's three |
-| `scripts/render_moonwalk.py` | Draws the frames of the moonwalk, for a preview of it as a greeting (below) |
-| `scripts/preview_moonwalk.py` | Lays those frames over a picture of Home and writes a film of it. Plain Python, not run in Blender |
+| `scripts/render_moonwalk.py` | Draws the frames of the app's second greeting, the moonwalk: the glide, and the middle part (below) |
+| `scripts/pack_moonwalk.py` | Packs those frames into the moonwalk's two pictures. Plain Python, not run in Blender |
+| `scripts/preview_moonwalk.py` | Lays the same frames over a picture of Home and writes a film of it: the preview Shawn was shown. Plain Python, not run in Blender |
 | `export/milo_mascot.glb` | The model with every clip, without the hat (2.67 MB), for whatever comes later. Nothing uses it today |
 | `renders/milo_thumbs_up.png` | The mascot as Blender draws it, in the pose of the reference picture |
 | `renders/milo_flex.webp`, `milo_peace.webp`, `milo_rock_on.webp` | Three clips as animated pictures with a see-through background, for whatever comes later (below) |
@@ -46,7 +47,7 @@ The same command without `-b` and without its last part opens Blender's window a
 
 Each is one action, at 24 frames a second, starting on frame 0. Every clip but the loops, `WaveUp` and the moonwalk's four begins and ends in the same standing pose, so one can follow another. The needles move in every clip.
 
-`Flex`, `Peace` and `RockOn` were added on 2026-10-09 for pictures to come ("future content ideas or use on the website"); nothing plays them yet. `WaveUp` and `WaveLoop` were added on 2026-10-10 for the website, where he waves for as long as a pointer is on him. The four clips of the moonwalk were added the same day for a greeting Shawn asked for; **they are a preview, and nothing plays them yet** (see "The hat and the moonwalk").
+`Flex`, `Peace` and `RockOn` were added on 2026-10-09 for pictures to come ("future content ideas or use on the website"); nothing plays them yet. `WaveUp` and `WaveLoop` were added on 2026-10-10 for the website, where he waves for as long as a pointer is on him. The four clips of the moonwalk were added the same day for a second greeting Shawn asked for; the app plays them since then, in turn with the wave (see "The hat and the moonwalk").
 
 | Clip | Length | What happens |
 |---|---|---|
@@ -71,7 +72,7 @@ The two gauge clips move one bone each and nothing else, so they can be laid ove
 
 ## The app's pictures
 
-The app's greeting is two pictures (WebP with a see-through background; a frame is 600 by 420 pixels, 24 frames a second):
+The app has two greetings, which take turns, and each is two pictures: a still sheet of frames the app steps through while it moves the mascot, and an animated picture Android plays while he stays where he is. All are WebP with a see-through background, 24 frames a second, 2.5 pixels to the dp. The moonwalk's two are in "The hat and the moonwalk", below; the wave's are these. A frame of theirs is 600 by 420 pixels:
 
 | Picture | What it shows | Size |
 |---|---|---|
@@ -93,7 +94,7 @@ python3 design/mascot/scripts/pack_greeting.py /tmp/milo-greeting/walk /tmp/milo
 
 Seen from the studio's camera, which looks down on the ground a little, the foot nearer the viewer stands about 11 dp lower in the picture than the other, and a planted foot rises about 3 dp while it steps back. That is the view: the mascot walks a little toward the viewer. From left to right a planted foot stays where it is.
 
-To give the app another clip, draw it as one more picture the same way and add it to `MascotPictures` in `core/designsystem/component/Mascot.kt`: an animated picture if the mascot stands where it is, a sheet of frames if the app has to move it in step. Each second of a clip is about a third of a megabyte.
+To give the app another greeting, draw it as two more pictures the same way, an animated picture for the part in which the mascot stands where it is and a sheet of frames for the part in which the app has to move it in step, and add it as the moonwalk was added: a value of `MascotGreetingKind`, its numbers beside `MoonwalkPicture`, and its files in `Mascot.kt` (`core/designsystem/component/`). A frame of the mascot at this size is about 10 KB however it is packed, so each second of a clip is about a quarter of a megabyte, and `MascotPicturesTest` holds each greeting under one megabyte.
 
 **Two runs do not give the same bytes.** Drawn twice from the same file on the same Mac, every frame differs from its twin in a few dozen pixels, by 3 of 255 at most, and the packed pictures differ by a few bytes in 800,000. So the app's pictures cannot be checked by drawing them again and comparing the files: compare the frames, and expect that much. A change that is not meant to touch them leaves the committed pictures alone.
 
@@ -159,7 +160,7 @@ The second step is given the same height and clips as the first, so that it meas
 
 ## The brake lights
 
-Two round red domes low on his back, close together and proud of the body, where a truck has its tail lights and he would have his behind (Shawn, 2026-10-10: "add brake light to his back side like a butt. I would like these to be able to light up"). He chose them from three designs drawn for him ("use A for the brake lights"); the other two are not in the script (FINDINGS_LOG, 2026-10-10). Nothing shows from the front, and nothing in the app or on the website shows them yet.
+Two round red domes low on his back, close together and proud of the body, where a truck has its tail lights and he would have his behind (Shawn, 2026-10-10: "add brake light to his back side like a butt. I would like these to be able to light up"). He chose them from three designs drawn for him ("use A for the brake lights"); the other two are not in the script (FINDINGS_LOG, 2026-10-10). Nothing shows from the front. The app's moonwalk is where they are seen, lit; the wave and the website show him from the front and from his left.
 
 - **The lenses are one object, `Brake_Lights`, and their red is one material of its own, `MilO_Brake_Lens`:** a dark, glossy red while it is unlit, in thin rims of the black rubber.
 - **They cast no shadow,** like the glass over the dials. The studio's rim light stands behind him; with a shadow, the lights darkened the top of a shoe by a few hundred pixels in every picture taken from the front.
@@ -197,7 +198,7 @@ The turn-around is a turntable, not an animation: the whole mascot is turned abo
 
 ## The hat and the moonwalk
 
-**A preview. The app does not play it.** Shawn, 2026-10-10: "i want to have a animation with him moon walking on to the screen stops mid way. adoes some hip thrusts than spins and continues moon walking. [...] if we can add a hat for this animation it would be cool. i want it to be like Micheal Jackson video", to "take turns with the wave", and "show me a preview first". What is here is the hat, the four clips and the two scripts that make the preview; nothing under `app/` was changed for it.
+**The app's second greeting, since 2026-10-10.** Shawn that day: "i want to have a animation with him moon walking on to the screen stops mid way. adoes some hip thrusts than spins and continues moon walking. [...] if we can add a hat for this animation it would be cool. i want it to be like Micheal Jackson video", to "take turns with the wave", and "show me a preview first". He was shown the preview below and said "it looks good"; the app plays what it showed. What is here is the hat, the four clips, the script that draws their frames, the script that packs them for the app, and the script that makes the preview.
 
 **The hat** is a black fedora with a band in his own green (`build_hat_bm` in `build_milo.py`; the object `Hat`, the felt `MilO_Hat_Felt`).
 
@@ -230,7 +231,29 @@ python3 design/mascot/scripts/preview_moonwalk.py /tmp/milo-moonwalk /tmp/milo-m
 - **The second step writes** `moonwalk.mp4` (the whole screen, 1080 pixels wide), `moonwalk.gif` (the foot of the screen, smaller), `moonwalk-sheet.png` (a frame from every quarter second) and four large stills. It plays the greeting as the app plays the one it has: he is 150 dp high, his soles are 4 dp above the bottom bar's tile, 24 frames a second, the app's soft shadow under his feet. He comes in from just beyond the right edge, does the middle part in the middle of the screen and glides out at the left: 7.3 seconds on a phone 411 dp wide.
 - **Nothing of the preview is committed.** The frames and the film are written wherever the two commands are told.
 
-**What the app would need, if this is built in:** the glide as a sheet of 14 stills, as the walk is now, played twice, in and out; the middle as an animated picture of 80 frames; and both higher than the greeting's 240 by 168 dp, because of the hat and the halo's room (the preview's frames are 226 by 235 dp). Packed as the greeting's pictures are, with 2.5 pixels to the dp, they came to 179 KB and 987 KB in a trial: the app's pictures of the mascot would go from 0.9 MB to 2.0 MB, and `MascotPicturesTest` holds them under one today. The halo makes the pictures right for the dark page only. The numbers `MascotPicture` holds would be these scripts' to print. And a rule for when he moonwalks and when he waves.
+**The app's two pictures** are made from the same frames, drawn with 2.5 pixels to the dp, which is what `render_moonwalk.py` draws when it is told nothing else:
+
+```
+blender -b design/mascot/milo_mascot.blend --python design/mascot/scripts/render_moonwalk.py -- /tmp/milo-moonwalk-app
+python3 design/mascot/scripts/pack_moonwalk.py /tmp/milo-moonwalk-app
+```
+
+| Picture | What it shows | Size |
+|---|---|---|
+| `app/src/main/res/drawable-nodpi/mascot_moonwalk.webp` | One cycle of the glide toward the left, 14 frames. A still picture of 3,360 by 960 pixels: the frames lie side by side, seven across and two down. The app draws the frame it wants, because it moves the mascot with every frame, in and out | 130 KB |
+| `app/src/main/res/drawable-nodpi/mascot_stop_and_spin.webp` | The middle part, from the glide's first frame: `MoonwalkStop`, `KickSpin` and `MoonwalkOn`, 80 frames. An animated picture, which Android plays once | 768 KB |
+
+- **The first step draws the frames** (two minutes), 560 by 592 pixels each. The second packs them, in seven seconds, and needs Pillow (`pip3 install pillow`), `cwebp` and `webpmux` (`brew install webp`).
+- **The app's code has to be told what the second step prints:** `MoonwalkPicture` in `core/designsystem/component/MascotMoonwalk.kt` holds those numbers: a frame's size, where his axis is in it, where his soles are, how far he reaches to each side while he glides, and his stride. `MascotPicturesTest` fails if the pictures' sizes, the sheet's rows, the animated picture's frames and time or how often it plays are not what stands there. The stride, the reaches, the axis and the soles are not in the files, and no test can check them: a wrong stride shows as a toe that slides.
+- **`pack_moonwalk.py` does four things `pack_greeting.py` does not,** and says why at its top:
+  - **It cuts the frames down** to what is drawn in any of them and 8 pixels more, made up to 480 by 480 pixels (192 dp). The room the first step leaves for the halo is mostly empty. It cost no bytes, but it cost the phone memory: the sheet is 12.9 MB there instead of 18.6.
+  - **A frame with a glow in it keeps its see-through channel almost whole** (20 of the 80: the skid and the turn). Stored as the wave's pictures store it, in twelve steps, an edge is fine and a soft halo is drawn as rings.
+  - **A frame that is the frame before is not stored** (2 of the 80): the frame before is shown twice as long.
+  - **A frame in which only the needles move is stored as the small box that changed** (5 of the 80), laid over the frame before. So the picture holds 78 stored frames, and a frame may depend on the one before it.
+- **Colour is packed at 50 of 100,** where the wave's is at 60: he is never still in these pictures, and at a phone's size a frame at 50 could not be told from one at 60. At 40 the numbers on the dials and the lines between his fingers smear.
+- **The script checks itself:** it plays the packed picture back and holds every frame against the one that was drawn, over the app's dark page. A patch in the wrong place stops it.
+- **The halo makes these pictures right for a dark ground only.** Over the app's lime tile the glow is an orange mist that darkens the lime (FINDINGS_LOG, 2026-10-10).
+- **A change to a clip, to the hat or to the lights** means both steps again, the numbers into `MoonwalkPicture` if any changed, and a look at the greeting on a phone or an emulator.
 
 ## What to know before writing a clip
 

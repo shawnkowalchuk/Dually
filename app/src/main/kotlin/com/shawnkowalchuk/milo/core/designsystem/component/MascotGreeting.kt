@@ -1,5 +1,6 @@
 package com.shawnkowalchuk.milo.core.designsystem.component
 
+import android.content.res.Resources
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
@@ -11,7 +12,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -38,41 +38,67 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * MilO's greeting (Shawn, 2026-10-09: "walked from the right side of the screen to the center
- * at the bottom of the screen. walking just above the bottom navigation than turned and
- * waved"). The mascot comes in from beyond the right edge and walks to the left along the top
- * of the bottom bar; in the middle of the screen it turns to the viewer, waves once, fades
- * away, and [onDone] is called.
+ * MilO's greeting, one of two ([MascotGreetingKind]).
+ *
+ * **The wave** (Shawn, 2026-10-09: "walked from the right side of the screen to the center at
+ * the bottom of the screen. walking just above the bottom navigation than turned and waved").
+ * The mascot comes in from beyond the right edge and walks to the left along the top of the
+ * bottom bar; in the middle of the screen it turns to the viewer, waves once and fades away.
+ *
+ * **The moonwalk** (Shawn, 2026-10-10: "moon walking on to the screen stops mid way. adoes some
+ * hip thrusts than spins and continues moon walking", in a hat). He glides in backward along
+ * the same line, does the middle part in the middle of the screen, and glides on until he is
+ * wholly beyond the left edge. It does not fade.
+ *
+ * Both are played the same way: the app steps through a sheet of frames by its own clock and
+ * moves the mascot with every one, Android plays an animated picture while he stays where he
+ * is, and the one takes the other's place in the same drawing of the screen.
  *
  * **It takes nothing from the screen under it.** It is a drawing and no more: no press, no
  * Back and no screen reader ever meets it, the screen is not dimmed, and every button under
- * the mascot works while it walks across.
+ * the mascot works while it goes across.
  *
- * **[onDone] is called once, however the greeting ends:** after the fade; at once, with nothing
- * drawn, while the phone's animations are switched off or when a picture cannot be read
- * ([onUnreadable] is then told why); and when MilO is put away in the middle of it, which is
- * also how a turn of the phone ends it.
+ * **[onDone] is called once, however the greeting ends:** when the mascot has gone; at once,
+ * with nothing drawn, while the phone's animations are switched off or when no picture can be
+ * read; and when MilO is put away in the middle of it, which is also how a turn of the phone
+ * ends it.
  *
- * Whether there is a greeting at all is not decided here (`feature/greeting`); which frame of
- * the walk is due at each moment, and where the mascot is in it, is worked out in
- * `MascotWalk.kt`.
+ * Whether there is a greeting at all, and which of the two, is not decided here
+ * (`feature/greeting`); which frame is due at each moment, and where the mascot is in it, is
+ * worked out in `MascotWalk.kt` and `MascotMoonwalk.kt`.
  *
+ * @param kind the greeting to play. If its pictures cannot be read, the one that stands in for
+ * it plays ([MascotGreetingKind.instead]).
  * @param barHeight the room the bottom bar takes at the foot of the screen, with everything
  * under it: what a `Scaffold` reports as its content's bottom padding.
+ * @param onShown called once, when the mascot is about to be drawn for the first time. A
+ * greeting that ends before that has shown nothing.
+ * @param onUnreadable told of each greeting whose pictures could not be read, and why.
  */
 @Composable
 fun MascotGreeting(
+    kind: MascotGreetingKind,
     onDone: () -> Unit,
     barHeight: Dp,
     modifier: Modifier = Modifier,
-    onUnreadable: (IOException) -> Unit = {},
+    onShown: () -> Unit = {},
+    onUnreadable: (MascotGreetingKind, IOException) -> Unit = { _, _ -> },
 ) {
     var stage by remember { mutableStateOf(GreetingStage.READING) }
     // The greeting outlives a recomposition; these keep it calling the newest functions.
     val newestOnDone by rememberUpdatedState(onDone)
+    val newestOnShown by rememberUpdatedState(onShown)
     val newestOnUnreadable by rememberUpdatedState(onUnreadable)
     val course =
-        remember { GreetingCourse(onStage = { stage = it }, onDone = { newestOnDone() }) }
+        remember {
+            GreetingCourse(
+                onStage = {
+                    stage = it
+                    if (it == GreetingStage.COMING) newestOnShown()
+                },
+                onDone = { newestOnDone() },
+            )
+        }
 
     // Put away in the middle of a greeting, MilO does not carry on with it when it comes back.
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { course.on(GreetingEvent.CUT_SHORT) }
@@ -80,7 +106,9 @@ fun MascotGreeting(
     // Leaving the composition is what stops the greeting (the effect in GreetingOnScreen).
     if (stage != GreetingStage.OVER) {
         BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-            GreetingOnScreen(course, barHeight, onUnreadable = { newestOnUnreadable(it) })
+            GreetingOnScreen(kind, course, barHeight) { which, why ->
+                newestOnUnreadable(which, why)
+            }
         }
     }
 }
@@ -88,54 +116,52 @@ fun MascotGreeting(
 /** Plays one greeting through, telling [course] of each step, and draws the mascot. */
 @Composable
 private fun BoxWithConstraintsScope.GreetingOnScreen(
+    kind: MascotGreetingKind,
     course: GreetingCourse,
     barHeight: Dp,
-    onUnreadable: (IOException) -> Unit,
+    onUnreadable: (MascotGreetingKind, IOException) -> Unit,
 ) {
     val resources = LocalResources.current
-    // Worked out once: a window that is resized under the greeting does not start it again.
-    val way = remember { MascotWalk(screenWidth = maxWidth.value) }
+    // Read once: a window that is resized under the greeting does not start it again.
+    val screenWidth = remember { maxWidth.value }
     var pictures by remember { mutableStateOf<MascotPictures?>(null) }
-    // The frame of the walk that is due. The mascot's step and its place are both read from
-    // this one number, and both while drawing: they cannot come apart.
-    val walkFrame = remember { mutableIntStateOf(0) }
+    // What is drawn of the mascot, and where. His step and his place are one value, and both
+    // are read from it while drawing: they cannot come apart.
+    var pose by remember { mutableStateOf(MascotPose(sheetFrame = 0, axis = 0f)) }
     val fade = remember { Animatable(1f) }
 
     LaunchedEffect(Unit) {
-        val read =
-            if (coroutineContext[MotionDurationScale]?.scaleFactor == 0f) {
-                null
-            } else {
-                try {
-                    readMascotPictures(resources)
-                } catch (unreadable: IOException) {
-                    onUnreadable(unreadable)
-                    null
-                }
-            }
+        val animationsOff = coroutineContext[MotionDurationScale]?.scaleFactor == 0f
+        val read = if (animationsOff) null else readFirstReadable(resources, kind, onUnreadable)
         if (read == null) {
             course.on(GreetingEvent.CUT_SHORT)
             return@LaunchedEffect
         }
         try {
+            val way = read.kind.wayAcross(screenWidth)
+            pose = way.coming.poseIn(0)
             pictures = read
             course.on(GreetingEvent.PICTURES_READ)
-            val waved = CompletableDeferred<Unit>()
-            walkIn(way) { frame ->
-                walkFrame.intValue = frame
-                // Still before the screen is drawn: the drawing that no longer shows the walk
-                // is the one that shows the turn's first frame, and starts its clock.
-                if (frame == way.frames) {
-                    read.turnAndWave.playOnce { waved.complete(Unit) }
-                    course.on(GreetingEvent.WALK_OVER)
+            val played = CompletableDeferred<Unit>()
+            step(way.coming) { frame ->
+                pose = way.coming.poseIn(frame)
+                // Still before the screen is drawn: the drawing that no longer shows the sheet
+                // is the one that shows the animated picture's first frame, and starts its clock.
+                if (frame == way.coming.frames) {
+                    read.played.playOnce { played.complete(Unit) }
+                    course.on(GreetingEvent.ARRIVED)
                 }
             }
-            withTimeoutOrNull(MascotPicture.TURN_AND_WAVE_MS + PICTURE_PATIENCE_MS) {
-                waved.await()
+            withTimeoutOrNull(read.kind.frames.playedMillis + PICTURE_PATIENCE_MS) {
+                played.await()
             }
-            course.on(GreetingEvent.WAVE_OVER)
-            fade.animateTo(0f, tween(LEAVE_MS))
-            course.on(GreetingEvent.FADED)
+            course.on(GreetingEvent.MIDDLE_OVER)
+            if (way.going == null) {
+                fade.animateTo(0f, tween(LEAVE_MS))
+            } else {
+                step(way.going) { frame -> pose = way.going.poseIn(frame) }
+            }
+            course.on(GreetingEvent.GONE)
         } finally {
             // Also when the greeting is cut short, or leaves the screen in the middle.
             read.close()
@@ -145,57 +171,82 @@ private fun BoxWithConstraintsScope.GreetingOnScreen(
     // Nothing is drawn while the pictures are being read.
     val shown = pictures
     if (shown != null) {
+        val frames = shown.kind.frames
         val shadow = MaterialTheme.colorScheme.scrim.copy(alpha = SHADOW_DARKEST)
         // The bar's tile begins rowGap below the top of the room the bar takes
-        // (MiloNavigationBar); the walking mascot's soles are a small step above the tile.
+        // (MiloNavigationBar); the mascot's soles are a small step above the tile.
         val spacing = MiloTheme.spacing
         val solesAboveFoot = barHeight - spacing.rowGap + spacing.extraSmall
         Box(
             modifier =
                 Modifier
                     .align(AbsoluteAlignment.BottomLeft)
-                    .offset(y = MascotPicture.SOLES.dp - solesAboveFoot)
-                    // Read while drawing, so a step of the walk moves the mascot and nothing
-                    // is composed or laid out again.
+                    .offset(y = frames.soles.dp - solesAboveFoot)
+                    // Read while drawing, so a step moves the mascot and nothing is composed
+                    // or laid out again.
                     .graphicsLayer {
-                        val middle = way.middleIn(walkFrame.intValue)
-                        translationX = (middle - MascotPicture.WIDTH / 2).dp.toPx()
+                        translationX = (pose.axis - frames.axis).dp.toPx()
                         alpha = fade.value
-                    }.drawBehind { groundShadow(shadow) },
+                    }.drawBehind { groundShadow(shadow, frames) },
         ) {
-            Mascot(shown, walkFrame = { walkFrame.intValue.takeIf { it < way.frames } })
+            Mascot(shown, sheetFrame = { pose.sheetFrame })
         }
     }
 }
 
 /**
- * Walks the mascot in. Before every drawing of the screen, [onFrame] is told the frame of the
- * walk that is due ([MascotWalk.frameAt]); the last it is told is [MascotWalk.frames], when the
- * walk is over. What [onFrame] does is drawn in that same drawing of the screen.
- *
- * The walk's clock is the screen's frame time, read as it is and not stretched by the phone's
- * "animator duration scale": the turn and wave that follows plays at its own pace whatever that
- * is set to.
+ * Reads the pictures of [kind], or, if they cannot be read, of the greeting that plays instead
+ * of it. [onUnreadable] is told of each one that could not be read. Null if none could.
  */
-private suspend fun walkIn(way: MascotWalk, onFrame: (Int) -> Unit) {
+private suspend fun readFirstReadable(
+    resources: Resources,
+    kind: MascotGreetingKind,
+    onUnreadable: (MascotGreetingKind, IOException) -> Unit,
+): MascotPictures? {
+    var wanted: MascotGreetingKind? = kind
+    while (wanted != null) {
+        try {
+            return readMascotPictures(resources, wanted)
+        } catch (unreadable: IOException) {
+            onUnreadable(wanted, unreadable)
+            wanted = wanted.instead
+        }
+    }
+    return null
+}
+
+/**
+ * Takes the mascot along one [leg]. Before every drawing of the screen, [onFrame] is told the
+ * frame that is due ([MascotLeg.frameAt]); the last it is told is [MascotLeg.frames], when the
+ * leg is over. What [onFrame] does is drawn in that same drawing of the screen.
+ *
+ * The leg's clock is the screen's frame time, read as it is and not stretched by the phone's
+ * "animator duration scale": the animated picture plays at its own pace whatever that is set
+ * to. The clock starts with a drawing of the screen that shows what was there before the leg.
+ */
+private suspend fun step(leg: MascotLeg, onFrame: (Int) -> Unit) {
     val began = withFrameNanos { it }
     do {
         val frame =
-            withFrameNanos { now -> way.frameAt((now - began) / NANOS_IN_MILLI).also(onFrame) }
-    } while (frame < way.frames)
+            withFrameNanos { now -> leg.frameAt((now - began) / NANOS_IN_MILLI).also(onFrame) }
+    } while (frame < leg.frames)
 }
 
-/** A faint, soft patch of dark on the ground under the mascot's feet. */
-private fun DrawScope.groundShadow(darkest: Color) {
+/** A faint, soft patch of dark on the ground under the mascot's feet, where he stands. */
+private fun DrawScope.groundShadow(darkest: Color, frames: MascotFrames) {
     val radius = SHADOW_WIDTH.toPx() / 2
-    val centre = Offset(size.width / 2, size.height - SHADOW_ABOVE_EDGE.toPx())
+    val centre =
+        Offset(
+            x = frames.axis.dp.toPx(),
+            y = size.height - (frames.soles.dp + SHADOW_ABOVE_SOLES).toPx(),
+        )
     val fading = Brush.radialGradient(listOf(darkest, Color.Transparent), centre, radius)
     scale(scaleX = 1f, scaleY = SHADOW_HEIGHT / SHADOW_WIDTH, pivot = centre) {
         drawCircle(fading, radius, centre)
     }
 }
 
-/** How long the mascot takes to fade away. */
+/** How long the waving mascot takes to fade away. */
 private const val LEAVE_MS = 260
 
 private const val NANOS_IN_MILLI = 1_000_000L
@@ -204,8 +255,8 @@ private const val NANOS_IN_MILLI = 1_000_000L
 private val SHADOW_WIDTH = 92.dp
 private val SHADOW_HEIGHT = 14.dp
 
-/** The shadow's middle, above the picture's lower edge: between the nearer foot and the other. */
-private val SHADOW_ABOVE_EDGE = 5.dp
+/** The shadow's middle, above the mascot's soles: between the nearer foot and the other. */
+private val SHADOW_ABOVE_SOLES = 3.4.dp
 
 /** How dark the shadow is in its middle. It fades to nothing at its rim. */
 private const val SHADOW_DARKEST = 0.5f

@@ -25,21 +25,28 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * The mascot's pictures, read and ready (ADR-007). The mascot is a 3D model in Blender
+ * One greeting's pictures, read and ready (ADR-007). The mascot is a 3D model in Blender
  * (`design/mascot/`); what the app carries is that model drawn there once, frame by frame, with
  * a see-through background. Android's own decoder reads them, so the app has no library for it
  * and no native code of its own.
  *
  * Every frame of both is the same size and was drawn by the same camera, so one can take
- * another's place without the mascot moving. What they hold is said in [MascotPicture].
+ * another's place without the mascot moving. What they hold is said in [MascotPicture] for the
+ * wave and in [MoonwalkPicture] for the moonwalk.
  *
- * @property walk one cycle of the walk toward the left: a still picture with its frames side by
- * side. The app draws the frame it wants, because the mascot's place has to change with its
- * step, and an animated picture does not say which frame it shows.
- * @property turnAndWave an animated picture, from the frame that follows the walk's last one: a
- * turn to the viewer, then the wave. The mascot stands where it is, so Android plays it.
+ * @property kind the greeting these are the pictures of.
+ * @property sheet one cycle of the walk, or of the glide, toward the left: a still picture with
+ * its frames side by side. The app draws the frame it wants, because the mascot's place has to
+ * change with its step, and an animated picture does not say which frame it shows.
+ * @property played an animated picture, from the frame that follows the sheet's last one: the
+ * turn and the wave, or the moonwalk's middle part. The mascot stands where it is, so Android
+ * plays it.
  */
-internal class MascotPictures(val walk: ImageBitmap, val turnAndWave: AnimatedImageDrawable) {
+internal class MascotPictures(
+    val kind: MascotGreetingKind,
+    val sheet: ImageBitmap,
+    val played: AnimatedImageDrawable,
+) {
     /**
      * Stops the animated picture. It is not played again.
      *
@@ -49,27 +56,57 @@ internal class MascotPictures(val walk: ImageBitmap, val turnAndWave: AnimatedIm
      * `AnimatedImageDrawable.postOnAnimationEnd`). The listener goes when the picture does.
      */
     fun close() {
-        turnAndWave.stop()
+        played.stop()
     }
 }
 
 /**
- * Reads both pictures, off the main thread, with the first frame of the animated one drawn and
- * waiting. Both at once and before anything is shown, so that the second is there the moment
- * the walk is over.
+ * Reads both pictures of one greeting, off the main thread, with the first frame of the
+ * animated one drawn and waiting. Both at once and before anything is shown, so that the second
+ * is there the moment the mascot has come in.
  *
  * @throws IOException if a picture cannot be read, or the second is not an animated one.
  */
-internal suspend fun readMascotPictures(resources: Resources): MascotPictures =
-    withContext(Dispatchers.IO) {
-        val walk = ImageDecoder.createSource(resources, R.drawable.mascot_walk)
-        val turnAndWave = ImageDecoder.createSource(resources, R.drawable.mascot_turn_and_wave)
-        MascotPictures(
-            walk = ImageDecoder.decodeBitmap(walk).asImageBitmap(),
-            turnAndWave =
-                ImageDecoder.decodeDrawable(turnAndWave) as? AnimatedImageDrawable
-                    ?: throw IOException("mascot_turn_and_wave is not an animated picture"),
-        )
+internal suspend fun readMascotPictures(
+    resources: Resources,
+    kind: MascotGreetingKind,
+): MascotPictures = withContext(Dispatchers.IO) {
+    val files = kind.files
+    val sheet = ImageDecoder.createSource(resources, files.sheet)
+    val played = ImageDecoder.createSource(resources, files.played)
+    MascotPictures(
+        kind = kind,
+        sheet = ImageDecoder.decodeBitmap(sheet).asImageBitmap(),
+        played =
+            ImageDecoder.decodeDrawable(played) as? AnimatedImageDrawable
+                ?: throw IOException("${files.playedName} is not an animated picture"),
+    )
+}
+
+/**
+ * A greeting's two pictures among the app's resources.
+ *
+ * @property playedName the second one's name, for the Log. Written out here and not asked of
+ * Android: the release build packs a resource under another, shorter name (ADR-008), and the
+ * line that says a picture could not be read must not count on what Android answers there.
+ */
+private class MascotFiles(val sheet: Int, val played: Int, val playedName: String)
+
+private val MascotGreetingKind.files: MascotFiles
+    get() = when (this) {
+        MascotGreetingKind.WAVE ->
+            MascotFiles(
+                sheet = R.drawable.mascot_walk,
+                played = R.drawable.mascot_turn_and_wave,
+                playedName = "mascot_turn_and_wave",
+            )
+
+        MascotGreetingKind.MOONWALK ->
+            MascotFiles(
+                sheet = R.drawable.mascot_moonwalk,
+                played = R.drawable.mascot_stop_and_spin,
+                playedName = "mascot_stop_and_spin",
+            )
     }
 
 /**
@@ -91,52 +128,57 @@ internal fun AnimatedImageDrawable.playOnce(onLastFrame: () -> Unit) {
 }
 
 /**
- * The mascot, as one of its [pictures] shows it, [MascotPicture.WIDTH] dp wide and
- * [MascotPicture.HEIGHT] high on every phone. It only draws: which frame of the walk, when the
- * turn and wave plays and where the mascot stands is its caller's business.
+ * The mascot, as one of a greeting's [pictures] shows it, as wide and as high as one of their
+ * frames ([MascotFrames]) on every phone. It only draws: which frame of the sheet, when the
+ * animated picture plays and where the mascot stands is its caller's business.
  *
- * **Nothing here redraws the turn and wave for its next frame.** A screen of MilO is drawn by
- * the phone's graphics chip, and there Android moves an animated picture on by itself, between
- * two of the app's own drawings, for as long as some part of it is on the screen.
+ * **Nothing here redraws the animated picture for its next frame.** A screen of MilO is drawn
+ * by the phone's graphics chip, and there Android moves an animated picture on by itself,
+ * between two of the app's own drawings, for as long as some part of it is on the screen.
  *
  * It is the first thing in the app that is not drawn by Compose's own means: picture files,
- * read by Android. A further use of the mascot goes through this component and adds its picture
- * to [MascotPictures].
+ * read by Android. A further use of the mascot goes through this component and adds its
+ * pictures to [readMascotPictures].
  *
- * @param walkFrame the frame of the walk to draw, counted on through its cycles, or null for
- * the turn and wave as it plays. Asked while drawing, so a new frame draws again and nothing
- * is composed or laid out for it.
+ * @param sheetFrame the frame of the sheet to draw, or null for the animated picture as it
+ * plays. Asked while drawing, so a new frame draws again and nothing is composed or laid out
+ * for it.
  */
 @Composable
 internal fun Mascot(
     pictures: MascotPictures,
-    walkFrame: () -> Int?,
+    sheetFrame: () -> Int?,
     modifier: Modifier = Modifier,
 ) {
+    val frames = pictures.kind.frames
     Spacer(
         modifier =
             modifier
-                .size(MascotPicture.WIDTH.dp, MascotPicture.HEIGHT.dp)
+                .size(frames.width.dp, frames.height.dp)
                 .drawBehind {
                     val whole = IntSize(size.width.roundToInt(), size.height.roundToInt())
-                    val frame = walkFrame()
+                    val frame = sheetFrame()
                     if (frame != null) {
-                        drawWalkFrame(pictures.walk, frame, whole)
+                        drawSheetFrame(pictures.sheet, frames, frame, whole)
                     } else {
-                        pictures.turnAndWave.setBounds(0, 0, whole.width, whole.height)
-                        drawIntoCanvas { pictures.turnAndWave.draw(it.nativeCanvas) }
+                        pictures.played.setBounds(0, 0, whole.width, whole.height)
+                        drawIntoCanvas { pictures.played.draw(it.nativeCanvas) }
                     }
                 },
     )
 }
 
-/** Draws one frame of the walk's [sheet], [whole] in size: the sheet's frames lie row after row. */
-private fun DrawScope.drawWalkFrame(sheet: ImageBitmap, frame: Int, whole: IntSize) {
-    val one =
-        IntSize(sheet.width / MascotPicture.WALK_COLUMNS, sheet.height / MascotPicture.WALK_ROWS)
-    val inCycle = frame.mod(MascotPicture.WALK_FRAMES)
-    val column = inCycle % MascotPicture.WALK_COLUMNS
-    val row = inCycle / MascotPicture.WALK_COLUMNS
+/** Draws one frame of a [sheet], [whole] in size: the sheet's frames lie row after row. */
+private fun DrawScope.drawSheetFrame(
+    sheet: ImageBitmap,
+    frames: MascotFrames,
+    frame: Int,
+    whole: IntSize,
+) {
+    val one = IntSize(sheet.width / frames.sheetColumns, sheet.height / frames.sheetRows)
+    val inCycle = frame.mod(frames.sheetFrames)
+    val column = inCycle % frames.sheetColumns
+    val row = inCycle / frames.sheetColumns
     drawImage(
         image = sheet,
         srcOffset = IntOffset(column * one.width, row * one.height),

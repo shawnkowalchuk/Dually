@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# preview_moonwalk.py - lays the moonwalk over a picture of Home, as the app would play it as a
+# preview_moonwalk.py - lays the moonwalk over a picture of Home, as the app plays it as a
 # greeting, and writes what there is to show of it. Plain Python, with Pillow and ffmpeg:
 #
 #   python3 design/mascot/scripts/preview_moonwalk.py <frames> <folder to write into>
@@ -14,17 +14,19 @@
 #   moonwalk-sheet.png      a frame from every quarter second, with its time
 #   moonwalk-<what>.png     large stills: the glide, the brake lights, the pose, the turn
 #
-# How it is played is how the app plays the greeting it has (MascotWalk.kt): the glide is one
-# cycle drawn on the spot, shown over and over, and every frame stands a part of the stride to
-# the left of the one before, so the foot that is up on its toe stays where it is. He comes in
-# from just beyond the right edge, does the middle part in the middle of the screen, and glides
-# on until he is wholly beyond the left edge. The glide in ends with the last frame of a cycle,
-# because the middle begins with the frame that follows it; so it begins partway into one, and
-# no time is spent before he is seen. (The greeting the app has walks in whole cycles, and up to
-# half a second of it is not seen.) His soles are
-# SOLES_DP above the bottom bar's tile, and the app's soft shadow lies under his feet.
+# How it is played is how the app plays it (MascotMoonwalk.kt): the glide is one cycle drawn on
+# the spot, shown over and over, and every frame stands a part of the stride to the left of the
+# one before, so the foot that is up on its toe stays where it is. He comes in from just beyond
+# the right edge, does the middle part in the middle of the screen, and glides on until he is
+# wholly beyond the left edge. The glide in ends with the last frame of a cycle, because the
+# middle begins with the frame that follows it; so it begins partway into one, and no time is
+# spent before he is seen. (The wave walks in whole cycles, and up to half a second of it is not
+# seen.) His soles are SOLES_DP above the bottom bar's tile, and the app's soft shadow lies under
+# his feet.
 #
-# THE APP DOES NOT PLAY THIS. It is a preview to decide by.
+# THIS IS THE PREVIEW Shawn was shown on 2026-10-10, before the moonwalk was built into the app
+# ("it looks good"). The app does not use what it writes: its pictures are pack_moonwalk.py's.
+# The app shows each frame for 42 ms, as its other pictures do; the film has 24 frames a second.
 
 import json
 import math

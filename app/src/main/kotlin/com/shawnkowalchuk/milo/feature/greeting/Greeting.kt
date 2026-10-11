@@ -2,12 +2,12 @@ package com.shawnkowalchuk.milo.feature.greeting
 
 import com.shawnkowalchuk.milo.data.settings.FirstRunStage
 
-/** Where MilO's greeting, the mascot's walk and wave over Home, stands. */
+/** Where MilO's greeting, the mascot's wave or his moonwalk over Home, stands. */
 enum class Greeting {
     /** No greeting is asked for: this start has had its greeting, or was given none. */
     NONE,
 
-    /** One is asked for, and the settings that decide it have not been read yet. */
+    /** One is asked for, and the settings that decide it, and which one, have not been read yet. */
     WAITING,
 
     /** The mascot is on the screen. */
@@ -30,19 +30,24 @@ enum class Greeting {
  * A greeting that is dropped does not come later. One that is showing is dropped as well when
  * any of this changes under it, which is how What's new, opening a moment late, ends it.
  *
+ * Which of MilO's greetings it is, is not decided here: they take turns (`GreetingTurn.kt`).
+ *
  * @param asked true from a fresh start of the activity until the greeting was shown or dropped.
  * @param firstRun how far the first start has come, or null while the settings are being read.
+ * @param turnRead true once it is known which greeting is due. That is read from the settings
+ * too, and nothing is shown or dropped before it is there.
  * @param onHome true while Home is the screen on top.
  * @param notificationTapped true while a tapped notification waits to be dealt with.
  */
 fun greeting(
     asked: Boolean,
     firstRun: FirstRunStage?,
+    turnRead: Boolean,
     onHome: Boolean,
     notificationTapped: Boolean,
 ): Greeting = when {
     !asked -> Greeting.NONE
-    firstRun == null -> Greeting.WAITING
+    firstRun == null || !turnRead -> Greeting.WAITING
     firstRun == FirstRunStage.DONE && onHome && !notificationTapped -> Greeting.SHOWING
     else -> Greeting.DROPPED
 }

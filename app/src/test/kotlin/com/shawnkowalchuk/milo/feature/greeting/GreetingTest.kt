@@ -4,14 +4,15 @@ import com.shawnkowalchuk.milo.data.settings.FirstRunStage
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** When the mascot walks in over Home, and when a start goes without its greeting. */
+/** When the mascot comes in over Home, and when a start goes without its greeting. */
 class GreetingTest {
     private fun greetingOn(
         asked: Boolean = true,
         firstRun: FirstRunStage? = FirstRunStage.DONE,
+        turnRead: Boolean = true,
         onHome: Boolean = true,
         notificationTapped: Boolean = false,
-    ) = greeting(asked, firstRun, onHome, notificationTapped)
+    ) = greeting(asked, firstRun, turnRead, onHome, notificationTapped)
 
     @Test
     fun `a fresh start on Home with nothing else going on is greeted`() {
@@ -31,6 +32,17 @@ class GreetingTest {
         assertEquals(Greeting.WAITING, greetingOn(firstRun = null))
         assertEquals(Greeting.WAITING, greetingOn(firstRun = null, onHome = false))
         assertEquals(Greeting.WAITING, greetingOn(firstRun = null, notificationTapped = true))
+    }
+
+    @Test
+    fun `it waits until it is known which greeting is due, and drops nothing yet`() {
+        assertEquals(Greeting.WAITING, greetingOn(turnRead = false))
+        assertEquals(Greeting.WAITING, greetingOn(turnRead = false, firstRun = null))
+        // Also where it will be dropped once that is known: nothing is decided on half the facts.
+        assertEquals(Greeting.WAITING, greetingOn(turnRead = false, onHome = false))
+        assertEquals(Greeting.WAITING, greetingOn(turnRead = false, firstRun = FirstRunStage.INTRO))
+        // A start that asks for none does not wait for it.
+        assertEquals(Greeting.NONE, greetingOn(asked = false, turnRead = false))
     }
 
     @Test

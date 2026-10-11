@@ -37,8 +37,9 @@ class MainActivity : ComponentActivity() {
     private var homeAsked by mutableStateOf(false)
 
     /**
-     * True from a fresh start of the activity until the greeting, the mascot's walk and wave
-     * over Home, has been shown or dropped. Which of the two is the screens' business (`feature/greeting`).
+     * True from a fresh start of the activity until the greeting, the mascot's wave or his
+     * moonwalk over Home, has been shown or dropped. Which of the two happens, and which
+     * greeting it is, is the screens' business (`feature/greeting`).
      */
     private var greetingAsked by mutableStateOf(false)
 

@@ -128,15 +128,18 @@ fun MiloApp(
                 }
             }
 
-            // The greeting (2026-10-09): on a fresh start the mascot walks in over Home and
-            // waves, unless something else has that moment. One that is dropped is told so at
-            // once, so that it does not show up later, over a screen Shawn has gone to since.
+            // The greeting (2026-10-09): on a fresh start the mascot comes in over Home, unless
+            // something else has that moment: he waves, or he moonwalks, turn and turn about
+            // (2026-10-10). One that is dropped is told so at once, so that it does not show up
+            // later, over a screen Shawn has gone to since.
             val greetings: GreetingViewModel =
                 viewModel(factory = greetingViewModelFactory(container))
+            val greetingDue by greetings.due.collectAsState()
             val greeting =
                 greeting(
                     asked = greetingAsked,
                     firstRun = firstRun,
+                    turnRead = greetingDue != null,
                     onHome = backStack.lastOrNull() == HomeKey,
                     notificationTapped = reportToOpen != null || homeAsked,
                 )
@@ -214,10 +217,13 @@ fun MiloApp(
             }
 
             // Over the screen, and drawn after it. It takes no press from what is under it.
-            if (greeting == Greeting.SHOWING) {
+            val due = greetingDue
+            if (greeting == Greeting.SHOWING && due != null) {
                 MascotGreeting(
+                    kind = due,
                     onDone = onGreetingDone,
                     barHeight = bottomBarHeight,
+                    onShown = greetings::onShown,
                     onUnreadable = greetings::onUnreadable,
                 )
             }
