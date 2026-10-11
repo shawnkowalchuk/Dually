@@ -15,11 +15,17 @@ Nothing in this folder is part of the app's build. The two pictures the app carr
 | `scripts/pack_greeting.py` | Packs those frames into the app's two pictures |
 | `scripts/render_clips.py` | Draws the frames of any clip, at any size |
 | `scripts/render_dials.py` | Draws the two dials without their needles, and the needles' blades alone, for the website |
+| `scripts/render_lights.py` | Draws the brake lights to be shown: his back with them off and lit, and a turn-around |
 | `scripts/pack_clips.py` | Packs those frames into the pictures in `renders/`, and into the website's three |
-| `export/milo_mascot.glb` | The model with every clip (2.28 MB), for whatever comes later. Nothing uses it today |
+| `scripts/render_moonwalk.py` | Draws the frames of the moonwalk, for a preview of it as a greeting (below) |
+| `scripts/preview_moonwalk.py` | Lays those frames over a picture of Home and writes a film of it. Plain Python, not run in Blender |
+| `export/milo_mascot.glb` | The model with every clip, without the hat (2.67 MB), for whatever comes later. Nothing uses it today |
 | `renders/milo_thumbs_up.png` | The mascot as Blender draws it, in the pose of the reference picture |
 | `renders/milo_flex.webp`, `milo_peace.webp`, `milo_rock_on.webp` | Three clips as animated pictures with a see-through background, for whatever comes later (below) |
 | `renders/milo_flex.png`, `milo_peace.png`, `milo_rock_on.png` | A still of the pose each of them holds |
+| `renders/milo_back.png`, `milo_back_lit.png`, `milo_back_three_quarter_lit.png` | His back with the brake lights off and lit, and from behind and to one side with them lit, on a see-through background (below) |
+| `renders/milo_back_on_dark.png`, `milo_back_lit_on_dark.png`, `milo_back_three_quarter_lit_on_dark.png` | The same three on the app's dark page, with the halo round the lit lights |
+| `renders/milo_turn_around_on_dark.webp` | A turn-around on the dark page, the lights coming on while his back is to the viewer: an animated picture that starts again for ever |
 | `reference.webp` | The picture the mascot was built from |
 
 **The scripts are the source, the `.blend` is their result.** To change the mascot, change a script and run the first four again, in the order above, rather than editing the Blender file by hand: what is done by hand is gone at the next run. Each of them only rebuilds its own collections (`MilO_Mascot`, `MilO_Studio`, `MilO_Reference`). After a change to the model, or to a clip that a picture is drawn from, that picture has to be drawn again too (below).
@@ -38,9 +44,9 @@ The same command without `-b` and without its last part opens Blender's window a
 
 ## The clips
 
-Each is one action, at 24 frames a second, starting on frame 0. Every clip but the three loops and `WaveUp` begins and ends in the same standing pose, so one can follow another. The needles move in every clip.
+Each is one action, at 24 frames a second, starting on frame 0. Every clip but the loops, `WaveUp` and the moonwalk's four begins and ends in the same standing pose, so one can follow another. The needles move in every clip.
 
-`Flex`, `Peace` and `RockOn` were added on 2026-10-09 for pictures to come ("future content ideas or use on the website"); nothing plays them yet. `WaveUp` and `WaveLoop` were added on 2026-10-10 for the website, where he waves for as long as a pointer is on him.
+`Flex`, `Peace` and `RockOn` were added on 2026-10-09 for pictures to come ("future content ideas or use on the website"); nothing plays them yet. `WaveUp` and `WaveLoop` were added on 2026-10-10 for the website, where he waves for as long as a pointer is on him. The four clips of the moonwalk were added the same day for a greeting Shawn asked for; **they are a preview, and nothing plays them yet** (see "The hat and the moonwalk").
 
 | Clip | Length | What happens |
 |---|---|---|
@@ -54,6 +60,10 @@ Each is one action, at 24 frames a second, starting on frame 0. Every clip but t
 | `RockOn` | 2.75 s | The right hand goes up and holds the horns: the two outer fingers up, the middle one curled under the thumb. Three nods to a beat, the RPM needle at the red line with each |
 | `WaveUp` | 0.5 s | The right arm goes up and stays up: its last frame is `WaveLoop`'s first. The way into the loop, not a clip to play alone; nothing brings the arm down again but `Wave`'s own ending |
 | `WaveLoop` | 0.5 s, loops | The arm held up, one wave of the hand. It is `Wave`'s wave at two a second instead of two and a half, so that one wave is 12 frames and the loop closes on a frame |
+| `Moonwalk` | 0.58 s, loops | In his hat, glides backward on the spot: one foot up on its toe, which stays where it is on the floor, while the other slides back flat; then they change over. One cycle, 14 frames, carries him 1.12 units |
+| `MoonwalkStop` | 1.83 s | From `Moonwalk`'s first frame. He brakes: his back end skids round towards the viewer and the brake lights come on. Then he comes back round into the pose, the right hand to the brim of his hat, the left at his belt, the right knee popped in, and thrusts his hips three times, the RPM needle jumping with each |
+| `KickSpin` | 1.08 s | From that pose. The left leg kicks out to its side, then he turns once round on the spot in half a second, the brake lights going past the viewer, and comes down on the toes of both feet; the brake lights go out |
+| `MoonwalkOn` | 0.42 s | From his toes back into `Moonwalk`'s first frame: the hand comes down from the hat and he turns back the way he glides |
 | `Gauge_Speed` | 2 s | The speed needle alone, from 0 to 240 |
 | `Gauge_RPM` | 2 s | The RPM needle alone, from 0 to 8 |
 
@@ -139,10 +149,88 @@ The second step is given the same height and clips as the first, so that it meas
 
 - The character faces Blender's −Y and stands on z = 0, about 2 units tall. `.L` is its own left.
 - **The needles are driven by two sliders on the skeleton** (`speed_kmh`, `rpm`). A clip keys the sliders, never the needle bones.
+- **The brake lights are driven by a third slider, `brake`,** from 0, unlit, to 1, full on. A clip keys the slider, never the lenses' material. Only the moonwalk's clips key it (see "The brake lights").
+- **The hat is put on by a fourth slider, `hat`:** 0 is no hat, 1 is the hat. Only the moonwalk's clips key it (see "The hat and the moonwalk").
+- **The bone `root` turns the whole mascot, feet and all,** about the point he stands on. Only the moonwalk's clips key it, for the skid and the turn. Every other clip leaves him facing the way he was built.
 - **Arms and legs are hoses.** Their four bones on each side are bendy bones that carry no mesh; rows of short `hose.*` bones follow them and carry it. A `.glb` file cannot hold a bendy bone, and this is what keeps the hoses round in the export.
 - **`Walk` walks on the spot,** with a short stride: each foot goes 0.30 of a unit back while it is planted, on a mascot 2 units high. The greeting moves the picture by that much, so a longer or shorter stride here changes how long the walk across the screen takes.
 - **The feet lead the legs.** Move a foot and its leg follows; lower the body and the knees bend.
 - The "M" is the app's own mark: its outline is read from `app/src/main/res/drawable/ic_launcher_foreground.xml`, and the numbers on the dials are set in the app's `sora.ttf`.
+
+## The brake lights
+
+Two round red domes low on his back, close together and proud of the body, where a truck has its tail lights and he would have his behind (Shawn, 2026-10-10: "add brake light to his back side like a butt. I would like these to be able to light up"). He chose them from three designs drawn for him ("use A for the brake lights"); the other two are not in the script (FINDINGS_LOG, 2026-10-10). Nothing shows from the front, and nothing in the app or on the website shows them yet.
+
+- **The lenses are one object, `Brake_Lights`, and their red is one material of its own, `MilO_Brake_Lens`:** a dark, glossy red while it is unlit, in thin rims of the black rubber.
+- **They cast no shadow,** like the glass over the dials. The studio's rim light stands behind him; with a shadow, the lights darkened the top of a shoe by a few hundred pixels in every picture taken from the front.
+- **None of the pictures there were changes.** Rays cast from the camera to every point of the lenses, in every frame of every clip as it is drawn, reach none of them; and the greeting's and the website's frames, drawn again, are the committed ones to within what two runs of the renderer differ by.
+- **Lit, the lens glows:** the material's emission strength follows the slider `brake`, from 0 to 4 (`BRAKE_GLOW`), in a red kept so pure that a lit lens is drawn red and not pink (`lens_material`). The light also falls on the body round the lens.
+- **A clip that lights them keys the slider itself.** In `animate_milo.py` it calls `set_brake(how far)` at every frame and `key_brake(frame)` after `key_pose(frame)`. The slider is not part of `key_pose`: that would add a curve to every clip there is. The moonwalk's clips do it (`key_clip` keys the pose and, for them, the lights, the hat and the turn), and `render_lights.py` does it in clips of its own, in memory. When a clip is drawn, the lights are put out and the hat is taken off first (`reset_pose`), so one that does not key them is not drawn with what the last one left behind.
+
+**The halo.** Blender's renderer draws no glow round a light. `on_ground` in `render_greeting.py` adds one when a picture is drawn: from what the frame emits and from nothing else, so that no highlight on the chrome or the gloss gets one; and it is added to the frame and to a flat ground under it, as light is. It has to be asked for:
+
+```
+blender -b design/mascot/milo_mascot.blend --python design/mascot/scripts/render_clips.py -- 400 /tmp/milo-lit <clip> --ground 121316
+```
+
+- **`--ground` and a colour** draws the frames on that colour (`121316` is the app's dark page) instead of see-through, with the halo wherever a clip lights the lights, and with a fifth of his height more margin so that the halo has faded before the picture ends.
+- **Without `--ground` nothing of it happens.** The greeting's and the website's pictures are drawn without it and are what they always were; that was checked by drawing them again (FINDINGS_LOG, 2026-10-10).
+- **A see-through picture gets its halo another way** (`halo_see_through` in `render_greeting.py`, built for the moonwalk's preview). Light is added to whatever lies behind, and a see-through picture cannot store that: it stores a colour and how much of it covers what lies behind. So beside the mascot the halo is stored as pure red that covers a part, as much as the halo would be bright on black; where the mascot is, it is added to him as light. Over the app's dark page that is the halo all but exactly. **Over a light ground it is a red mist that darkens what it should light: it is for dark grounds only.** The halo's faint far part is left out (`HALO_ENDS`), so that it ends inside the picture and the picture's edge does not show; `render_moonwalk.py` stops if anything is drawn on a picture's border.
+- **The halo shows on a dark ground.** On the lime and on white it all but disappears, and the lights then read as lit by their own brightness and by the warm light on the body.
+
+**The pictures in `renders/`** are drawn and packed like this, 2.7 MB in all:
+
+```
+blender -b design/mascot/milo_mascot.blend --python design/mascot/scripts/render_lights.py -- /tmp/milo-lights
+python3 design/mascot/scripts/pack_clips.py lights /tmp/milo-lights
+```
+
+| Picture | What it shows | Size |
+|---|---|---|
+| `milo_back.png`, `milo_back_lit.png`, `milo_back_three_quarter_lit.png` | His back with the lights off; lit; and from behind and to one side, lit. See-through, 552 by 584 pixels, no halo | 0.3 MB each |
+| `milo_back_on_dark.png`, `milo_back_lit_on_dark.png`, `milo_back_three_quarter_lit_on_dark.png` | The same three on the dark page with the halo, 776 by 808 pixels | 0.4 to 0.5 MB each |
+| `milo_turn_around_on_dark.webp` | Once round in 36 frames and 3 seconds, on the dark page, the lights coming on while his back is to the viewer. 464 by 488 pixels, starts again for ever | 242 KB |
+
+The turn-around is a turntable, not an animation: the whole mascot is turned about the point he stands on, feet and all, as `render_greeting.py` turns him for the walk. (The moonwalk's clips turn him round themselves, with the bone `root`.)
+
+**In the `.glb`.** A `.glb` holds meshes, materials, a skeleton and the skeleton's movement. It holds neither a slider nor the rule that ties a material to one, and Blender's exporter does not write a glow that follows a slider (tried with its "pointer animation" switched on: no difference). So a bone, `brake`, which carries no mesh, grows with the slider from size 1 to size 2, and that is in the file for every clip that keys the slider. The lens's lit colour is not in the file: unlit is how it is exported. Whoever plays the `.glb` reads the bone's size and lights the material `MilO_Brake_Lens` itself: emissive colour (1.0, 0.004, 0.002) times 4 times (size less 1).
+
+## The hat and the moonwalk
+
+**A preview. The app does not play it.** Shawn, 2026-10-10: "i want to have a animation with him moon walking on to the screen stops mid way. adoes some hip thrusts than spins and continues moon walking. [...] if we can add a hat for this animation it would be cool. i want it to be like Micheal Jackson video", to "take turns with the wave", and "show me a preview first". What is here is the hat, the four clips and the two scripts that make the preview; nothing under `app/` was changed for it.
+
+**The hat** is a black fedora with a band in his own green (`build_hat_bm` in `build_milo.py`; the object `Hat`, the felt `MilO_Hat_Felt`).
+
+- **It is as wide as he is,** because his head is two dials side by side: both go up into its crown. It rests on the small dial and is pulled down over the big one, so it sits at a slant, and it is tipped forward, low over both. The brim's front edge ends above the middle of each dial: the needles and the lower numbers stay in view.
+- **The felt is nearly black, not black, with a soft sheen along its edges.** He is shown on the app's dark page, where a plain black hat is a hole in the picture.
+- **A slider, `hat`, puts it on:** it is the size of the bone `hat`, which carries the hat. At 0 the whole hat is one point inside the dials and nothing of it is drawn. The Blender file is saved with it at 0, and `reset_pose` sets it to 0 before any clip is written or drawn, so every clip that does not ask for the hat is without it. The moonwalk's clips set it to 1 at every frame (`set_hat`) and key it.
+- **By hand in Blender's window it lingers.** A clip chosen after one of the moonwalk's says nothing about the hat, the brake lights or the turn, so it is shown with what the moonwalk left: the hat on, the lights lit, he a little turned. `show("Idle")` in `animate_milo.py` puts that right, or setting the sliders `hat` and `brake` to 0 and the bone `root` back by hand. Every script that draws a picture does it before every clip, and `export_milo.py` does it before the file is saved (the exporter plays every clip, and had left the hat on in the saved file).
+- **None of the pictures there were changes:** the twelve clips there were are the same in the Blender file and in the `.glb`, and the greeting's and the website's frames, drawn again, are the committed ones to within what two runs of the renderer differ by, and one step of 255 more in four single pixels (FINDINGS_LOG, 2026-10-10).
+- **The hat is not in the `.glb`.** A `.glb` has no slider: a clip that says nothing about the hat shows it as it was built, on his head, and Blender's exporter writes nothing for a part that keeps still through a clip. He would wear it in every clip. The bone `hat` is in the file and the moonwalk's clips move it, so a hat can be hung on it.
+
+**The clips** are in the table above. What they are built on:
+
+- **The moonwalk is drawn on the spot, as `Walk` is,** and whoever shows it moves the picture: a 14th of the stride with every frame, to the left. The foot that is up on its toe then stays where it is on the screen. That foot's toe goes forward under him at an even pace, which is the floor going by; the flat foot slides back twice as far over the floor as he glides.
+- **He does not glide straight back, but 35 degrees to his right of it** (`MOON_SLANT`). The pictures show him half turned to the viewer and move him level across the screen. Gliding straight back he would be going away from the viewer as well, and the foot that should stay put crept 7 dp up and down the screen. For the same reason the foot farther from the viewer goes a little further than the nearer one (`MOON_FAR`): it is drawn smaller, and its way with it. Both are right for the angle he is drawn at and for no other.
+- **His hands are at his waist while he glides,** clear of his feet, which are what a moonwalk is watched for.
+- **The brake lights cannot be seen from the front,** and he glides with his front to the viewer. So he stops with a skid: his back end swings round to the viewer, and that is where the lights are seen to come on. They are seen again as his back goes past in the turn.
+- **The turn takes 13 frames,** a little over half a second, and goes at an even pace through its middle, 37 degrees a frame at most, so that every frame is a clear step on from the last. Faster, it is a smear.
+- **The hip thrusts are seen from the side or not at all:** the foot of the body goes forward and its top goes back, 22 degrees, while he is turned three quarters to the viewer. Facing the viewer there would be nothing to see.
+- **A hand that holds the hat or the belt is turned with the body** (`carried`). The arm poses are directions in the room, not from the body: without it the hand is left behind when the body leans.
+- **The hand at the hat covers the upper corner of the big dial.** It is at the brim's corner on the side the viewer sees, where it hides least; the other side of the hat is behind the small dial from there.
+
+**The preview** is drawn and laid over a picture of Home (`marketing/screenshots/home.png`) like this:
+
+```
+blender -b design/mascot/milo_mascot.blend --python design/mascot/scripts/render_moonwalk.py -- /tmp/milo-moonwalk 2.625
+python3 design/mascot/scripts/preview_moonwalk.py /tmp/milo-moonwalk /tmp/milo-moonwalk-preview
+```
+
+- **The first step draws the frames** (two minutes): one cycle of the glide, and the three other clips one after the other, on a see-through background with the halo, he turned 55 degrees to the right. 2.625 is how many pixels the picture of Home has to the dp; without it the frames have 2.5, as the app's pictures do. It prints, and writes into `moonwalk.json`, what the second step needs: the picture's size, where he stands in it and how far a cycle carries him. It also prints how well the foot on its toe keeps its place.
+- **The second step writes** `moonwalk.mp4` (the whole screen, 1080 pixels wide), `moonwalk.gif` (the foot of the screen, smaller), `moonwalk-sheet.png` (a frame from every quarter second) and four large stills. It plays the greeting as the app plays the one it has: he is 150 dp high, his soles are 4 dp above the bottom bar's tile, 24 frames a second, the app's soft shadow under his feet. He comes in from just beyond the right edge, does the middle part in the middle of the screen and glides out at the left: 7.3 seconds on a phone 411 dp wide.
+- **Nothing of the preview is committed.** The frames and the film are written wherever the two commands are told.
+
+**What the app would need, if this is built in:** the glide as a sheet of 14 stills, as the walk is now, played twice, in and out; the middle as an animated picture of 80 frames; and both higher than the greeting's 240 by 168 dp, because of the hat and the halo's room (the preview's frames are 226 by 235 dp). Packed as the greeting's pictures are, with 2.5 pixels to the dp, they came to 179 KB and 987 KB in a trial: the app's pictures of the mascot would go from 0.9 MB to 2.0 MB, and `MascotPicturesTest` holds them under one today. The halo makes the pictures right for the dark page only. The numbers `MascotPicture` holds would be these scripts' to print. And a rule for when he moonwalks and when he waves.
 
 ## What to know before writing a clip
 

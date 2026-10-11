@@ -8,7 +8,14 @@
 # pose in the file is the rest pose (arms straight out); every clip stashed on the rig's NLA
 # tracks becomes one named animation, sampled on every frame so that everything the rig works
 # out for itself (legs following the feet, hoses following their bones, needles following the
-# sliders) is written as plain bone movement.
+# sliders, the bone "brake" growing with the brake lights' slider) is written as plain bone
+# movement. The lenses' glow itself is not: a .glb cannot hold a material that follows a slider.
+#
+# The hat is left out (LEFT_OUT). In the Blender file a slider keeps it off his head in every
+# clip but the moonwalk's. A .glb has no such thing: a clip that says nothing about the hat
+# shows it as it was built, on his head, and the exporter writes nothing for a part that keeps
+# still through a clip. He would wear it in every clip. The bone "hat" is in the file, and the
+# moonwalk's clips move it, so a hat can be hung on it.
 
 import os
 import json
@@ -22,6 +29,8 @@ def here():
     return os.path.dirname(os.path.abspath(path)) if os.path.isfile(path) else bpy.path.abspath("//scripts")
 
 
+# TODO(debt): the .glb plays the moonwalk without the hat (FINDINGS_LOG, 2026-10-10).
+LEFT_OUT = ("Hat",)
 MASCOT = os.path.normpath(os.path.join(here(), ".."))
 OUT = os.path.join(MASCOT, "export", "milo_mascot.glb")
 
@@ -43,7 +52,7 @@ def export(path):
         except RuntimeError:
             pass
     for ob in bpy.data.collections["MilO_Mascot"].objects:
-        ob.select_set(True)
+        ob.select_set(ob.name not in LEFT_OUT)
     bpy.context.view_layer.objects.active = rig
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
@@ -60,7 +69,17 @@ def export(path):
     known = bpy.ops.export_scene.gltf.get_rna_type().properties.keys()
     bpy.ops.export_scene.gltf(**{k: v for k, v in wanted.items() if k in known})
 
+    # The exporter plays every clip, and leaves what only the moonwalk's clips key where the
+    # last of them left it: the hat on, the brake lights lit, the mascot turned. The file is
+    # saved after this script, and is to be saved with the hat off and the lights out.
+    rig["hat"] = 0.0
+    rig["brake"] = 0.0
+    for b in rig.pose.bones:
+        b.location = (0.0, 0.0, 0.0)
+        b.rotation_euler = (0.0, 0.0, 0.0)
+        b.scale = (1.0, 1.0, 1.0)
     rig.animation_data.action = shown
+    bpy.context.scene.frame_set(bpy.context.scene.frame_current)
     return path
 
 

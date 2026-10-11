@@ -2,11 +2,17 @@
 # numbered PNG frames from the studio's camera and under the studio's lights, as the greeting's
 # are drawn. Run it after the other scripts, with Blender WITHOUT its window:
 #
-#   blender -b design/mascot/milo_mascot.blend --python design/mascot/scripts/render_clips.py -- <pixels> <folder> <clip> [<clip> ...]
+#   blender -b design/mascot/milo_mascot.blend --python design/mascot/scripts/render_clips.py -- <pixels> <folder> <clip> [<clip> ...] [--ground <rrggbb>]
 #
 # <pixels> is how high the standing mascot is drawn. <clip> is a name from CLIPS in
 # animate_milo.py: Wave, Flex, Peace, RockOn and so on. Each clip's frames go into a folder of
 # its own inside <folder>, named after the clip. pack_clips.py makes the pictures out of them.
+#
+# With --ground and a colour, 121316 for the app's dark page, the frames are drawn on a flat
+# ground of that colour instead of see-through, and with a soft halo round the brake lights
+# where a clip lights them (on_ground in render_greeting.py). The picture then has HALO_ROOM
+# more margin, so that the halo has faded before the picture ends. Without --ground nothing of
+# this happens, and the frames are what they always were.
 #
 # Every clip named in one run is drawn on one size of picture, with the standing mascot on the
 # same spot in each, so that one can be cut after another without a jump. The picture's size is
@@ -36,6 +42,8 @@ MARGIN = 12
 # frames: with a side of 8 pixels' multiple a frame is a whole number of the screen's pixels
 # there, also on a screen that is scaled by a quarter or a half more.
 WHOLE = 8
+# With a ground and its halo: this much more margin, as a part of the mascot's height.
+HALO_ROOM = 0.2
 # The name a clip is written under in memory, so that the stored clip of the same name is left alone.
 DRAWN = "Drawn_"
 
@@ -75,11 +83,16 @@ def write(name):
     for frame in range(frames + 1):
         pose_at(frame / clips.FPS)
         greeting.key(frame)
+        if name in clips.DANCE:  # the moonwalk's clips: the hat, the brake lights, the turn
+            clips.key_dance(frame)
     return frames + 1
 
 
 def play(name):
-    """Makes one of the clips written here the rig's live clip."""
+    """Makes one of the clips written here the rig's live clip. The brake lights go out and the
+    hat comes off first: a clip that does not key them must not be drawn with what the last one
+    left behind."""
+    clips.reset_pose()
     action = bpy.data.actions[DRAWN + name]
     rig.animation_data.action = action
     if getattr(rig.animation_data, "action_slot", True) is None and action.slots:
@@ -112,40 +125,70 @@ def reach(frames):
     return left, low, right, high
 
 
-def set_picture(frames, pixels):
-    """Sets the picture so that every frame of the clips fits in it with MARGIN to spare, and
+def set_picture(frames, pixels, margin=MARGIN):
+    """Sets the picture so that every frame of the clips fits in it with `margin` to spare, and
     the standing mascot is `pixels` high. Returns the picture's size, and where the mascot
     stands in it: its axis from the left edge and its soles above the lower edge."""
     # A first stage only to measure on: the lens is right, the picture is larger than needed.
     # (The stage is set twice. The second time it finds the dials dulled already.)
     greeting.set_stage(3 * pixels, 3 * pixels, pixels)
     left, low, right, high = reach(frames)
-    width = WHOLE * ceil((right - left + 2 * MARGIN) / WHOLE)
-    height = WHOLE * ceil((high - low + 2 * MARGIN) / WHOLE)
-    axis, soles = MARGIN - floor(left), MARGIN - floor(low)
+    width = WHOLE * ceil((right - left + 2 * margin) / WHOLE)
+    height = WHOLE * ceil((high - low + 2 * margin) / WHOLE)
+    axis, soles = margin - floor(left), margin - floor(low)
     greeting.set_stage(width, height, pixels)
     greeting.slide_view("shift_x", lambda: axis / width - greeting.seen((0, 0, 0))[0])
     greeting.slide_view("shift_y", lambda: (soles - seen_in_pixels()[1]) / height)
     return width, height, axis, soles
 
 
+def draw(folder, frames):
+    """Draws every frame of the clip that is live, without asking where the mascot is in it:
+    on a ground the picture has no see-through part to tell."""
+    os.makedirs(folder, exist_ok=True)
+    for frame in range(frames):
+        scene.frame_set(frame)
+        scene.render.filepath = os.path.join(folder, "%04d" % frame)
+        bpy.ops.render.render(write_still=True)
+
+
 def main():
     asked = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+    ground = None
+    if "--ground" in asked:
+        at = asked.index("--ground")
+        ground = asked[at + 1].lstrip("#").lower() if at + 1 < len(asked) else ""
+        del asked[at:at + 2]
+        if len(ground) != 6 or any(c not in "0123456789abcdef" for c in ground):
+            raise SystemExit("After --ground: a colour as six hex digits, 121316 for the app's dark page.")
     if len(asked) < 3 or not asked[0].isdigit():
         raise SystemExit("After '--': how high the standing mascot is in pixels, a folder, and one clip or more.")
     pixels, folder, names = int(asked[0]), os.path.abspath(asked[1]), asked[2:]
     shown = rig.animation_data.action
     frames = {name: write(name) for name in names}
-    width, height, axis, soles = set_picture(frames, pixels)
+    width, height, axis, soles = set_picture(frames, pixels, MARGIN + (round(HALO_ROOM * pixels) if ground else 0))
+    if ground:
+        greeting.on_ground(ground)
 
     boxes = {}
     for name in names:
         play(name)
-        boxes[name] = greeting.render_clip(os.path.join(folder, name), frames[name])
+        if ground:
+            draw(os.path.join(folder, name), frames[name])
+        else:
+            boxes[name] = greeting.render_clip(os.path.join(folder, name), frames[name])
 
     for name in names:
         bpy.data.actions.remove(bpy.data.actions[DRAWN + name])
     rig.animation_data.action = shown
+
+    if ground:
+        print("picture: %d x %d pixels, %d frames a second, on #%s, with a halo round lit brake lights" % (width, height, clips.FPS, ground))
+        print("the standing mascot: %d pixels high; its axis is %d pixels from the left edge, its soles %d above the lower edge"
+              % (pixels, axis, soles))
+        for name in names:
+            print("%s: %d frames in %s" % (name, frames[name], os.path.join(folder, name)))
+        return
 
     every = [box for name in names for box in boxes[name]]
     left, top = min(b[0] for b in every), min(b[1] for b in every)
