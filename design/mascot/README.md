@@ -20,16 +20,20 @@ Nothing in this folder is part of the app's build. The four pictures the app car
 | `scripts/render_moonwalk.py` | Draws the frames of the app's second greeting, the moonwalk: the glide, and the middle part (below) |
 | `scripts/pack_moonwalk.py` | Packs those frames into the moonwalk's two pictures. Plain Python, not run in Blender |
 | `scripts/preview_moonwalk.py` | Lays the same frames over a picture of Home and writes a film of it: the preview Shawn was shown. Plain Python, not run in Blender |
-| `export/milo_mascot.glb` | The model with every clip, without the hat (2.67 MB), for whatever comes later. Nothing uses it today |
+| `scripts/render_party.py` | Draws the frames of the party: with its confetti, without it, or the confetti alone, for a preview of it (below) |
+| `scripts/preview_party.py` | Makes a film of those frames on a phone's screen, with sound if it is given any. Plain Python, not run in Blender |
+| `export/milo_mascot.glb` | The model with every clip, without the hat, the party cap, the popper and the confetti (3.00 MB), for whatever comes later. Nothing uses it today |
 | `renders/milo_thumbs_up.png` | The mascot as Blender draws it, in the pose of the reference picture |
 | `renders/milo_flex.webp`, `milo_peace.webp`, `milo_rock_on.webp` | Three clips as animated pictures with a see-through background, for whatever comes later (below) |
 | `renders/milo_flex.png`, `milo_peace.png`, `milo_rock_on.png` | A still of the pose each of them holds |
 | `renders/milo_back.png`, `milo_back_lit.png`, `milo_back_three_quarter_lit.png` | His back with the brake lights off and lit, and from behind and to one side with them lit, on a see-through background (below) |
 | `renders/milo_back_on_dark.png`, `milo_back_lit_on_dark.png`, `milo_back_three_quarter_lit_on_dark.png` | The same three on the app's dark page, with the halo round the lit lights |
 | `renders/milo_turn_around_on_dark.webp` | A turn-around on the dark page, the lights coming on while his back is to the viewer: an animated picture that starts again for ever |
+| `renders/milo_party_cap.png`, `milo_party_cap_three_quarter.png` | Him in his party cap, from the front and three quarters on, on a see-through background (below) |
+| `renders/milo_one_year.webp`, `milo_one_year.png` | The party, confetti and all, as an animated picture with a see-through background, and a still of him cheering under the confetti |
 | `reference.webp` | The picture the mascot was built from |
 
-**The scripts are the source, the `.blend` is their result.** To change the mascot, change a script and run the first four again, in the order above, rather than editing the Blender file by hand: what is done by hand is gone at the next run. Each of them only rebuilds its own collections (`MilO_Mascot`, `MilO_Studio`, `MilO_Reference`). After a change to the model, or to a clip that a picture is drawn from, that picture has to be drawn again too (below).
+**The scripts are the source, the `.blend` is their result.** To change the mascot, change a script and run the first four again, in the order above, rather than editing the Blender file by hand: what is done by hand is gone at the next run. Each of them only rebuilds its own collections (`MilO_Mascot` and `MilO_Confetti`, `MilO_Studio`, `MilO_Reference`). After a change to the model, or to a clip that a picture is drawn from, that picture has to be drawn again too (below).
 
 Without Blender's window, which is how it was last run (2026-10-09). `-b` is "no window", and the last part saves the file, which nothing else does:
 
@@ -45,9 +49,9 @@ The same command without `-b` and without its last part opens Blender's window a
 
 ## The clips
 
-Each is one action, at 24 frames a second, starting on frame 0. Every clip but the loops, `WaveUp` and the moonwalk's four begins and ends in the same standing pose, so one can follow another. The needles move in every clip.
+Each is one action, at 24 frames a second, starting on frame 0. Every clip but the loops, `WaveUp`, the moonwalk's four and `OneYear` begins and ends in the same standing pose, so one can follow another. `OneYear` begins in it, in his party cap, and ends with both arms up. The needles move in every clip.
 
-`Flex`, `Peace` and `RockOn` were added on 2026-10-09 for pictures to come ("future content ideas or use on the website"); nothing plays them yet. `WaveUp` and `WaveLoop` were added on 2026-10-10 for the website, where he waves for as long as a pointer is on him. The four clips of the moonwalk were added the same day for a second greeting Shawn asked for; the app plays them since then, in turn with the wave (see "The hat and the moonwalk").
+`Flex`, `Peace` and `RockOn` were added on 2026-10-09 for pictures to come ("future content ideas or use on the website"); nothing plays them yet. `WaveUp` and `WaveLoop` were added on 2026-10-10 for the website, where he waves for as long as a pointer is on him. The four clips of the moonwalk were added the same day for a second greeting Shawn asked for; the app plays them since then, in turn with the wave (see "The hat and the moonwalk"). `OneYear` was added the same day for the day the app has been used for a year, with the confetti's own clip beside it; **it is a preview, and nothing plays it yet** (see "The party").
 
 | Clip | Length | What happens |
 |---|---|---|
@@ -65,6 +69,8 @@ Each is one action, at 24 frames a second, starting on frame 0. Every clip but t
 | `MoonwalkStop` | 1.83 s | From `Moonwalk`'s first frame. He brakes: his back end skids round towards the viewer and the brake lights come on. Then he comes back round into the pose, the right hand to the brim of his hat, the left at his belt, the right knee popped in, and thrusts his hips three times, the RPM needle jumping with each |
 | `KickSpin` | 1.08 s | From that pose. The left leg kicks out to its side, then he turns once round on the spot in half a second, the brake lights going past the viewer, and comes down on the toes of both feet; the brake lights go out |
 | `MoonwalkOn` | 0.42 s | From his toes back into `Moonwalk`'s first frame: the hand comes down from the hat and he turns back the way he glides |
+| `OneYear` | 5.42 s | In his party cap. He stands still for half a second, and bobs up, glad. His left hand goes behind his back, feels about, and comes out with a party popper, which he holds up beside his head. He brings it in front of his chest, its mouth up between the dials; his right hand takes the string and draws it tight, the revs climbing; he pulls, and on frame 73, 3.04 seconds in, it goes off: both needles right round, a jump, and he cheers with both arms up, the popper in his left hand, while the confetti comes down |
+| `OneYear_Confetti` | 5.42 s | Not his: the confetti's own clip, on the confetti's own skeleton (`MilO_Confetti_Rig`). Nothing until frame 73; then a flash at the popper's mouth for three frames, and the paper and the streamers up over his head and down round him |
 | `Gauge_Speed` | 2 s | The speed needle alone, from 0 to 240 |
 | `Gauge_RPM` | 2 s | The RPM needle alone, from 0 to 8 |
 
@@ -152,6 +158,7 @@ The second step is given the same height and clips as the first, so that it meas
 - **The needles are driven by two sliders on the skeleton** (`speed_kmh`, `rpm`). A clip keys the sliders, never the needle bones.
 - **The brake lights are driven by a third slider, `brake`,** from 0, unlit, to 1, full on. A clip keys the slider, never the lenses' material. Only the moonwalk's clips key it (see "The brake lights").
 - **The hat is put on by a fourth slider, `hat`:** 0 is no hat, 1 is the hat. Only the moonwalk's clips key it (see "The hat and the moonwalk").
+- **Three more sliders are for the party:** `party_hat` puts the party cap on, `popper` puts the party popper in his left fist, and `pull` puts the bead on the popper's string into his right hand's fingers. All three are 0 where the file is saved. Only `OneYear` keys them (see "The party").
 - **The bone `root` turns the whole mascot, feet and all,** about the point he stands on. Only the moonwalk's clips key it, for the skid and the turn. Every other clip leaves him facing the way he was built.
 - **Arms and legs are hoses.** Their four bones on each side are bendy bones that carry no mesh; rows of short `hose.*` bones follow them and carry it. A `.glb` file cannot hold a bendy bone, and this is what keeps the hoses round in the export.
 - **`Walk` walks on the spot,** with a short stride: each foot goes 0.30 of a unit back while it is planted, on a mascot 2 units high. The greeting moves the picture by that much, so a longer or shorter stride here changes how long the walk across the screen takes.
@@ -255,6 +262,73 @@ python3 design/mascot/scripts/pack_moonwalk.py /tmp/milo-moonwalk-app
 - **The halo makes these pictures right for a dark ground only.** Over the app's lime tile the glow is an orange mist that darkens the lime (FINDINGS_LOG, 2026-10-10).
 - **A change to a clip, to the hat or to the lights** means both steps again, the numbers into `MoonwalkPicture` if any changed, and a look at the greeting on a phone or an emulator.
 
+## The party: a year of use
+
+**A preview. The app does not play it.** Shawn, 2026-10-10: "a one year use animation. After the person has used the app for a year this one will come up that day every time he starts a trip. i want it to fade in with the mascot in the center with a birthday cap. i want him to put his hand behind his back and pull out a party popper and pull it and shoot confetti above his head. i want sound effects for this". What is here is the cap, the popper, the confetti, the clip and the two scripts that make the preview; nothing under `app/` was changed for it, and no sound is in the repository.
+
+**The cap** is a paper cone in the app's lime with stripes of his own green that wind round it, a white rolled rim and a red pom-pom (`build_cap_bm` in `build_milo.py`; the object `Party_Cap`).
+
+- **It sits on the big dial,** the highest part of his head, a little towards his right, and leans a little further that way and back. A cone cannot be as wide as he is, as the fedora is. Its rim is not flat: it follows the dial's round housing, so the cap sits on it from every side.
+- **Lime and white stripes were tried and dropped:** on a white ground the cap was all but gone. With the green stripes and the red pom-pom it holds on the dark page and on white.
+- **A slider, `party_hat`, puts it on,** as `hat` puts the fedora on: it is the size of the bone `party_hat`, which carries the cap, and at 0 nothing of the cap is drawn. The two hats do not know of each other: with both sliders at 1 he wears both, one through the other.
+- **The cap's bone hangs on the big dial's bone,** not on the body: a clip that turns or swells that dial takes the cap with it. `OneYear` also tips and tilts the cap a moment behind whatever his head does (`set_party`), by a few degrees; more, and its rim leaves the dial.
+
+**The popper** is a red cone with a white band and a lime lip, on a handle, with a knob on its tail and a string with a bead out of that (`build_popper_bm`; the object `Popper`).
+
+- **It lies in his left fist like an ice-cream cone:** its mouth comes out on the thumb's side, its tail and the string on the other. The handle is inside the fist, where the fingers are; his hands have no room in them for a handle, and none is seen.
+- **A slider, `popper`, puts it there,** the same way: the size of the bone `popper`. The bone reaches from the middle of the fist to the popper's mouth, so its far end is where the confetti comes out.
+- **A third slider, `pull`, is the string.** At 0 the bead hangs straight out of the tail. At 1 it is where the right hand pinches (the bone `grip.R`), wherever that hand is, and the string reaches after it, as long as it has to be. In between it is on its way. A real popper's string does not stretch; this one does for two frames, as he pulls.
+- **Which hand holds and which pulls** is said once, at the top of `build_milo.py` (`POPPER_SIDE`, `PULL_SIDE`). The clip is written for the left hand holding; the other way round, the fist would be in front of the big dial.
+
+**The confetti** is a collection of its own, `MilO_Confetti`: 130 pieces of paper, 6 curled streamers and the flash at the popper's mouth, in six colours, the app's lime twice as often as the others (`build_confetti`).
+
+- **It is one mesh on a skeleton of its own,** `MilO_Confetti_Rig`, a bone to a piece. The pieces are cut and coloured from a seed, so every build makes the same ones.
+- **The collection is hidden,** in Blender's window and in every picture, unless a script asks for it: no picture there was has confetti in it. `render_party.py` asks. To see it in Blender's window, switch the collection on in the outliner and play `OneYear`.
+- **Its flight is worked out, not simulated** (`throw_confetti` in `animate_milo.py`): from one seed, the same every run, with no cache. The paper is blown out of the popper's mouth in a cone, is slowed by the air within half a second, and flutters down at the pace of falling paper; the streamers go further, unroll and hang as they fall. It is keyed on every frame for the first third of a second and on every second frame after.
+- **It starts where the clip has the popper's mouth** in the frame of the pop, and points where the popper points. Move the hand in the clip and the confetti moves with it at the next run.
+- **None of it goes through him.** He stands in a slab of room that the pieces are pushed out of, to the front or to the back (`SLAB_...`): they fall in front of him and behind him. From the front that cannot be told from falling round him. From the side it can.
+- **It casts no shadow,** so that a picture of him alone with a picture of the confetti alone laid over it is nearly the picture of both. Not quite: a piece that is behind him is in the picture of the confetti alone.
+- **It is not in the `.glb`,** which holds the `MilO_Mascot` collection only; nor are the cap and the popper, for the hat's reason. The bones `party_hat`, `popper`, `popper_string` and `popper_pull` are in the file, and `OneYear` moves them.
+
+**The clip** is in the table above. What it is built on:
+
+- **He fires the popper in front of his chest, not above his head.** His arms are short: his two hands only meet in front of his middle, and a hand held up beside his head is out of the other's reach. So he holds the popper up to show it, then brings it down in front of him, where the other hand can take the string. It is aimed up between the dials, a little forward and a little to his left, away from the cap; the confetti goes up past his face and opens over his head.
+- **The hand really goes behind him.** From the front nothing of the glove is seen for fourteen frames, 30 to 43, and the popper appears in the fist there, upright, where his body hides it. Of the arm only the elbow shows, at his side: his arms are short.
+- **It begins with half a second of standing still** (`PARTY_HOLD`), for whoever shows it to fade it in on, and comes to rest over its last second with both arms up, for a fade out. The confetti is still coming down when it ends.
+- **The frame of the pop is `PARTY_POP`,** 73. The right hand starts its pull a frame and a half before; on that frame and the next the string is stretched after it, and by the one after it has sprung back; the flash and the first paper are at the mouth. A sound's bang belongs on that frame.
+- **The needles** flick up when he bobs, tremble while he feels about behind his back, rise for the popper, fall to nothing while he aims, climb to the red line as the string comes tight, and go right round when it goes off.
+- **An arm can be said by where its wrist is** (`reaching`, and `holding` and `pinching`, which say where the popper's fist or the pinch is): the popper has to be in a place, and the two hands have to meet. They give an ordinary arm pose, which is blended like any other.
+
+**The preview** is drawn and made into a film like this:
+
+```
+blender -b design/mascot/milo_mascot.blend --python design/mascot/scripts/render_party.py -- /tmp/milo-party
+blender -b design/mascot/milo_mascot.blend --python design/mascot/scripts/render_party.py -- /tmp/milo-party --cap
+python3 design/mascot/scripts/preview_party.py /tmp/milo-party /tmp/milo-party-preview --name A --pop pop.mp3 --before rustle.mp3:-6 --after horn.mp3:-8
+```
+
+- **The first step draws the frames** (three and a half minutes): he and the confetti, 600 pixels high in a picture of 1080 by 1380, on a see-through background. The picture is a fixed room round him, not measured from what is in it: confetti that drifts out of it is to drift out of it. `--confetti without` draws him alone and `--confetti alone` the confetti alone, into folders of their own beside the first, in the same picture; `--every 3` and `--frames 60-84` draw a part, for a quick look, and `--turn 40` turns him and the confetti to look from the side. It writes `party.json`, which says what the third step needs: the picture's size, where he stands in it, and the frame of the pop; and it prints, and writes there too, where the popper's mouth is in the picture in that frame.
+- **The second draws two stills of the cap,** from the front and three quarters on, into the same folder.
+- **The third writes** `party-preview-A.mp4` (a phone's screen of 1080 by 2400, the app's dark page, he in the middle of it, the app's soft shadow under his feet), `party-preview.gif` (the middle of the screen, smaller, no sound), three sheets (a frame from every quarter second; every frame of the reach behind his back; every frame round the pop) and the cap's stills on the dark page and on white. He fades in over the half second he stands still and out over the clip's last half second. 5.71 seconds in all.
+- **The sounds are given to it, and it lays them:** `--pop` is the bang, and the script finds where the file is loudest and lays that on the frame of the pop, to the sample; `--before` is a rustle that begins as the hand comes out from behind his back, `--after` a horn or a cheer that begins seven frames after the bang. A colon and a number after a file makes it that many decibels louder. Without any, the film is silent. **No sound is kept in this repository.** The ones the preview was made with were generated (ElevenLabs), and their licence is not confirmed.
+- **Nothing of the preview is committed** but the four pictures in `renders/`, which are drawn small and packed like this (2.9 MB together):
+
+```
+blender -b design/mascot/milo_mascot.blend --python design/mascot/scripts/render_party.py -- /tmp/milo-party-small 280
+blender -b design/mascot/milo_mascot.blend --python design/mascot/scripts/render_party.py -- /tmp/milo-party-small --cap
+python3 design/mascot/scripts/pack_clips.py party /tmp/milo-party-small
+```
+
+| Picture | What it shows | Size |
+|---|---|---|
+| `milo_party_cap.png`, `milo_party_cap_three_quarter.png` | Him standing in his cap, from the front and turned 40 degrees to his left. See-through, 560 by 768 pixels | 0.4 MB each |
+| `milo_one_year.webp` | The whole clip with its confetti, 131 frames of 504 by 644 pixels, he 280 high. See-through; plays once and keeps its last frame | 1.9 MB |
+| `milo_one_year.png` | Frame 84 of it: both arms up, the confetti over his head | 0.2 MB |
+
+`render_clips.py` draws `OneYear` too, like any clip: him alone, in a picture measured from how far he reaches.
+
+**What the app would need, if this is built in:** the clip as one animated picture that plays once, as the turn and wave is, and a larger one than the greeting's 240 by 168 dp: drawn 150 dp high he reaches 109 dp to one side of the point he stands on and 89 dp to the other, and 210 dp above his soles. Packed as the greeting's pictures are, with 2.5 pixels to the dp, he alone came to 1.95 MB in a trial and the confetti alone to 1.13 MB (131 frames each, in the fixed room, 676 by 862 pixels; cut down to him the first weighs much the same, because what weighs is him). The app's pictures of the mascot are 0.9 MB together today, and `MascotPicturesTest` holds them under one. So either the app carries about 3 MB more, or it carries him alone and throws the confetti itself: for that it needs the frame of the pop, 73 of 24 a second, and where the popper's mouth then is in the picture, which `render_party.py` prints. Then a sound whose licence is settled, laid on that frame, and a rule for when the phone's and the app's sound settings let it be heard. And the rule for the day itself: a year after what, how the app remembers it, and what becomes of the greeting that day.
+
 ## What to know before writing a clip
 
 - **A hand has a thumb and three fingers:** `finger_a` next to the thumb, `finger_b` the middle and longest, `finger_c` the outer one. A pose curls each finger at its two joints and may spread it sideways (`spread` in `arm_pose`); the thumb folds across the palm with `(112, 0, 50, 62)` or near it. The peace sign is a and b up and apart; the horns are a and c up.
@@ -262,4 +336,5 @@ python3 design/mascot/scripts/pack_moonwalk.py /tmp/milo-moonwalk-app
 - **No overshoot towards the head.** `ThumbsUp` swings a little past its pose and back. A hand beside the head that does so goes through a dial: `Peace` and `RockOn` swing outwards as they arrive instead.
 - **An arm goes from one pose to another by the shortest way,** which between "forearm up" and "forearm down" can be through the body. `curved()` draws the way towards a third pose: `Flex` takes its fists round the outside with it.
 - **Turned about 10 degrees to its right and leaning back, the dials go pale.** Their glossy black faces then mirror the studio's key light into the camera, the same shine the greeting found in its turn. The pictures are drawn with the faces dulled, but the model and its `.glb` keep the gloss, so `Flex` does not lean back in the pose in which it is turned that way.
+- **His two hands only meet in front of his middle.** Each arm reaches about three quarters of a unit from its shoulder, and the shoulders are a unit apart. A hand held up beside the head cannot be reached by the other (see "The party").
 - **Look at the frames.** `render_clips.py` at 250 pixels and a sheet of every second frame shows a hand in a dial, or a pop, that the numbers do not.

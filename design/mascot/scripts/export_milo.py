@@ -16,6 +16,12 @@
 # shows it as it was built, on his head, and the exporter writes nothing for a part that keeps
 # still through a clip. He would wear it in every clip. The bone "hat" is in the file, and the
 # moonwalk's clips move it, so a hat can be hung on it.
+#
+# The party cap and the party popper are left out for the same reason: each is put on, or into
+# his fist, by a slider, and in the .glb he would wear the one and hold the other in every
+# clip. Their bones are in the file ("party_hat", "popper", and "popper_string" and
+# "popper_pull" for the string), and the clip OneYear moves them. The confetti is not in the
+# file either: it is a collection of its own, and only "MilO_Mascot" is exported.
 
 import os
 import json
@@ -30,7 +36,8 @@ def here():
 
 
 # TODO(debt): the .glb plays the moonwalk without the hat (FINDINGS_LOG, 2026-10-10).
-LEFT_OUT = ("Hat",)
+# TODO(debt): and the party, OneYear, without the cap, the popper and the confetti.
+LEFT_OUT = ("Hat", "Party_Cap", "Popper")
 MASCOT = os.path.normpath(os.path.join(here(), ".."))
 OUT = os.path.join(MASCOT, "export", "milo_mascot.glb")
 
@@ -69,11 +76,12 @@ def export(path):
     known = bpy.ops.export_scene.gltf.get_rna_type().properties.keys()
     bpy.ops.export_scene.gltf(**{k: v for k, v in wanted.items() if k in known})
 
-    # The exporter plays every clip, and leaves what only the moonwalk's clips key where the
-    # last of them left it: the hat on, the brake lights lit, the mascot turned. The file is
-    # saved after this script, and is to be saved with the hat off and the lights out.
-    rig["hat"] = 0.0
-    rig["brake"] = 0.0
+    # The exporter plays every clip, and leaves what only the moonwalk's clips and the party's
+    # key where the last of them left it: the hat or the cap on, the brake lights lit, the
+    # popper in his fist, the mascot turned. The file is saved after this script, and is to be
+    # saved with all of that off.
+    for prop in ("hat", "brake", "party_hat", "popper", "pull"):
+        rig[prop] = 0.0
     for b in rig.pose.bones:
         b.location = (0.0, 0.0, 0.0)
         b.rotation_euler = (0.0, 0.0, 0.0)
