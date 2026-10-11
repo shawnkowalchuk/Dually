@@ -230,14 +230,28 @@ data class MiloChangeTagColors(
 )
 
 /**
+ * The fill and digit of the cells of a row of wheels (since 2026-10-10, Home's odometer, which
+ * the owner chose from three drawings). The drawing has the dark cells and the lime one. No
+ * colour was added for either.
+ *
+ * @param whole a digit of the figure: a window in the page's colour, darker than the tile it is
+ * cut into, with a light digit.
+ * @param counting the last digit's cell while a trip is counted and its wheel turns: the accent
+ * with a dark digit.
+ */
+@Immutable
+data class MiloWheelColors(val whole: FillAndText, val counting: FillAndText)
+
+/**
  * The design's colours that Material has no role for, or no role with a name that says what
  * they are for. Reach them through `MiloTheme.colors`.
  *
  * **In use today:** [control], [fieldFill], [fieldBorder], [chipSelected] and [chip], and since
  * Home was laid out as the design draws it, [quietFill], [idleOutline], [idleIcon], [linkGlint]
  * and the amber tile's three ([attentionTile], [attentionSecondaryText], [attentionButton]),
- * since Trips was, [danger], since the Log was, [logText] and [logTags], and since the What's
- * new screen (2026-10-08), [changeTags]. One more,
+ * since Trips was, [danger], since the Log was, [logText] and [logTags], since the What's
+ * new screen (2026-10-08), [changeTags], and since Home's odometer became a row of wheels
+ * (2026-10-10), [wheels]. One more,
  * [accentPressed], is the design's colour for a part that comes with another screen's own
  * layout. It is named here so that the part finds it; nothing uses it yet, and what is said of
  * it below is what the design draws with it.
@@ -266,6 +280,7 @@ data class MiloChangeTagColors(
  * @param chipSelected the filter chip that is in force.
  * @param chip every other filter chip. It is the tile's colour: chips stand on the page.
  * @param changeTags the tags of the What's new screen: see [MiloChangeTagColors].
+ * @param wheels the cells of a row of wheels: see [MiloWheelColors].
  */
 @Immutable
 data class MiloColors(
@@ -286,6 +301,7 @@ data class MiloColors(
     val chip: FillAndText,
     val logTags: MiloLogTagColors,
     val changeTags: MiloChangeTagColors,
+    val wheels: MiloWheelColors,
 )
 
 internal val MiloExtraColors =
@@ -319,5 +335,10 @@ internal val MiloExtraColors =
                 improved = FillAndText(fill = BluetoothTagFill, text = BluetoothTagText),
                 fixed = FillAndText(fill = AttentionFill, text = AttentionText),
                 security = FillAndText(fill = ErrorTagFill, text = ErrorTagText),
+            ),
+        wheels =
+            MiloWheelColors(
+                whole = FillAndText(fill = Page, text = TextMain),
+                counting = FillAndText(fill = Accent, text = Page),
             ),
     )

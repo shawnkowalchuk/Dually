@@ -64,6 +64,8 @@ class ColorContrastTest {
                 "the log's Android Auto tag" to colors.logTags.androidAuto,
                 "the log's service tag" to colors.logTags.service,
                 "the log's error tag" to colors.logTags.error,
+                "a wheel's digit" to colors.wheels.whole,
+                "the last wheel's digit while it counts" to colors.wheels.counting,
             )
         for ((name, pair) in pairs) {
             assertReadable(name, pair.text, pair.fill, TEXT)
@@ -128,6 +130,15 @@ class ColorContrastTest {
             MARK,
         )
         assertReadable("an outline that carries meaning", scheme.outline, bar, MARK)
+    }
+
+    @Test
+    fun `the wheel that counts is told apart from the tile it stands on`() {
+        // Its fill is what says "this digit is turning", so the fill itself is held to the
+        // measure of a mark. The other cells are not: they only frame their digits.
+        val tile = scheme.surfaceContainer
+        assertReadable("the last cell counting", colors.wheels.counting.fill, tile, MARK)
+        assertReadable("the dot of the side that is down", scheme.outline, tile, MARK)
     }
 
     @Test
