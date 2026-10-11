@@ -22,6 +22,17 @@
 
 ## Log
 
+### 2026-10-11
+
+**`[CHANGE]` MilO stays upright when the phone is turned**
+Phone only; the Android Auto screen is not touched. **Built, not yet proven on the phone.** Shawn: "can we please make the app allways portrait fixed. I dont like when i flip my phone and it goes landscape". One line in the manifest, `android:screenOrientation="portrait"` on MilO's one activity.
+- **What is not obvious.** Lint fails the build on that line twice (`LockedOrientationActivity`, `DiscouragedApi`), and a lint warning is an error here. Both are answered on the activity itself with `tools:ignore` and a comment that says why, so the two checks stay on for anything added later.
+- **It holds on a phone and not everywhere.** MilO targets Android 17. From Android 16 on, an app that targets it is not held to a fixed orientation on a screen 600 dp wide or more: on a tablet or an unfolded phone MilO turns as before. That is why no code that handles a turn was removed (the greeting ending at a turn, the forms keeping what is typed), and why the older device checks that turn the phone were left as they are, with a note.
+- **A side effect:** the moonwalk's red glow in front of the lime tile (the `[DEBT]` of 2026-10-10) needed the phone on its side or a very narrow window. On a phone only the narrow window is left.
+- **Not chosen: following the phone's own auto-rotate lock.** He has that switch and still asked; an app that is upright by itself is what he described.
+- **Tests:** none added; there is nothing to test below a device. The gate passes. Device checks UP-1 to UP-4. UP-4 asks about a holder that carries the phone on its side, the one case where this choice costs something.
+
+
 ### 2026-10-10
 
 **`[CHANGE]` Home's odometer has no cell for the tenth: the last digit of the kilometres turns slowly on to the next**

@@ -5,6 +5,11 @@
       "date": null,
       "changes": [
         {
+          "kind": "improved",
+          "title": "MilO stays upright",
+          "body": "MilO no longer turns on its side when you turn the phone. Every screen stays upright. On a tablet or an unfolded phone Android still turns it."
+        },
+        {
           "kind": "new",
           "title": "A party after a year of MilO",
           "body": "One year after your first recorded trip, and on that date every year after, MilO's mascot holds a small party. Each trip that starts that day begins with the pop of a party popper in place of its usual first sound, wherever the phone is. If MilO is open on Home when the trip starts, the mascot fades in in a party cap, brings a popper out from behind his back and fires it, and confetti comes down round him; if not, he does it the next time you open MilO that day. Everything under him can be pressed while he is there. The pop has no switch of its own: it is silent when both sounds are switched off in Settings."

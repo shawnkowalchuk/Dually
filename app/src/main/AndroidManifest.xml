@@ -148,11 +148,23 @@
             to edge, and a window that is slid up puts the form's text under the clock and
             takes the screen's title off the display. With this, the window stays where it is
             and MiloApp gives the keyboard's room up at the bottom instead.
+
+            screenOrientation="portrait" (2026-10-11, Shawn: "can we please make the app allways
+            portrait fixed. I dont like when i flip my phone and it goes landscape"): MilO stays
+            upright when the phone is turned. Lint has two things to say about that, and both
+            are answered here and not switched off for the project. LockedOrientationActivity
+            asks for every orientation for the sake of large screens and Chrome OS; MilO is
+            used on a phone, in a hand or in a truck's holder, and its owner asked for this.
+            DiscouragedApi says Android 16 ignores the line "in most cases": those cases are
+            screens 600 dp wide or more (tablets, unfolded phones), where Android turns MilO
+            as before and its screens adapt as they always have. On a phone it holds.
         -->
         <activity
             android:name=".app.MainActivity"
             android:exported="true"
-            android:windowSoftInputMode="adjustResize">
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
