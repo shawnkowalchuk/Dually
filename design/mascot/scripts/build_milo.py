@@ -7,7 +7,7 @@
 import os
 import bpy
 import bmesh
-from math import radians, sin, cos, pi
+from math import radians, sin, cos, pi, exp, hypot
 from mathutils import Vector, Matrix
 
 COLL = "MilO_Mascot"
@@ -78,6 +78,21 @@ BRAKE_X, BRAKE_Z = 0.168, 0.965
 BRAKE_R, BRAKE_PROUD, BRAKE_RIM = 0.16, 0.10, 0.012
 # How strongly a lens glows with the slider "brake" at 1: its material's emission strength.
 BRAKE_GLOW = 4.0
+
+# The hat: a black fedora with a green band, for the moonwalk. It is as wide as he is, because
+# his head is two dials side by side: both go up into its crown. It rests on the small dial and
+# is pulled down over the big one, so it sits at a slant, HAT_ROLL degrees down towards the
+# small dial, and it is tipped HAT_TIP degrees forward, low over both. The brim's front edge
+# ends above the middle of each dial: the needles and the lower numbers stay in view.
+# HAT_AT is the middle of its opening, and the point the bone "hat" turns it about.
+HAT_AT = Vector((0.04, -0.055, 1.90))
+HAT_TIP, HAT_ROLL = 14.0, 14.0
+# The crown: half its width, half its depth, its height. The brim: its width and its thickness.
+HAT_A, HAT_B, HAT_H = 0.40, 0.29, 0.37
+HAT_BRIM, HAT_FELT = 0.19, 0.024
+# How far the crown's front is pressed in from both sides, as a part of its width; how deep the
+# crease along its top is; and how far the brim's front edge is snapped down, its back edge up.
+HAT_PINCH, HAT_CREASE, HAT_SNAP = 0.36, 0.08, 0.035
 
 
 # ---------------------------------------------------------------- small helpers
@@ -174,6 +189,17 @@ def lens_material(name):
     return m
 
 
+def felt_material(name):
+    """The hat's felt: nearly black, with a soft sheen along its edges. He is shown on the
+    app's dark page, where a hat that is plain black is a hole in the picture."""
+    m = principled(name, srgb("#1B1B20"), rough=0.5)
+    bsdf = next(n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+    for key, value in (("Sheen Weight", 0.8), ("Sheen Roughness", 0.35)):
+        if key in bsdf.inputs:
+            bsdf.inputs[key].default_value = value
+    return m
+
+
 def make_materials():
     return {
         "green": principled("MilO_Green", srgb("#34BA16"), rough=0.22, coat=0.4),
@@ -186,6 +212,7 @@ def make_materials():
         "red": principled("MilO_Red", srgb("#F01E12"), rough=0.35, emit=0.5),
         "glass": glass_material("MilO_Glass"),
         "brake": lens_material("MilO_Brake_Lens"),
+        "felt": felt_material("MilO_Hat_Felt"),
     }
 
 
@@ -610,6 +637,62 @@ def light_up(lens, arm):
     drv.expression = "v * %g" % BRAKE_GLOW
 
 
+# ---------------------------------------------------------------- the hat
+def hat_place():
+    """Where the hat is and how it is tilted: its own up is Z and its front is -Y."""
+    return (Matrix.Translation(HAT_AT) @ Matrix.Rotation(radians(HAT_ROLL), 4, "Y")
+            @ Matrix.Rotation(radians(HAT_TIP), 4, "X"))
+
+
+def build_hat_bm():
+    """A fedora: felt is material 0, the band material 1. It is turned like a round hat on a
+    wheel and then pressed into shape: made oval, the crown's front pinched in from both sides
+    and creased along its top, the brim snapped down in front and up behind. Open underneath,
+    inside the crown, where the dials are."""
+    bm = bmesh.new()
+    a, b, h, w, t = HAT_A, HAT_B, HAT_H, HAT_BRIM, HAT_FELT
+    side = 0.76 * h  # the crown's side goes up to here, and leans in a little on the way
+
+    def lean(z):
+        return 1.0 - 0.08 * (min(z, side) / side) ** 1.3
+
+    # A profile point is (across, height): across up to 1 is a part of the crown's half width,
+    # what is more than 1 is that far out along the brim.
+    felt = [(0.95, -t), (1.0 + w - t, -t)]
+    felt += [(1.0 + w - t / 2 + t / 2 * cos(u), -t / 2 + t / 2 * sin(u)) for u in arc(-90, 90, 6)]
+    felt += [(1.0 + w * 0.5, 0.0), (1.012, 0.0)]
+    felt += [(lean(side * i / 6), side * i / 6) for i in range(7)]
+    felt += [(0.70 + (lean(side) - 0.70) * cos(u), side + (h - side) * sin(u)) for u in arc(0, 90, 6)[1:]]
+    felt += [(0.5, h), (0.26, h), (0.0, h)]
+    band = [(lean(z) - (0.03 if tucked else 0.0), z)
+            for z, tucked in ((0.012, True), (0.012, False), (0.055, False), (0.1, False), (0.1, True))]
+
+    for profile, proud, mi in ((felt, 0.0, 0), (band, 0.009, 1)):
+        for v in lathe(bm, profile, 56, mi=mi):
+            x, y, z = v.co
+            across = hypot(x, y)
+            if across < 1e-9:
+                c = s = 0.0
+            else:
+                c, s = x / across, y / across
+            crown = min(across, 1.0)
+            out = max(across - 1.0, 0.0)
+            x, y = (a * crown + out + proud) * c, (b * crown + out + proud) * s
+            front = -y / b  # 1 at the crown's front, -1 at its back
+            if z > 0.0 and out < 0.02:
+                up = z / h
+                high = min(1.0, max(0.0, (up - 0.25) / 0.75))
+                x *= 1.0 - HAT_PINCH * high * high * (3 - 2 * high) * max(0.0, front) ** 1.5
+                top = min(1.0, max(0.0, (up - 0.72) / 0.28))
+                z -= HAT_CREASE * top * exp(-(x / (0.34 * a)) ** 2) * (0.7 + 0.3 * front)
+                z *= 1.0 + 0.07 * front * high
+            elif out > 0.0:
+                z -= HAT_SNAP * (out / w) * (-y / (b + w)) - 0.03 * (out / w) ** 2 * (x / (a + w)) ** 2
+            v.co = (x, y, z)
+    bmesh.ops.transform(bm, matrix=hat_place(), verts=bm.verts[:])
+    return bm
+
+
 def mirrored(coll, ob, name):
     me = ob.data.copy()
     me.name = name
@@ -658,6 +741,10 @@ def build_rig(coll):
     # can hold a bone's movement but neither a slider nor a material's glow, still says in every
     # clip how far the brake lights are on.
     add("brake", (0, BACK_Y, BRAKE_Z), (0, BACK_Y + 0.12, BRAKE_Z), "body", z=(0, 0, 1), deform=False)
+    # The hat's bone points up through the hat, as the hat is tilted; its own Z is the hat's
+    # front. Turning it about its own X tips the hat further forward.
+    tilted = hat_place().to_3x3()
+    add("hat", HAT_AT, HAT_AT + tilted @ Vector((0, 0, 0.3)), "body", z=tilted @ Vector((0, -1, 0)))
 
     for side, sx in ((".L", 1.0), (".R", -1.0)):
         def P(x, y, z, sx=sx):
@@ -759,6 +846,22 @@ def build_rig(coll):
         var.targets[0].id = arm
         var.targets[0].data_path = '["brake"]'
         drv.expression = "1 + v"
+
+    # A fourth slider puts the hat on: 0 is no hat, 1 is the hat. It is the size of the bone
+    # "hat", which carries the hat: at 0 the whole hat is one point inside the dials, and
+    # nothing of it is drawn. So every clip that does not ask for the hat is drawn without it.
+    arm["hat"] = 0.0
+    arm.id_properties_ui("hat").update(min=0.0, max=1.0, soft_min=0.0, soft_max=1.0,
+                                       description="The hat: 0 is none, 1 is on")
+    for fc in arm.driver_add('pose.bones["hat"].scale'):
+        drv = fc.driver
+        drv.type = "SCRIPTED"
+        var = drv.variables.new()
+        var.name = "v"
+        var.type = "SINGLE_PROP"
+        var.targets[0].id = arm
+        var.targets[0].data_path = '["hat"]'
+        drv.expression = "v"
     arm.show_in_front = True
     return arm
 
@@ -832,10 +935,12 @@ def build():
     # him, and with a shadow the lights darkened the top of a shoe a little in every picture
     # taken from the front: a few hundred pixels, but the pictures he has are not to change.
     lights.visible_shadow = False
+    hat = finish(coll, "Hat", build_hat_bm(), [mats["felt"], mats["green"]], sharp=50)
 
     rig = build_rig(coll)
     rigid(body, rig, "body")
     rigid(lights, rig, "body")
+    rigid(hat, rig, "hat")
     light_up(mats["brake"], rig)
     # The big flat faces set the shading, so the front stays flat right up to its rounded edges.
     flat = body.modifiers.new("Flat faces", "WEIGHTED_NORMAL")

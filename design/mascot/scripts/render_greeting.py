@@ -62,6 +62,11 @@ FPS = 24
 HALO_FROM = 1.0
 HALO_STRENGTH = 1.6
 HALO_SIZE = 0.5
+# In a see-through picture the halo has to end before the picture does, or the picture's edge
+# shows as the edge of a faint red square. Blender's glow never quite ends: far from the lights
+# it is still this faint, as a part of full brightness. So this much is taken off it everywhere
+# beside the mascot, and what is fainter is left out (halo_see_through).
+HALO_ENDS = 0.13
 
 
 def here():
@@ -233,43 +238,103 @@ def on_ground(colour):
 
     It has to be asked for (render_clips.py's --ground, render_lights.py). The greeting and the
     website's pictures do not ask, and nothing here is touched for them: they are drawn as they
-    always were. A halo in a see-through picture is not drawn: light that is added to whatever
-    lies behind cannot be stored in a see-through picture as it is. Call it after set_stage,
+    always were. For a see-through picture there is halo_see_through. Call it after set_stage,
     which makes the picture see-through again."""
     def lin(c):
         c /= 255.0
         return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
 
-    # The frame's emission is asked for before the nodes are made: only then do they offer it.
-    bpy.context.view_layer.use_pass_emit = True
-    old = bpy.data.node_groups.get("MilO_Halo")
-    if old:
-        bpy.data.node_groups.remove(old)
-    tree = bpy.data.node_groups.new("MilO_Halo", "CompositorNodeTree")
-    tree.interface.new_socket(name="Image", in_out="OUTPUT", socket_type="NodeSocketColor")
-    frame = tree.nodes.new("CompositorNodeRLayers")
+    tree, frame, glow, done = halo_nodes("MilO_Halo")
     over = tree.nodes.new("CompositorNodeAlphaOver")
     over.inputs["Background"].default_value = (*(lin(int(colour[i:i + 2], 16)) for i in (0, 2, 4)), 1.0)
+    add = tree.nodes.new("ShaderNodeMix")
+    add.data_type = "RGBA"
+    add.blend_type = "ADD"
+    add.inputs["Factor"].default_value = 1.0
+    colours = [socket for socket in add.inputs if socket.type == "RGBA"]
+    tree.links.new(frame.outputs["Image"], over.inputs["Foreground"])
+    tree.links.new(over.outputs["Image"], colours[0])
+    tree.links.new(glow, colours[1])
+    tree.links.new(next(socket for socket in add.outputs if socket.type == "RGBA"), done.inputs[0])
+    scene.compositing_node_group = tree
+    scene.render.use_compositing = True
+    scene.render.image_settings.color_mode = "RGB"
+
+
+def halo_nodes(name):
+    """The start of both halos: a new set of nodes of that name with the drawn frame, the glow
+    of what it emits, and the way out. Returns the set, the frame's node, the glow and the way
+    out's node."""
+    # The frame's emission is asked for before the nodes are made: only then do they offer it.
+    bpy.context.view_layer.use_pass_emit = True
+    old = bpy.data.node_groups.get(name)
+    if old:
+        bpy.data.node_groups.remove(old)
+    tree = bpy.data.node_groups.new(name, "CompositorNodeTree")
+    tree.interface.new_socket(name="Image", in_out="OUTPUT", socket_type="NodeSocketColor")
+    frame = tree.nodes.new("CompositorNodeRLayers")
     glare = tree.nodes.new("CompositorNodeGlare")
     glare.inputs["Type"].default_value = "Bloom"
     glare.inputs["Quality"].default_value = "High"
     glare.inputs["Threshold"].default_value = HALO_FROM
     glare.inputs["Strength"].default_value = HALO_STRENGTH
     glare.inputs["Size"].default_value = HALO_SIZE
-    add = tree.nodes.new("ShaderNodeMix")
-    add.data_type = "RGBA"
-    add.blend_type = "ADD"
-    add.inputs["Factor"].default_value = 1.0
-    done = tree.nodes.new("NodeGroupOutput")
-    colours = [socket for socket in add.inputs if socket.type == "RGBA"]
-    tree.links.new(frame.outputs["Image"], over.inputs["Foreground"])
     tree.links.new(frame.outputs["Emission"], glare.inputs["Image"])
-    tree.links.new(over.outputs["Image"], colours[0])
-    tree.links.new(glare.outputs["Glare"], colours[1])
-    tree.links.new(next(socket for socket in add.outputs if socket.type == "RGBA"), done.inputs[0])
+    return tree, frame, glare.outputs["Glare"], tree.nodes.new("NodeGroupOutput")
+
+
+def halo_see_through():
+    """Draws this run's pictures see-through as ever, and with the halo round lit brake lights
+    in them: for a picture that is laid over a screen, as the app lays the greeting over Home.
+
+    A halo is light, added to whatever lies behind it, and a see-through picture cannot hold
+    that: it can only hold a colour and how much of it covers what lies behind. So beside the
+    mascot the halo is stored as pure red that covers a part: as much as the halo would be
+    bright on black. Over the app's dark page that is the halo, all but exactly, and on black it
+    is exactly the picture on_ground("000000") draws. Over a light ground it is a red mist that
+    darkens what it should light: this is for dark grounds only. Where the mascot is, the halo
+    is added to him as light is, and nothing is see-through.
+
+    A phone lays a see-through picture over the screen with the numbers as they are stored,
+    which are not amounts of light but their curved form (sRGB): hence the curve below, the
+    same one. The halo's faint far part is left out (HALO_ENDS), so that it ends inside the
+    picture. Call it after set_stage."""
+    tree, frame, glow, done = halo_nodes("MilO_Halo_See_Through")
+
+    def split(colour):
+        node = tree.nodes.new("CompositorNodeSeparateColor")
+        tree.links.new(colour, node.inputs["Image"])
+        return node.outputs
+
+    def sum_of(operation, *values):
+        node = tree.nodes.new("ShaderNodeMath")
+        node.operation = operation
+        for socket, value in zip(node.inputs, values):
+            if isinstance(value, (int, float)):
+                socket.default_value = value
+            else:
+                tree.links.new(value, socket)
+        return node.outputs[0]
+
+    drawn, lit = split(frame.outputs["Image"]), split(glow)
+    # how bright the halo is here, from 0 to 1, as light and then as a phone stores it
+    most = sum_of("MINIMUM", sum_of("MAXIMUM", lit["Red"], sum_of("MAXIMUM", lit["Green"], lit["Blue"])), 1.0)
+    curved = sum_of("MULTIPLY_ADD", sum_of("POWER", most, 1 / 2.4), 1.055, -0.055)
+    straight = sum_of("MULTIPLY", most, 12.92)
+    stored = sum_of("MULTIPLY_ADD", sum_of("LESS_THAN", most, 0.0031308), sum_of("SUBTRACT", straight, curved), curved)
+    stored = sum_of("DIVIDE", sum_of("MAXIMUM", sum_of("SUBTRACT", stored, HALO_ENDS), 0.0), 1 - HALO_ENDS)
+    # beside the mascot the halo covers that part, in its own colour at full strength; where the
+    # mascot is, it is added to him
+    clear = sum_of("SUBTRACT", 1.0, drawn["Alpha"])
+    covered = sum_of("MULTIPLY_ADD", clear, stored, drawn["Alpha"])
+    gain = sum_of("MULTIPLY_ADD", clear, sum_of("DIVIDE", stored, sum_of("MAXIMUM", most, 1e-6)), drawn["Alpha"])
+    picture = tree.nodes.new("CompositorNodeCombineColor")
+    for channel in ("Red", "Green", "Blue"):
+        tree.links.new(sum_of("MULTIPLY_ADD", lit[channel], gain, drawn[channel]), picture.inputs[channel])
+    tree.links.new(covered, picture.inputs["Alpha"])
+    tree.links.new(picture.outputs["Image"], done.inputs[0])
     scene.compositing_node_group = tree
     scene.render.use_compositing = True
-    scene.render.image_settings.color_mode = "RGB"
 
 
 def slide_view(shift, off):

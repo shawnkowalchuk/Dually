@@ -83,13 +83,16 @@ def write(name):
     for frame in range(frames + 1):
         pose_at(frame / clips.FPS)
         greeting.key(frame)
+        if name in clips.DANCE:  # the moonwalk's clips: the hat, the brake lights, the turn
+            clips.key_dance(frame)
     return frames + 1
 
 
 def play(name):
-    """Makes one of the clips written here the rig's live clip. The brake lights go out first:
-    a clip that does not key their slider must not be drawn with what the last one left on it."""
-    rig["brake"] = 0.0
+    """Makes one of the clips written here the rig's live clip. The brake lights go out and the
+    hat comes off first: a clip that does not key them must not be drawn with what the last one
+    left behind."""
+    clips.reset_pose()
     action = bpy.data.actions[DRAWN + name]
     rig.animation_data.action = action
     if getattr(rig.animation_data, "action_slot", True) is None and action.slots:

@@ -13,17 +13,25 @@
 #   RockOn       2.75 s        holds up the horns with its right hand, and nods to the beat
 #   WaveUp       0.5 s         the right arm goes up, and stays up: it ends where WaveLoop begins
 #   WaveLoop     0.5 s, loops  the arm held up, one wave of the hand; the website loops it
+#   Moonwalk     0.58 s, loops glides backward on the spot, in his hat: one foot up on its toe, the other sliding
+#   MoonwalkStop 1.83 s        skids round to a stop, brake lights on; hand to the hat, three hip thrusts
+#   KickSpin     1.08 s        a kick, one fast turn on the spot, and down onto his toes, brake lights off
+#   MoonwalkOn   0.42 s        from his toes back into the moonwalk
 #   Gauge_Speed  2 s           the speed needle alone, 0 to 240: seek to speed / 240 of its length
 #   Gauge_RPM    2 s           the RPM needle alone, 0 to 8: seek to rpm / 8 of its length
 #
-# Every clip but the three loops and WaveUp starts and ends in the same standing pose (NEUTRAL),
-# so they can follow one another. The needles move in every clip: each clip keys the rig's two sliders
+# Every clip but the loops, WaveUp and the moonwalk's four starts and ends in the same standing
+# pose (NEUTRAL), so they can follow one another. The moonwalk's four follow one another in the
+# order above, each starting where the last one ended, and the last ends where Moonwalk begins.
+# The needles move in every clip: each clip keys the rig's two sliders
 # ("speed_kmh", "rpm") and the needle bones follow through their drivers.
 #
 # The brake lights on his back have a slider too, "brake", from 0 (unlit) to 1. None of these
-# clips lights them, and none keys the slider: a clip that does calls set_brake at every frame
-# and key_brake after key_pose. It is not part of key_pose, which would add a curve to every
-# clip there is.
+# clips but the moonwalk's lights them, and no other keys the slider: a clip that does calls
+# set_brake at every frame and key_brake after key_pose. It is not part of key_pose, which would
+# add a curve to every clip there is. The same goes for the hat (the slider "hat" and the bone
+# of that name) and for turning the whole mascot round (the bone "root"): the moonwalk's clips
+# set and key them (key_clip), no other clip does, and reset_pose takes the hat off again.
 #
 # A clip is a function of time that sets the whole pose; it is keyed on every frame.
 
@@ -258,6 +266,27 @@ def key_brake(frame):
     rig.keyframe_insert('["brake"]', frame=frame)
 
 
+def set_hat(on=0.0, tip=0.0):
+    """The hat: 0 is none, 1 is on; tipped further forward by `tip` degrees. Only for the
+    clips of the moonwalk, as set_brake is."""
+    rig["hat"] = clamp(on)
+    pb["hat"].rotation_euler = (radians(tip), 0.0, 0.0)
+
+
+def set_turn(left=0.0):
+    """Turns the whole mascot, feet and all, about the point he stands on: degrees to his own
+    left. Only for the clips of the moonwalk."""
+    pb["root"].rotation_euler = (0.0, 0.0, radians(left))
+
+
+def key_dance(frame):
+    """What the moonwalk's clips key and no other clip does."""
+    key_brake(frame)
+    rig.keyframe_insert('["hat"]', frame=frame)
+    pb["hat"].keyframe_insert("rotation_euler", frame=frame)
+    pb["root"].keyframe_insert("rotation_euler", frame=frame)
+
+
 def neutral(t=0.0):
     body = set_body()
     set_arm("L", RELAXED, body)
@@ -467,20 +496,245 @@ def rock_on(t):
     set_gauges(speed=loud * (110 + 30 * nod), rpm=IDLE_RPM + loud * (3.2 + 3.0 * nod))
 
 
+# ---------------------------------------------------------------- the moonwalk
+# He glides backward: the foot that is up on its toe stays where it is on the floor, the other
+# slides back flat, and then they change over. The clip is drawn on the spot, as Walk is: each
+# foot goes MOON_REACH between its place in front and its place behind, and that is how far he
+# glides while one foot slides, so one cycle carries him twice that (MOON_STRIDE).
+MOON_HALF = 7  # frames one foot slides for
+MOON_SECONDS = 2 * MOON_HALF / FPS
+MOON_REACH = 0.56
+MOON_STRIDE = 2 * MOON_REACH
+MOON_BACK = -0.33  # where a flat foot's ankle is at the back; in front it is MOON_REACH further on
+MOON_HEEL = 40.0  # degrees the heel comes up
+# He does not glide straight back but this many degrees to his right of it, and his feet go
+# that way under him. The pictures show him half turned to the viewer and move him level across
+# the screen: gliding straight back he would be going away from the viewer as well, and a foot
+# that should stay where it is would creep up and down the screen. This slant takes that out:
+# it is 90 less the angle he is drawn at (GLIDE_ANGLE in render_moonwalk.py).
+MOON_SLANT = 35.0
+MOON_APART = 0.10  # how far each foot is out to its side in the middle of its way
+# For the same pictures: the left foot is the one farther from the viewer and is drawn smaller,
+# and its way with it. So it goes this part further and the right foot this part less, and in
+# the picture both go equally far: otherwise neither would quite keep its place on the screen.
+MOON_FAR = 0.056
+TOE = 0.42  # from under the ankle to where a shoe stands on its toe, as in set_foot
+# How far he is turned at the end of his skid, his back to the viewer, and in the pose that
+# follows, in degrees to his own left of the way he faces while he glides. He is drawn gliding
+# 55 degrees from the viewer (render_moonwalk.py), so in the pose he is a little more towards them.
+SKID_TURN = 92.0
+POSE_TURN = -12.0
+STOP_FRAMES, THRUSTS, THRUST_FRAMES = 44, 3, 7
+KICK_FRAMES, ON_FRAMES = 26, 10
+
+# One hand to the brim of the hat, at its corner over the big dial, where it hides least: the
+# arm nearly straight up, the palm under the brim's edge and the fingers over it. Written for
+# the left arm like every pose; the right arm, which is the mirror image, is the one that does it.
+HAT_HAND = arm_pose(V(0.22, -0.30, 0.93), V(-0.8, 0.55, 0.0), V(-0.16, -0.71, 0.68), V(-0.8, 0.55, 0.0),
+                    V(-0.25, -0.25, 0.94), V(-0.8, 0.55, 0.1), (48, 55, 50, 58, 48, 55), (60, 0, 30, 30))
+# The other hand at his belt: in front of the foot of the body, the thumb up.
+BELT = arm_pose(V(0.38, -0.40, -0.84), V(0.2, 0.9, -0.3), V(-0.61, -0.71, -0.36), V(0.2, 0.95, -0.1),
+                V(-0.92, -0.20, -0.34), V(0.2, 0.95, -0.1), (78, 84, 80, 86, 78, 84), (15, 0, 0, 10))
+# Out to the side and low, for balance; and flung straight out, the hand open.
+BALANCE = dict(blend_arms(RELAXED, OUT, 0.6), curl=RELAXED["curl"], thumb=RELAXED["thumb"])
+FLING = dict(OUT, curl=CHEER["curl"], thumb=CHEER["thumb"])
+
+# A stance is the body (set_body's seven numbers) and the two feet (set_foot's five each).
+SKID = dict(body=(0.0, -0.07, -0.03, -7.0, 0.0, 0.0, -0.03), L=(0.10, -0.14, 0.0, 22.0, 0.0), R=(0.08, 0.14, 0.0, 14.0, 0.0))
+# The pose: the weight on the left foot, the right knee popped in with the heel up.
+POSE = dict(body=(0.0, -0.02, 0.02, -5.0, 0.0, -2.0, 0.0), L=(0.09, -0.04, 0.0, 26.0, 0.0), R=(0.0, 0.04, 0.0, -8.0, -36.0))
+# A hip thrust: the foot of the body goes forward and the top of it back.
+THRUST = dict(body=(0.0, -0.05, 0.24, -22.0, 0.0, -2.0, -0.03), L=(0.09, -0.04, 0.0, 26.0, 0.0), R=(0.0, 0.04, 0.0, -8.0, -48.0))
+# The kick: the left leg, the one on the far side of the hand at the hat, straight out to its
+# side and high, the body leaning away from it.
+KICK_READY = dict(body=(-0.02, -0.07, 0.0, 2.0, 0.0, 3.0, -0.04), L=(-0.02, 0.0, 0.05, 10.0, -15.0), R=(0.06, 0.0, 0.0, 14.0, 0.0))
+KICK = dict(body=(0.06, 0.02, 0.0, -3.0, 0.0, -11.0, 0.02), L=(0.62, -0.06, 0.40, 64.0, 24.0), R=(0.06, 0.0, 0.0, 14.0, 0.0))
+SPIN = dict(body=(0.0, 0.05, 0.0, 0.0, 0.0, 0.0, 0.03), L=(0.0, -0.02, 0.0, 6.0, -30.0), R=(0.0, 0.05, 0.0, 6.0, -30.0))
+# Down on the toes of both feet.
+LAND = dict(body=(0.0, -0.06, 0.0, 4.0, 0.0, 0.0, -0.02), L=(0.06, -0.06, 0.0, 16.0, -42.0), R=(0.06, 0.06, 0.0, 10.0, -42.0))
+# What the dials show while he glides.
+MOON_SPEED, MOON_RPM = 30.0, 2.0
+
+
+def ease(f, a, b):
+    """0 up to frame a, 1 from frame b on, smoothly from the one to the other."""
+    return smooth((f - a) / (b - a))
+
+
+def blend(a, b, w):
+    """The stance that lies the part w of the way from a to b."""
+    return {part: tuple(x + (y - x) * w for x, y in zip(a[part], b[part])) for part in a}
+
+
+def stand(stance):
+    body = set_body(*stance["body"])
+    for side in ("L", "R"):
+        set_foot(side, *stance[side])
+    return body
+
+
+def carried(arm, body, side):
+    """The same arm turned as the body is turned, so that a hand on the hat or at the belt stays
+    there when the body leans. (The arm poses are directions in the room, not from the body.)"""
+    moved = body @ REST["body"].inverted()
+    if side == "R":  # set_arm mirrors a pose for the right arm: the turn is mirrored to match
+        flip = Matrix.Scale(-1.0, 3, (1, 0, 0))
+        moved = flip @ moved @ flip
+    out = dict(arm)
+    for key in ("upper", "upper_palm", "fore", "fore_palm", "hand", "hand_palm"):
+        out[key] = moved @ arm[key]
+    return out
+
+
+def moon_foot(q):
+    """One foot at the part q of its cycle: how far along its way it is, from MOON_BACK behind
+    him to MOON_REACH further on, and how far its heel is up. In the first half it is on its
+    toe, and the toe stays where it is on the floor, which goes by under him at an even pace;
+    the heel is up at once and comes down as the foot gets ahead of him. In the second half it
+    is flat and slides back. Over the floor it goes twice as far as he glides, starting and
+    ending gently: that is the last two terms."""
+    q %= 1.0
+    if q < 0.5:
+        s = q / 0.5
+        return MOON_BACK + MOON_REACH * s, MOON_HEEL * smooth(s / 0.2) * (1 - smooth((s - 0.3) / 0.7))
+    s = (q - 0.5) / 0.5
+    return MOON_BACK + MOON_REACH * (1 - 2 * smooth(s) + s), 0.0
+
+
+def moon_stance(p):
+    w = 2 * pi * p
+    feet = {}
+    for side, q, left in (("L", p, 1.0), ("R", p + 0.5, -1.0)):
+        along, heel = moon_foot(q)
+        along *= 1 + left * MOON_FAR
+        # A shoe that tips up on its toe carries its ankle forward over the toe: the last term.
+        feet[side] = (MOON_APART + left * along * sin(radians(MOON_SLANT)),
+                      along * cos(radians(MOON_SLANT)) + TOE * (1 - cos(radians(heel))), 0.0, 8.0, -heel)
+    # leaning into it, the head a little ahead, and sinking a little on every slide
+    return dict(body=(0.0, -0.035 + 0.012 * cos(2 * w), 0.015 * sin(2 * w), 7.0 + 1.5 * cos(2 * w),
+                      3.0 * cos(w), 1.5 * sin(w), 0.0), **feet)
+
+
+def moon_arm(p, side):
+    """The arms are bent, the hands at his waist and clear of his feet, which are what a
+    moonwalk is watched for; they swing a little against the feet."""
+    reach = cos(2 * pi * p) * (1.0 if side == "L" else -1.0)
+    arm = turned(RELAXED, "X", -9 * reach + 2, -9 * reach - 72, -9 * reach - 84)
+    arm["curl"] = (40, 46, 44, 50, 48, 54)
+    return arm
+
+
+def moonwalk(t):
+    p = (t / MOON_SECONDS) % 1.0
+    w = 2 * pi * p
+    body = stand(moon_stance(p))
+    for side in ("L", "R"):
+        set_arm(side, moon_arm(p, side), body)
+    set_eyes(twist_speedo=2 * sin(w), twist_rpm=2 * sin(w))
+    set_gauges(speed=MOON_SPEED + 3 * sin(2 * w), rpm=MOON_RPM + 0.3 * sin(2 * w))
+    set_hat(1.0)
+    set_brake(0.0)
+    set_turn(0.0)
+
+
+def moonwalk_stop(t):
+    """From the moonwalk's first pose. He brakes, and his back end skids round towards the
+    viewer with the brake lights on; then he comes back round into the pose, one hand to the
+    brim of his hat and the other at his belt, and thrusts his hips THRUSTS times."""
+    f = t * FPS
+    skid, pose = ease(f, 0, 5), ease(f, 11, 19)
+    first = STOP_FRAMES - THRUSTS * THRUST_FRAMES - 1
+    thrust = 0.0
+    for i in range(THRUSTS):  # out fast, back slower
+        u = (f - first - i * THRUST_FRAMES) / THRUST_FRAMES
+        if 0.0 < u < 1.0:
+            thrust = smooth(u / 0.3) * (1 - smooth((u - 0.42) / 0.58))
+    # he rocks on his feet as the skid ends, and his arms with him
+    rock = exp(-0.35 * max(f - 5, 0)) * sin(0.95 * max(f - 5, 0)) * (1 - pose)
+    stance = blend(blend(blend(moon_stance(0.0), SKID, skid), POSE, pose), THRUST, thrust)
+    right, up, forward, lean, turn_left, tilt_left, stretch = stance["body"]
+    stance["body"] = (right, up + 0.03 * rock, forward, lean + 5 * rock, turn_left, tilt_left, stretch + 0.02 * rock)
+    body = stand(stance)
+    for side, held in (("R", HAT_HAND), ("L", BELT)):
+        out = turned(BALANCE, "Y", 8 * rock, 12 * rock, 16 * rock)
+        set_arm(side, blend_arms(blend_arms(moon_arm(0.0, side), out, skid), carried(held, body, side), pose), body)
+    set_eyes(pop_speedo=0.05 * thrust, pop_rpm=0.05 * thrust)
+    # the needles fall as he stops, and the engine is revved with every thrust
+    set_gauges(speed=MOON_SPEED * (1 - ease(f, 0, 8)), rpm=MOON_RPM + (IDLE_RPM - MOON_RPM) * ease(f, 0, 8) + 5.0 * thrust)
+    set_hat(1.0, tip=5 * pose + 4 * thrust)
+    set_brake(ease(f, 1, 3))
+    # the skid is quick at first, swings a little too far and comes to rest; the way back is
+    # one smooth turn
+    swung = (1 - (1 - clamp(f / 6)) ** 3) + 0.07 * exp(-0.5 * max(f - 6, 0)) * sin(1.1 * max(f - 6, 0))
+    set_turn(SKID_TURN * swung + (POSE_TURN - SKID_TURN) * ease(f, 11, 19))
+
+
+def kick_spin(t):
+    """From the pose. He winds up the other way, kicks his right foot out in front, and turns
+    once round on the spot, fast, his back and its brake lights going past the viewer; then he
+    comes down on the toes of both feet, and the brake lights go out."""
+    f = t * FPS
+    ready = ease(f, 0, 3) * (1 - ease(f, 3, 5))
+    kick = ease(f, 3, 6) * (1 - ease(f, 7, 10))
+    spin = ease(f, 7, 10) * (1 - ease(f, 19, 22))
+    land = ease(f, 19, 22)
+    stance = blend(blend(blend(blend(POSE, KICK_READY, ready), KICK, kick), SPIN, spin), LAND, land)
+    body = stand(stance)
+    set_arm("R", carried(HAT_HAND, body, "R"), body)
+    flung = max(kick, land)
+    set_arm("L", blend_arms(carried(BELT, body, "L"), FLING, flung), body)
+    turning = clamp((f - 7) / 13)
+    whirl = 40 * turning * (1 - turning)
+    set_eyes(twist_speedo=-whirl, twist_rpm=whirl, pop_speedo=0.04 * kick, pop_rpm=0.04 * kick)
+    # the engine screams through the turn
+    revs = ease(f, 2, 6) * (1 - 0.6 * ease(f, 20, 26))
+    set_gauges(speed=200 * ease(f, 7, 12) * (1 - 0.8 * ease(f, 19, 26)), rpm=IDLE_RPM + 5.8 * revs)
+    set_hat(1.0, tip=5.0)
+    set_brake(1 - ease(f, 21, 25))  # he lets go of the brake as he lands
+    # wound up 16 degrees the other way first; then an even pace through the middle of the turn,
+    # so that every frame of it is a clear step on from the last
+    turned_by = 0.55 * smooth(turning) + 0.45 * turning
+    set_turn(POSE_TURN - 16 * ease(f, 0, 4) * (1 - turned_by) + 360 * turned_by)
+
+
+def moonwalk_on(t):
+    """From his toes back into the moonwalk's first pose: the hand comes down from the hat, and
+    he is turned back the way he glides."""
+    f = t * FPS
+    go = ease(f, 0, ON_FRAMES)
+    body = stand(blend(LAND, moon_stance(0.0), go))
+    set_arm("R", blend_arms(carried(HAT_HAND, body, "R"), moon_arm(0.0, "R"), ease(f, 1, ON_FRAMES - 1)), body)
+    set_arm("L", blend_arms(FLING, moon_arm(0.0, "L"), ease(f, 0, ON_FRAMES - 2)), body)
+    set_eyes()
+    set_gauges(speed=40 + (MOON_SPEED - 40) * go, rpm=IDLE_RPM + 5.8 * 0.4 + (MOON_RPM - IDLE_RPM - 5.8 * 0.4) * go)
+    set_hat(1.0, tip=5 * (1 - ease(f, 0, 6)))
+    set_brake(0.0)
+    set_turn(POSE_TURN * (1 - ease(f, 0, ON_FRAMES - 2)))
+
+
+# The clips that also key the hat, the brake lights and the turn of the whole mascot.
+DANCE = ("Moonwalk", "MoonwalkStop", "KickSpin", "MoonwalkOn")
+
 CLIPS = [("Idle", 4.0, idle, True), ("Wave", 2.0, wave, False), ("ThumbsUp", 2.0, thumbs_up, False),
          ("Walk", 1.0, walk, True), ("Celebrate", 3.0, celebrate, False),
          ("Flex", 4.5, flex, False), ("Peace", 2.75, peace, False), ("RockOn", 2.75, rock_on, False),
-         ("WaveUp", 0.5, wave_up, False), ("WaveLoop", 0.5, wave_loop, True)]
+         ("WaveUp", 0.5, wave_up, False), ("WaveLoop", 0.5, wave_loop, True),
+         ("Moonwalk", MOON_SECONDS, moonwalk, True), ("MoonwalkStop", STOP_FRAMES / FPS, moonwalk_stop, False),
+         ("KickSpin", KICK_FRAMES / FPS, kick_spin, False), ("MoonwalkOn", ON_FRAMES / FPS, moonwalk_on, False)]
 NEEDLE_CLIPS = [("Gauge_Speed", "speed_kmh", 240.0), ("Gauge_RPM", "rpm", 8.0)]
 NEEDLE_SECONDS = 2.0
 
 
 # ---------------------------------------------------------------- writing the actions
 def reset_pose():
+    """Every bone back to rest, the hat off and the brake lights out: what a clip that does not
+    key them is to be drawn with."""
     for b in pb:
         b.location = (0.0, 0.0, 0.0)
         b.rotation_euler = (0.0, 0.0, 0.0)
         b.scale = (1.0, 1.0, 1.0)
+    rig["hat"] = 0.0
+    rig["brake"] = 0.0
 
 
 def new_action(name, frames, loop):
@@ -506,6 +760,14 @@ def key_pose(frame):
         pb[name].keyframe_insert("scale", frame=frame)
     rig.keyframe_insert('["speed_kmh"]', frame=frame)
     rig.keyframe_insert('["rpm"]', frame=frame)
+
+
+def key_clip(name, frame):
+    """Keys the pose as it stands as a frame of the clip `name`: what every clip keys, and for
+    the moonwalk's clips the hat, the brake lights and the turn of the whole mascot as well."""
+    key_pose(frame)
+    if name in DANCE:
+        key_dance(frame)
 
 
 def all_curves(action):
@@ -534,7 +796,7 @@ def animate():
         new_action(name, frames, loop)
         for frame in range(frames + 1):
             pose_at(frame / FPS)
-            key_pose(frame)
+            key_clip(name, frame)
 
     # The two needle clips move one slider each and nothing else, so they can be laid over any
     # other clip and scrubbed to a live value.

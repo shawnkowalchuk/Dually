@@ -14,10 +14,11 @@
 #   dark/0000.png to 0002.png          the same three on the app's dark page, with the halo
 #   dark/turn/0000.png ...             the turn-around on the dark page, with the halo
 #
-# No stored clip lights the brake lights yet or turns the mascot round. This script writes clips
-# of its own for it, in memory: he stands, his slider "brake" is keyed, and the whole mascot is
-# turned about the point he stands on, as render_greeting.py turns him for the walk. The
-# turn-around is a turntable, not an animation: his feet turn with him.
+# These pictures are of him standing, and no stored clip is that with the lights lit (the
+# moonwalk's clips light them, in the middle of a dance). So this script writes clips of its
+# own, in memory: he stands, his slider "brake" is keyed, and the whole mascot is turned about
+# the point he stands on, as render_greeting.py turns him for the walk. The turn-around is a
+# turntable, not an animation: his feet turn with him.
 #
 # NOTHING IS SAVED.
 
