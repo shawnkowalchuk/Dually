@@ -23,14 +23,20 @@
 #   Burnout      0.25 s, loops runs on the spot, his shoes scuffing back like spinning tyres
 #   BrakeSlide   0.92 s        crouches back, bolts, brakes: brake lights on, his back end swings round into a slide
 #   Slide        0.33 s, loops the slide, held, brake lights on
+#   WalkIn       0.5 s, loops  walks with a longer stride than Walk's, on the spot, seen three quarters from the front
+#   WalkStop     0.46 s        stops, brake lights on, and hops round to face the viewer: it ends where Wave begins
+#   TurnAway     0.88 s        from where Wave ends: hops round to the right, back to the viewer, and lifts a foot; brake lights off
+#   WalkOff      0.5 s, loops  the same walk, seen three quarters from behind
 #   Gauge_Speed  2 s           the speed needle alone, 0 to 240: seek to speed / 240 of its length
 #   Gauge_RPM    2 s           the RPM needle alone, 0 to 8: seek to rpm / 8 of its length
 #
-# Every clip but the loops, WaveUp, the moonwalk's four, OneYear and the five of the run starts
-# and ends in the same standing pose (NEUTRAL), so they can follow one another. The moonwalk's
-# four follow one another in the order above, each starting where the last one ended, and the
-# last ends where Moonwalk begins. OneYear starts in the standing pose, in his cap, and ends
-# with both arms up. The five of the run follow one another in the order above: he never stands.
+# Every clip but the loops, WaveUp, the moonwalk's four, OneYear, the five of the run and the
+# four of the walk in and off starts and ends in the same standing pose (NEUTRAL), so they can
+# follow one another. The moonwalk's four follow one another in the order above, each starting
+# where the last one ended, and the last ends where Moonwalk begins. OneYear starts in the
+# standing pose, in his cap, and ends with both arms up. The five of the run follow one another
+# in the order above: he never stands. The last four go round Wave: WalkIn, WalkStop, Wave,
+# TurnAway, WalkOff; WalkStop ends standing and TurnAway begins standing, each turned as it says.
 # The needles move in every clip: each clip keys the rig's two sliders
 # ("speed_kmh", "rpm") and the needle bones follow through their drivers.
 #
@@ -42,7 +48,8 @@
 # set and key them (key_clip), no other clip does, and reset_pose takes the hat off again.
 # And the same for the party: the sliders "party_hat", "popper" and "pull" and the party cap's
 # bone are set by set_party and keyed by key_party, in OneYear and in no other clip. The five
-# clips of the run key the brake lights and the turn of the whole mascot, and not the hat (key_run).
+# clips of the run key the brake lights and the turn of the whole mascot, and not the hat
+# (key_run), and so do the four of the walk in and off.
 #
 # Two clips are not the mascot's: OneYear_Confetti, on the skeleton of the confetti
 # (MilO_Confetti_Rig, in a collection of its own), written from where OneYear has the popper's
@@ -1497,12 +1504,260 @@ def write_smoke(name="RunSlide_Smoke"):
     return len(puffs)
 
 
+# ---------------------------------------------------------------- the walk in and the walk off
+# The wave, walked through: he walks in at the left, stops in the middle with his brake lights
+# coming on, turns to the viewer and waves (the clip Wave, as it is), turns away to the right,
+# and walks off at the right with his back and its brake lights to the viewer. Four clips, and
+# Wave between the second and the third:
+#
+#   WalkIn    one cycle of a walk with a longer stride than Walk's, drawn on the spot as Walk
+#             is: whoever shows it moves the picture PACE_STRIDE / PACE_FRAMES on with every
+#             frame, and a planted foot keeps its place. He is seen three quarters from the front
+#   WalkStop  from WalkIn's first frame, in which one foot is planted under him and the other is
+#             in the air beside it. That foot comes down, the brake lights come on, and he hops
+#             round to face the viewer. It ends in the standing pose, which is Wave's first frame
+#   TurnAway  from the standing pose, which is Wave's last frame. He hops round to the right,
+#             his back coming into view with the brake lights lit, lands, and lifts a foot for
+#             his first step: the brake lights go out. It ends in WalkOff's first frame
+#   WalkOff   one cycle of the same walk, seen three quarters from behind
+#
+# IN THESE FOUR THE BONE "root" SAYS WHICH WAY HE FACES, and 0 is facing the viewer, the way he
+# was built: so they are drawn from the studio's camera as they are, with the rig not turned
+# (render_wave2.py), and Wave fits between them as it is. WalkIn is turned WALK_IN_TURN degrees
+# to his left, WalkOff WALK_OFF_TURN.
+#
+# In both walks he goes the same way through the room, WALK_HEADING degrees to the left of
+# facing the viewer, which is level in the picture as the studio's camera sees it (the camera
+# stands a little to one side). So his feet do not go straight ahead under him, as in the
+# moonwalk and the run: walking in, he goes 38.5 degrees to his left of straight ahead; walking
+# off, 38.5 to his right. The two views are mirror images of each other about the way he goes.
+#
+# Wave does not key the brake lights. Whoever shows the five one after the other keeps them
+# lit through it, where they are behind him: render_wave2.py does.
+PACE_FRAMES = 12  # frames to a cycle: two steps in half a second, the pace of the greeting's first walk
+PACE_STEP = 0.52  # how far a planted foot goes back under him
+PACE_STRIDE = 2 * PACE_STEP  # how far one cycle carries him
+PACE_LIFT = 0.12  # how high a foot is carried forward
+PACE_HEEL, PACE_TOE = 18.0, 22.0  # degrees the toe is up as a foot lands, and the heel as it leaves
+HEEL = 0.20  # from under the ankle back to where a shoe stands on its heel, as in set_foot
+WALK_IN_TURN, WALK_OFF_TURN, WALK_HEADING = 58.0, 135.0, 96.5
+PACE_APART = 0.07  # each foot's way is this far out to its own side
+PACE_SQUARE = 0.5  # how far his hips are as if square to the way he goes (placed)
+# The left foot is the one farther from the viewer in both walks and is drawn smaller: it goes
+# this part further and the right foot this part less, as in the moonwalk and the run. And his
+# shoes point a little towards the viewer as he walks in and a little away as he walks off, so
+# their edges are a little nearer and a little farther: walking off, both feet go this part
+# further, walking in this part less. Then all four are carried equally far in the picture.
+PACE_FAR, PACE_NEAR = 0.0476, 0.0032
+# How far his shoes point towards the way he goes, as a part of the angle between that and
+# straight ahead: most of it.
+PACE_TOES = 0.72
+# The part of a cycle the clips' first frame is: the left foot flat under him, in the middle
+# of its step, the right foot at the top of its way forward. It is where he stops from and
+# starts from: the foot in the air is put down, or lifted, and the other one never moves.
+PACE_FIRST = 0.25
+PACE_SPEED, PACE_RPM = 46.0, 2.6  # what the dials show while he walks
+# WalkStop and TurnAway: how many frames each is; the frames he leaves the floor on and lands
+# on, and how high he hops, in each; and the frame of TurnAway on which he begins to lift his
+# foot for the first step, which is when the brake lights begin to go out.
+HALT_FRAMES, AWAY_FRAMES = 11, 21
+HALT_HOP, AWAY_HOP = (3, 8, 0.10), (3, 10, 0.14)
+STEP_OFF = 17
+# Standing, as neutral() stands: a stance like the others here, and a whole pose.
+STANDING = dict(body=(0.0,) * 7, L=(0.04, 0.0, 0.0, 18.0, 0.0), R=(0.04, 0.0, 0.0, 18.0, 0.0))
+
+
+def pace_way(facing):
+    """Which way he is going, as he sees it when he is turned `facing` degrees to his left of
+    facing the viewer: x to his left, y behind him."""
+    a = radians(WALK_HEADING - facing)
+    return V(sin(a), -cos(a), 0.0)
+
+
+def pace_foot(q):
+    """One foot at the part q of a cycle: how far along its way it is, how high, and how far
+    its toe is up. In the first half it is on the floor and goes back at the floor's pace: it
+    lands on its heel, is flat from a quarter to seven tenths of the way, and leaves from its
+    toe. In the second half it is carried forward."""
+    q %= 1.0
+    if q < 0.5:
+        s = q / 0.5
+        return PACE_STEP * (0.5 - s), 0.0, PACE_HEEL * (1 - smooth(s / 0.25)) - PACE_TOE * smooth((s - 0.7) / 0.3)
+    s = (q - 0.5) / 0.5
+    return (PACE_STEP * (smooth(s) - 0.5), PACE_LIFT * sin(pi * s),
+            -PACE_TOE * (1 - smooth(s / 0.4)) + PACE_HEEL * smooth((s - 0.55) / 0.45))
+
+
+def stepped(side, along, way, up, toes, toe_up):
+    """placed(), for a shoe that rolls from its heel to its toe as a walking foot does. A shoe
+    is tipped about the point of the floor under its ankle (set_foot), so the edge it stands on,
+    the heel's or the toe's, would creep as it tips: the ankle is carried by what that comes
+    to, along the shoe, and the edge stays where it is."""
+    flip = 1.0 if side == "L" else -1.0
+    roll = (TOE if toe_up < 0 else -HEEL) * (1 - cos(radians(toe_up)))
+    out, forward, up, toe_out, toe_up = placed(side, along, way, up, toes, toe_up, PACE_SQUARE, PACE_APART)
+    return (out + flip * roll * sin(radians(toes)), forward + roll * cos(radians(toes)), up, toe_out, toe_up)
+
+
+def pace_stance(p, facing):
+    """The body and the feet at the part p of a cycle of the walk, he turned `facing` degrees."""
+    w = 2 * pi * p
+    way = pace_way(facing)
+    toes = PACE_TOES * (WALK_HEADING - facing)
+    near = -PACE_NEAR if toes > 0 else PACE_NEAR
+    feet = {}
+    for side, q, far in (("L", p, 1.0), ("R", p + 0.5, -1.0)):
+        along, up, toe_up = pace_foot(q)
+        feet[side] = stepped(side, along * (1 + far * PACE_FAR) * (1 + near), way, up, toes + far * 6.0, toe_up)
+    # he leans the way he goes, a little, and sinks as each foot lands
+    lean, tilt = lean_to(way, 5.0 + 1.5 * cos(2 * w))
+    ahead = 0.03
+    return dict(body=(-ahead * way.x - 0.02 * sin(w), -0.012 - 0.022 * cos(2 * w), -ahead * way.y,
+                      lean, -5.0 * cos(w), tilt + 2.5 * sin(w), 0.0), **feet)
+
+
+def pace_pose(p, facing):
+    """Everything of the walk at the part p of a cycle but the brake lights and the way he
+    faces: the stance, the two arms, the dials, the needles. A whole pose, to be blended with
+    another (between) and set (strike)."""
+    w = 2 * pi * p
+    arms = {}
+    for side, reach in (("L", -cos(w)), ("R", cos(w))):
+        # Each arm swings with the opposite leg, and bends more as it comes forward: Walk's
+        # arms. But held a little further out: his feet go to one side as they come forward,
+        # and a hand that swings back beside him was in the shoe that comes up under it.
+        bend, back = 0.5 + 0.5 * reach, max(-reach, 0.0)
+        arm = turned(RELAXED, "X", -28 * reach, -28 * reach - 22 * bend, -28 * reach - 30 * bend)
+        arms[side] = dict(turned(arm, "Y", -2.0 - 4.0 * back, -8.0 - 12.0 * back, -11.0 - 16.0 * back), curl=(30, 35, 35, 40, 40, 45))
+    eyes = (2 * sin(w), 2 * sin(w), 0.015 * cos(2 * w), -0.015 * cos(2 * w))
+    gauges = (PACE_SPEED + 5 * sin(2 * w + 0.5), PACE_RPM + 0.6 * sin(2 * w + 2.0) + 0.15 * sin(4 * w))
+    return pace_stance(p, facing), arms, eyes, gauges
+
+
+STILL = (STANDING, {"L": RELAXED, "R": RELAXED}, (0.0, 0.0, 0.0, 0.0), (0.0, IDLE_RPM))
+
+
+def between(a, b, w):
+    """The whole pose that lies the part w of the way from a to b."""
+    return (blend(a[0], b[0], w), {side: blend_arms(a[1][side], b[1][side], w) for side in ("L", "R")},
+            tuple(x + (y - x) * w for x, y in zip(a[2], b[2])), tuple(x + (y - x) * w for x, y in zip(a[3], b[3])))
+
+
+def strike(pose):
+    """Sets a whole pose."""
+    stance, arms, eyes, gauges = pose
+    body = stand(stance)
+    for side in ("L", "R"):
+        set_arm(side, arms[side], body)
+    set_eyes(*eyes)
+    set_gauges(*gauges)
+
+
+def paced(p, facing, lit=0.0):
+    strike(pace_pose(p, facing))
+    set_brake(lit)
+    set_turn(facing)
+
+
+def walk_in(t):
+    paced(PACE_FIRST + t * FPS / PACE_FRAMES, WALK_IN_TURN)
+
+
+def walk_off(t, lit=0.0):
+    """`lit` is how far the brake lights are on as he goes: 0 in the clip. render_wave2.py also
+    draws him with them lit all the way off, for Shawn to choose between the two."""
+    paced(PACE_FIRST + t * FPS / PACE_FRAMES, WALK_OFF_TURN, lit)
+
+
+def foot_up(stance, side, part):
+    """A stance with one foot only that part of the way up."""
+    out, forward, up, toe_out, toe_up = stance[side]
+    return dict(stance, **{side: (out, forward, up * part, toe_out, toe_up)})
+
+
+def hopped(pose, high, air, crouch, twist=0.0, fling=0.0):
+    """A whole pose in a hop on the spot: `air` is how far up he is, 0 on the floor and 1 at the
+    top of a hop `high`; `crouch` is how far he is down before it and after it; `twist` turns
+    the top of him, degrees to his left; `fling` lets his arms fly out."""
+    stance, arms, eyes, gauges = pose
+    right, up, forward, lean, turn_left, tilt_left, stretch = stance["body"]
+    feet = {}
+    for side in ("L", "R"):  # the feet come up a little less than he does, toes hanging
+        out, ahead, foot, toe_out, toe_up = stance[side]
+        feet[side] = (out + 0.03 * air, ahead, foot + 0.85 * high * air, toe_out, toe_up - 14.0 * air)
+    body = (right, up + high * air - 0.06 * crouch, forward, lean + 3.0 * crouch, turn_left + twist, tilt_left,
+            stretch + 0.04 * air - 0.06 * crouch)
+    arms = {side: blend_arms(arms[side], BALANCE, fling) for side in ("L", "R")}
+    return dict(body=body, **feet), arms, eyes, gauges
+
+
+def walk_stop(t):
+    """From WalkIn's first frame. The foot that is in the air comes down beside the other, which
+    stays where it is, and the brake lights come on, at once, as a car's do; the top of him
+    rocks on the way he was going. Then he crouches, hops, and turns to face the viewer in the
+    air: his feet turn with him only while they are off the floor. He lands and comes to rest
+    in the standing pose."""
+    f = t * FPS
+    if f >= HALT_FRAMES:
+        neutral()
+        set_brake(1.0)
+        set_turn(0.0)
+        return
+    off, on, high = HALT_HOP
+    down, round_ = ease(f, 0, 2), ease(f, off, on)
+    walking = pace_pose(PACE_FIRST, WALK_IN_TURN)
+    halted = (foot_up(walking[0], "R", 1 - down), *walking[1:])
+    crouch = bump(f, off - 3, off + 1) + 0.8 * bump(f, on - 1, on + 3)
+    pose = hopped(between(between(walking, halted, down), STILL, round_), high, hop(f, off, on), crouch,
+                  twist=-10.0 * bump(f, off - 3, off + 2), fling=0.3 * hop(f, off, on))
+    # he rocks on the way he was going as he stops, and back
+    stance = pose[0]
+    right, up, forward, lean, turn_left, tilt_left, stretch = stance["body"]
+    rock = exp(-0.55 * f) * sin(1.15 * f) * (1 - round_)
+    tip, tilt = lean_to(pace_way(WALK_IN_TURN), 9.0 * rock)
+    stance["body"] = (right, up, forward, lean + tip, turn_left, tilt_left + tilt, stretch)
+    strike(pose)
+    # the needles fall as he stops
+    fall = ease(f, 0, 8)
+    set_gauges(speed=walking[3][0] * (1 - fall), rpm=walking[3][1] + (IDLE_RPM - walking[3][1]) * fall)
+    set_brake(1.0 if f >= 1 else 0.0)
+    set_turn(WALK_IN_TURN * (1 - round_))
+
+
+def turn_away(t, lights_stay=False):
+    """From the standing pose. He crouches, the top of him already turning the way he will go,
+    hops, and turns to the right in the air until his back and its brake lights are to the
+    viewer; lands with his feet where the walk has them, and stands while the lights are seen;
+    and from frame STEP_OFF lifts his right foot for the first step, straight up, while the
+    brake lights go out. Its last frame is WalkOff's first. With `lights_stay` the lights stay
+    lit: render_wave2.py draws that too."""
+    f = t * FPS
+    off, on, high = AWAY_HOP
+    round_, step = ease(f, off, on), ease(f, STEP_OFF, AWAY_FRAMES)
+    going = pace_pose(PACE_FIRST, WALK_OFF_TURN)
+    landed = (foot_up(going[0], "R", step), *going[1:])
+    # landed, he stands a moment before he goes: the body and the arms take up the walk with the step
+    stood = (dict(landed[0], body=STANDING["body"]), STILL[1], STILL[2], STILL[3])
+    # he sinks a little once more before he goes, which is his weight going onto the foot that stays
+    crouch = bump(f, 0, off + 1) + 0.9 * bump(f, on - 1, on + 4) + 0.3 * bump(f, STEP_OFF - 3, STEP_OFF + 1)
+    pose = hopped(between(between(STILL, stood, round_), landed, step), high, hop(f, off, on), crouch,
+                  twist=14.0 * bump(f, 0, off + 2.5), fling=0.35 * hop(f, off, on))
+    strike(pose)
+    # the engine is revved for the turn
+    rev = bump(f, off - 2, on + 2)
+    set_gauges(speed=going[3][0] * step + 30.0 * rev * (1 - step), rpm=IDLE_RPM + (going[3][1] - IDLE_RPM) * step + 2.6 * rev * (1 - step))
+    set_brake(1.0 if lights_stay else 1 - ease(f, STEP_OFF, AWAY_FRAMES - 1))
+    set_turn(WALK_OFF_TURN * round_)
+
+
 # The clips that also key the hat, the brake lights and the turn of the whole mascot.
 DANCE = ("Moonwalk", "MoonwalkStop", "KickSpin", "MoonwalkOn")
 # The clips that also key the party cap, the popper and its string.
 PARTY = ("OneYear",)
 # The clips that also key the brake lights and the turn of the whole mascot, and not the hat.
 RUNS = ("Run", "SpinUp", "Burnout", "BrakeSlide", "Slide")
+# And these, of the wave walked through, key the same two.
+WALKS = ("WalkIn", "WalkStop", "TurnAway", "WalkOff")
 
 CLIPS = [("Idle", 4.0, idle, True), ("Wave", 2.0, wave, False), ("ThumbsUp", 2.0, thumbs_up, False),
          ("Walk", 1.0, walk, True), ("Celebrate", 3.0, celebrate, False),
@@ -1513,7 +1768,9 @@ CLIPS = [("Idle", 4.0, idle, True), ("Wave", 2.0, wave, False), ("ThumbsUp", 2.0
          ("OneYear", PARTY_FRAMES / FPS, one_year, False),
          ("Run", RUN_FRAMES / FPS, run, True), ("SpinUp", SPIN_UP_FRAMES / FPS, spin_up, False),
          ("Burnout", BURN_FRAMES / FPS, burnout, True), ("BrakeSlide", BRAKE_FRAMES / FPS, brake_slide, False),
-         ("Slide", SLIDE_FRAMES / FPS, slide, True)]
+         ("Slide", SLIDE_FRAMES / FPS, slide, True),
+         ("WalkIn", PACE_FRAMES / FPS, walk_in, True), ("WalkStop", HALT_FRAMES / FPS, walk_stop, False),
+         ("TurnAway", AWAY_FRAMES / FPS, turn_away, False), ("WalkOff", PACE_FRAMES / FPS, walk_off, True)]
 NEEDLE_CLIPS = [("Gauge_Speed", "speed_kmh", 240.0), ("Gauge_RPM", "rpm", 8.0)]
 NEEDLE_SECONDS = 2.0
 
@@ -1565,7 +1822,7 @@ def key_clip(name, frame):
         key_dance(frame)
     if name in PARTY:
         key_party(frame)
-    if name in RUNS:
+    if name in RUNS or name in WALKS:
         key_run(frame)
 
 
