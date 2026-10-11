@@ -105,8 +105,12 @@ private fun SetupItem.notSetRes(): Int = when (this) {
 private val NOTHING_PAIRED_DETAILS =
     setOf(SetupDetail.TRUCK_NOT_PAIRED, SetupDetail.TRUCK_ASSOCIATION_MISSING)
 
-/** The words on the button that carries out a row's fix. */
-internal fun SetupRow.fixLabelRes(): Int = when (fix) {
+/**
+ * The words on the button that carries out [fix], this row's fix. The fix is handed in, and not
+ * read from the row, so that a row without one cannot ask for a button's words: a row has a
+ * button only where it has a fix.
+ */
+internal fun SetupRow.fixLabelRes(fix: SetupFix): Int = when (fix) {
     is SetupFix.AskPermission -> R.string.setup_action_allow
 
     is SetupFix.Open -> R.string.setup_action_open_settings
@@ -118,6 +122,4 @@ internal fun SetupRow.fixLabelRes(): Int = when (fix) {
         } else {
             R.string.setup_action_change_truck
         }
-
-    null -> error("A row without a fix has no button")
 }

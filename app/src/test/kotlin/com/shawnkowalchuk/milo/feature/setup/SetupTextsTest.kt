@@ -41,7 +41,7 @@ class SetupTextsTest {
                     R.string.setup_action_change_truck
                 }
 
-            assertEquals("$detail", expected, truckRow(detail).fixLabelRes())
+            assertEquals("$detail", expected, truckRow(detail).fixLabelRes(SetupFix.OpenPairing))
         }
     }
 

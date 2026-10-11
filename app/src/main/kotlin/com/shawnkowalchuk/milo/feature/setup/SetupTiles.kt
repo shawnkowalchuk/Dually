@@ -150,7 +150,7 @@ internal fun ChecklistGroup(label: String, rows: List<SetupRow>, actions: SetupA
 private fun ChecklistRow(row: SetupRow, actions: SetupActions) {
     val fix = row.fix
     val fixButton =
-        fix?.let { StatusRowAction(stringResource(row.fixLabelRes())) { actions.onFix(it) } }
+        fix?.let { StatusRowAction(stringResource(row.fixLabelRes(it))) { actions.onFix(it) } }
     val step = row.confirmStep
     // A row Shawn can confirm has two buttons: the one that opens the setting, and the one that
     // says he set it (or takes that back). The button for the next thing to do comes last.
