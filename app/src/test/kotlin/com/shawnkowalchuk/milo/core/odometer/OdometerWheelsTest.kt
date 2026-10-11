@@ -9,8 +9,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The odometer as Home's row of wheels shows it: the figure to the tenth, how far the last
- * wheel has turned, and that the wheels never say something else than Settings' whole number.
+ * The odometer as Home's row of wheels shows it: Settings' whole number while it stands, the
+ * figure before its rounding while a trip is counted, and how far the last wheel has turned.
  * Every figure here is made by [odometerAt] itself, so a change of its rule shows in this test.
  */
 class OdometerWheelsTest {
@@ -38,16 +38,21 @@ class OdometerWheelsTest {
         ),
     )
 
-    // ---- The figure to the tenth ------------------------------------------------------------------
+    // ---- Standing: Settings' number ---------------------------------------------------------------
 
     @Test
-    fun `the wheels show the reading and the trips since, to the tenth`() {
-        val wheels = figure(23_400.0, 10_200.0, 5_000.0).wheels()
+    fun `wheels that stand show the number Settings shows`() {
+        val figure = figure(23_400.0, 10_200.0, 5_000.0)
 
-        // 123,456 and 38.6 km: 123494 on the whole wheels, and a 6 on the tenth's.
-        assertEquals(1_234_946L, wheels.tenths)
-        assertEquals(km, wheels.unit)
+        val wheels = figure.wheels()
+
+        // 123,456 and 38.6 km is 123,494.6: Settings says 123,495, and so do the wheels.
+        assertEquals(1_234_946L, figure.inTenths())
+        assertEquals(123_495L, figure.value)
+        assertEquals(OdometerWheels(123_495L, km, turn = null), wheels)
     }
+
+    // ---- The figure to the tenth ------------------------------------------------------------------
 
     @Test
     fun `a reading with no trip since stands at a tenth of nought`() {
@@ -116,28 +121,80 @@ class OdometerWheelsTest {
         assertEquals(2_000_000L, odd.inTenths())
     }
 
-    // ---- How far the last wheel has turned --------------------------------------------------------
+    // ---- A trip past the tenth it is printed as ---------------------------------------------------
 
     @Test
-    fun `the last wheel stands on its digit when the trip is at exactly that tenth`() {
-        assertEquals(0.0, lastWheelTurn(4_600.0, km), 1e-9)
-        assertEquals(0.0, lastWheelTurn(0.0, km), 1e-9)
+    fun `a trip at exactly the tenth it is printed as is nothing past it`() {
+        assertEquals(0.0, pastItsTenth(4_600.0, km), 1e-9)
+        assertEquals(0.0, pastItsTenth(0.0, km), 1e-9)
     }
 
     @Test
-    fun `it is half-way to the next digit just before the printed figure changes`() {
-        assertEquals(0.25, lastWheelTurn(4_625.0, km), 1e-9)
-        assertEquals(0.49, lastWheelTurn(4_649.0, km), 1e-9)
-        // At 4,650 m the trip is printed as 4.7, and the wheel is half-way up to that 7.
-        assertEquals(-0.5, lastWheelTurn(4_650.0, km), 1e-9)
-        assertEquals(-0.25, lastWheelTurn(4_675.0, km), 1e-9)
+    fun `it is half a tenth past just before the printed figure changes, and half short after`() {
+        assertEquals(0.25, pastItsTenth(4_625.0, km), 1e-9)
+        assertEquals(0.49, pastItsTenth(4_649.0, km), 1e-9)
+        // At 4,650 m the trip is printed as 4.7, and is half a tenth short of that.
+        assertEquals(-0.5, pastItsTenth(4_650.0, km), 1e-9)
+        assertEquals(-0.25, pastItsTenth(4_675.0, km), 1e-9)
     }
 
     @Test
-    fun `in miles a tenth of a mile is one digit of the wheel`() {
-        assertEquals(0.0, lastWheelTurn(1_609.344, mi), 1e-9)
-        assertEquals(0.25, lastWheelTurn(1_609.344 + 40.2336, mi), 1e-9)
-        assertEquals(-0.25, lastWheelTurn(1_609.344 - 40.2336, mi), 1e-9)
+    fun `in miles it is counted in tenths of a mile`() {
+        assertEquals(0.0, pastItsTenth(1_609.344, mi), 1e-9)
+        assertEquals(0.25, pastItsTenth(1_609.344 + 40.2336, mi), 1e-9)
+        assertEquals(-0.25, pastItsTenth(1_609.344 - 40.2336, mi), 1e-9)
+    }
+
+    // ---- Counting: how far the last wheel has turned ----------------------------------------------
+
+    @Test
+    fun `while a trip is counted the last wheel is as far on as the kilometre has been driven`() {
+        // 1,250 m after a reading of 123,456: the 7 has come, and a quarter of the way to the 8.
+        val wheels = figure(1_250.0).wheels(tripMetres = 1_250.0)
+
+        assertEquals(123_457L, wheels.whole)
+        assertEquals(0.25, checkNotNull(wheels.turn), 1e-9)
+    }
+
+    @Test
+    fun `the digit changes at the whole kilometre, not where Settings' rounding does`() {
+        // 600 m on, Settings rounds to 123,457. The wheels still show the 6, well on its way.
+        val before = figure(600.0)
+        assertEquals(123_457L, before.value)
+        assertEquals(123_456L, before.wheels(tripMetres = 600.0).whole)
+        assertEquals(0.6, checkNotNull(before.wheels(tripMetres = 600.0).turn), 1e-9)
+
+        // A metre short of the kilometre the wheel has all but turned; at it, the 7 stands.
+        val nearly = figure(999.0).wheels(tripMetres = 999.0)
+        assertEquals(123_456L, nearly.whole)
+        assertEquals(0.999, checkNotNull(nearly.turn), 1e-9)
+        val there = figure(1_000.0).wheels(tripMetres = 1_000.0)
+        assertEquals(123_457L, there.whole)
+        assertEquals(0.0, checkNotNull(there.turn), 1e-9)
+    }
+
+    @Test
+    fun `when the trip is over the wheels stand on Settings' number`() {
+        val figure = figure(2_600.0)
+
+        val counting = figure.wheels(tripMetres = 2_600.0)
+        val standing = figure.wheels()
+
+        assertEquals(123_458L, counting.whole)
+        assertEquals(0.6, checkNotNull(counting.turn), 1e-9)
+        assertEquals(OdometerWheels(123_459L, km, turn = null), standing)
+        assertEquals(figure.value, standing.whole)
+    }
+
+    @Test
+    fun `in miles the last wheel turns once in a mile`() {
+        val typed = OdometerReading(at(7, 18), 76_543, mi)
+
+        // Three quarters of a mile.
+        val wheels = figure(1_207.008, unit = mi, typed = typed).wheels(tripMetres = 1_207.008)
+
+        assertEquals(76_543L, wheels.whole)
+        assertEquals(0.75, checkNotNull(wheels.turn), 1e-9)
     }
 
     @Test
@@ -148,9 +205,9 @@ class OdometerWheelsTest {
         for (metres in 0..2_500 step 7) {
             val wheels = figure(metres.toDouble()).wheels(tripMetres = metres.toDouble())
 
-            val stands = wheels.tenths + checkNotNull(wheels.turn)
+            val stands = wheels.whole + checkNotNull(wheels.turn)
 
-            assertEquals("at $metres m", 1_234_560.0 + metres / 100.0, stands, 1e-6)
+            assertEquals("at $metres m", 123_456.0 + metres / 1_000.0, stands, 1e-6)
             assertTrue("the wheel went back at $metres m", stands > last)
             last = stands
         }
@@ -159,6 +216,6 @@ class OdometerWheelsTest {
     @Test
     fun `an odometer that counts no trip has wheels that stand`() {
         assertNull(figure(4_600.0).wheels().turn)
-        assertEquals(0.0, checkNotNull(figure(4_600.0).wheels(tripMetres = 4_600.0).turn), 1e-9)
+        assertEquals(0.6, checkNotNull(figure(4_600.0).wheels(tripMetres = 4_600.0).turn), 1e-9)
     }
 }

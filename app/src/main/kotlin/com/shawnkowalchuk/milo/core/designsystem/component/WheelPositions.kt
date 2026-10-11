@@ -6,13 +6,10 @@ import kotlin.math.floor
 // stands on each wheel, and which wheels turn together, as on a truck's own odometer. Plain
 // functions, so the carry from one wheel to the next is held by unit tests and not by the eye.
 //
-// A figure is counted in its smallest step, which the last wheel shows: a tenth of a kilometre
-// on Home's odometer. Every wheel before it shows ten times as much as the one after it.
+// A figure is counted in its smallest step, which the last wheel shows: a whole kilometre on
+// Home's odometer. Every wheel before it shows ten times as much as the one after it.
 
 private const val DIGITS_ON_A_WHEEL = 10L
-
-/** A whole part and its one decimal: the fewest wheels a figure is shown on. */
-private const val FEWEST_WHEELS = 2
 
 /**
  * One wheel at one moment.
@@ -30,19 +27,19 @@ internal data class Wheel(val digit: Int, val turning: Boolean) {
 /**
  * The wheels of [steps], the highest first and the last wheel last.
  *
- * There are as many wheels as the figure has digits, and never fewer than two: a figure under
- * one whole unit has a 0 before its tenth. While the row rolls and every digit is a 9, there is
- * one wheel more, a 0 in front: the carry is about to reach it, and it needs a wheel to turn.
+ * There are as many wheels as the figure has digits. While the row rolls and every digit is a
+ * 9, there is one wheel more, a 0 in front: the carry is about to reach it, and it needs a
+ * wheel to turn.
  *
- * @param steps the figure in steps of its last wheel (tenths), not negative: the step the last
- * wheel last reached.
+ * @param steps the figure in steps of its last wheel, not negative: the step the last wheel
+ * last reached.
  * @param rolling whether the last wheel is turning on from that step. A row that stands
  * (`false`) has no wheel that turns.
  */
 internal fun wheelsOf(steps: Long, rolling: Boolean): List<Wheel> {
     require(steps >= 0) { "A row of wheels cannot show a negative figure, but was given $steps" }
     val reached = if (rolling) steps + 1 else steps
-    val count = maxOf(FEWEST_WHEELS, digitsOf(steps), digitsOf(reached))
+    val count = maxOf(digitsOf(steps), digitsOf(reached))
     var place = 1L
     val lowestFirst =
         (0 until count).map {

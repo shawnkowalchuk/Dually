@@ -32,7 +32,7 @@
         {
           "kind": "improved",
           "title": "The odometer turns as you drive",
-          "body": "Home shows the odometer like the one on a dashboard: each digit in its own cell, and one more for the tenth. During a trip in a paired vehicle that last cell is green and its digit rolls on as you drive. The tenth counts from the whole number you typed in Settings, so it can differ from the truck's own, and Settings still shows the figure rounded to the nearest whole."
+          "body": "Home shows the odometer like the one on a dashboard: each digit of the whole kilometres in its own cell. During a trip in a paired vehicle the last cell is green and its digit turns slowly on to the next as you drive, one digit for every kilometre. It counts from the whole number you typed in Settings, so the last digit can change at another moment than the truck's own. When no trip is running, Home shows the same number as Settings."
         }
       ]
     },

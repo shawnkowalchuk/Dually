@@ -231,23 +231,16 @@ data class MiloChangeTagColors(
 
 /**
  * The fill and digit of the cells of a row of wheels (since 2026-10-10, Home's odometer, which
- * the owner chose from three drawings). The drawing has the dark cells and the lime one; the
- * quiet cell of an odometer that counts nothing was not drawn, and is made of colours the
- * design already has. No colour was added for any of the three.
+ * the owner chose from three drawings). The drawing has the dark cells and the lime one. No
+ * colour was added for either.
  *
- * @param whole a digit of the whole kilometres: a window in the page's colour, darker than the
- * tile it is cut into, with a light digit.
- * @param tenth the tenth's cell while nothing is being counted: the grey of secondary text with
- * a dark digit. It is the counting cell without its colour, so it is never taken for one more
- * digit of the kilometres.
- * @param tenthCounting the tenth's cell while a trip is counted: the accent with a dark digit.
+ * @param whole a digit of the figure: a window in the page's colour, darker than the tile it is
+ * cut into, with a light digit.
+ * @param counting the last digit's cell while a trip is counted and its wheel turns: the accent
+ * with a dark digit.
  */
 @Immutable
-data class MiloWheelColors(
-    val whole: FillAndText,
-    val tenth: FillAndText,
-    val tenthCounting: FillAndText,
-)
+data class MiloWheelColors(val whole: FillAndText, val counting: FillAndText)
 
 /**
  * The design's colours that Material has no role for, or no role with a name that says what
@@ -346,7 +339,6 @@ internal val MiloExtraColors =
         wheels =
             MiloWheelColors(
                 whole = FillAndText(fill = Page, text = TextMain),
-                tenth = FillAndText(fill = TextSecondary, text = Page),
-                tenthCounting = FillAndText(fill = Accent, text = Page),
+                counting = FillAndText(fill = Accent, text = Page),
             ),
     )

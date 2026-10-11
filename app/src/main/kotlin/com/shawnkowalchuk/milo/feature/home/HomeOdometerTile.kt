@@ -22,20 +22,22 @@ import com.shawnkowalchuk.milo.core.designsystem.text.distanceSpokenRes
 import com.shawnkowalchuk.milo.core.designsystem.text.unitShortRes
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
 import com.shawnkowalchuk.milo.core.odometer.OdometerWheels
+import com.shawnkowalchuk.milo.core.odometer.formatOdometer
 import com.shawnkowalchuk.milo.core.util.formatDistance
-import com.shawnkowalchuk.milo.core.util.formatTenths
 
 /**
  * Each paired vehicle's odometer (Shawn's request of 2026-10-09: "i want the milage on the home
  * screen"; he chose the odometer reading), as a row of wheels like the truck's own (2026-10-10:
  * "i also want to make the odometer more prominent display the way it is actively live"; of
  * three drawings he chose "Dashboard wheels"). Each digit of the whole kilometres stands in a
- * dark cell, and one more cell holds the tenth.
+ * dark cell. There is no cell for the tenth: he read it as one more digit ("the 1/10 at the
+ * end looks like it is another zero on the odometer").
  *
  * **While a trip moves an odometer,** a lime dot pulses before the tile's label, that
- * odometer's last cell is lime, its last wheel turns as the truck is driven, and the line
- * under it says how far this trip has come. **Otherwise** the cells stand still, the last one
- * quiet, over the line that says where the figure comes from.
+ * odometer's last cell is lime, its last wheel turns slowly on to the next digit as the
+ * kilometre is driven, and the line under it says how far this trip has come. **Otherwise**
+ * the cells stand still and alike, showing the number Settings shows, over the line that says
+ * where the figure comes from.
  *
  * With one vehicle, its wheels alone; with several, each under its name. Nothing to press: a
  * reading is typed in Settings, and the tile says so before the first.
@@ -112,16 +114,16 @@ private fun NamedOdometer(odometer: HomeOdometer, format: HomeFormat) {
     }
 }
 
-/** The row of wheels. A screen reader is read the figure with its tenth and the unit's word. */
+/** The row of wheels. A screen reader is read the whole figure and the unit's word. */
 @Composable
 private fun Wheels(wheels: OdometerWheels, format: HomeFormat) {
     DashboardWheels(
-        steps = wheels.tenths,
+        steps = wheels.whole,
         unit = stringResource(unitShortRes(wheels.unit)),
         spoken =
             stringResource(
                 distanceSpokenRes(wheels.unit),
-                formatTenths(wheels.tenths, format.locale),
+                formatOdometer(wheels.whole, format.locale),
             ),
         turn = wheels.turn?.toFloat(),
     )

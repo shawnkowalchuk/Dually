@@ -106,7 +106,7 @@ private fun HomeOdometerPreview(
 /** How far the script below drives each second: a truck at 90 km/h. */
 private const val SCRIPT_METRES_A_SECOND = 25.0
 
-/** Where the script's trip starts: just before the odometer's wheels carry from 469.9 to 470.0. */
+/** Where the script's trip starts: just before the odometer's wheels carry from 469 to 470. */
 private const val SCRIPT_STARTS_AT_METRES = 9_300.0
 private const val SCRIPT_ENDS_AT_METRES = 10_100.0
 

@@ -35,9 +35,11 @@ import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
 import kotlin.math.roundToInt
 
 // A figure as a row of wheels, like a truck's own odometer: each digit in a cell of its own,
-// the last cell for the tenth, and the last wheel turning as the figure grows. Added on
-// 2026-10-10 for Home's odometer, as the owner chose it from three drawings ("Dashboard
-// wheels"). What stands on which wheel, and which wheels turn together, is worked out in
+// and the last wheel turning as the figure grows. Added on 2026-10-10 for Home's odometer, as
+// the owner chose it from three drawings ("Dashboard wheels"). It had one more cell at first,
+// set apart, for the tenth of a kilometre; the owner read it as one more digit of the
+// odometer, and it was taken out the same day: the last digit of the figure is the wheel that
+// turns. What stands on which wheel, and which wheels turn together, is worked out in
 // WheelPositions.kt.
 
 /**
@@ -56,8 +58,9 @@ private const val CELL_HEIGHT_IN_DIGITS = 1.5f
  * seconds apart, over and over (FINDINGS_LOG, 2026-10-10). A spring this soft turns that into
  * one movement that all but never stops while the truck drives, about two and a half seconds
  * behind the figure, and comes to rest some five seconds after the truck has. A stiffer one
- * lets every step show as a stop and a start; a softer one is a whole digit behind on the
- * highway.
+ * lets every step show as a stop and a start. It was chosen while the last wheel showed a
+ * tenth of a kilometre and turned ten times as fast as a kilometre's wheel does; the slower
+ * wheel is the easier one to follow.
  *
  * One value for every pace, on purpose: a spring tuned to the time since the last step was
  * tried, and made things worse, because a short wait follows a long one.
@@ -76,28 +79,27 @@ private const val MOST_STEPS_ROLLED = 5f
 
 /**
  * A figure on a row of wheels: every digit of [steps] in a cell of its own, dark with a light
- * digit, the last one apart from the others for the tenth, and [unit] small and grey after it.
+ * digit, and [unit] small and grey after the last.
  *
- * **Standing** ([turn] null): the digits stand, and the last cell is grey with a dark digit:
- * the counting cell without its colour.
+ * **Standing** ([turn] null): the digits stand, every cell alike.
  *
  * **Counting** ([turn] given): the last cell is the accent with a dark digit, and the wheels
- * roll. The last wheel stands [turn] of a digit away from the last digit of [steps], and
- * follows every change of the two softly: it does not jump from 6 to 7, it rolls there, and
- * while it passes from 9 to 0 the wheel before it rolls on by one, as on a dashboard.
- * Nothing rolls while the row is out of view or its screen is not in front, and with the
- * phone's animations switched off the digits of [steps] just stand, in the same colours.
+ * roll. The last wheel stands [turn] of a digit on from the last digit of [steps], between
+ * that digit and the next, and follows every change of the two softly: it does not jump from
+ * 6 to 7, it rolls there, and while it passes from 9 to 0 the wheel before it rolls on by
+ * one, as on a dashboard. Nothing rolls while the row is out of view or its screen is not in
+ * front, and with the phone's animations switched off the digits of [steps] just stand, in
+ * the same colours.
  *
  * It is as wide as its cells. Where that is wider than the room it is given (a very large font,
  * a figure of eight digits), the whole row is drawn smaller, and nothing is cut off.
  *
- * @param steps the figure in steps of its last wheel: for an odometer its tenths, so that
- * 1,234,606 is drawn as 123460 and a 6.
+ * @param steps the figure in steps of its last wheel: for Home's odometer its whole kilometres.
  * @param unit the unit alone: "km", "mi".
  * @param spoken what a screen reader says for the whole row: the figure with its unit's whole
  * word. The cells themselves are not read.
- * @param turn how far the last wheel stands from the last digit of [steps], from -0.5 (half-way
- * up from the digit before) to 0.5 (half-way on to the next), or null for a row that stands.
+ * @param turn how far the last wheel has turned on from the last digit of [steps] to the next,
+ * from 0 up to 1, or null for a row that stands.
  */
 @Composable
 fun DashboardWheels(
@@ -121,7 +123,7 @@ fun DashboardWheels(
 /**
  * The row while it counts. What is animated is a small number, how far the row has rolled from
  * the figure it started at: a figure of millions of tenths does not fit a `Float` to the
- * hundredth of a digit, and a trip's worth of tenths does.
+ * hundredth of a digit, and a trip's worth of steps does.
  *
  * **The wheels follow the figure on a soft spring** ([ROLL_STIFFNESS]), so the steps the
  * figure arrives in become one movement. They only ever roll forwards, and no further than
@@ -180,17 +182,26 @@ private fun WheelRow(
     val digitSize = with(LocalDensity.current) { style.fontSize.toDp() }
     val cell = DpSize(digitSize * CELL_WIDTH_IN_DIGITS, digitSize * CELL_HEIGHT_IN_DIGITS)
     val colors = MiloTheme.colors.wheels
-    val whole = colors.whole
-    val tenth = if (counting) colors.tenthCounting else colors.tenth
     Row(modifier = modifier, verticalAlignment = Alignment.Bottom) {
         Row(horizontalArrangement = Arrangement.spacedBy(spacing.extraSmall)) {
-            for (index in 0 until wheels.lastIndex) {
-                WheelCell(wheels[index], whole, cell, part)
+            wheels.forEachIndexed { index, wheel ->
+                // The wheel that turns is the one in the accent: it is a digit of the figure
+                // like the others, so it stands in line with them and not apart.
+                val last = index == wheels.lastIndex
+                WheelCell(
+                    wheel,
+                    if (last &&
+                        counting
+                    ) {
+                        colors.counting
+                    } else {
+                        colors.whole
+                    },
+                    cell,
+                    part,
+                )
             }
         }
-        // The tenth stands apart: it is not one more digit of the kilometres.
-        Spacer(Modifier.width(spacing.small))
-        WheelCell(wheels.last(), tenth, cell, part)
         Spacer(Modifier.width(spacing.buttonGap))
         Text(
             text = unit,

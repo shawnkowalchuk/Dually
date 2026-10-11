@@ -39,8 +39,8 @@ internal data class HomeOdometer(
     /**
      * What this odometer counts of the trip being recorded: all of it, or, where its reading
      * was typed during this trip, what the trip has driven since the reading (the odometer's
-     * rule since 2026-10-10). The last wheel turns by this, so that it stands on its digit
-     * when the figure does; by the whole trip it would stand up to half a digit off.
+     * rule since 2026-10-10). The last wheel turns by this, so that it reaches its next digit
+     * a kilometre after the reading; by the whole trip it would reach it too early.
      */
     private fun countedMetres(figure: OdometerFigure): Double? {
         val metres = tripMetres ?: return null

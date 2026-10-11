@@ -14,23 +14,22 @@ class WheelPositionsTest {
     private fun digits(steps: Long, rolling: Boolean = false): List<Int> =
         wheelsOf(steps, rolling).map { it.digit }
 
-    /** The wheels that are turning, counted from the last one: 0 is the tenth's. */
+    /** The wheels that are turning, counted from the last one: 0 is the last wheel. */
     private fun turning(steps: Long): List<Int> =
         wheelsOf(steps, rolling = true).reversed().mapIndexedNotNull { place, wheel ->
             place.takeIf { wheel.turning }
         }
 
     @Test
-    fun `each digit has a wheel of its own, the tenth's last`() {
-        // 123,460.6 km.
+    fun `each digit has a wheel of its own`() {
         assertEquals(listOf(1, 2, 3, 4, 6, 0, 6), digits(1_234_606))
         assertEquals(listOf(8, 6, 4, 1, 2, 0), digits(864_120))
     }
 
     @Test
-    fun `a figure under one whole unit has a nought before its tenth`() {
-        assertEquals(listOf(0, 5), digits(5))
-        assertEquals(listOf(0, 0), digits(0))
+    fun `a figure of one digit has one wheel, and nought has a wheel too`() {
+        assertEquals(listOf(5), digits(5))
+        assertEquals(listOf(0), digits(0))
         assertEquals(listOf(1, 0), digits(10))
     }
 
@@ -51,7 +50,7 @@ class WheelPositionsTest {
         val wheels = wheelsOf(1_234_609, rolling = true)
 
         assertEquals(listOf(0, 1), turning(1_234_609))
-        // The whole kilometres' last wheel shows 0 and is on its way to 1.
+        // The wheel before the last shows 0 and is on its way to 1.
         assertEquals(0, wheels[wheels.lastIndex - 1].digit)
         assertEquals(1, wheels[wheels.lastIndex - 1].next)
         assertEquals(9, wheels.last().digit)
@@ -60,10 +59,10 @@ class WheelPositionsTest {
 
     @Test
     fun `a carry runs through every wheel at 9, and stops at the first that is not`() {
-        // 129,999.9 km: the tenth, four nines and the 2 turn; the 1 stands.
+        // 1,299,999: the five nines and the 2 turn; the 1 stands.
         assertEquals(listOf(0, 1, 2, 3, 4, 5), turning(1_299_999))
         assertFalse(wheelsOf(1_299_999, rolling = true).first().turning)
-        // 123,499.9: the tenth, two nines and the 4.
+        // 1,234,999: the three nines and the 4.
         assertEquals(listOf(0, 1, 2, 3), turning(1_234_999))
     }
 

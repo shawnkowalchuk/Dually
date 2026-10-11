@@ -88,7 +88,7 @@ class HomeOdometerTest {
 
         assertFalse(only.counting)
         // 123,456 and 40.0 km.
-        assertEquals(1_234_960L, only.wheels?.tenths)
+        assertEquals(123_496L, only.wheels?.whole)
         assertNull(only.wheels?.turn)
     }
 
@@ -98,9 +98,9 @@ class HomeOdometerTest {
 
         assertTrue(only.counting)
         assertEquals(12_340.0, only.tripMetres)
-        // 40.0 km and the 12.3 km this trip is printed as; the wheel is 40 m past its digit.
-        assertEquals(1_235_083L, only.wheels?.tenths)
-        assertEquals(0.4, checkNotNull(only.wheels?.turn), 1e-9)
+        // 40.0 km and this trip's 12.34 km: 123,508, and the last wheel 340 m on to its 9.
+        assertEquals(123_508L, only.wheels?.whole)
+        assertEquals(0.34, checkNotNull(only.wheels?.turn), 1e-9)
     }
 
     @Test
@@ -108,7 +108,7 @@ class HomeOdometerTest {
         val only = home(truckOnly, driving(0.0)).single()
 
         assertTrue(only.counting)
-        assertEquals(1_234_960L, only.wheels?.tenths)
+        assertEquals(123_496L, only.wheels?.whole)
         assertEquals(0.0, checkNotNull(only.wheels?.turn), 1e-9)
     }
 
@@ -119,7 +119,7 @@ class HomeOdometerTest {
         val only = home(truckOnly, byButton).single()
 
         assertFalse(only.counting)
-        assertEquals(1_234_960L, only.wheels?.tenths)
+        assertEquals(123_496L, only.wheels?.whole)
     }
 
     @Test
@@ -130,7 +130,7 @@ class HomeOdometerTest {
         val unnamed = home(withVan, driving(15_000.0, vehicle = null))
 
         assertEquals(listOf(false, true), inTheVan.map { it.counting })
-        assertEquals(listOf(1_234_960L, 500_150L), inTheVan.map { it.wheels?.tenths })
+        assertEquals(listOf(123_496L, 50_015L), inTheVan.map { it.wheels?.whole })
         assertEquals(listOf(true, false), inTheTruck.map { it.counting })
         assertEquals(listOf(true, false), unnamed.map { it.counting })
     }
@@ -144,7 +144,7 @@ class HomeOdometerTest {
         val only = home(settings, driving(12_340.0)).single()
 
         assertFalse(only.counting)
-        assertEquals(1_234_700L, only.wheels?.tenths)
+        assertEquals(123_470L, only.wheels?.whole)
     }
 
     @Test
@@ -155,7 +155,7 @@ class HomeOdometerTest {
 
         assertFalse(only.counting)
         // 40.0 km and the 12.0 km that were stored.
-        assertEquals(1_235_080L, only.wheels?.tenths)
+        assertEquals(123_508L, only.wheels?.whole)
     }
 
     @Test
@@ -169,7 +169,7 @@ class HomeOdometerTest {
     }
 
     @Test
-    fun `in miles the wheels are in miles, and count the trip in tenths of a mile`() {
+    fun `in miles the wheels are in miles, and the last wheel turns once in a mile`() {
         val inMiles =
             truckOnly.copy(
                 distanceUnit = DistanceUnit.MILES,
@@ -181,15 +181,15 @@ class HomeOdometerTest {
 
         assertTrue(only.counting)
         assertEquals(DistanceUnit.MILES, only.wheels?.unit)
-        assertEquals(765_460L, only.wheels?.tenths)
-        assertEquals(0.25, checkNotNull(only.wheels?.turn), 1e-9)
+        assertEquals(76_546L, only.wheels?.whole)
+        assertEquals(0.025, checkNotNull(only.wheels?.turn), 1e-9)
     }
 
     @Test
     fun `with a reading typed during the trip the last wheel turns by what was driven since`() {
         // Typed 340 m into trip 9, which has now gone 1,300 m: 960 m since the reading. The
-        // figure shows the reading and 1.0 km, and the wheel is 40 m short of that digit. By
-        // the whole trip (exactly 1.3 km) it would stand on a digit that is not the figure's.
+        // wheels show the reading, and the last wheel is 40 m short of its next digit. By the
+        // whole trip (1.3 km) it would have passed that digit 300 m ago.
         val typedInTheTruck =
             OdometerReading(
                 atMs = tripStartedAt + 120_000,
@@ -202,7 +202,7 @@ class HomeOdometerTest {
         val shown = home(settings, driving(metres = 1_300.0), trips = emptyList()).single()
 
         assertTrue(shown.counting)
-        assertEquals(1_235_010L, shown.wheels?.tenths)
-        assertEquals(-0.4, shown.wheels?.turn ?: Double.NaN, 1e-9)
+        assertEquals(123_500L, shown.wheels?.whole)
+        assertEquals(0.96, shown.wheels?.turn ?: Double.NaN, 1e-9)
     }
 }
