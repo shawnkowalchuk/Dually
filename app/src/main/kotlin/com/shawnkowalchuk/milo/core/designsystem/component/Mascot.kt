@@ -124,7 +124,7 @@ internal suspend fun readMascotPartyPictures(resources: Resources): MascotPartyP
  * line that says a picture could not be read must not count on what Android answers there.
  * @throws IOException if it cannot be read, or is not an animated picture.
  */
-private fun readAnimated(resources: Resources, picture: Int, name: String): AnimatedImageDrawable =
+internal fun readAnimated(resources: Resources, picture: Int, name: String): AnimatedImageDrawable =
     ImageDecoder.decodeDrawable(ImageDecoder.createSource(resources, picture))
         as? AnimatedImageDrawable
         ?: throw IOException("$name is not an animated picture")
@@ -184,7 +184,9 @@ internal fun AnimatedImageDrawable.playOnce(onLastFrame: () -> Unit) {
  * It is the first thing in the app that is not drawn by Compose's own means: picture files,
  * read by Android. A further use of the mascot goes through this file: a greeting through this
  * component, with its pictures added to [readMascotPictures]; the one-year party, which is two
- * animated pictures and no sheet, through [MascotPlayed] and [readMascotPartyPictures].
+ * animated pictures and no sheet, through [MascotPlayed] and [readMascotPartyPictures]; the run
+ * across the Report screen, whose sheet is another size than its animated pictures, through
+ * [MascotSheet], [MascotPlayed] and [readMascotRunPictures] (`MascotRunPictures.kt`).
  *
  * @param sheetFrame the frame of the sheet to draw, or null for the animated picture as it
  * plays. Asked while drawing, so a new frame draws again and nothing is composed or laid out
@@ -215,15 +217,15 @@ internal fun Mascot(
 
 /**
  * One animated picture of the mascot as Android plays it, [width] by [height]: the party's two
- * are drawn with it, one after the other. Like [Mascot] it only draws, and nothing here redraws
- * the picture for its next frame.
+ * are drawn with it, one after the other, and the run's two. Like [Mascot] it only draws, and
+ * nothing here redraws the picture for its next frame.
  *
- * @param picture the picture to draw. Asked while drawing, so another picture taking its place
- * draws again and nothing is composed or laid out for it.
+ * @param picture the picture to draw, or null for nothing at all. Asked while drawing, so
+ * another picture taking its place draws again and nothing is composed or laid out for it.
  */
 @Composable
 internal fun MascotPlayed(
-    picture: () -> AnimatedImageDrawable,
+    picture: () -> AnimatedImageDrawable?,
     width: Dp,
     height: Dp,
     modifier: Modifier = Modifier,
@@ -231,7 +233,8 @@ internal fun MascotPlayed(
     Spacer(
         modifier =
             modifier.size(width, height).drawBehind {
-                drawPlayed(picture(), IntSize(size.width.roundToInt(), size.height.roundToInt()))
+                val played = picture() ?: return@drawBehind
+                drawPlayed(played, IntSize(size.width.roundToInt(), size.height.roundToInt()))
             },
     )
 }
@@ -243,7 +246,7 @@ private fun DrawScope.drawPlayed(played: AnimatedImageDrawable, whole: IntSize) 
 }
 
 /** Draws one frame of a [sheet], [whole] in size: the sheet's frames lie row after row. */
-private fun DrawScope.drawSheetFrame(
+internal fun DrawScope.drawSheetFrame(
     sheet: ImageBitmap,
     frames: MascotFrames,
     frame: Int,

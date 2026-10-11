@@ -1,6 +1,6 @@
 # ADR-007: The mascot is two pictures, drawn beforehand and read by Android
 Date: 2026-10-09
-Status: Accepted. Supersedes ADR-005. Three addenda at the end. Two of 2026-10-10: a second greeting, the moonwalk, as two more pictures; and the one-year party, as two more again. One of 2026-10-11: the wave has another course and two other pictures, and what the Decision below says of the wave is how it was until then.
+Status: Accepted. Supersedes ADR-005. Four addenda at the end. Two of 2026-10-10: a second greeting, the moonwalk, as two more pictures; and the one-year party, as two more again. Two of 2026-10-11: the wave has another course and two other pictures, and what the Decision below says of the wave is how it was until then; and the run across the Report screen, as three more pictures.
 
 ## Context
 
@@ -247,3 +247,55 @@ The APK grows by 245 KB, 1.6 %, which is the pictures.
 - **The old wave's frames can still be drawn** (`render_greeting.py`), and nothing packs them for the app.
 
 **It has run on an emulator only** (Android 16), at four widths and on its side, and was laid beside the film at every quarter second. Device checks WW-1 to WW-10.
+
+## Addendum, 2026-10-11: the run across the Report screen
+
+### Context
+
+On 2026-10-10 Shawn asked for a fourth thing of the mascot's: "i was thinking one where the mascot runs on to the screen. than he runs in one spot in the center for 2 seconds. than sort of turns and slides out. if we can make smoke from his shoes or something visual that would be cool. the lights on his butt should be off tell he stops and slides and than turn on like a car stopping." The model got five clips and a cloud of smoke of 110 puffs, and he was shown a film of it and approved it. On 2026-10-11 he said where it plays ("when the user completes sending a report by email", after the answer "I sent it") and chose its two sounds.
+
+It is unlike the three before it in two ways. **He moves for the whole of it:** in the greetings he walks or glides in and out, and stands where he is for the part Android plays; here he is still going while he brakes and slides. **And he leaves something behind:** his smoke stays where it was made, so it goes back past him as fast as he goes forward. A picture of him "on the spot", moved by the app, has to be wide enough to hold the smoke he has left, and moved in step with its frames.
+
+This record's first lesson stands in the way of that: Android does not say which frame of an animated picture it shows. The first build of the greeting moved an animated walk by another clock, and he walked on the spot for up to half a second.
+
+### Decision
+
+**The run is built as this record builds everything of the mascot's: pictures drawn in Blender, committed, and read by Android.** The smoke is drawn into them, as the party's confetti is: thrown by the app instead it would have been lighter, and not the film he approved, in which a puff is in front of his shoe or behind it.
+
+**Three pictures** (`app/src/main/res/drawable-nodpi/`), WebP with a see-through background, 42 ms a frame, 2.5 pixels to the dp, he 150 dp high as in the greetings:
+
+| Picture | What it is | Frames | Who plays it | Size |
+|---|---|---|---|---|
+| `mascot_run_in.webp` | the run in's last two cycles, on the spot, with the dust behind his feet: a still sheet | 16 | the app, which moves him with every frame | 152 KB |
+| `mascot_run_on_the_spot.webp` | from the frame he gets to the spot to the last one before he brakes | 57 | Android, once; the app starts it | 641 KB |
+| `mascot_brake_and_slide.webp` | from the frame his brake lights come on in until he is gone | 45 | Android, once; the app starts it | 732 KB |
+
+Together 1.52 MB. They are packed by `design/mascot/scripts/pack_run_slide.py` from the frames `render_run_slide.py` draws.
+
+1. **The run in is a sheet, as the greetings' legs are,** because the app has to move him with every frame. It holds two cycles of the run where a greeting's sheet holds one: he is the same in both, the dust behind him is not.
+2. **The two animated pictures stand still, and he moves in them.** Every drawn frame is laid, when it is packed, where the film laid it: by whole pixels, on a picture as wide as he goes, 468 dp. The smoke then stands still in the picture, the shadow under his feet is laid in under him, and the app moves nothing while Android plays. A frame is stored as the box that changed from the one before, so the width costs no bytes where nothing is drawn.
+3. **The clip is cut in two at the brake,** as the party's is at the pop and for the same reason: the app starts the second picture, so the drawing of the screen that first shows his brake lights lit is the one the squeal is asked for in. The first is started by the app as well, in the drawing that first shows him at the spot, for the wheels' whirr.
+4. **Both animated pictures are cut to one box,** so the second takes the first's place without anything moving.
+5. **The pictures end 312 dp to the right of the spot he runs on,** which is as far as the drawn frames take the last of him by the frame after the last. So the spot is the middle of the screen on every screen up to 620 dp wide, and on a wider one as near the middle as lets him leave at the right edge.
+
+### Consequences
+
+**What it costs, measured:**
+
+| | Before | With the run |
+|---|---|---|
+| The mascot's pictures | 4,334 KB, six | 5,858 KB, nine |
+| The built-in sounds | 182 KB, three | 459 KB, five |
+| The release APK (built unsigned, the same way both times) | 15,858,110 bytes | 17,692,537 bytes |
+
+The APK grows by 1,834 KB, 11.6 %: the three pictures' 1,524 KB, the two sounds' 277 KB, which are stored as they are, and 34 KB for the code.
+
+- **`MascotPicturesTest` holds the run's three under 1.6 MB, counted apart from the greetings' four and the party's two,** whose limits are as they were. It is half as much again as a greeting because it is 118 frames with smoke in every one, where a greeting is about 100 of him alone; from the brake on a frame is 16 KB, because the whole trail of smoke changes in every frame and every frame there has the brake lights' glow.
+- **The halo is stored for a dark ground, as the greetings' is, and here it shows more often:** from the brake until he is gone he is in front of whatever the Report screen has above the bottom bar, and that is often the lime button "Email the report", which was just pressed. Over it the halo is an orange patch that darkens the lime (`[DEBT]`, FINDINGS_LOG 2026-10-11).
+- **A picture that is wider than the screen has to be laid out as large as it is.** Compose gives a part of the screen no more room than its parent has, and a picture of 468 dp on a screen of 411 was drawn squeezed to the screen's width, he 12 % thinner than in the run in. Nothing before was wider than the screen. `MascotRun` asks for it by name; the next wide picture must too.
+- **The seams keep a drawing or two of the screen each,** as the party's does: the first frame of each animated picture stands for about 65 ms where the film gives it 42. By the end the app is two to three frames behind the film.
+- **The baked shadow is right on any ground** (it is black that covers a part of what lies behind, which is what a shadow is). In the first picture, whose see-through channel is stored coarsely, it is stored in a few steps; on the Report screen it lies on the dark gap above the bar.
+- **Memory:** the sheet is 17.9 MB unpacked; a frame of the animated pictures is 2.1 MB. All three are read when a run is about to play, and let go when it is over.
+- **Every further thing of this kind is this much again.** One in which he moves and leaves nothing behind needs no wide picture: its moving parts can be sheets.
+
+**It has run on an emulator only** (Android 16), at four widths, laid beside the film at every quarter second, with every recorded frame held against the 118 packed pictures. Device checks RS-1 to RS-14.

@@ -35,7 +35,13 @@ internal fun ReportEntry(container: AppContainer, backStack: NavBackStack<NavKey
                                 sent = container.sentReportRepository,
                                 settings = container.settingsStore,
                                 eventLog = container.eventLogRepository,
-                                onSentByAnswer = container.review.prompts::onReportSentByAnswer,
+                                // The one thing the Report feature tells the rest of the app:
+                                // the mascot runs across the screen, and Google Play is asked
+                                // for its review card once he has gone.
+                                onSentByAnswer = {
+                                    container.sentRun.onReportSentByAnswer()
+                                    container.review.prompts.onReportSentByAnswer()
+                                },
                                 clock = container.clock,
                             )
                         ReportViewModel(

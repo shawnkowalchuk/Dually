@@ -226,7 +226,7 @@ private fun BoxWithConstraintsScope.PartyOnScreen(
  * The clock is the screen's frame time, read as it is and not stretched by the phone's "animator
  * duration scale": an animated picture plays at its own pace whatever that is set to.
  */
-private suspend fun everyFrame(onFrame: (sinceMillis: Long) -> Boolean) {
+internal suspend fun everyFrame(onFrame: (sinceMillis: Long) -> Boolean) {
     val began = withFrameNanos { it }
     do {
         val goesOn = withFrameNanos { now -> onFrame((now - began) / NANOS_IN_MILLI) }
@@ -241,6 +241,7 @@ private const val NANOS_IN_MILLI = 1_000_000L
  * it:** it shows the second as soon as that is ready, a drawing of the screen after the picture
  * was started (seen on an emulator on 2026-10-10: a first frame of 546 ms was gone after about a
  * tenth of a second, one of 42 ms after 17). So each of the party's pictures is shown for its
- * first frame's time by the app, not yet playing, and started when all but this is up.
+ * first frame's time by the app, not yet playing, and started when all but this is up. The run
+ * across the Report screen starts its two pictures the same way.
  */
-private const val START_AHEAD_MS = MascotPicture.FRAME_MS / 2
+internal const val START_AHEAD_MS = MascotPicture.FRAME_MS / 2

@@ -290,9 +290,10 @@ class AppContainer(context: Context, private val trustedClock: TrustedClock) {
     // size limit: the report for the accountant with the monthly reminder to send it; Android's
     // backup with the export and import of all data; the watch on Android Auto outside trips;
     // the daily check that a work day has a trip; the home-screen widget; the version with its
-    // list of changes; what MilO's clock does beside telling the time; the one-year party; and
-    // Google Play's review card. None of the last seven can touch a trip; the widget's buttons
-    // reach the trip controller as any button does.
+    // list of changes; what MilO's clock does beside telling the time; the one-year party;
+    // Google Play's review card; and the mascot's run when a report has been sent. None of the
+    // last eight can touch a trip; the widget's buttons reach the trip controller as any
+    // button does.
     val reports: ReportObjects by lazy { ReportObjects(appContext, this) }
     val transfer: TransferObjects by lazy {
         val main = miloDatabase.mainTransferDao()
@@ -305,6 +306,7 @@ class AppContainer(context: Context, private val trustedClock: TrustedClock) {
     val clocks: ClockObjects by lazy { ClockObjects(this, trustedClock) }
     val party: PartyObjects by lazy { PartyObjects(appContext, this) }
     val review: ReviewObjects by lazy { ReviewObjects(appContext, this) }
+    val sentRun: SentRunObjects by lazy { SentRunObjects(appContext, this) }
 
     /**
      * Makes an audio file Shawn picked the connect sound or the trip-start sound, by copying it

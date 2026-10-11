@@ -39,7 +39,7 @@
 - Edit, delete or add a missed trip on the Trips screen, and mark any trip Business or Personal.
 - Label a trip with what it was for, picked from the labels used before: the label used where the trip ended is chosen already. The report prints it as the trip's purpose.
 - Show every distance in kilometres or miles, the report included: one setting, "Units", in Settings.
-- Send the report: MilO opens the email app with the PDF attached, and you press send.
+- Send the report: MilO opens the email app with the PDF attached, and you press send. Back in MilO, answer "I sent it", and the mascot runs across the foot of the screen, brakes and slides out, with a whirr and a squeal that stay silent when the phone is on silent or on vibrate.
 - Export and import all data as one file. Android's own backup carries the rest.
 
 <p align="center">
