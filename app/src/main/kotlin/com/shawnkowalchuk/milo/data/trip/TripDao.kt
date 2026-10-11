@@ -58,6 +58,13 @@ interface TripDao {
     suspend fun findStarts(): List<TripStart>
 
     /**
+     * How many trips are [finished] and were not typed in by hand, and again each time that
+     * changes: the trips MilO recorded itself that count (`Trip.isRecordedTrip`). A read only.
+     */
+    @Query("SELECT COUNT(*) FROM trips WHERE status = :finished AND addedByHand = 0")
+    fun observeRecordedCount(finished: TripStatus): Flow<Int>
+
+    /**
      * Every trip that started in the half-open range from [fromMs] up to, not including,
      * [untilMs], whatever its status, newest first. Read through the index on `startedAtMs`.
      */

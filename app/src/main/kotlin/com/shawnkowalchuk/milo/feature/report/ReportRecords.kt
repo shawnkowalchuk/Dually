@@ -25,12 +25,14 @@ import kotlin.coroutines.cancellation.CancellationException
  * to the email app, and what Shawn answered.
  *
  * @param settings where the report that was handed to the email app is kept until answered.
+ * @param onSentByAnswer "I sent it" has stored a report; never "Mark as sent" (ADR-009).
  * @param clock wall-clock milliseconds.
  */
 class ReportRecords(
     private val sent: SentReportRepository,
     private val settings: SettingsStore,
     private val eventLog: EventLogRepository,
+    private val onSentByAnswer: () -> Unit = {},
     private val clock: () -> Long,
 ) {
     /**
@@ -69,7 +71,7 @@ class ReportRecords(
     suspend fun answered(report: ReportHandOver, sent: Boolean): Boolean = when {
         !forgetAwaited() -> false
 
-        sent -> answeredSent(report) != null
+        sent -> (answeredSent(report) != null).also { stored -> if (stored) onSentByAnswer() }
 
         else -> {
             answeredNotSent(report)

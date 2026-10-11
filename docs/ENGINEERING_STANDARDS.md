@@ -6,7 +6,7 @@
 >
 > **This is one of four documents** that work together — see §17 for how they fit.
 >
-> **Status:** Living document · **Owner:** Shawn · **Last updated:** 2026-10-10
+> **Status:** Living document · **Owner:** Shawn · **Last updated:** 2026-10-11
 
 ---
 
@@ -50,6 +50,7 @@ Pinned. Changing the stack mid-project is the most expensive form of debt there 
 | Storage | Room 3.0.3 on bundled SQLite; DataStore Preferences 1.2.1 for settings | New app, so start on Room's current line. |
 | Background work | WorkManager 2.12.0 | Only for jobs that can wait. Never to start a trip. Not in the build yet: no job has needed it. The monthly reminder and the daily "nothing recorded" check each use one inexact `AlarmManager` alarm a day instead (FINDINGS_LOG, 2026-10-06). |
 | Location | play-services-location 21.4.0 | Fused location provider. |
+| Google Play's review card | `com.google.android.play:review` 2.0.2 | Google's In-App Review library, since 2026-10-11 (ADR-009): the one library of Google Play's in the app, and the only way to the card. **Without its Kotlin extensions, `review-ktx`:** with them the release build stops in R8. |
 | Android Auto | `androidx.car.app` 1.8.0-rc01 | The in-truck screen and `CarConnection`. **A release candidate: the one exception to "stable only",** taken on 2026-10-06 for its security fix and to be replaced by the stable 1.8.0 the day that is released (ADR-001, "Exception, 2026-10-06"). |
 | Dependency injection | Manual: an `AppContainer` created by the `Application` class | **No Hilt.** Small app, and Hilt's plugin is tied to AGP majors. |
 | Tests | JUnit 4, kotlinx-coroutines-test, Turbine | Plain JVM tests. **No Robolectric** (§11). |
@@ -239,6 +240,7 @@ The bar: *would a bug here lose a trip, or put a wrong number on the report acco
 
 ### Other baselines
 - **Location data stays on the phone.** It leaves only in files Shawn sends or saves himself (PDF, CSV, and since 2026-10-06 the export file, which holds every trip's positions and, unless he switches them off, every raw GPS point), in his own Android backup (switched on since 2026-10-06: the trips with their positions and addresses go to his Google account, the raw points only to a phone he moves to), and as coordinates given to Android's Geocoder for an address lookup. There is no server. **MilO itself still sends nothing:** it has no INTERNET permission and no storage permission; a file is written where Android's own file picker put it, and the backup is Android's.
+- **Google Play is told one thing by the app, and nothing about a trip** (since 2026-10-11, ADR-009): that MilO asked for its review card, at up to three moments in a copy installed from Google Play. The request goes to the Play Store app on the phone, through Google's library. MilO still has no INTERNET permission, and nothing comes back. Anything more that is ever handed to Google Play gets an ADR first, and a sentence on the website's privacy page in the same change.
 - **No personal data in logs that leave the device** (Logcat, CI output, crash text): no coordinates, addresses or names. The in-app event log stays on the phone unless Shawn shares it himself: since 2026-10-06 the Log screen can hand it to Android's share sheet as a text file. That file is his to send, and the screen says before the press what it holds: the truck's and the other paired devices' names and Bluetooth addresses, and every address he typed or replaced on the edit screen (an edit's line names the address before and after). It holds no GPS position, and that must stay so: nothing written to the event log may contain one.
 - **Validate all input** — what Shawn types and any imported file. An import checks the whole file before it touches anything, refuses what it does not know (a newer format, an unknown part, a value that cannot be), and takes nothing about the truck's pairing on the file's word (`data/transfer/ExportChecks.kt`, `platform/transfer/TruckArrival.kt`).
 - **Least privilege** — declare only the permissions a built feature uses.

@@ -35,6 +35,7 @@ internal fun ReportEntry(container: AppContainer, backStack: NavBackStack<NavKey
                                 sent = container.sentReportRepository,
                                 settings = container.settingsStore,
                                 eventLog = container.eventLogRepository,
+                                onSentByAnswer = container.review.prompts::onReportSentByAnswer,
                                 clock = container.clock,
                             )
                         ReportViewModel(

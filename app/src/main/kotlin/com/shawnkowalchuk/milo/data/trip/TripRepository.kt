@@ -51,6 +51,13 @@ class TripRepository(private val dao: TripDao) {
      */
     suspend fun findTripStarts(): List<TripStart> = dao.findStarts()
 
+    /**
+     * How many trips MilO holds that it recorded itself and that count (`isRecordedTrip`), and
+     * again each time that changes. MilO asks Google Play for its review card by this number
+     * (`core/review/`).
+     */
+    fun observeRecordedTripCount(): Flow<Int> = dao.observeRecordedCount(TripStatus.FINISHED)
+
     /** Finished trips, newest first. Discarded and deleted trips are left out. */
     fun observeFinishedTrips(): Flow<List<Trip>> = dao.observeWithStatus(TripStatus.FINISHED)
 
