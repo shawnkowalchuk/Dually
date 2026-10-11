@@ -17,12 +17,14 @@
 #   MoonwalkStop 1.83 s        skids round to a stop, brake lights on; hand to the hat, three hip thrusts
 #   KickSpin     1.08 s        a kick, one fast turn on the spot, and down onto his toes, brake lights off
 #   MoonwalkOn   0.42 s        from his toes back into the moonwalk
+#   OneYear      5.42 s        a year of use: in his party cap, brings a party popper out from behind his back and fires it
 #   Gauge_Speed  2 s           the speed needle alone, 0 to 240: seek to speed / 240 of its length
 #   Gauge_RPM    2 s           the RPM needle alone, 0 to 8: seek to rpm / 8 of its length
 #
-# Every clip but the loops, WaveUp and the moonwalk's four starts and ends in the same standing
-# pose (NEUTRAL), so they can follow one another. The moonwalk's four follow one another in the
-# order above, each starting where the last one ended, and the last ends where Moonwalk begins.
+# Every clip but the loops, WaveUp, the moonwalk's four and OneYear starts and ends in the same
+# standing pose (NEUTRAL), so they can follow one another. The moonwalk's four follow one another
+# in the order above, each starting where the last one ended, and the last ends where Moonwalk
+# begins. OneYear starts in the standing pose, in his cap, and ends with both arms up.
 # The needles move in every clip: each clip keys the rig's two sliders
 # ("speed_kmh", "rpm") and the needle bones follow through their drivers.
 #
@@ -32,9 +34,16 @@
 # add a curve to every clip there is. The same goes for the hat (the slider "hat" and the bone
 # of that name) and for turning the whole mascot round (the bone "root"): the moonwalk's clips
 # set and key them (key_clip), no other clip does, and reset_pose takes the hat off again.
+# And the same for the party: the sliders "party_hat", "popper" and "pull" and the party cap's
+# bone are set by set_party and keyed by key_party, in OneYear and in no other clip.
+#
+# One clip is not the mascot's: OneYear_Confetti, on the skeleton of the confetti
+# (MilO_Confetti_Rig, in a collection of its own). It is written last, from where OneYear has
+# the popper's mouth in the frame it goes off on (write_confetti).
 #
 # A clip is a function of time that sets the whole pose; it is keyed on every frame.
 
+import random
 import bpy
 from math import radians, sin, cos, pi, exp
 from mathutils import Vector, Matrix, Euler, Quaternion
@@ -277,6 +286,23 @@ def set_turn(left=0.0):
     """Turns the whole mascot, feet and all, about the point he stands on: degrees to his own
     left. Only for the clips of the moonwalk."""
     pb["root"].rotation_euler = (0.0, 0.0, radians(left))
+
+
+def set_party(cap=0.0, popper=0.0, pull=0.0, cap_tip=0.0, cap_tilt=0.0):
+    """The party cap (0 is none, 1 is on), tipped forward and tilted to his left by so many
+    degrees; the popper in his fist (0 is none, 1 is there); and how far the bead on its string
+    is in the other hand's fingers (0 hangs, 1 is there). Only for the clip of the party."""
+    rig["party_hat"] = clamp(cap)
+    rig["popper"] = clamp(popper)
+    rig["pull"] = clamp(pull)
+    pb["party_hat"].rotation_euler = (radians(cap_tip), 0.0, radians(-cap_tilt))
+
+
+def key_party(frame):
+    """What the party's clip keys and no other clip does."""
+    for prop in ("party_hat", "popper", "pull"):
+        rig.keyframe_insert('["%s"]' % prop, frame=frame)
+    pb["party_hat"].keyframe_insert("rotation_euler", frame=frame)
 
 
 def key_dance(frame):
@@ -712,15 +738,332 @@ def moonwalk_on(t):
     set_turn(POSE_TURN * (1 - ease(f, 0, ON_FRAMES - 2)))
 
 
+# ---------------------------------------------------------------- the party
+# A year of use. He stands in his party cap; reaches behind his back with his left hand; brings
+# out a party popper and holds it up; brings it in front of him, where his right hand takes the
+# string, and pulls: confetti over his head, and he jumps and cheers while it comes down. One
+# clip, OneYear, and beside it the confetti's own clip on the confetti's own skeleton
+# (throw_confetti, below).
+#
+# The popper is fired in front of his chest, not above his head: his arms are short, and his
+# two hands only meet in front of his middle. It is aimed up between the dials and a little to
+# his left, away from the cap, so the confetti goes up past his face and over his head.
+PARTY_HOLD = 12  # frames he stands still at the start, for a picture of him to fade in on
+PARTY_POP = 73  # the frame the popper goes off on
+PARTY_FRAMES = 130
+
+SHOULDER = rig.data.bones["upper_arm.L"].head_local.copy()
+UPPER_ARM, FOREARM = rig.data.bones["upper_arm.L"].length, rig.data.bones["forearm.L"].length
+
+
+def held(bone):
+    """Where a bone lies in the hand that carries it, as build_milo.py put it there: how far
+    along the hand from the wrist, how far to the thumb's side, how far under the palm; and
+    which hand it is."""
+    hand = rig.data.bones[bone].parent
+    x, y, z = hand.matrix_local.inverted() @ rig.data.bones[bone].head_local
+    return y, (-x if hand.name.endswith(".L") else x), z, hand.name[-1]
+
+
+GRIP_ALONG, _, GRIP_UNDER, POPPER_HAND = held("popper")
+PINCH_ALONG, PINCH_THUMB, PINCH_UNDER, PULL_HAND = held(next(b.name for b in rig.data.bones if b.name.startswith("grip.")))
+# From the middle of the fist along the popper: to its mouth, and back to the bead on its string.
+POPPER_LENGTH = rig.data.bones["popper"].length
+BEAD_BACK = (rig.data.bones["popper_pull"].head_local - rig.data.bones["popper"].head_local).length
+
+
+def reaching(wrist, elbow, hand, palm, curl, thumb, spread=(0.0, 0.0, 0.0)):
+    """An arm said by where its wrist is, not by which way its bones point: `wrist` is a point
+    in the room while he stands as he was built, and the elbow bends towards `elbow`. Written
+    for the left arm, like every pose. A wrist out of reach is brought as near as the arm goes."""
+    reach = wrist - SHOULDER
+    far = min(reach.length, 0.995 * (UPPER_ARM + FOREARM))
+    way = reach.normalized()
+    along = (UPPER_ARM ** 2 - FOREARM ** 2 + far ** 2) / (2 * far)
+    off = max(UPPER_ARM ** 2 - along ** 2, 0.0) ** 0.5
+    joint = way * along + (elbow - way * elbow.dot(way)).normalized() * off
+    return arm_pose(joint, palm, way * far - joint, palm, hand, palm, curl, thumb, spread)
+
+
+def holding(grip, mouth, fingers, elbow):
+    """The arm that holds the popper: the middle of its fist at `grip`, the popper's mouth
+    pointing `mouth`, the fingers pointing as nearly `fingers` as that leaves them free to."""
+    mouth = mouth.normalized()
+    along = (fingers - mouth * fingers.dot(mouth)).normalized()
+    palm = along.cross(mouth)
+    return reaching(grip - along * GRIP_ALONG - palm * GRIP_UNDER, elbow, along, palm, GRIPPED, THUMB_ROUND)
+
+
+def pinching(at, fingers, palm, elbow, curl, thumb):
+    """The arm whose fingers pinch the bead of the string: the pinch at `at`."""
+    along = fingers.normalized()
+    palm = (palm - along * palm.dot(along)).normalized()
+    wrist = at - along * PINCH_ALONG - palm.cross(along) * PINCH_THUMB - palm * PINCH_UNDER
+    return reaching(wrist, elbow, along, palm, curl, thumb)
+
+
+# A fist round the popper's handle, and one that pinches the bead.
+GRIPPED = (60, 76, 62, 78, 60, 76)
+THUMB_ROUND = (100, 0, 44, 56)
+PINCHED = (46, 62, 60, 74, 70, 82)
+THUMB_PINCH = (96, 0, 36, 40)
+# The left arm. Behind his back, the fist where the camera cannot see it, the popper upright;
+# and where the arm passes on its way there, swung back and out, so that it goes round the body.
+BEHIND = holding(V(0.09, 0.60, 1.08), V(-0.10, 0.0, 0.95), V(-1.0, 0.1, -0.1), V(0.8, 0.5, -0.3))
+BACK = dict(reaching(V(0.76, 0.34, 0.90), V(0.7, 0.4, 0.3), V(-0.35, 0.75, -0.55), V(0.3, 0.6, 0.7), RELAXED["curl"], RELAXED["thumb"]))
+# Out again: the forearm swings out round the elbow, the fist passing behind him and out at his
+# side; then up, the popper held high beside his head, its mouth up and in over his head.
+OUTBACK = holding(V(0.62, 0.66, 1.08), V(0.0, 0.0, 1.0), V(0.1, 1.0, 0.0), V(1.0, 0.3, -0.3))
+SIDE = holding(V(0.99, 0.14, 1.08), V(0.15, -0.10, 0.98), V(1.0, 0.2, 0.0), V(0.3, 0.6, -0.7))
+SHOWN = holding(V(0.84, -0.12, 1.78), V(-0.42, -0.10, 0.90), V(0.9, 0.0, 0.42), V(0.8, 0.2, -0.3))
+# In front of his chest, to be fired: the mouth up between the dials.
+AIM_GRIP, AIM_WAY = V(0.05, -0.52, 1.22), V(0.10, -0.15, 0.985).normalized()
+AIM = holding(AIM_GRIP, AIM_WAY, V(-0.6, -0.8, 0.0), V(0.7, -0.2, -0.6))
+# And up again once it has gone off.
+HIGH = holding(V(0.90, -0.12, 1.76), V(-0.30, -0.10, 0.95), V(0.9, 0.0, 0.42), V(0.8, 0.2, -0.3))
+# The right arm, written for the left like every pose and mirrored when it is set. Its fingers
+# come to the bead from below, the palm up; take it; draw the string tight; and are flung away.
+BEAD = mirror(AIM_GRIP - AIM_WAY * BEAD_BACK)
+READY = pinching(BEAD + V(0.16, -0.02, -0.16), V(-0.8, -0.55, -0.2), V(0.0, 0.15, 1.0), V(0.6, 0.2, -0.6),
+                 (20, 26, 24, 30, 30, 36), (40, 0, 10, 14))
+TAKEN = pinching(BEAD, V(-0.8, -0.55, -0.2), V(0.0, 0.15, 1.0), V(0.6, 0.2, -0.6), PINCHED, THUMB_PINCH)
+TAUT = pinching(BEAD - mirror(AIM_WAY) * 0.09, V(-0.8, -0.55, -0.2), V(0.0, 0.15, 1.0), V(0.6, 0.2, -0.6), PINCHED, THUMB_PINCH)
+# Flung away down and to its side, the way it pulled; and where it passes on its way up to cheer.
+FLUNG = reaching(V(0.80, -0.20, 0.90), V(0.3, 0.7, 0.6), V(0.55, -0.30, -0.78), V(-0.3, 0.9, -0.3), CHEER["curl"], CHEER["thumb"])
+WIDE = arm_pose(V(0.95, -0.12, 0.28), V(0.0, -1.0, 0.0), V(0.92, -0.18, 0.34), V(0.0, -1.0, 0.0),
+                V(0.90, -0.20, 0.38), V(0.0, -1.0, 0.0), CHEER["curl"], CHEER["thumb"])
+
+
+def one_year(t):
+    """In his party cap: stands still; bobs up, glad; reaches behind his back with his left
+    hand and brings out the popper; holds it up; brings it in front of him, where his right
+    hand takes the string, draws it tight and pulls; and when it goes off he jumps and cheers,
+    both arms up, and comes to rest like that."""
+    f = t * FPS
+    pop = f - PARTY_POP  # frames since the popper went off
+    # what he is doing, each from 0 to 1
+    crouch, rise = bump(f, 12, 17), bump(f, 15, 23)
+    behind = ease(f, 22, 32) * (1 - ease(f, 41, 47))
+    wiggle = sin(2 * pi * (f - 33) / 4.0) * ease(f, 33, 34) * (1 - ease(f, 39, 41))
+    shown = ease(f, 45, 53) * (1 - ease(f, 56, 63))
+    aimed = ease(f, 56, 65) * (1 - ease(pop, 0, 3))
+    tense = ease(f, 64, 72) * (1 - ease(pop, 0, 1))
+    shiver = tense * sin(2 * pi * f / 2.0)
+    recoil = clamp(pop / 1.5) * exp(-0.5 * max(pop - 1.5, 0.0))
+    jump, land, skip = hop(f, PARTY_POP + 2, PARTY_POP + 11), bump(f, PARTY_POP + 10, PARTY_POP + 16), hop(f, PARTY_POP + 16, PARTY_POP + 22)
+    cheer = ease(pop, 1, 8)
+    still = 1 - ease(f, PARTY_FRAMES - 24, PARTY_FRAMES - 8)  # he comes to rest at the end
+    sway = cheer * still * sin(2 * pi * (pop - 22) / 16.0) * ease(pop, 20, 26)
+
+    body = set_body(
+        right=0.009 * shiver,
+        up=(-0.04 * crouch + 0.045 * rise - 0.012 * behind + 0.014 * wiggle * wiggle + 0.02 * shown - 0.05 * aimed - 0.04 * tense
+            - 0.03 * recoil + 0.20 * jump - 0.05 * land + 0.05 * skip),
+        stretch=(-0.05 * crouch + 0.05 * rise + 0.03 * shown - 0.045 * aimed - 0.045 * tense
+                 + 0.07 * bump(f, PARTY_POP + 1, PARTY_POP + 7) - 0.08 * land + 0.035 * bump(f, PARTY_POP + 15, PARTY_POP + 21)),
+        lean=3 * crouch - 2 * rise + 4 * behind - 3 * shown + 5 * aimed + 3 * tense - 9 * recoil - 3 * cheer,
+        turn_left=13 * behind + 5 * wiggle - 3 * shown,
+        tilt_left=-3 * behind + 2.5 * wiggle + 3 * shown + 3.5 * sway,
+    )
+
+    # the arm with the popper
+    glad = blend_arms(RELAXED, BALANCE, 0.5 * rise)  # both arms out a little as he bobs up
+    if f < 41:
+        left = turned(curved(glad, BACK, BEHIND, ease(f, 22, 32)), "Z", 0.0, 5 * wiggle, 9 * wiggle)
+    else:
+        left = curved(BEHIND, OUTBACK, SIDE, ease(f, 41, 47))
+    left = blend_arms(left, SHOWN, ease(f, 45, 53) + 0.05 * bump(f, 51, 57))
+    left = blend_arms(left, AIM, ease(f, 56, 65))
+    left = turned(left, "X", 0.0, -7 * recoil, -12 * recoil)
+    shake = 7 * sin(2 * pi * pop / 8.0) * cheer * still
+    left = blend_arms(left, turned(HIGH, "Y", 0.3 * shake, 0.6 * shake, 0.8 * shake), cheer)
+    set_arm("L", left, body)
+
+    # the other arm
+    right = blend_arms(RELAXED, BALANCE, 0.5 * rise + 0.45 * behind + 0.3 * shown)
+    right = blend_arms(right, READY, ease(f, 55, 62))
+    right = blend_arms(right, TAKEN, ease(f, 60, 65))
+    right = blend_arms(right, TAUT, ease(f, 65, 72))
+    right = blend_arms(right, FLUNG, ease(pop, -1.5, 2.5))
+    right = curved(right, WIDE, turned(CHEER, "Y", -0.5 * shake, -shake, -1.4 * shake), ease(pop, 2, 9))
+    set_arm("R", right, body)
+
+    air = max(jump, 0.4 * skip)
+    for side in ("L", "R"):
+        set_foot(side, out=0.04 + 0.05 * air, up=0.9 * (0.20 * jump + 0.05 * skip), toe_up=-22 * air)
+
+    # The dials: they tip towards the hand behind his back, look up at the popper, lean
+    # together over it, and fly open when it goes off.
+    set_eyes(twist_speedo=-7 * behind - 4 * wiggle - 5 * shown - 9 * aimed + 8 * recoil + 3 * sway,
+             twist_rpm=-7 * behind - 4 * wiggle - 5 * shown + 9 * aimed - 8 * recoil + 3 * sway,
+             pop_speedo=0.05 * rise + 0.03 * shown - 0.03 * aimed - 0.02 * tense + 0.10 * recoil + 0.03 * cheer * still,
+             pop_rpm=0.05 * rise + 0.03 * shown - 0.03 * aimed - 0.02 * tense + 0.12 * recoil + 0.03 * cheer * still)
+    # The engine: a flick of both needles at the start, a tremble while he feels about behind
+    # his back, up for the popper, and down to nothing while he aims; the revs climb as the
+    # string comes tight, and both needles go right round when it goes off.
+    after = clamp(pop / 1.0)
+    calm = ease(pop, 22, 50)
+    set_gauges(
+        speed=(55 * rise + 6 * behind + 65 * shown * (1 - aimed)
+               + after * ((238 - 110 * calm) * spring(pop / 9.0) + 14 * sin(2 * pi * pop / 5.0) * (1 - calm))),
+        rpm=(IDLE_RPM + 2.6 * rise + 0.5 * behind + 0.5 * wiggle + 2.4 * shown * (1 - aimed)
+             + 5.6 * tense + 0.25 * shiver
+             + after * ((7.0 - 3.4 * calm) * spring(pop / 6.0) + 0.5 * sin(2 * pi * pop / 3.0) * (1 - calm))))
+
+    # The cap is paper on a band: it is a moment behind whatever his head does.
+    set_party(cap=1.0, popper=ease(f, 35, 38), pull=ease(f, 61, 65) * (1 - ease(pop, -0.5, 1.5)),
+              cap_tip=(5 * bump(f, 13, 18) - 7 * bump(f, 17, 24) + 4 * aimed - 13 * recoil
+                       + 9 * bump(f, PARTY_POP + 4, PARTY_POP + 11) - 8 * bump(f, PARTY_POP + 11, PARTY_POP + 18)),
+              cap_tilt=-3 * behind + 4 * bump(f, 47, 56) - 3.5 * sway)
+
+
+# ---------------------------------------------------------------- the confetti
+# The pieces build_milo.py cut are thrown here: every piece is a bone of the confetti's own
+# skeleton, and its flight is worked out, not simulated by Blender, from one seed, so that
+# every run throws the same confetti. Blown out of the popper's mouth in a cone, the paper is
+# slowed by the air within half a second, and then flutters down at the pace of falling paper;
+# the streamers go further, unroll and hang as they fall. He stands in a slab of room that the
+# pieces are pushed out of, to the front or to the back: they fall in front of him and behind
+# him, and none goes through him.
+CONFETTI_SEED = 365
+# The slab he stands in: how far it reaches to each side and up, and its front and back.
+SLAB_SIDE, SLAB_TOP, SLAB_FRONT, SLAB_BACK = 1.25, 3.1, -0.58, 0.46
+FLASH = (0.7, 0.95, 0.5)  # the size of the flash at the mouth, a frame each from the pop on
+
+
+def popper_mouth():
+    """Where the popper's mouth is and which way it points, in the rig's own room, as the rig
+    is posed in the frame the scene is at."""
+    posed = rig.evaluated_get(bpy.context.evaluated_depsgraph_get()).pose.bones["popper"]
+    return posed.tail.copy(), (posed.tail - posed.head).normalized()
+
+
+def throw_confetti(pieces, mouth, way, frames):
+    """Every piece's flight from the pop on: for each bone named in `pieces` a list with an
+    entry a frame, the first for the frame of the pop, of where it is, how it is turned (three
+    angles) and its size (three numbers)."""
+    rnd = random.Random(CONFETTI_SEED)
+    across = way.orthogonal().normalized()
+    over = way.cross(across)
+    steps = 4
+    tick = 1.0 / (FPS * steps)
+    flights = {}
+    for name in pieces:
+        if name == "flash":
+            flights[name] = [(mouth + way * 0.12, (0.0, radians(25.0 * g), 0.0), (FLASH[g],) * 3 if g < len(FLASH) else (0.0,) * 3)
+                             for g in range(frames + 1)]
+            continue
+        streamer = name.startswith("streamer")
+        # when it leaves the mouth, which way, how far the blast carries it and how the air
+        # holds it; then how fast it sinks, the wind it is in, and how it flutters and tumbles
+        late = 0 if streamer else rnd.randrange(3)
+        opened, round_ = radians(rnd.triangular(0.0, 24.0 if streamer else 46.0, 14.0)), rnd.uniform(0.0, 2 * pi)
+        go = way * cos(opened) + (across * cos(round_) + over * sin(round_)) * sin(opened)
+        carry = rnd.triangular(1.9, 2.9, 2.4) if streamer else rnd.triangular(0.9, 2.7, 1.7)
+        air = 3.0 if streamer else rnd.uniform(3.6, 5.0)
+        sink = rnd.uniform(0.5, 0.8) if streamer else rnd.uniform(0.55, 1.35)
+        wind = V(rnd.uniform(-0.5, 0.4), rnd.uniform(-0.2, 0.6), 0.0)
+        flutter = [(rnd.uniform(2.0, 5.0), rnd.uniform(6.0, 11.0), rnd.uniform(0.0, 2 * pi)) for _ in range(2)]
+        spin = V(rnd.uniform(-10.0, 10.0), rnd.uniform(-10.0, 10.0), rnd.uniform(-5.0, 5.0))
+        turn = V(rnd.uniform(0.0, 2 * pi), rnd.uniform(0.0, 2 * pi), rnd.uniform(0.0, 2 * pi))
+        roll = rnd.uniform(-2.0, 2.0)
+        floor = 0.012 + 0.006 * rnd.random()
+
+        at, speed = mouth.copy(), go * carry * air
+        flight, seconds, down, angles = [], -0.5 / FPS, False, None
+        for g in range(frames + 1):
+            if g < late:
+                flight.append((mouth.copy(), tuple(turn), (0.0, 0.0, 0.0)))
+                continue
+            for _ in range(steps if g > late else steps // 2):
+                seconds += tick
+                if down:
+                    continue
+                free = smooth(seconds / 0.5)  # the blast lets go of it
+                push = V(flutter[0][0] * sin(flutter[0][1] * seconds + flutter[0][2]),
+                         0.5 * flutter[1][0] * sin(flutter[1][1] * seconds + flutter[1][2]), 0.0) * free
+                if abs(at.x) < SLAB_SIDE and at.z < SLAB_TOP and SLAB_FRONT < at.y < SLAB_BACK:
+                    push.y += 30.0 * ((SLAB_FRONT if at.y < -0.05 else SLAB_BACK) - at.y)
+                speed += (-(speed - wind * free) * air + V(0.0, 0.0, -sink * air) + push) * tick
+                at += speed * tick
+                if at.z <= floor:
+                    at.z, down = floor, True
+            if streamer:
+                # it hangs from the end that flew ahead: its length trails back to the mouth at
+                # first, and hangs down, swaying, as it falls; and it unrolls as it goes
+                hang = smooth(seconds / 0.9)
+                along = (-go * (1 - hang) + V(0.25 * sin(2.2 * seconds + turn.x), 0.25 * sin(1.7 * seconds + turn.y), -1.0) * hang).normalized()
+                turned_to = along.to_track_quat("Y", "Z") @ Quaternion((0.0, 1.0, 0.0), turn.z + roll * seconds)
+                angles = turned_to.to_euler("XYZ", angles) if angles else turned_to.to_euler("XYZ")
+                flight.append((at.copy(), tuple(angles), (1.0, 0.12 + 0.88 * smooth(seconds / 0.45), 1.0)))
+            else:
+                if down:  # it lies flat where it came down
+                    lying = (round(angles[0] / pi) * pi, round(angles[1] / pi) * pi, angles[2])
+                    angles = tuple(a + (b - a) * 0.6 for a, b in zip(angles, lying))
+                else:
+                    angles = tuple(turn + spin * seconds)
+                flight.append((at.copy(), angles, (1.0, 1.0, 1.0)))
+        flights[name] = flight
+    return flights
+
+
+def write_confetti(name="OneYear_Confetti"):
+    """Writes the confetti's clip, on the confetti's skeleton, for the party's clip as the rig
+    is showing it now (show, or a clip a drawing script wrote from one_year): the pieces leave
+    the popper's mouth where it is in the frame of the pop. Until then they have no size.
+    Their flight is keyed on every frame while it is fast and on every second frame after."""
+    scene = bpy.context.scene
+    scene.frame_set(PARTY_POP)
+    mouth, way = popper_mouth()
+    thrown = bpy.data.objects["MilO_Confetti_Rig"]
+    old = bpy.data.actions.get(name)
+    if old:
+        bpy.data.actions.remove(old)
+    action = bpy.data.actions.new(name)
+    thrown.animation_data_create()
+    thrown.animation_data.action = action
+    action.use_fake_user = True
+    action.use_frame_range = True
+    action.frame_start = 0
+    action.frame_end = PARTY_FRAMES
+    after = PARTY_FRAMES - PARTY_POP
+    keyed = [g for g in range(after + 1) if g <= 8 or g % 2 == 0 or g == after]
+    flights = throw_confetti([b.name for b in thrown.pose.bones], mouth, way, after)
+    for bone in thrown.pose.bones:
+        flight = flights[bone.name]
+        first = next(g for g, (_, _, size) in enumerate(flight) if size[0] > 0.0)
+        bone.location, bone.rotation_euler, bone.scale = flight[first][0], flight[first][1], (0.0, 0.0, 0.0)
+        for frame in sorted({0, PARTY_POP + first - 1}):
+            bone.keyframe_insert("scale", frame=frame)
+        bone.keyframe_insert("location", frame=PARTY_POP + first - 1)
+        bone.keyframe_insert("rotation_euler", frame=PARTY_POP + first - 1)
+        size = None
+        for g in keyed:
+            if g < first:
+                continue
+            bone.location, bone.rotation_euler = flight[g][0], flight[g][1]
+            bone.keyframe_insert("location", frame=PARTY_POP + g)
+            bone.keyframe_insert("rotation_euler", frame=PARTY_POP + g)
+            if flight[g][2] != size:  # most pieces get their size once and keep it
+                size = bone.scale = flight[g][2]
+                bone.keyframe_insert("scale", frame=PARTY_POP + g)
+    if getattr(thrown.animation_data, "action_slot", True) is None and action.slots:
+        thrown.animation_data.action_slot = action.slots[0]
+    return mouth, way
+
+
 # The clips that also key the hat, the brake lights and the turn of the whole mascot.
 DANCE = ("Moonwalk", "MoonwalkStop", "KickSpin", "MoonwalkOn")
+# The clips that also key the party cap, the popper and its string.
+PARTY = ("OneYear",)
 
 CLIPS = [("Idle", 4.0, idle, True), ("Wave", 2.0, wave, False), ("ThumbsUp", 2.0, thumbs_up, False),
          ("Walk", 1.0, walk, True), ("Celebrate", 3.0, celebrate, False),
          ("Flex", 4.5, flex, False), ("Peace", 2.75, peace, False), ("RockOn", 2.75, rock_on, False),
          ("WaveUp", 0.5, wave_up, False), ("WaveLoop", 0.5, wave_loop, True),
          ("Moonwalk", MOON_SECONDS, moonwalk, True), ("MoonwalkStop", STOP_FRAMES / FPS, moonwalk_stop, False),
-         ("KickSpin", KICK_FRAMES / FPS, kick_spin, False), ("MoonwalkOn", ON_FRAMES / FPS, moonwalk_on, False)]
+         ("KickSpin", KICK_FRAMES / FPS, kick_spin, False), ("MoonwalkOn", ON_FRAMES / FPS, moonwalk_on, False),
+         ("OneYear", PARTY_FRAMES / FPS, one_year, False)]
 NEEDLE_CLIPS = [("Gauge_Speed", "speed_kmh", 240.0), ("Gauge_RPM", "rpm", 8.0)]
 NEEDLE_SECONDS = 2.0
 
@@ -735,6 +1078,8 @@ def reset_pose():
         b.scale = (1.0, 1.0, 1.0)
     rig["hat"] = 0.0
     rig["brake"] = 0.0
+    for prop in ("party_hat", "popper", "pull"):
+        rig[prop] = 0.0
 
 
 def new_action(name, frames, loop):
@@ -768,6 +1113,8 @@ def key_clip(name, frame):
     key_pose(frame)
     if name in DANCE:
         key_dance(frame)
+    if name in PARTY:
+        key_party(frame)
 
 
 def all_curves(action):
@@ -818,6 +1165,9 @@ def animate():
             strip.action_slot = bpy.data.actions[name].slots[0]
         track.mute = True
 
+    # The confetti's clip is thrown from where the party's clip has the popper's mouth.
+    show("OneYear")
+    write_confetti()
     show("Idle")
     print("clips:", {a.name: "%d frames%s" % (a.frame_end, ", loops" if a.use_cyclic else "")
                      for a in bpy.data.actions})

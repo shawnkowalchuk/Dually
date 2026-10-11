@@ -143,6 +143,7 @@ internal class TripWorker(
         if (open.id == drivingOffToldFor || unconfirmed || open.progress.drivenAtMs == null) return
         drivingOffToldFor = open.id
         service.drivingOff = true
+        service.drivingOffStartsTrip = open.fromParked
     }
 
     /**

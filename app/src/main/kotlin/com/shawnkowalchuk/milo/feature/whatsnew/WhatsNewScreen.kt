@@ -28,6 +28,7 @@ import com.shawnkowalchuk.milo.core.designsystem.component.Tile
 import com.shawnkowalchuk.milo.core.designsystem.component.TileColumn
 import com.shawnkowalchuk.milo.core.designsystem.component.TilePadding
 import com.shawnkowalchuk.milo.core.designsystem.component.TileRow
+import com.shawnkowalchuk.milo.core.designsystem.component.onLongHold
 import com.shawnkowalchuk.milo.core.designsystem.component.tileRowPlace
 import com.shawnkowalchuk.milo.core.designsystem.theme.FillAndText
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
@@ -45,20 +46,32 @@ import java.time.LocalDate
  * with a row for each change: a tag for its kind (New, Improved, Fixed, Security), its title and
  * a sentence or two. Made of the design's parts: the event log's tag, the checklist's rows.
  *
+ * **One thing here is not said on the screen** (2026-10-10): a finger rested for two seconds on
+ * the label of the version on this phone calls [onVersionHeld], which plays MilO's one-year
+ * party, so that it can be seen on a day that is not its day. The label is not a button and
+ * does not look like one.
+ *
  * @param onBack the arrow at the top. Android's Back does the same.
+ * @param onVersionHeld see above.
  */
 @Composable
 fun WhatsNewScreen(
     viewModel: WhatsNewViewModel,
     onBack: () -> Unit,
+    onVersionHeld: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsState()
-    WhatsNewContent(state = state, onBack = onBack, modifier = modifier)
+    WhatsNewContent(state, onBack = onBack, onVersionHeld = onVersionHeld, modifier = modifier)
 }
 
 @Composable
-private fun WhatsNewContent(state: WhatsNewUiState, onBack: () -> Unit, modifier: Modifier) {
+private fun WhatsNewContent(
+    state: WhatsNewUiState,
+    onBack: () -> Unit,
+    onVersionHeld: () -> Unit,
+    modifier: Modifier,
+) {
     val spacing = MiloTheme.spacing
     TileColumn(
         modifier =
@@ -91,15 +104,28 @@ private fun WhatsNewContent(state: WhatsNewUiState, onBack: () -> Unit, modifier
                     )
                 }
 
-            is WhatsNewUiState.Ready -> for (release in state.releases) ReleaseGroup(release)
+            is WhatsNewUiState.Ready ->
+                for (release in state.releases) ReleaseGroup(release, onVersionHeld)
         }
     }
 }
 
-/** One version: its label on the page, then its changes as the rows of one tile. */
+/**
+ * One version: its label on the page, then its changes as the rows of one tile. The label of
+ * the version on this phone is the one that can be held ([WhatsNewScreen]).
+ */
 @Composable
-private fun ReleaseGroup(release: ReleaseShown) {
-    GroupLabel(releaseHeading(release))
+private fun ReleaseGroup(release: ReleaseShown, onVersionHeld: () -> Unit) {
+    GroupLabel(
+        text = releaseHeading(release),
+        // The whole line, not only its words: a finger finds a line more easily than a word.
+        modifier =
+            if (release.onThisPhone) {
+                Modifier.fillMaxWidth().onLongHold(onVersionHeld)
+            } else {
+                Modifier
+            },
+    )
     Column {
         release.changes.forEachIndexed { index, change ->
             TileRow(place = tileRowPlace(index, release.changes.size)) { ChangeLine(change) }
@@ -193,5 +219,5 @@ private fun WhatsNewPreview() {
                 ReleaseShown("0.1.0", LocalDate.of(2026, 10, 9), false, changes.take(1)),
             ),
         )
-    MiloTheme { Surface { WhatsNewContent(state = state, onBack = {}, modifier = Modifier) } }
+    MiloTheme { Surface { WhatsNewContent(state, onBack = {}, onVersionHeld = {}, Modifier) } }
 }

@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -73,22 +74,65 @@ internal suspend fun readMascotPictures(
 ): MascotPictures = withContext(Dispatchers.IO) {
     val files = kind.files
     val sheet = ImageDecoder.createSource(resources, files.sheet)
-    val played = ImageDecoder.createSource(resources, files.played)
     MascotPictures(
         kind = kind,
         sheet = ImageDecoder.decodeBitmap(sheet).asImageBitmap(),
-        played =
-            ImageDecoder.decodeDrawable(played) as? AnimatedImageDrawable
-                ?: throw IOException("${files.playedName} is not an animated picture"),
+        played = readAnimated(resources, files.played, files.playedName),
     )
 }
 
 /**
- * A greeting's two pictures among the app's resources.
+ * The two pictures of MilO's one-year party, read and ready (ADR-007, the party's addendum).
+ * Both are animated pictures that Android plays; what they hold is said in
+ * [MascotPartyPicture].
  *
- * @property playedName the second one's name, for the Log. Written out here and not asked of
+ * @property popper from the clip's first frame to the last one before the popper goes off.
+ * @property pop from the frame the popper goes off on. The app starts it itself, so that it
+ * knows the moment of the pop: Android does not say which frame of a picture it shows.
+ */
+internal class MascotPartyPictures(
+    val popper: AnimatedImageDrawable,
+    val pop: AnimatedImageDrawable,
+) {
+    /** Stops both. Their listeners are left where they are, for [MascotPictures.close]'s reason. */
+    fun close() {
+        popper.stop()
+        pop.stop()
+    }
+}
+
+/**
+ * Reads the party's two pictures, off the main thread, each with its first frame drawn and
+ * waiting. Only when a party is about to play: nothing of them is read at an ordinary start.
+ *
+ * @throws IOException if a picture cannot be read, or is not an animated one.
+ */
+internal suspend fun readMascotPartyPictures(resources: Resources): MascotPartyPictures =
+    withContext(Dispatchers.IO) {
+        MascotPartyPictures(
+            popper = readAnimated(resources, R.drawable.mascot_party_popper, "mascot_party_popper"),
+            pop = readAnimated(resources, R.drawable.mascot_party_pop, "mascot_party_pop"),
+        )
+    }
+
+/**
+ * Reads one animated picture from the app's resources.
+ *
+ * @param name the picture's name, for the Log. Written out by whoever asks and not asked of
  * Android: the release build packs a resource under another, shorter name (ADR-008), and the
  * line that says a picture could not be read must not count on what Android answers there.
+ * @throws IOException if it cannot be read, or is not an animated picture.
+ */
+private fun readAnimated(resources: Resources, picture: Int, name: String): AnimatedImageDrawable =
+    ImageDecoder.decodeDrawable(ImageDecoder.createSource(resources, picture))
+        as? AnimatedImageDrawable
+        ?: throw IOException("$name is not an animated picture")
+
+/**
+ * A greeting's two pictures among the app's resources.
+ *
+ * @property playedName the second one's name, for the Log ([readAnimated] says why it is
+ * written out).
  */
 private class MascotFiles(val sheet: Int, val played: Int, val playedName: String)
 
@@ -137,8 +181,9 @@ internal fun AnimatedImageDrawable.playOnce(onLastFrame: () -> Unit) {
  * between two of the app's own drawings, for as long as some part of it is on the screen.
  *
  * It is the first thing in the app that is not drawn by Compose's own means: picture files,
- * read by Android. A further use of the mascot goes through this component and adds its
- * pictures to [readMascotPictures].
+ * read by Android. A further use of the mascot goes through this file: a greeting through this
+ * component, with its pictures added to [readMascotPictures]; the one-year party, which is two
+ * animated pictures and no sheet, through [MascotPlayed] and [readMascotPartyPictures].
  *
  * @param sheetFrame the frame of the sheet to draw, or null for the animated picture as it
  * plays. Asked while drawing, so a new frame draws again and nothing is composed or laid out
@@ -161,11 +206,39 @@ internal fun Mascot(
                     if (frame != null) {
                         drawSheetFrame(pictures.sheet, frames, frame, whole)
                     } else {
-                        pictures.played.setBounds(0, 0, whole.width, whole.height)
-                        drawIntoCanvas { pictures.played.draw(it.nativeCanvas) }
+                        drawPlayed(pictures.played, whole)
                     }
                 },
     )
+}
+
+/**
+ * One animated picture of the mascot as Android plays it, [width] by [height]: the party's two
+ * are drawn with it, one after the other. Like [Mascot] it only draws, and nothing here redraws
+ * the picture for its next frame.
+ *
+ * @param picture the picture to draw. Asked while drawing, so another picture taking its place
+ * draws again and nothing is composed or laid out for it.
+ */
+@Composable
+internal fun MascotPlayed(
+    picture: () -> AnimatedImageDrawable,
+    width: Dp,
+    height: Dp,
+    modifier: Modifier = Modifier,
+) {
+    Spacer(
+        modifier =
+            modifier.size(width, height).drawBehind {
+                drawPlayed(picture(), IntSize(size.width.roundToInt(), size.height.roundToInt()))
+            },
+    )
+}
+
+/** Draws an animated picture as it plays, [whole] in size. */
+private fun DrawScope.drawPlayed(played: AnimatedImageDrawable, whole: IntSize) {
+    played.setBounds(0, 0, whole.width, whole.height)
+    drawIntoCanvas { played.draw(it.nativeCanvas) }
 }
 
 /** Draws one frame of a [sheet], [whole] in size: the sheet's frames lie row after row. */

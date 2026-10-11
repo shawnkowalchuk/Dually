@@ -32,6 +32,7 @@ import com.shawnkowalchuk.milo.feature.greeting.GreetingViewModel
 import com.shawnkowalchuk.milo.feature.greeting.greeting
 import com.shawnkowalchuk.milo.feature.onboarding.OnboardingScreen
 import com.shawnkowalchuk.milo.feature.onboarding.OnboardingViewModel
+import com.shawnkowalchuk.milo.feature.party.PartyViewModel
 import com.shawnkowalchuk.milo.feature.whatsnew.WhatsNewNoticeViewModel
 import java.time.YearMonth
 
@@ -50,6 +51,10 @@ import java.time.YearMonth
  * screen. Home is shown once, and [onHomeShown] says that the request is dealt with.
  * @param greetingAsked true from a fresh start until the greeting has been shown or dropped
  * (`feature/greeting`); [onGreetingDone] says that it has.
+ *
+ * TODO(debt): this Composable is over the 200 lines the standards ask for (section 3). It stood
+ *  at 199 before the one-year party, which added the thirteen it needs. See docs/FINDINGS_LOG.md,
+ *  2026-10-10.
  */
 @Composable
 fun MiloApp(
@@ -128,6 +133,15 @@ fun MiloApp(
                 }
             }
 
+            // MilO's one-year party (2026-10-10; `PartyObjects.kt`). Asked for on the What's new
+            // screen, it leads to Home by the same gate as every other way out of a screen.
+            val onHome = backStack.lastOrNull() == HomeKey
+            val party: PartyViewModel = viewModel(factory = partyViewModelFactory(container))
+            val partyHasTheScreen by party.hasTheScreen.collectAsState()
+            PartyWatch(party, onHome, firstRun, unsavedWork.unsaved) {
+                leave(TopLevelDestination.HOME) { backStack.showTopLevel(HomeKey, HomeKey) }
+            }
+
             // The greeting (2026-10-09): on a fresh start the mascot comes in over Home, unless
             // something else has that moment: he waves, or he moonwalks, turn and turn about
             // (2026-10-10). One that is dropped is told so at once, so that it does not show up
@@ -140,8 +154,9 @@ fun MiloApp(
                     asked = greetingAsked,
                     firstRun = firstRun,
                     turnRead = greetingDue != null,
-                    onHome = backStack.lastOrNull() == HomeKey,
+                    onHome = onHome,
                     notificationTapped = reportToOpen != null || homeAsked,
+                    party = partyHasTheScreen,
                 )
             // The room the bottom bar takes, as the Scaffold below works it out: the mascot
             // walks along the bar's top edge.
@@ -227,6 +242,7 @@ fun MiloApp(
                     onUnreadable = greetings::onUnreadable,
                 )
             }
+            PartyOverHome(party)
 
             if (unsavedWork.asking) {
                 ConfirmDialog(
@@ -242,9 +258,11 @@ fun MiloApp(
                     onDismiss = {
                         unsavedWork = unsavedWork.kept()
                         // Staying on the form is also the answer to a notification that was
-                        // tapped, the reminder's or the daily check's.
+                        // tapped, the reminder's or the daily check's, and to a party that was
+                        // asked for.
                         onReportOpened()
                         onHomeShown()
+                        party.onAskedDropped()
                     },
                 )
             }

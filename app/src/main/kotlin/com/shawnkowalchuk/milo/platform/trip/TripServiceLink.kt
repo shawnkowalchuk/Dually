@@ -40,6 +40,12 @@ internal class TripServiceLink {
      */
     var drivingOff = false
 
+    /**
+     * Set by the worker together with [drivingOff] when the trip that drives off is one a
+     * parked truck's moving started. It had no connect sound, so this is its first sound.
+     */
+    var drivingOffStartsTrip = false
+
     private var lastOrders: Orders? = null
 
     /**
@@ -89,7 +95,8 @@ internal class TripServiceLink {
                 if (watching) {
                     service.watchParked(orders.checkAtMs, orders.gps)
                 } else {
-                    service.record(orders.checkAtMs, sounds)
+                    val tripStarts = tripJustStarted || (drivingOff && drivingOffStartsTrip)
+                    service.record(orders.checkAtMs, sounds, tripStarts)
                 }
             }
             lastOrders = orders
@@ -100,6 +107,7 @@ internal class TripServiceLink {
         }
         tripJustStarted = false
         drivingOff = false
+        drivingOffStartsTrip = false
     }
 
     @Synchronized

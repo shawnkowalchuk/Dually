@@ -1,5 +1,6 @@
 package com.shawnkowalchuk.milo.platform.trip
 
+import com.shawnkowalchuk.milo.core.party.TripStart
 import com.shawnkowalchuk.milo.core.schedule.TripCategory
 import com.shawnkowalchuk.milo.core.trip.TripStatus
 import com.shawnkowalchuk.milo.data.trip.Trip
@@ -54,6 +55,9 @@ class FakeTripDao : TripDao {
 
     override fun observeWithStatus(status: TripStatus): Flow<List<Trip>> =
         flowOf(rows.filter { it.status == status })
+
+    override suspend fun findStarts(): List<TripStart> =
+        rows.map { TripStart(it.startedAtMs, it.recordedStartedAtMs, it.addedByHand) }
 
     override fun observeStartedBetween(fromMs: Long, untilMs: Long): Flow<List<Trip>> =
         flowOf(rows.filter { it.startedAtMs in fromMs until untilMs }.reversed())

@@ -153,6 +153,9 @@ class FakeService :
 
     /** Every sound asked for, in order. */
     val sounds = mutableListOf<TripSound>()
+
+    /** The sounds of each order that was said to hold a trip's first sound, in order. */
+    val firstSoundsOfTrips = mutableListOf<List<TripSound>>()
     var checkAtMs: Long? = null
 
     /** Beside the parked truck: when the controller last said GPS goes off, or null for never. */
@@ -179,11 +182,12 @@ class FakeService :
     }
 
     @Synchronized
-    override fun record(checkAtMs: Long?, sounds: List<TripSound>) {
+    override fun record(checkAtMs: Long?, sounds: List<TripSound>, tripStarts: Boolean) {
         recording = true
         watchingParked = false
         this.checkAtMs = checkAtMs
         this.sounds += sounds
+        if (tripStarts) firstSoundsOfTrips += sounds
         if (TripSound.CONNECT in sounds) tripStartsAnnounced++
         if (TripSound.DRIVING_OFF in sounds) drivingOffsAnnounced++
     }

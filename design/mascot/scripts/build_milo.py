@@ -1,16 +1,21 @@
 # build_milo.py - rebuilds the MilO mascot (model + rig) from scratch inside the "MilO_Mascot"
-# collection. Run it inside Blender. It only ever touches objects in that collection.
+# collection, and the confetti of his party popper inside "MilO_Confetti". Run it inside Blender.
+# It only ever touches objects in those two collections.
 #
 # The character faces -Y, stands on z = 0 and is about 2 units tall. ".L" is the character's own
 # left (+X). Everything is built in a neutral rest pose: arms straight out, hands open, palms down.
 
 import os
+import random
 import bpy
 import bmesh
-from math import radians, sin, cos, pi, exp, hypot
+from math import radians, sin, cos, pi, exp, hypot, sqrt
 from mathutils import Vector, Matrix
 
 COLL = "MilO_Mascot"
+# The confetti of the party popper: a collection of its own, so that a picture can be drawn
+# with it, without it, or of it alone. It is hidden wherever it is not asked for.
+CONFETTI = "MilO_Confetti"
 def here():
     """This script's folder: from its own path, or beside the .blend when it is run from
     Blender's text editor."""
@@ -93,6 +98,48 @@ HAT_BRIM, HAT_FELT = 0.19, 0.024
 # How far the crown's front is pressed in from both sides, as a part of its width; how deep the
 # crease along its top is; and how far the brim's front edge is snapped down, its back edge up.
 HAT_PINCH, HAT_CREASE, HAT_SNAP = 0.36, 0.08, 0.035
+
+# The party cap: a paper cone for the day he has been used for a year, in the app's lime with
+# stripes of his own green that wind round it, a white rolled rim and a red pom-pom on its tip.
+# (Lime and white stripes were tried: on a white ground the cap was all but gone.) A cone
+# cannot be as wide as he is, as the fedora is, so it sits on the big dial, the highest part
+# of his head: CAP_SEAT degrees round the dial from its top, towards his right, and its tip
+# leans CAP_LEAN degrees further that way and CAP_BACK degrees to the back. Its rim follows
+# the dial's round housing.
+CAP_SEAT, CAP_LEAN, CAP_BACK = 10.0, 6.0, 4.0
+# Half its width at the rim, its height, and how thick the rolled rim is.
+CAP_R, CAP_H, CAP_ROLL = 0.21, 0.56, 0.018
+# How many stripes of each colour, and how many times they wind round on the way up.
+CAP_STRIPES, CAP_TURNS = 5, 0.55
+POM_R = 0.075
+
+# The party popper: a cone with a pull string, held in the fist of POPPER_SIDE's hand like an
+# ice-cream cone: its mouth comes out on the thumb's side and its tail, with the string, on the
+# other. It is built where that hand is in the rest pose, the arm straight out and the palm
+# down: POPPER_GRIP is the middle of the fist, as far along the hand from the wrist and as far
+# under it, and the mouth points the way the thumb's side does.
+POPPER_SIDE, PULL_SIDE = "L", "R"
+POPPER_GRIP = (0.29, 0.125)
+# Along the popper from the middle of the fist: where the tail ends, where the cone begins,
+# where its mouth is; and half the width of the handle, of the cone's foot and of its mouth.
+POPPER_TAIL, POPPER_NECK, POPPER_MOUTH = -0.215, 0.185, 0.50
+POPPER_R = (0.04, 0.052, 0.14)
+# The string: how long it hangs out of the tail, half its thickness, and the bead on its end.
+STRING_L, STRING_R, BEAD_R = 0.15, 0.011, 0.036
+# Where the other hand pinches the bead, in the rest pose of the left hand (the right hand's
+# place is the mirror image): how far along the hand from the wrist, how far towards the thumb
+# and how far under the hand.
+PINCH = (0.33, 0.10, 0.13)
+
+# The confetti: this many pieces of paper and this many streamers, cut and coloured by a seed,
+# so that every build makes the same ones. animate_milo.py throws them (the same seed).
+PAPERS, STREAMERS = 130, 6
+CONFETTI_SEED = 365
+# The app's lime first; the rest are there to be festive on its dark page.
+CONFETTI_COLOURS = (("Lime", "#C6F432"), ("White", "#F2F3F5"), ("Red", "#FF3B30"), ("Yellow", "#FFC83D"),
+                    ("Blue", "#35B8FF"), ("Pink", "#FF5CA8"))
+# A streamer: its length, the radius it is curled to, how many curls, and its ribbon's width.
+STREAMER = (0.62, 0.034, 3.5, 0.034)
 
 
 # ---------------------------------------------------------------- small helpers
@@ -200,6 +247,16 @@ def felt_material(name):
     return m
 
 
+def wool_material(name):
+    """The pom-pom on the party cap: red wool, soft at its edges."""
+    m = principled(name, srgb("#F01E12"), rough=0.9)
+    bsdf = next(n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+    for key, value in (("Sheen Weight", 1.0), ("Sheen Roughness", 0.5)):
+        if key in bsdf.inputs:
+            bsdf.inputs[key].default_value = value
+    return m
+
+
 def make_materials():
     return {
         "green": principled("MilO_Green", srgb("#34BA16"), rough=0.22, coat=0.4),
@@ -213,6 +270,14 @@ def make_materials():
         "glass": glass_material("MilO_Glass"),
         "brake": lens_material("MilO_Brake_Lens"),
         "felt": felt_material("MilO_Hat_Felt"),
+        # The party cap and the party popper: the app's lime, and his green, a white and the
+        # needles' red as paper (the body's green is glossy, the needles' red glows, and the
+        # gloves' white is theirs); and the pom-pom's wool.
+        "party_lime": principled("MilO_Party_Lime", srgb("#C6F432"), rough=0.42),
+        "party_green": principled("MilO_Party_Green", srgb("#34BA16"), rough=0.42),
+        "party_white": principled("MilO_Party_White", (0.82, 0.82, 0.82, 1), rough=0.45),
+        "party_red": principled("MilO_Party_Red", srgb("#F01E12"), rough=0.36),
+        "pom": wool_material("MilO_Party_Pom"),
     }
 
 
@@ -693,6 +758,228 @@ def build_hat_bm():
     return bm
 
 
+# ---------------------------------------------------------------- the party cap
+def housing_radius(g, y):
+    """How far a dial's round housing reaches from the dial's axis at the depth y: it is rounded
+    off at its front and at its back (build_gauge)."""
+    e = g["R"] * 0.2
+    into = max(GAUGE_Y + e - y, y - (GAUGE_BACK_Y - e), 0.0)
+    return g["R"] - e + sqrt(max(e * e - into * into, 0.0))
+
+
+def cap_seat():
+    """The middle of the cap's rim, on the big dial's housing; the way the housing faces there;
+    and the cap's tip."""
+    seat_at, tip_at, back = radians(CAP_SEAT), radians(CAP_SEAT + CAP_LEAN), radians(CAP_BACK)
+    out = Vector((-sin(seat_at), 0.0, cos(seat_at)))
+    seat = Vector((SPEEDO["cx"], (GAUGE_Y + GAUGE_BACK_Y) / 2, SPEEDO["cz"])) + out * SPEEDO["R"]
+    tip = seat + CAP_H * Vector((-sin(tip_at) * cos(back), sin(back), cos(tip_at) * cos(back)))
+    return seat, out, tip
+
+
+def build_cap_bm():
+    """A paper cone: the paper is material 0, its stripes material 1, the rolled rim material 2
+    and the pom-pom material 3. Its rim is laid on the dial's housing, which is round, so the rim is
+    not flat; every line of the cone runs straight from the rim to the tip. The points of the
+    mesh wind round with the stripes, so a stripe's edge is an edge of the mesh and is clean."""
+    bm = bmesh.new()
+    seat, out, tip = cap_seat()
+    across = Vector((out.z, 0.0, -out.x))
+    back = Vector((0.0, 1.0, 0.0))
+    axis = Vector((SPEEDO["cx"], 0.0, SPEEDO["cz"]))
+
+    def rim(turn, wider=0.0, sunk=0.006):
+        """A point of the rim, laid on the housing, and the way the housing faces there."""
+        p = seat + (CAP_R + wider) * (cos(turn) * across + sin(turn) * back)
+        radial = Vector((p.x - axis.x, 0.0, p.z - axis.z)).normalized()
+        return axis + Vector((0.0, p.y, 0.0)) + radial * (housing_radius(SPEEDO, p.y) - sunk), radial
+
+    wide = 5  # faces across a stripe
+    segs, rings, top = 2 * CAP_STRIPES * wide, 16, 0.94
+    rows = []
+    for i in range(rings + 1):
+        up = top * i / rings
+        row = []
+        for j in range(segs):
+            foot = rim(2 * pi * (j / segs + CAP_TURNS * up))[0]
+            row.append(bm.verts.new(foot + (tip - foot) * up))
+        rows.append(row)
+    for low, high in zip(rows[:-1], rows[1:]):
+        for j in range(segs):
+            k = (j + 1) % segs
+            bm.faces.new((low[j], low[k], high[k], high[j])).material_index = (j // wide) % 2
+    closed = bm.verts.new(seat + (tip - seat) * 0.98)
+    for j in range(segs):
+        bm.faces.new((rows[-1][j], rows[-1][(j + 1) % segs], closed)).material_index = (j // wide) % 2
+
+    # the rim, rolled outwards: a thin ring that lies on the housing
+    around = 8
+    rolls = []
+    for j in range(segs):
+        turn = 2 * pi * j / segs
+        foot, up = rim(turn, wider=CAP_ROLL * 0.5, sunk=-CAP_ROLL * 0.75)
+        outward = (cos(turn) * across + sin(turn) * back).normalized()
+        rolls.append([bm.verts.new(foot + CAP_ROLL * (cos(2 * pi * u / around) * outward + sin(2 * pi * u / around) * up))
+                      for u in range(around)])
+    for j in range(segs):
+        a, b = rolls[j], rolls[(j + 1) % segs]
+        for u in range(around):
+            v = (u + 1) % around
+            bm.faces.new((a[u], b[u], b[v], a[v])).material_index = 2
+
+    # the pom-pom: a ball of wool, a little lumpy, with the cone's tip inside it
+    middle = seat + (tip - seat) * 0.985
+    ball = [(POM_R * cos(a), POM_R * sin(a)) for a in arc(-90, 90, 10)]
+    ball[0], ball[-1] = (0.0, -POM_R), (0.0, POM_R)
+    for v in lathe(bm, ball, 20, mi=3):
+        d = v.co.normalized()
+        v.co = middle + v.co * (1.0 + 0.09 * sin(9 * d.x + 1.0) * sin(8 * d.y + 2.0) * sin(10 * d.z + 0.5))
+    return bm
+
+
+# ---------------------------------------------------------------- the party popper
+POPPER_PARTS = {1: "popper", 2: "popper_string", 3: "popper_pull"}
+
+
+def popper_place():
+    """Where the popper is in the rest pose and how it lies: its own up, +Z, is the way its
+    mouth points, which is the way of the thumb's side of the hand, to the front."""
+    along, under = POPPER_GRIP
+    side = 1.0 if POPPER_SIDE == "L" else -1.0
+    return Matrix.Translation((side * (WRIST_X + along), 0.0, ARM_Z - under)) @ z_to((0, -1, 0))
+
+
+def build_popper_bm():
+    """A cone on a handle, with a knob on its tail and a string with a bead out of that. Red is
+    material 0, white 1, lime 2 and the dark inside of its mouth 3. Built upright, its mouth up
+    and the middle of the fist at 0, and then laid into the hand. Its points are numbered in
+    the layer "part" for the three bones that carry it (POPPER_PARTS)."""
+    bm = bmesh.new()
+    layer = bm.verts.layers.int.new("part")
+
+    def tag(part):
+        for v in bm.verts:
+            if v[layer] == 0:
+                v[layer] = part
+
+    handle, foot, mouth = POPPER_R
+    tail, neck, top = POPPER_TAIL, POPPER_NECK, POPPER_MOUTH
+
+    def wide(z):
+        return foot + (mouth - foot) * (z - neck) / (top - neck)
+
+    # the knob on the tail, and the handle the fist is closed round
+    knob = [(0.0, tail), (0.034, tail)] + [(0.034 + 0.022 * sin(a), tail + 0.026 - 0.026 * cos(a)) for a in arc(0, 180, 8)]
+    lathe(bm, knob + [(handle, tail + 0.052)], 24, mi=2)
+    lathe(bm, [(handle, tail + 0.052), (handle, neck - 0.012)], 24, mi=1)
+    # the cone: red, with a white band and a lime lip round its mouth
+    band = (neck + 0.52 * (top - neck), neck + 0.74 * (top - neck))
+    lathe(bm, [(handle, neck - 0.012), (foot, neck), (wide(band[0]), band[0])], 40, mi=0)
+    lathe(bm, [(wide(band[0]), band[0]), (wide(band[1]), band[1])], 40, mi=1)
+    lathe(bm, [(wide(band[1]), band[1]), (mouth, top)], 40, mi=0)
+    torus(bm, (0, 0, top), (0, 0, 1), mouth, 0.013, segs=40, msegs=10, mi=2)
+    lathe(bm, [(mouth - 0.004, top), (0.03, top - 0.2), (0.0, top - 0.2)], 40, mi=3)
+    tag(1)
+    tube(bm, (0, 0, tail + 0.01), (0, 0, tail - STRING_L), STRING_R, STRING_R, rings=1, segs=10, mi=1)
+    tag(2)
+    ball = [(BEAD_R * cos(a), tail - STRING_L + BEAD_R * sin(a)) for a in arc(-90, 90, 8)]
+    ball[0], ball[-1] = (0.0, tail - STRING_L - BEAD_R), (0.0, tail - STRING_L + BEAD_R)
+    lathe(bm, ball, 16, mi=2)
+    tag(3)
+    bmesh.ops.transform(bm, matrix=popper_place(), verts=bm.verts[:])
+    return bm
+
+
+# ---------------------------------------------------------------- the confetti
+def build_confetti(rig):
+    """The pieces the popper shoots: PAPERS pieces of paper, STREAMERS curled streamers and the
+    flash at its mouth, in the collection CONFETTI. They are one mesh on a skeleton of their
+    own, a bone to a piece, and every piece is built at that skeleton's foot: animate_milo.py
+    moves them. Nothing of the collection is drawn or shown unless a script asks for it."""
+    coll = reset_collection(CONFETTI)
+    coll.hide_viewport = coll.hide_render = False
+    rnd = random.Random(CONFETTI_SEED)
+    colours = [principled("MilO_Confetti_" + name, srgb(colour), rough=0.6, emit=0.3) for name, colour in CONFETTI_COLOURS]
+    # The flash glows in its own colour and takes none from the lights, or it is drawn white.
+    flash = principled("MilO_Confetti_Flash", (1.0, 0.78, 0.16, 1.0), rough=0.9, emit=1.0)
+    next(n for n in flash.node_tree.nodes if n.type == "BSDF_PRINCIPLED").inputs["Base Color"].default_value = (0.0, 0.0, 0.0, 1.0)
+
+    bm = bmesh.new()
+    layer = bm.verts.layers.int.new("part")
+    bones = []
+
+    def piece(name, verts):
+        bones.append(name)
+        for v in verts:
+            v[layer] = len(bones)
+
+    for i in range(PAPERS):
+        # a slip of paper, or now and then a round one; the lime comes up twice as often
+        colour = rnd.choice([0, 0, 1, 2, 3, 4, 5])
+        if rnd.random() < 0.22:
+            r = rnd.uniform(0.028, 0.038)
+            verts = [bm.verts.new((r * cos(2 * pi * k / 10), r * sin(2 * pi * k / 10), 0.0)) for k in range(10)]
+        else:
+            w, h = rnd.uniform(0.03, 0.044), rnd.uniform(0.019, 0.028)
+            verts = [bm.verts.new(p) for p in ((-w, -h, 0.0), (w, -h, 0.0), (w, h, 0.0), (-w, h, 0.0))]
+        bm.faces.new(verts).material_index = colour
+        piece("paper.%03d" % i, verts)
+
+    length, curl, curls, width = STREAMER
+    steps = 56
+    for i in range(STREAMERS):
+        # a ribbon wound round its own length, like a paper streamer
+        colour, hand = (0, 3, 5, 4, 2, 1)[i % 6], 1.0 if i % 2 else -1.0
+        edges = []
+        for k in range(steps + 1):
+            turn = hand * 2 * pi * curls * k / steps
+            at = Vector((curl * cos(turn), length * k / steps, curl * sin(turn)))
+            edges.append((bm.verts.new(at - Vector((0, width / 2, 0))), bm.verts.new(at + Vector((0, width / 2, 0)))))
+        for (a, b), (c, d) in zip(edges[:-1], edges[1:]):
+            bm.faces.new((a, c, d, b)).material_index = colour
+        piece("streamer.%d" % i, [v for edge in edges for v in edge])
+
+    # the flash at the popper's mouth: a star that faces the viewer, there for three frames
+    points, tips, dips = 9, 0.28, 0.11
+    star = [bm.verts.new(((dips if k % 2 else tips) * sin(pi * k / points), 0.0, (dips if k % 2 else tips) * cos(pi * k / points)))
+            for k in range(2 * points)]
+    middle = bm.verts.new((0.0, 0.0, 0.0))
+    for k in range(2 * points):
+        bm.faces.new((middle, star[k], star[(k + 1) % (2 * points)])).material_index = len(colours)
+    piece("flash", star + [middle])
+
+    mesh = finish(coll, "Confetti", bm, colours + [flash], sharp=None, recalc=False)
+    # Paper casts no shadow here: it would flicker over his face, and a picture of the confetti
+    # alone laid over one of him without it is then the picture of both.
+    mesh.visible_shadow = False
+
+    data = bpy.data.armatures.new("MilO_Confetti_Rig")
+    arm = bpy.data.objects.new("MilO_Confetti_Rig", data)
+    coll.objects.link(arm)
+    for o in bpy.context.view_layer.objects:
+        try:
+            o.select_set(False)
+        except RuntimeError:
+            pass
+    bpy.context.view_layer.objects.active = arm
+    arm.select_set(True)
+    bpy.ops.object.mode_set(mode="EDIT")
+    for name in bones:
+        b = data.edit_bones.new(name)
+        b.head, b.tail = (0.0, 0.0, 0.0), (0.0, 0.1, 0.0)
+        b.align_roll(Vector((0, 0, 1)))
+    bpy.ops.object.mode_set(mode="OBJECT")
+    for pb in arm.pose.bones:
+        pb.rotation_mode = "XYZ"
+    skin_by_part(mesh, arm, dict(enumerate(bones, 1)))
+    # It goes where he goes, and is turned with him when a script turns him for a picture.
+    arm.parent = rig
+    arm.select_set(False)
+    bpy.context.view_layer.objects.active = rig
+    coll.hide_viewport = coll.hide_render = True
+    return len(bones)
+
+
 def mirrored(coll, ob, name):
     me = ob.data.copy()
     me.name = name
@@ -745,6 +1032,10 @@ def build_rig(coll):
     # front. Turning it about its own X tips the hat further forward.
     tilted = hat_place().to_3x3()
     add("hat", HAT_AT, HAT_AT + tilted @ Vector((0, 0, 0.3)), "body", z=tilted @ Vector((0, -1, 0)))
+    # The party cap's bone points from the middle of its rim to its tip, and hangs on the big
+    # dial: the cap sits on that dial's housing and goes with it when a clip turns or swells it.
+    seat, _, tip = cap_seat()
+    add("party_hat", seat, seat + (tip - seat).normalized() * 0.3, "eye_speedo", z=(0, -1, 0))
 
     for side, sx in ((".L", 1.0), (".R", -1.0)):
         def P(x, y, z, sx=sx):
@@ -770,6 +1061,19 @@ def build_rig(coll):
         t2 = t1 + THUMB_DIR * THUMB_L2
         add("thumb.01" + side, P(*THUMB_0), P(*t1), "hand" + side, z=down)
         add("thumb.02" + side, P(*t1), P(*t2), "thumb.01" + side, True, z=down)
+
+    # The party popper lies in one fist. Its bone reaches from the middle of the fist to its
+    # mouth: the bone's end is where the confetti comes out. The string is a bone that reaches
+    # from the tail to the bead (a rule below keeps it reaching), and the bead is a bone of its
+    # own, which the other hand can take: "grip" is where that hand pinches it.
+    place = popper_place()
+    add("popper", place @ Vector((0, 0, 0)), place @ Vector((0, 0, POPPER_MOUTH)), "hand." + POPPER_SIDE, z=(0, 0, -1))
+    bead = Vector((0, 0, POPPER_TAIL - STRING_L))
+    add("popper_string", place @ Vector((0, 0, POPPER_TAIL)), place @ bead, "popper", z=(0, 0, -1))
+    add("popper_pull", place @ bead, place @ (bead - Vector((0, 0, 0.08))), "popper", z=(0, 0, -1))
+    along, to_thumb, under = PINCH
+    pinch = Vector(((-1.0 if PULL_SIDE == "R" else 1.0) * (WRIST_X + along), -to_thumb, ARM_Z - under))
+    add("grip." + PULL_SIDE, pinch, pinch + Vector((0, -0.08, 0)), "hand." + PULL_SIDE, z=(0, 0, -1), deform=False)
 
     # Arms and legs are hoses. Each control bone bends as a curve (a bendy bone), and a row of
     # short ordinary bones follows that curve and carries the mesh. Bendy bones alone do not
@@ -862,8 +1166,48 @@ def build_rig(coll):
         var.targets[0].id = arm
         var.targets[0].data_path = '["hat"]'
         drv.expression = "v"
+
+    # Three more sliders are for the party: "party_hat" puts the party cap on and "popper"
+    # puts the popper in his fist, each as "hat" puts the fedora on: it is the size of the bone
+    # that carries the thing, and at 0, where the file is saved, nothing of it is drawn.
+    # "pull" puts the bead on the popper's string into the other hand: at 0 it hangs straight
+    # out of the tail, at 1 it is where that hand pinches, and the string reaches after it.
+    for prop, bone, what in (("party_hat", "party_hat", "The party cap: 0 is none, 1 is on"),
+                             ("popper", "popper", "The party popper in his fist: 0 is none, 1 is there")):
+        arm[prop] = 0.0
+        arm.id_properties_ui(prop).update(min=0.0, max=1.0, soft_min=0.0, soft_max=1.0, description=what)
+        for fc in arm.driver_add('pose.bones["%s"].scale' % bone):
+            tie(fc.driver, arm, prop, "v")
+    arm["pull"] = 0.0
+    arm.id_properties_ui("pull").update(min=0.0, max=1.0, soft_min=0.0, soft_max=1.0,
+                                        description="The popper's string: 0 hangs, 1 is in the other hand")
+    take = arm.pose.bones["popper_pull"].constraints.new("COPY_LOCATION")
+    take.name = "Taken"
+    take.target = arm
+    take.subtarget = "grip." + PULL_SIDE
+    tie(arm.driver_add('pose.bones["popper_pull"].constraints["Taken"].influence').driver, arm, "pull", "v")
+    reach = arm.pose.bones["popper_string"].constraints.new("STRETCH_TO")
+    reach.name = "Reaches"
+    reach.target = arm
+    reach.subtarget = "popper_pull"
+    reach.rest_length = STRING_L
+    reach.volume = "NO_VOLUME"
+    # With the popper away its bones have no size, and a string cannot reach for a bead that
+    # is nowhere: the rule is off until the popper is there.
+    tie(arm.driver_add('pose.bones["popper_string"].constraints["Reaches"].influence').driver, arm, "popper", "ceil(v)")
     arm.show_in_front = True
     return arm
+
+
+def tie(drv, arm, prop, expression):
+    """Makes a driver follow one of the rig's sliders: `expression` says how, with v the slider."""
+    drv.type = "SCRIPTED"
+    var = drv.variables.new()
+    var.name = "v"
+    var.type = "SINGLE_PROP"
+    var.targets[0].id = arm
+    var.targets[0].data_path = '["%s"]' % prop
+    drv.expression = expression
 
 
 def bind(ob, arm):
@@ -886,6 +1230,21 @@ def skin_parts(ob, arm, side):
         groups.setdefault(pid, []).append(i)
     for pid, idx in groups.items():
         ob.vertex_groups.new(name=HAND_PARTS[pid] + side).add(idx, 1.0, "REPLACE")
+    me.attributes.remove(me.attributes["part"])
+    bind(ob, arm)
+
+
+def skin_by_part(ob, arm, bones):
+    """A mesh whose points are numbered in the layer "part": each number's points follow the
+    bone `bones` names for it."""
+    me = ob.data
+    vals = [0] * len(me.vertices)
+    me.attributes["part"].data.foreach_get("value", vals)
+    groups = {}
+    for i, pid in enumerate(vals):
+        groups.setdefault(pid, []).append(i)
+    for pid, idx in groups.items():
+        ob.vertex_groups.new(name=bones[pid]).add(idx, 1.0, "REPLACE")
     me.attributes.remove(me.attributes["part"])
     bind(ob, arm)
 
@@ -936,11 +1295,17 @@ def build():
     # taken from the front: a few hundred pixels, but the pictures he has are not to change.
     lights.visible_shadow = False
     hat = finish(coll, "Hat", build_hat_bm(), [mats["felt"], mats["green"]], sharp=50)
+    cap = finish(coll, "Party_Cap", build_cap_bm(),
+                 [mats["party_lime"], mats["party_green"], mats["party_white"], mats["pom"]], sharp=50)
+    popper = finish(coll, "Popper", build_popper_bm(),
+                    [mats["party_red"], mats["party_white"], mats["party_lime"], mats["black"]], sharp=50)
 
     rig = build_rig(coll)
     rigid(body, rig, "body")
     rigid(lights, rig, "body")
     rigid(hat, rig, "hat")
+    rigid(cap, rig, "party_hat")
+    skin_by_part(popper, rig, POPPER_PARTS)
     light_up(mats["brake"], rig)
     # The big flat faces set the shading, so the front stays flat right up to its rounded edges.
     flat = body.modifiers.new("Flat faces", "WEIGHTED_NORMAL")
@@ -956,9 +1321,10 @@ def build():
         rigid(shoe, rig, "foot" + side)
         skin_parts(hand, rig, side)
 
+    pieces = build_confetti(rig)
     bpy.context.view_layer.update()
-    print("built %d objects, %d bones, M faces painted black: %d"
-          % (len(coll.objects), len(rig.data.bones), black_faces))
+    print("built %d objects, %d bones, M faces painted black: %d; confetti: %d pieces"
+          % (len(coll.objects), len(rig.data.bones), black_faces, pieces))
     return rig
 
 

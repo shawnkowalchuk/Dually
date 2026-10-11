@@ -85,6 +85,8 @@ def write(name):
         greeting.key(frame)
         if name in clips.DANCE:  # the moonwalk's clips: the hat, the brake lights, the turn
             clips.key_dance(frame)
+        if name in clips.PARTY:  # the party's clip: the party cap, the popper and its string
+            clips.key_party(frame)
     return frames + 1
 
 

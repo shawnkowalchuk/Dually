@@ -4,6 +4,7 @@ import androidx.room3.Dao
 import androidx.room3.Insert
 import androidx.room3.Query
 import androidx.room3.Transaction
+import com.shawnkowalchuk.milo.core.party.TripStart
 import com.shawnkowalchuk.milo.core.schedule.TripCategory
 import com.shawnkowalchuk.milo.core.trip.TripStatus
 import kotlinx.coroutines.flow.Flow
@@ -47,6 +48,14 @@ interface TripDao {
 
     @Query("SELECT * FROM trips WHERE status = :status ORDER BY startedAtMs DESC")
     fun observeWithStatus(status: TripStatus): Flow<List<Trip>>
+
+    /**
+     * When every stored trip started, with what says whether MilO recorded it: three columns of
+     * every row, whatever its status. A read only. Which of them count, and for what, is not
+     * decided in SQL (`core/party/PartyDay.kt`).
+     */
+    @Query("SELECT startedAtMs, recordedStartedAtMs, addedByHand FROM trips")
+    suspend fun findStarts(): List<TripStart>
 
     /**
      * Every trip that started in the half-open range from [fromMs] up to, not including,

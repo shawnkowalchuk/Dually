@@ -9,13 +9,9 @@ import android.media.MediaPlayer
 import android.net.Uri
 import androidx.annotation.RawRes
 import com.shawnkowalchuk.milo.R
-import com.shawnkowalchuk.milo.data.settings.MiloSettings
-import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.TripSound
-import com.shawnkowalchuk.milo.data.settings.sound
 import java.io.File
 import java.io.IOException
-import java.util.concurrent.Executor
 
 /** What the event log calls each sound: the names the Settings screen gives them. */
 internal val TripSound.inLog: String
@@ -38,6 +34,10 @@ private val TripSound.bundledInLog: String
         TripSound.CONNECT -> "the bundled chirp"
         TripSound.DRIVING_OFF -> "the bundled chime"
     }
+
+/** What the event log calls the pop of MilO's one-year party, and the sound built in for it. */
+private const val PARTY_POP_IN_LOG = "Party pop"
+private const val PARTY_POP_BUNDLED_IN_LOG = "the bundled pop"
 
 /**
  * Plays the two sounds ([TripSound]), each once: Shawn's audible proof that the truck connected
@@ -65,6 +65,11 @@ private val TripSound.bundledInLog: String
  * his own audio files for a sound, MilO's copy of it is played (`OwnTripSound`), and the bundled
  * one is the fallback whenever the copy cannot be: it is gone, or it does not play after all.
  *
+ * **A third sound, on one day a year:** the pop of MilO's one-year party ([playPartyPop]),
+ * `res/raw/party_pop.wav`, made by `tools/make_party_pop.py`. It is played as the two are, by
+ * the same means and at the same volume, and takes its turn among them. It has no setting of
+ * its own; who asks for it, and when, is `platform/party`'s business.
+ *
  * **One sound at a time,** in one of two ways:
  * - [waitTurn] true, the trip service's player: a sound asked for while another plays starts
  *   when that one has ended. The trip-start sound can come seconds after the connect sound, and
@@ -84,8 +89,8 @@ class TripSoundPlayer(
     /** The sound that is playing, if one is. */
     private var playing: MediaPlayer? = null
 
-    /** With [waitTurn], the sound asked for while another played, and its own file or null. */
-    private var waiting: Pair<TripSound, String?>? = null
+    /** With [waitTurn], the sound asked for while another played: how to ask for it again. */
+    private var waiting: (() -> Unit)? = null
 
     /**
      * @param ownSoundUri MilO's copy of the file chosen for [which], or null for its bundled
@@ -95,38 +100,59 @@ class TripSoundPlayer(
     // the classpath through other libraries). One call does not justify adding it.
     @SuppressLint("UseKtx")
     fun play(which: TripSound, ownSoundUri: String?) {
-        if (waitTurn && playing != null) {
-            waiting = which to ownSoundUri
-            return
-        }
+        if (waitsItsTurn { play(which, ownSoundUri) }) return
         if (ownSoundUri == null) {
             playBundled(which)
             return
         }
         val started =
-            start(which, "the chosen sound", onFailure = { playBundled(which) }) { player ->
+            start(which.inLog, "the chosen sound", onFailure = { playBundled(which) }) { player ->
                 player.setDataSource(context, Uri.parse(ownSoundUri))
             }
         if (!started) playBundled(which)
     }
 
+    /** Plays the pop of MilO's one-year party: the sound built in for it, and no other. */
+    fun playPartyPop() {
+        if (waitsItsTurn(::playPartyPop)) return
+        start(PARTY_POP_IN_LOG, PARTY_POP_BUNDLED_IN_LOG, onFailure = {}) { player ->
+            player.setBundled(R.raw.party_pop)
+        }
+    }
+
+    /**
+     * With [waitTurn] and a sound playing: keeps [again] for when that sound has ended.
+     *
+     * @return true if the sound that was asked for has to wait.
+     */
+    private fun waitsItsTurn(again: () -> Unit): Boolean {
+        if (!waitTurn || playing == null) return false
+        waiting = again
+        return true
+    }
+
     private fun playBundled(which: TripSound) {
-        start(which, which.bundledInLog, onFailure = {}) { player ->
-            context.resources.openRawResourceFd(which.bundled).use { sound ->
-                player.setDataSource(sound.fileDescriptor, sound.startOffset, sound.length)
-            }
+        start(which.inLog, which.bundledInLog, onFailure = {}) { player ->
+            player.setBundled(which.bundled)
+        }
+    }
+
+    private fun MediaPlayer.setBundled(@RawRes sound: Int) {
+        context.resources.openRawResourceFd(sound).use { file ->
+            setDataSource(file.fileDescriptor, file.startOffset, file.length)
         }
     }
 
     /**
      * Prepares and plays one sound, and releases the player when it has finished or failed.
      *
+     * @param inLog what the event log calls the sound.
      * @param onFailure called if the player fails after it was handed to Android (while
      * preparing or playing). A failure before that is reported by the return value.
      * @return false if the sound could not even be handed to Android.
      */
     private fun start(
-        which: TripSound,
+        inLog: String,
         describe: String,
         onFailure: () -> Unit,
         setSource: (MediaPlayer) -> Unit,
@@ -151,24 +177,24 @@ class TripSoundPlayer(
             }
             player.setOnErrorListener { failed, what, extra ->
                 finished(failed)
-                onNote("${which.inLog} failed while playing $describe (error $what/$extra)")
+                onNote("$inLog failed while playing $describe (error $what/$extra)")
                 onFailure()
                 nextTurn()
                 true
             }
             // Asynchronous: reading a file Shawn chose can be slow, and this is the main thread.
             player.prepareAsync()
-            onNote("${which.inLog}: playing $describe")
+            onNote("$inLog: playing $describe")
             true
         } catch (unreadable: IOException) {
-            abandon(which, player, describe, unreadable)
+            abandon(inLog, player, describe, unreadable)
         } catch (denied: SecurityException) {
             // The permission to read a chosen file is lost when the file is moved or deleted.
-            abandon(which, player, describe, denied)
+            abandon(inLog, player, describe, denied)
         } catch (invalid: IllegalArgumentException) {
-            abandon(which, player, describe, invalid)
+            abandon(inLog, player, describe, invalid)
         } catch (wrongState: IllegalStateException) {
-            abandon(which, player, describe, wrongState)
+            abandon(inLog, player, describe, wrongState)
         }
     }
 
@@ -184,19 +210,19 @@ class TripSoundPlayer(
      */
     private fun nextTurn() {
         if (playing != null) return
-        val (which, ownSoundUri) = waiting ?: return
+        val again = waiting ?: return
         waiting = null
-        play(which, ownSoundUri)
+        again()
     }
 
     private fun abandon(
-        which: TripSound,
+        inLog: String,
         player: MediaPlayer,
         describe: String,
         failure: Exception,
     ): Boolean {
         finished(player)
-        onNote("${which.inLog} could not play $describe: $failure")
+        onNote("$inLog could not play $describe: $failure")
         return false
     }
 
@@ -230,30 +256,4 @@ fun playbackProblem(file: File): String? {
     } finally {
         player.release()
     }
-}
-
-/**
- * Plays [sounds], in their order, as the settings have them: each that is switched on, with the
- * file Shawn chose for it, or its bundled sound. The settings are read once for all of them.
- *
- * @param mainThread where the sounds are played ([TripSoundPlayer.play] must run there).
- * @param onUnreadable a line for the event log if the settings cannot be read. The controller
- * logs the unreadable file itself; both sounds are on by default, so the bundled ones play.
- */
-internal suspend fun TripSoundPlayer.playAsSet(
-    sounds: List<TripSound>,
-    settings: SettingsStore,
-    mainThread: Executor,
-    onUnreadable: (String) -> Unit,
-) {
-    val now =
-        try {
-            settings.current()
-        } catch (unreadable: IOException) {
-            onUnreadable("Sound settings unreadable: $unreadable")
-            MiloSettings()
-        }
-    val chosen = sounds.map { it to now.sound(it) }.filter { (_, choice) -> choice.enabled }
-    if (chosen.isEmpty()) return
-    mainThread.execute { for ((which, choice) in chosen) play(which, choice.ownUri) }
 }

@@ -1,6 +1,6 @@
 # ADR-007: The mascot is two pictures, drawn beforehand and read by Android
 Date: 2026-10-09
-Status: Accepted. Supersedes ADR-005. Addendum of 2026-10-10 at the end: a second greeting, the moonwalk, as two more pictures.
+Status: Accepted. Supersedes ADR-005. Two addenda of 2026-10-10 at the end: a second greeting, the moonwalk, as two more pictures; and the one-year party, as two more again.
 
 ## Context
 
@@ -142,3 +142,59 @@ The APK grows by 915 KB, 7.5 %: the two pictures, and 19 KB of code. The bundle 
 - **Every further greeting is two more pictures and about this much again.** The course that plays them is there.
 
 **It has run on an emulator only** (Android 16, without a graphics chip), at four widths and on its side. Device checks MW-1 to MW-11. The phone runs Android 14; whether its decoder lays the five patches as the emulator's does is MW-3.
+
+## Addendum, 2026-10-10: the one-year party
+
+### Context
+
+The same day Shawn asked for a third thing of the mascot's: "a one year use animation. After the person has used the app for a year this one will come up that day every time he starts a trip. i want it to fade in with the mascot in the center with a birthday cap. i want hime to put his hand behind his back and pull out a party popper and pull it and shoot confeti above his head. i want sound effects for this". The model got a party cap, a popper, confetti and the clip `OneYear`. He was shown a film of it with sound, on a phone's screen, and approved it.
+
+It is not a greeting. The mascot does not cross the screen: he stands in its middle, half as large again as in the greetings. Confetti flies over the whole width of the screen. And one frame of it, the one the popper goes off on, has a sound that must come with it.
+
+The first addendum said what it costs: "Every further greeting is two more pictures and about this much again", a megabyte. The party is more picture than a greeting: 130 frames where a greeting has about 80, a frame two and a half times as large, and 57 of them full of paper. The task set its weight: two and a half megabytes for everything it adds, sound and code included.
+
+### Decision
+
+**The party is built as this record builds everything of the mascot's: pictures drawn in Blender, committed, and read by Android.** The confetti is drawn into them. Throwing it in the app instead, over a picture of him alone, would have been lighter, and would not have been the film he approved: paper that falls behind him as well as in front, streamers that unroll, a flash at the popper's mouth.
+
+**Two animated pictures, and no sheet** (`app/src/main/res/drawable-nodpi/`). WebP with a see-through background, 42 ms a frame. A frame is 675 by 800 pixels:
+
+| Picture | What it is | Frames | Who plays it | Size |
+|---|---|---|---|---|
+| `mascot_party_popper.webp` | from the frame he stands still in to the last one before the popper goes off | 61 | Android, once, after the app has shown its first frame for half a second | 885 KB |
+| `mascot_party_pop.webp` | from the frame the popper goes off on to the last in which anything of him is seen | 57 | Android, once; the app starts it | 1,426 KB |
+
+Together 2.31 MB. They are drawn by `design/mascot/scripts/render_party.py` and packed by `pack_party.py`.
+
+**The clip is cut in two at the frame of the pop.** This record's first lesson was that Android does not say which frame of an animated picture it shows. A sound laid on a frame by the app's own clock would come apart from the picture on a phone that draws slowly. So the second picture begins with that frame, and the app starts it: the swap and the request for the sound are made in one drawing of the screen.
+
+**He has fewer pixels to the dp than in the greetings: 1.64, where they have 2.5.** He is as many pixels high as there, 375, and shown as large as the film showed him, 229 dp on a screen 411 dp wide. Packed as the greetings' pictures are, the party weighed 3.0 MB at this size and 4.2 MB at the film's own pixels; packed as it now is, 2.3 MB at this size and 3.3 MB at the film's.
+
+**What is done to these pictures beyond what the moonwalk's addendum did,** each in `pack_party.py` with its reason:
+
+1. **The drawn frames are made smaller,** by five eighths, and the empty top of the film's room is cut off.
+2. **The confetti's frames are packed harder than the frames in which he is alone:** colour at 28 of 100 and the see-through channel at 30, where the others have 40 and 50.
+3. **A frame that is fading out is packed harder still,** in proportion to how strongly it is shown; and the clip's last frame, in which nothing of him is left, is not in the pictures at all.
+4. **The frames he stands still in, at the start, are the app's to show.** They are one picture, and the first picture's first frame.
+
+### Consequences
+
+**What it costs, measured:**
+
+| | Before | With the party |
+|---|---|---|
+| The mascot's pictures | 1,778 KB, four | 4,090 KB, six |
+| The built-in sounds | 94 KB, two | 182 KB, three |
+| The release APK (built unsigned, the same way both times) | 13.08 MB | 15.55 MB |
+
+The APK grows by 2,466 KB, 18.9 %: the two pictures, the pop's 88 KB, and 70 KB of code. That is under the 2.5 MB it was given. The bundle for Google Play was not built here; it carries the same three files more.
+
+- **He is a little softer than in the film,** and than the waving and the moonwalking mascot. It shows on the dials' numbers when a still is held beside the film's. The film's own sharpness would cost one megabyte more (`[DEBT]`, FINDINGS_LOG 2026-10-10).
+- **`MascotPicturesTest` holds the party's two under 2.4 MB, counted apart from the greetings' four,** whose limits are as they were.
+- **Android does not keep a picture's first frame on the screen for the time the file gives it.** Found here, on the emulator: a first frame that the file gave thirteen frames' time was gone after about a tenth of a second, and a first frame of 42 ms after 17. Android shows the second frame as soon as it is ready. Every later frame is kept for its time, which is why the moonwalk's held frames were never a fault. So the app shows a picture's first frame itself, the picture not yet playing, and starts the picture half a frame's time before that frame's time is up. The greetings' animated pictures begin with a frame of 42 ms that the mascot is all but still in, and were left as they are.
+- **A picture that is started while nothing else on the screen changes waits until something draws the screen.** Android begins to play a picture when it next draws it. The greetings start theirs in a drawing that changes the mascot anyway; the party's second start comes while he is wholly there and nothing changes. Starting a picture therefore draws again, by a number the drawing reads.
+- **The party's pictures are right on any ground.** He faces the viewer and no brake light is lit: no halo is stored in them.
+- **Memory:** a frame of the party is 2.2 MB unpacked, and both pictures are read before it begins. They are read only when a party plays, and let go when it is over.
+- **Every further thing of this kind is this much again,** and one with as much paper in the air weighs more than one without.
+
+**It has run on an emulator only** (Android 16), on the day itself and on demand. Device checks OY-1 to OY-14.

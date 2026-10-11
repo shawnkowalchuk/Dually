@@ -1,5 +1,5 @@
 # pack_clips.py - makes pictures out of the frames render_clips.py drew. Run it with plain
-# Python, not inside Blender. It has three uses:
+# Python, not inside Blender. It has four uses:
 #
 #   python3 design/mascot/scripts/pack_clips.py poses <folder>
 #
@@ -40,6 +40,15 @@
 # milo_back_lit.png; milo_back_three_quarter_lit.png), the same three on the app's dark page
 # with the halo (..._on_dark.png), and the turn-around on the dark page as an animated picture
 # that starts again for ever (milo_turn_around_on_dark.webp).
+#
+#   python3 design/mascot/scripts/pack_clips.py party <folder>
+#
+# <folder> holds what render_party.py drew, small: every frame of him and the confetti, and,
+# from a second run with --cap, the two stills of him in his party cap. It writes into
+# design/mascot/renders/ the two stills (milo_party_cap.png, milo_party_cap_three_quarter.png),
+# the party as an animated picture that plays once and keeps its last frame
+# (milo_one_year.webp), and a still of him cheering under the confetti (milo_one_year.png).
+# Nothing uses them: they are there to show the party without drawing it again.
 #
 # A VISITOR'S BROWSER KEEPS THESE PICTURES FOR A WEEK AND THE STYLESHEET FOR AN HOUR
 # (firebase.json). A picture that changes in a way the stylesheet counts on, another number of
@@ -107,6 +116,11 @@ NEEDLES = ("speed", "rpm")
 LIGHTS_STILLS = ("milo_back", "milo_back_lit", "milo_back_three_quarter_lit")
 TURN_MS = 83
 TURN_CWEBP = ["-q", "78", "-sharp_yuv", "-af", "-m", "6"]
+
+# The party's pictures: the two stills of the cap that render_party.py drew, in its order, and
+# the frame of the party that is its still: both arms up, the confetti over his head.
+PARTY_CAPS = ("milo_party_cap", "milo_party_cap_three_quarter")
+PARTY_STILL = 84
 
 
 def size_of(frame):
@@ -241,10 +255,29 @@ def lights(folder):
     print("together: %d bytes" % total)
 
 
+def party(folder):
+    os.makedirs(RENDERS, exist_ok=True)
+    total = 0
+    for frame, name in enumerate(PARTY_CAPS):
+        out = os.path.join(RENDERS, name + ".png")
+        shutil.copyfile(os.path.join(folder, "cap", "%04d.png" % frame), out)
+        total += os.path.getsize(out)
+        print("%s.png: %d x %d pixels, %d bytes" % (name, *size_of(out), os.path.getsize(out)))
+    frames = os.path.join(folder, "with")
+    out = os.path.join(RENDERS, "milo_one_year.webp")
+    said = pack_animated(frames, out)
+    still = os.path.join(RENDERS, "milo_one_year.png")
+    shutil.copyfile(os.path.join(frames, "%04d.png" % PARTY_STILL), still)
+    total += os.path.getsize(out) + os.path.getsize(still)
+    print("milo_one_year.webp: %s, %d x %d pixels, %d bytes; milo_one_year.png is frame %d, %d bytes"
+          % (said, *size_of(still), os.path.getsize(out), PARTY_STILL, os.path.getsize(still)))
+    print("together: %d bytes" % total)
+
+
 def main():
-    uses = {"poses": poses, "website": website, "lights": lights}
+    uses = {"poses": poses, "website": website, "lights": lights, "party": party}
     if len(sys.argv) != 3 or sys.argv[1] not in uses:
-        raise SystemExit("Say 'poses', 'website' or 'lights', then the folder the frames were drawn into.")
+        raise SystemExit("Say 'poses', 'website', 'lights' or 'party', then the folder the frames were drawn into.")
     for tool, formula in (("cwebp", "webp"), ("webpmux", "webp"), ("ffmpeg", "ffmpeg")):
         if shutil.which(tool) is None:
             raise SystemExit("%s is not installed. On a Mac: brew install %s" % (tool, formula))

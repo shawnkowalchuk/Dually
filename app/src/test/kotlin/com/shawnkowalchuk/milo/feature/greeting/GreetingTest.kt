@@ -12,7 +12,8 @@ class GreetingTest {
         turnRead: Boolean = true,
         onHome: Boolean = true,
         notificationTapped: Boolean = false,
-    ) = greeting(asked, firstRun, turnRead, onHome, notificationTapped)
+        party: Boolean? = false,
+    ) = greeting(asked, firstRun, turnRead, onHome, notificationTapped, party)
 
     @Test
     fun `a fresh start on Home with nothing else going on is greeted`() {
@@ -59,5 +60,21 @@ class GreetingTest {
     @Test
     fun `a tap on a notification drops it, even one that leads to Home`() {
         assertEquals(Greeting.DROPPED, greetingOn(notificationTapped = true))
+    }
+
+    @Test
+    fun `it waits until it is known whether MilO's party has the screen, and drops nothing yet`() {
+        assertEquals(Greeting.WAITING, greetingOn(party = null))
+        assertEquals(Greeting.WAITING, greetingOn(party = null, onHome = false))
+        assertEquals(Greeting.WAITING, greetingOn(party = null, turnRead = false))
+        // A start that asks for none does not wait for it.
+        assertEquals(Greeting.NONE, greetingOn(asked = false, party = null))
+    }
+
+    @Test
+    fun `MilO's party plays instead of the greeting, which is dropped`() {
+        assertEquals(Greeting.DROPPED, greetingOn(party = true))
+        // No party, and everything is as it was.
+        assertEquals(Greeting.SHOWING, greetingOn(party = false))
     }
 }
