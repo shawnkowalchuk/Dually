@@ -1582,6 +1582,19 @@ Four older checks were written for the odometer as one figure: where HM-2, HM-4,
 | HS-14 | **Animations off.** In Android's accessibility settings switch on "Remove animations", then look at Home during a trip. Switch it off again afterwards. | The last cell is lime and its digit stands on the cell, changing in one step; the dot does not pulse; the card changes sides at once. | not run |
 | HS-15 | **No cell for the tenth** (the evening of 2026-10-10). Look at the row at rest and in a trip. | It has as many cells as the dashboard's whole kilometres have digits, and nothing after them but "km". Shawn, of the build before: "the 1/10 at the end looks like it is another zero on the odometer". **Write down** whether the row now reads as the truck's odometer at a glance. | not run |
 
+## MilO stays upright (2026-10-11)
+
+Shawn: "can we please make the app allways portrait fixed. I dont like when i flip my phone and it goes landscape". MilO's activity asks for portrait. Ran nowhere yet: the gate built it, and no emulator or phone was turned.
+
+**Older checks that say "turn the phone on its side"** (165, 173, 174, 181, 202, 203, 230, 245, 254, NL-7, NL-42, WN-7, MG-9, MW-8, MW-10) were written when MilO turned. On the phone their turn now changes nothing, which is their pass; what they describe after a turn stands for a tablet or an unfolded phone, where Android 16 still turns MilO.
+
+| # | What to do | What should happen | Result |
+|---|---|---|---|
+| UP-1 | **Turned on every screen.** With auto-rotate on in the phone's quick settings, open Home, Trips, Settings and the Log in turn, and turn the phone on its side on each. | Each screen stays upright; nothing moves or is drawn again. | not run |
+| UP-2 | **In the middle of something.** Turn the phone during the opening greeting, with the keyboard up on a trip's edit screen, and with "Did you send it?" on the Report screen. | The greeting plays on; what was typed is still there; the question stays. | not run |
+| UP-3 | **Coming back from an app that is on its side.** Open a video or the camera held sideways, then switch to MilO with the phone still on its side. | MilO is upright. | not run |
+| UP-4 | **In the truck's holder.** If the holder carries the phone on its side: open MilO there. | MilO is upright, so it reads sideways in that holder. **Write down** whether the phone is ever carried that way, because then this choice wants a second look. | not run |
+
 ## Later work packages
 
 Nothing waiting. A work package that adds behaviour only the phone can prove adds its checks above.
