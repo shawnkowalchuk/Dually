@@ -24,6 +24,14 @@
 
 ### 2026-10-11
 
+**`[DECISION]` The mascot's source and the marketing kit are no longer in the repository**
+Shawn: "can we make the website/marketing/design masctot on github no accessable becuase the repo is public?" GitHub has no private folder in a public repository. He was given three ways (the whole repository private; `design/` and `marketing/` moved out; leave it) and chose to move the two out, then: "just store them locally. git ignored". `website/` stays: it is what the site is deployed from, and its pages are public on the web anyway.
+- **What changed.** `design/` (the mascot's Blender file, the scripts that build, animate, draw and pack him, his renders; 56 files, 19 MB) and `marketing/` (125 files, 28 MB) were taken out of the tree and added to `.gitignore`. On his Mac they stay where they were, in the project's folder. Nothing in the build, the tests or CI reads either folder; six comments in the app and one in `tools/make_run_sounds.py` name scripts there, and still say where the numbers and pictures came from.
+- **What this does not do.** Every version of both folders up to today is still in the repository's history and in its pull requests, for anyone who looks. He was told so before he chose. Only a private repository, or a rewritten history with GitHub's help, takes that back; neither was asked for.
+- **The pictures themselves are public as before:** the app carries the mascot's packed frames (`app/src/main/res/drawable-nodpi/`) and the website its own (`website/mascot/`).
+- **What it costs.** The two folders are no longer backed up by a push. A copy as of this day is in `~/MilO-backups/design-and-marketing-2026-10-11/` on the same Mac; a backup off that Mac is his to arrange. And a git worktree does not have them: work on the mascot is done in the project's own folder, or with a copy of `design/` put into the worktree, where the same `.gitignore` keeps it out.
+
+
 **`[FINDING]` An outside review of the code, and what held up**
 Shawn had another AI model (DeepSeek) read the project on 2026-10-11 and passed on its five findings. Each was checked against the code before anything was done; this entry is here so that the one that was wrong is not tried again.
 - **Files over 300 lines (STANDARDS section 3): true.** Its counts were exact. The `[DEBT]` entry below.

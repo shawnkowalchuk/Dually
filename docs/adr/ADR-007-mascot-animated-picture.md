@@ -1,4 +1,6 @@
 # ADR-007: The mascot is two pictures, drawn beforehand and read by Android
+
+> **Note, 2026-10-11:** `design/mascot/`, which this record refers to, is kept on the owner's Mac only and is no longer in the repository (FINDINGS_LOG, 2026-10-11). The record is left as it was written.
 Date: 2026-10-09
 Status: Accepted. Supersedes ADR-005. Four addenda at the end. Two of 2026-10-10: a second greeting, the moonwalk, as two more pictures; and the one-year party, as two more again. Two of 2026-10-11: the wave has another course and two other pictures, and what the Decision below says of the wave is how it was until then; and the run across the Report screen, as three more pictures.
 

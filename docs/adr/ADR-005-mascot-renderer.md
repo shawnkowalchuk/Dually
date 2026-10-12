@@ -1,4 +1,6 @@
 # ADR-005: The mascot is a 3D model, drawn by Filament
+
+> **Note, 2026-10-11:** `design/mascot/`, which this record refers to, is kept on the owner's Mac only and is no longer in the repository (FINDINGS_LOG, 2026-10-11). The record is left as it was written.
 Date: 2026-10-09
 Status: Superseded by ADR-007 on 2026-10-09
 

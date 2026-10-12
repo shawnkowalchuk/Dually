@@ -54,10 +54,14 @@ app/src/debug/res/raw/
 firebase-debug.log
 firebase-debug.*.log
 
-# --- The mascot (design/mascot/, ADR-007) -----------------------------------------------------
-# Blender's own backup of the file it has just saved.
-*.blend1
+# --- The mascot's source and the marketing kit: on the owner's Mac only --------------------------
+# Since 2026-10-11 these two folders are not in the repository (FINDINGS_LOG, that date): the
+# mascot's Blender file with the scripts that build, draw and pack him, and the pictures and
+# videos for the shop pages. The repository is public; these are kept where only the owner has
+# them. What the app and the website show of the mascot is in app/src/main/res/ and website/.
+/design/
+/marketing/
 
-# --- The marketing kit (marketing/) ------------------------------------------------------------
-# What Python leaves beside the kit's scripts when one of them reads another.
+# --- Python scripts (tools/) --------------------------------------------------------------------
+# What Python leaves beside a script when one of them reads another.
 __pycache__/
