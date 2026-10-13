@@ -9,6 +9,7 @@ import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.TripSound
+import com.shawnkowalchuk.milo.data.settings.setSoundEnabled
 import com.shawnkowalchuk.milo.data.settings.sound
 import com.shawnkowalchuk.milo.platform.party.OneYearParty
 import java.time.LocalDateTime

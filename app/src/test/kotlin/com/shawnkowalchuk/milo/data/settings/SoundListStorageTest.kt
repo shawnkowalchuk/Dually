@@ -96,7 +96,8 @@ class SoundListStorageTest {
     fun `out of the box both sounds are on and play their built-in sound`() = runTest {
         for (which in TripSound.entries) {
             assertEquals(
-                SoundChoice(enabled = true, ownUri = null, ownName = null),
+                // The chirp and the chime: the first of each sound's list (2026-10-13).
+                SoundChoice(enabled = true, ownUri = null, ownName = null, which.firstBuiltIn),
                 store.current().sound(which),
             )
         }

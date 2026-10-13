@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
 import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.designsystem.component.MiloIcons
+import com.shawnkowalchuk.milo.data.settings.TripSound
 import kotlinx.serialization.Serializable
 
 // The screens, as keys of the Navigation 3 back stack. Each is @Serializable because Navigation
@@ -65,6 +66,15 @@ data class ReportKey(val year: Int, val month: Int) : NavKey
 @Serializable
 data object WhatsNewKey : NavKey
 
+/**
+ * The screen of one of the two sounds, where the sound it plays is chosen (2026-10-13). Not in
+ * the bottom bar: it is opened from that sound's row of the "Sounds" tile on Settings.
+ *
+ * @param which the sound the screen is about. The back stack saves it by the constant's name.
+ */
+@Serializable
+data class SoundListKey(val which: TripSound) : NavKey
+
 /** The four screens of the bottom navigation bar, in the order the bar shows them. */
 enum class TopLevelDestination(val key: NavKey, val labelRes: Int, val icon: ImageVector) {
     HOME(HomeKey, R.string.nav_home, MiloIcons.Home),
@@ -75,8 +85,8 @@ enum class TopLevelDestination(val key: NavKey, val labelRes: Int, val icon: Ima
 
 /**
  * The bottom-bar screen the back stack is in: the one directly on top of Home, which is where
- * a button of the bar puts its screen ([showTopLevel]), or Home itself. With Setup or the
- * pairing screen open from Settings that is Settings, and with the edit screen or the Report
+ * a button of the bar puts its screen ([showTopLevel]), or Home itself. With Setup, the pairing
+ * screen or a sound's own screen open from Settings that is Settings, and with the edit screen or the Report
  * screen open from Trips it is Trips, so the bar keeps showing where Shawn came from. Settings
  * opened from that Report screen keeps it on Trips too: Settings is a screen of the bar, but
  * there it is opened on top of another one, as the pairing screen, Setup and the Report screen

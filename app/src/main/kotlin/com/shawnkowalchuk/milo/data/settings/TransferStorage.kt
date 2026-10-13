@@ -55,7 +55,11 @@ data class TransferredTruck(val address: String, val name: String?)
  *  and not a setting; these four settings still wait for the format that takes them all. So
  *  does the switch of the trip-start sound ([MiloSettings.drivingOffSoundEnabled], 2026-10-08):
  *  [soundEnabled] is the connect sound's switch, the one MilO always had, and an import leaves
- *  the trip-start sound's switch as this phone has it.
+ *  the trip-start sound's switch as this phone has it. And so does the built-in sound chosen
+ *  for each of the two sounds ([MiloSettings.connectBuiltIn], [MiloSettings.drivingOffBuiltIn],
+ *  2026-10-13), which means the same on any phone, since every MilO carries the same twelve:
+ *  Android's backup carries the choice, an export file does not, and an import leaves this
+ *  phone's choice as it is. See docs/FINDINGS_LOG.md, 2026-10-13.
  */
 data class TransferredSettings(
     val truck: TransferredTruck?,
@@ -182,7 +186,8 @@ suspend fun SettingsStore.replaceTransferred(arrived: TransferredSettings, truck
  * truck. The truck's address and name stay, so that the phone knows which device to pair again.
  * @param dropOwnSound true if MilO's copies of the sounds of Shawn's own are not on this phone.
  * They never are after a restore: the copies are kept out of every backup. The list of them
- * goes too, and both sounds play their built-in sound.
+ * goes too, and a sound that played one of them plays the first built-in sound of its list. A
+ * built-in sound that was chosen is in every MilO, and stays chosen.
  */
 suspend fun SettingsStore.forgetOtherInstallation(dropAssociation: Boolean, dropOwnSound: Boolean) {
     dataStore.edit { stored ->

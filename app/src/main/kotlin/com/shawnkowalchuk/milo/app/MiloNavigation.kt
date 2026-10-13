@@ -196,8 +196,6 @@ fun MiloNavigation(
                                     initializer {
                                         SettingsViewModel(
                                             settings = container.settingsStore,
-                                            ownSound = container.ownTripSound,
-                                            playSound = container.soundPreview::play,
                                             armDrivingAlert = container.drivingAlert::arm,
                                             lookAtReminder = container.reports.reminder::look,
                                             eventLog = container.eventLogRepository,
@@ -214,6 +212,7 @@ fun MiloNavigation(
                         widgetViewModel =
                             viewModel(factory = homeWidgetViewModelFactory(container)),
                         onChangeTruck = { backStack.openOnTop(PairingKey) },
+                        onOpenSounds = { backStack.openOnTop(SoundListKey(it)) },
                         onBack =
                             if (openedOnTop) {
                                 { backStack.closeIfOnTop(SettingsKey) }
@@ -230,6 +229,7 @@ fun MiloNavigation(
                         showCoffee = !fromGooglePlay,
                     )
                 }
+                entry<SoundListKey> { key -> SoundListEntry(container, backStack, key) }
                 entry<WhatsNewKey> { WhatsNewEntry(container, backStack) }
                 entry<LogKey> {
                     EventLogScreen(

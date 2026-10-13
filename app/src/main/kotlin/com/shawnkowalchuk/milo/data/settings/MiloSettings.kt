@@ -61,7 +61,7 @@ enum class ConfirmedStep(val key: String) {
  * Not a setting: see `readDrivenOffTripId`.
  * @param soundEnabled whether the connect sound plays ([TripSound.CONNECT]; until 2026-10-08
  * the only sound, then called the trip-start sound).
- * @param customSoundUri the audio file Shawn chose for it, or null for the bundled chirp. It
+ * @param customSoundUri the audio file Shawn chose for it, or null for a built-in sound. It
  * names MilO's own copy of the file (`data/sound/OwnSoundStore`), never the file he picked.
  * @param customSoundName what the file he picked was called, for display only. Null with no
  * custom sound, and when the phone gave no name for the file.
@@ -69,6 +69,10 @@ enum class ConfirmedStep(val key: String) {
  * ([TripSound.DRIVING_OFF], since 2026-10-08). On out of the box, like the connect sound.
  * @param drivingOffSoundUri and [drivingOffSoundName] the same as [customSoundUri] and
  * [customSoundName], for the trip-start sound. Read both sounds through `sound(which)`.
+ * @param connectBuiltIn the built-in sound chosen for the connect sound, for while it plays
+ * none of his own (since 2026-10-13; kept in `BuiltInSounds.kt`). Null while none was chosen,
+ * and for a stored one this build does not know: the chirp plays then, as it always did.
+ * @param drivingOffBuiltIn the same for the trip-start sound; null plays the chime.
  * @param homeWidgetEnabled whether MilO's home-screen widget is offered (since 2026-10-07; kept
  * in `WidgetStorage.kt`). Switched off, it cannot be added, and one on the home screen says so.
  * @param firstRunStage how far the first start has got: the page that says what MilO does, then
@@ -151,6 +155,8 @@ data class MiloSettings(
     val drivingOffSoundEnabled: Boolean = true,
     val drivingOffSoundUri: String? = null,
     val drivingOffSoundName: String? = null,
+    val connectBuiltIn: BuiltInSound? = null,
+    val drivingOffBuiltIn: BuiltInSound? = null,
     val ownSounds: List<OwnSound> = emptyList(),
     val homeWidgetEnabled: Boolean = true,
     val homeWidgetCentsPerKm: Int = DEFAULT_CENTS_PER_KM,

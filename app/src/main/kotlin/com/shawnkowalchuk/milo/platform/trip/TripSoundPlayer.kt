@@ -9,6 +9,7 @@ import android.media.MediaPlayer
 import android.net.Uri
 import androidx.annotation.RawRes
 import com.shawnkowalchuk.milo.R
+import com.shawnkowalchuk.milo.data.settings.BuiltInSound
 import com.shawnkowalchuk.milo.data.settings.TripSound
 import java.io.File
 import java.io.IOException
@@ -18,21 +19,6 @@ internal val TripSound.inLog: String
     get() = when (this) {
         TripSound.CONNECT -> "Connect sound"
         TripSound.DRIVING_OFF -> "Trip-start sound"
-    }
-
-/** The sound built into the app for each, in `res/raw`. */
-@get:RawRes
-private val TripSound.bundled: Int
-    get() = when (this) {
-        TripSound.CONNECT -> R.raw.trip_start_chirp
-        TripSound.DRIVING_OFF -> R.raw.trip_go_chime
-    }
-
-/** And what the event log calls it. */
-private val TripSound.bundledInLog: String
-    get() = when (this) {
-        TripSound.CONNECT -> "the bundled chirp"
-        TripSound.DRIVING_OFF -> "the bundled chime"
     }
 
 /** What the event log calls the pop of MilO's one-year party, and the sound built in for it. */
@@ -58,12 +44,11 @@ private const val PARTY_POP_BUNDLED_IN_LOG = "the bundled pop"
  * - **They are played by the service, not by a notification channel**, because MIUI is reported
  *   to switch channel sounds off (docs/research/2026-10-03-miui-dev-bluetooth-audio.md).
  *
- * The bundled sounds are original and synthesised, made by `tools/make_trip_start_chirp.py`:
- * `res/raw/trip_start_chirp.wav` for the connect sound (the name is older than the second sound
- * and stays, because a clip on Shawn's Mac replaces it by that name, README "Your own connect
- * sound") and `res/raw/trip_go_chime.wav` for the trip-start sound. If Shawn has chosen one of
- * his own audio files for a sound, MilO's copy of it is played (`OwnTripSound`), and the bundled
- * one is the fallback whenever the copy cannot be: it is gone, or it does not play after all.
+ * Each plays the built-in sound chosen for it ([BuiltInSound], twelve since 2026-10-13, original
+ * and synthesised; `BundledSounds.kt` has their files): out of the box the chirp at the connect
+ * and the chime at the drive-off, as always. If Shawn has chosen one of his own audio files for
+ * a sound, MilO's copy of it is played (`OwnTripSound`), and a built-in one is the fallback
+ * whenever the copy cannot be: it is gone, or it does not play after all.
  *
  * **A third sound, on one day a year:** the pop of MilO's one-year party ([playPartyPop]),
  * `res/raw/party_pop.wav`, made by `tools/make_party_pop.py`. It is played as the two are, by
@@ -74,8 +59,9 @@ private const val PARTY_POP_BUNDLED_IN_LOG = "the bundled pop"
  * - [waitTurn] true, the trip service's player: a sound asked for while another plays starts
  *   when that one has ended. The trip-start sound can come seconds after the connect sound, and
  *   a long clip of his own must not be cut off by it. One waits at most; a newer one replaces it.
- * - false, the Play button on the Settings screen: the sound that is playing is cut off, so two
- *   presses of Play start the sound again and do not play two on top of each other.
+ * - false, the Play buttons of the Settings screens: the sound that is playing is cut off, so
+ *   two presses of Play start the sound again and do not play two on top of each other, and a
+ *   press on another row's Play starts that row's sound. [stop] ends it when the screen is left.
  *
  * Call it on the main thread, which is also where the player reports back.
  *
@@ -93,23 +79,37 @@ class TripSoundPlayer(
     private var waiting: (() -> Unit)? = null
 
     /**
-     * @param ownSoundUri MilO's copy of the file chosen for [which], or null for its bundled
+     * @param ownSoundUri MilO's copy of the file chosen for [which], or null for a built-in
      * sound.
+     * @param builtIn the built-in sound to play: at once if [ownSoundUri] is null, and in the
+     * place of the file at [ownSoundUri] if that cannot be played.
      */
     // Lint offers String.toUri() from core-ktx, a library MilO does not declare (it is only on
     // the classpath through other libraries). One call does not justify adding it.
     @SuppressLint("UseKtx")
-    fun play(which: TripSound, ownSoundUri: String?) {
-        if (waitsItsTurn { play(which, ownSoundUri) }) return
+    fun play(which: TripSound, ownSoundUri: String?, builtIn: BuiltInSound) {
+        if (waitsItsTurn { play(which, ownSoundUri, builtIn) }) return
         if (ownSoundUri == null) {
-            playBundled(which)
+            playBundled(which, builtIn)
             return
         }
+        val fallBack = { playBundled(which, builtIn) }
         val started =
-            start(which.inLog, "the chosen sound", onFailure = { playBundled(which) }) { player ->
+            start(which.inLog, "the chosen sound", onFailure = fallBack) { player ->
                 player.setDataSource(context, Uri.parse(ownSoundUri))
             }
-        if (!started) playBundled(which)
+        if (!started) fallBack()
+    }
+
+    /**
+     * Cuts off the sound that is playing and drops one that waits its turn, without a line in
+     * the event log. For the Settings screens' Play buttons, when their screen is left: a clip
+     * of Shawn's own can be minutes long, and it is played as an alarm.
+     */
+    fun stop() {
+        waiting = null
+        playing?.release()
+        playing = null
     }
 
     /** Plays the pop of MilO's one-year party: the sound built in for it, and no other. */
@@ -131,9 +131,9 @@ class TripSoundPlayer(
         return true
     }
 
-    private fun playBundled(which: TripSound) {
-        start(which.inLog, which.bundledInLog, onFailure = {}) { player ->
-            player.setBundled(which.bundled)
+    private fun playBundled(which: TripSound, sound: BuiltInSound) {
+        start(which.inLog, sound.inLog, onFailure = {}) { player ->
+            player.setBundled(sound.bundled)
         }
     }
 

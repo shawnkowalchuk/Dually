@@ -76,36 +76,6 @@ class SettingsStore(internal val dataStore: DataStore<Preferences>) {
         dataStore.edit { it[MINIMUM_TRIP_DISTANCE_METRES] = metres }
     }
 
-    /** Switches one of the two sounds on or off. Which sound it plays does not change. */
-    suspend fun setSoundEnabled(which: TripSound, enabled: Boolean) {
-        dataStore.edit { it[which.enabledKey] = enabled }
-    }
-
-    /**
-     * Stores the sound Shawn chose for [which]. The two values always change together. The list
-     * of his own sounds is not touched: `addOwnSound` adds to it.
-     *
-     * @param uri where MilO's own copy of the audio file is.
-     * @param name what the file he picked was called, or null if the phone gave none. A blank
-     * name is refused: pass null.
-     */
-    suspend fun setCustomSound(which: TripSound, uri: String, name: String?) {
-        require(uri.isNotBlank()) { "A custom sound needs a URI" }
-        require(name == null || name.isNotBlank()) { "A sound's name is text, or null for none" }
-        dataStore.edit { preferences ->
-            preferences[which.uriKey] = uri
-            preferences.setOrRemove(which.nameKey, name)
-        }
-    }
-
-    /** Has [which] play its built-in sound again. */
-    suspend fun clearCustomSound(which: TripSound) {
-        dataStore.edit { preferences ->
-            preferences.remove(which.uriKey)
-            preferences.remove(which.nameKey)
-        }
-    }
-
     /**
      * Stores the work schedule, all seven days in one write. A schedule cannot hold a day whose
      * hours end before they start (`DayHours` refuses to be built), so there is nothing left to
@@ -235,6 +205,8 @@ class SettingsStore(internal val dataStore: DataStore<Preferences>) {
                 preferences[DRIVING_OFF_SOUND_ENABLED] ?: defaults.drivingOffSoundEnabled,
             drivingOffSoundUri = preferences[DRIVING_OFF_SOUND_URI],
             drivingOffSoundName = preferences[DRIVING_OFF_SOUND_NAME],
+            connectBuiltIn = preferences.readBuiltInSound(TripSound.CONNECT),
+            drivingOffBuiltIn = preferences.readBuiltInSound(TripSound.DRIVING_OFF),
             ownSounds = preferences.readOwnSounds(),
             homeWidgetEnabled = preferences.readHomeWidgetEnabled(),
             homeWidgetCentsPerKm = preferences.readHomeWidgetCentsPerKm(),

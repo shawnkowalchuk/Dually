@@ -6,6 +6,7 @@ import com.shawnkowalchuk.milo.core.trip.TripStatus
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.settings.TripSound
 import com.shawnkowalchuk.milo.data.settings.setNothingRecordedTime
+import com.shawnkowalchuk.milo.data.settings.setSoundEnabled
 import com.shawnkowalchuk.milo.platform.trip.FakeSettingsFile
 import java.time.DayOfWeek
 import java.time.LocalTime

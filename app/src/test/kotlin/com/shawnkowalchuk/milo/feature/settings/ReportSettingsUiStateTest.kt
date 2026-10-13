@@ -13,7 +13,7 @@ import org.junit.Test
  */
 class ReportSettingsUiStateTest {
     private fun shown(settings: MiloSettings = MiloSettings()) =
-        settingsUiState(settings, copyingSound = false, problem = null, problemDay = null)
+        settingsUiState(settings, problem = null, problemDay = null)
 
     @Test
     fun `the report's four settings are shown as stored, and empty while they are not set`() {
@@ -35,7 +35,7 @@ class ReportSettingsUiStateTest {
     fun `an address that was not stored stands in its field with what is said of it`() {
         val stored = MiloSettings(accountantEmail = "accounts@example.ca")
 
-        val refused = settingsUiState(stored, false, null, null, refusedEmail = "accounts@example")
+        val refused = settingsUiState(stored, null, null, refusedEmail = "accounts@example")
 
         // The field is built from the text that was refused: with the phone turned, or back
         // from the pairing screen, "not saved" stands under that text and not under the stored
@@ -50,8 +50,8 @@ class ReportSettingsUiStateTest {
     fun `the stored address is never shown as not saved`() {
         val stored = MiloSettings(accountantEmail = "accounts@example.ca")
 
-        val unrefused = settingsUiState(stored, false, null, null, refusedEmail = null).report
-        val emptied = settingsUiState(MiloSettings(), false, null, null, refusedEmail = null).report
+        val unrefused = settingsUiState(stored, null, null, refusedEmail = null).report
+        val emptied = settingsUiState(MiloSettings(), null, null, refusedEmail = null).report
 
         assertEquals("accounts@example.ca", unrefused.accountantEmail)
         assertFalse(unrefused.emailRefused)
