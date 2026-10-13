@@ -47,7 +47,7 @@ internal fun HomeWidgetTile(viewModel: HomeWidgetViewModel) {
 }
 
 /**
- * The home-screen widget: its switch, drawn like the two sounds' (a title, a line that
+ * The home-screen widget: its switch, drawn like the reminder's (a title, a line that
  * says what it is, and the switch), the rate its dollars are priced at (always, because Home's
  * month tile and the Android Auto screen are priced at it too), and while the widget is on, a
  * button that asks the home screen to add it, or the sentence that says how. What the dollars

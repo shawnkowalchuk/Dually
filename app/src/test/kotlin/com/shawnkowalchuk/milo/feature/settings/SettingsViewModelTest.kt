@@ -6,18 +6,17 @@ import com.shawnkowalchuk.milo.core.schedule.DEFAULT_WORK_SCHEDULE
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
+import com.shawnkowalchuk.milo.data.settings.BuiltInSound
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
+import com.shawnkowalchuk.milo.data.settings.SoundChoice
+import com.shawnkowalchuk.milo.data.settings.TripSound
 import com.shawnkowalchuk.milo.data.settings.setHomeWidgetCentsPerKm
 import com.shawnkowalchuk.milo.data.settings.setParkedLimitSeconds
-import com.shawnkowalchuk.milo.data.sound.OwnSoundStore
+import com.shawnkowalchuk.milo.data.settings.sound
+import com.shawnkowalchuk.milo.data.settings.useBuiltInSound
 import com.shawnkowalchuk.milo.platform.trip.FakeEventLogDao
 import com.shawnkowalchuk.milo.platform.trip.FakeSettingsFile
-import com.shawnkowalchuk.milo.platform.trip.OwnTripSound
-import com.shawnkowalchuk.milo.platform.trip.PickedAudio
 import com.shawnkowalchuk.milo.platform.trip.UnreadableSettingsFile
-import java.io.File
-import java.io.FileNotFoundException
-import java.io.InputStream
 import java.time.DayOfWeek
 import java.time.LocalTime
 import kotlinx.coroutines.Dispatchers
@@ -32,9 +31,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TemporaryFolder
 
 /**
  * The one press on the Settings screen that has to tell something besides the settings file:
@@ -46,9 +43,6 @@ import org.junit.rules.TemporaryFolder
 // library; there is no stable equivalent.
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
-    @get:Rule
-    val temporaryFolder = TemporaryFolder()
-
     private val log = FakeEventLogDao()
 
     /** Each time the driving alert was told: by what name, and what the switch was stored as. */
@@ -57,29 +51,12 @@ class SettingsViewModelTest {
     /** Each time the monthly reminder was told: what was stored for it at that moment. */
     private val reminderLooks = mutableListOf<Pair<Boolean, Int>>()
 
-    private val noFiles =
-        object : PickedAudio {
-            override fun open(uri: String): InputStream = throw FileNotFoundException(uri)
-
-            override fun nameOf(uri: String): String? = null
-        }
-
     private fun TestScope.viewModel(file: DataStore<Preferences>): SettingsViewModel {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val settings = SettingsStore(file)
         val eventLog = EventLogRepository(log)
         return SettingsViewModel(
             settings = settings,
-            ownSound =
-                OwnTripSound(
-                    picked = noFiles,
-                    playbackProblem = { null },
-                    store = OwnSoundStore(File(temporaryFolder.root, "trip_sound")),
-                    settings = settings,
-                    eventLog = eventLog,
-                    clock = { 0L },
-                ),
-            playSound = { _, _ -> },
             // The alert reads the stored switch when it is told, so what is stored at that
             // moment is what matters.
             armDrivingAlert = { source ->
@@ -182,6 +159,31 @@ class SettingsViewModelTest {
             assertEquals(emptyList<ScheduleDay>(), shown.schedule.filter { it.hoursRefused })
             watching.cancel()
         }
+
+    @Test
+    fun `a sound's switch is stored by itself, and the sound chosen for it is kept`() = runTest {
+        val file = FakeSettingsFile()
+        SettingsStore(file).useBuiltInSound(TripSound.CONNECT, BuiltInSound.COIN)
+        val viewModel = viewModel(file)
+
+        viewModel.onSoundEnabled(TripSound.CONNECT, false)
+        runCurrent()
+
+        val now = SettingsStore(file).current()
+        assertEquals(
+            SoundChoice(false, null, null, BuiltInSound.COIN),
+            now.sound(TripSound.CONNECT),
+        )
+        // The other row's switch is its own.
+        assertEquals(true, now.sound(TripSound.DRIVING_OFF).enabled)
+
+        viewModel.onSoundEnabled(TripSound.CONNECT, true)
+        runCurrent()
+        assertEquals(
+            SoundChoice(true, null, null, BuiltInSound.COIN),
+            SettingsStore(file).current().sound(TripSound.CONNECT),
+        )
+    }
 
     @Test
     fun `the reminder's day stops at the 1st and at the 31st`() = runTest {

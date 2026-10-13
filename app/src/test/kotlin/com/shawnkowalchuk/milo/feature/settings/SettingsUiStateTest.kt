@@ -3,12 +3,12 @@ package com.shawnkowalchuk.milo.feature.settings
 import com.shawnkowalchuk.milo.core.schedule.DEFAULT_WORK_SCHEDULE
 import com.shawnkowalchuk.milo.core.schedule.DayHours
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
+import com.shawnkowalchuk.milo.data.settings.BuiltInSound
 import com.shawnkowalchuk.milo.data.settings.GRACE_PERIOD_CHOICE
 import com.shawnkowalchuk.milo.data.settings.MINIMUM_TRIP_DISTANCE_CHOICE
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.settings.PARKED_LIMIT_CHOICE
 import com.shawnkowalchuk.milo.data.settings.TripSound
-import com.shawnkowalchuk.milo.platform.trip.OwnSoundRefusal
 import java.time.DayOfWeek
 import java.time.LocalTime
 import org.junit.Assert.assertEquals
@@ -21,10 +21,9 @@ import org.junit.Test
 class SettingsUiStateTest {
     private fun shown(
         settings: MiloSettings = MiloSettings(),
-        copyingSound: Boolean = false,
         problem: SettingsProblem? = null,
         problemDay: DayOfWeek? = null,
-    ) = settingsUiState(settings, copyingSound, problem, problemDay)
+    ) = settingsUiState(settings, problem, problemDay)
 
     @Test
     fun `a fresh install shows the defaults from the brief`() {
@@ -39,8 +38,9 @@ class SettingsUiStateTest {
             assertTrue(state.sound(which).enabled)
             assertNull(state.sound(which).ownUri)
         }
-        assertFalse(state.copyingSound)
-        assertNull(state.pickedFor)
+        // The two MilO always had: what the "Sounds" tile names under each row.
+        assertEquals(BuiltInSound.CHIRP, state.sound(TripSound.CONNECT).builtIn)
+        assertEquals(BuiltInSound.CHIME, state.sound(TripSound.DRIVING_OFF).builtIn)
         assertNull(state.problem)
     }
 
@@ -209,10 +209,16 @@ class SettingsUiStateTest {
     }
 
     @Test
-    fun `a copy under way and a problem are passed through as they are`() {
-        assertTrue(shown(copyingSound = true).copyingSound)
-        val picked = settingsUiState(MiloSettings(), true, null, null, null, TripSound.DRIVING_OFF)
-        assertEquals(TripSound.DRIVING_OFF, picked.pickedFor)
+    fun `a built-in sound that was chosen is the one the tile names, for that sound only`() {
+        val state = shown(MiloSettings(connectBuiltIn = BuiltInSound.COIN))
+
+        assertEquals(BuiltInSound.COIN, state.sound(TripSound.CONNECT).builtIn)
+        assertNull(state.sound(TripSound.CONNECT).ownUri)
+        assertEquals(BuiltInSound.CHIME, state.sound(TripSound.DRIVING_OFF).builtIn)
+    }
+
+    @Test
+    fun `a problem is passed through as it is`() {
         assertEquals(
             SettingsProblem.COULD_NOT_SAVE,
             shown(problem = SettingsProblem.COULD_NOT_SAVE).problem,
@@ -323,18 +329,5 @@ class SettingsUiStateTest {
         val notSaved =
             shown(problem = SettingsProblem.COULD_NOT_SAVE, problemDay = DayOfWeek.FRIDAY)
         assertTrue(notSaved.schedule.none { it.hoursRefused })
-        // And the problems of the sound card are about no day at all.
-        val sound = shown(problem = SettingsProblem.SOUND_NOT_PLAYABLE)
-        assertTrue(sound.schedule.none { it.hoursRefused })
-    }
-
-    @Test
-    fun `each reason a picked file is refused has words of its own`() {
-        assertEquals(
-            SettingsProblem.SOUND_COULD_NOT_COPY,
-            OwnSoundRefusal.COULD_NOT_COPY.asProblem(),
-        )
-        assertEquals(SettingsProblem.SOUND_TOO_LARGE, OwnSoundRefusal.TOO_LARGE.asProblem())
-        assertEquals(SettingsProblem.SOUND_NOT_PLAYABLE, OwnSoundRefusal.NOT_PLAYABLE.asProblem())
     }
 }

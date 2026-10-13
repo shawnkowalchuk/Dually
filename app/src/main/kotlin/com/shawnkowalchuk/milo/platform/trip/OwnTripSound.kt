@@ -2,11 +2,13 @@ package com.shawnkowalchuk.milo.platform.trip
 
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
+import com.shawnkowalchuk.milo.data.settings.BuiltInSound
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.TripSound
 import com.shawnkowalchuk.milo.data.settings.addOwnSound
 import com.shawnkowalchuk.milo.data.settings.chooseOwnSound
 import com.shawnkowalchuk.milo.data.settings.removeOwnSound
+import com.shawnkowalchuk.milo.data.settings.useBuiltInSound
 import com.shawnkowalchuk.milo.data.sound.OwnSoundStore
 import com.shawnkowalchuk.milo.data.sound.SoundTooLargeException
 import java.io.File
@@ -33,7 +35,7 @@ enum class OwnSoundRefusal {
 
 /**
  * Changes which sound each of the two sounds ([TripSound]) plays: one of Shawn's own audio
- * files, or its built-in sound.
+ * files, or one of the sounds built into MilO.
  *
  * Since 2026-10-07 his own sounds are a list he chooses from (his choice: "A list of my own
  * sounds"): a picked file is added to it and plays from then on, and the sounds added before
@@ -117,16 +119,18 @@ class OwnTripSound(
         }
 
     /**
-     * Has [which] play its built-in sound again. His own sounds stay on the list.
+     * Has [which] play the built-in [sound] (one of twelve since 2026-10-13). His own sounds
+     * stay on the list.
      *
      * @throws IOException if the settings cannot be written. Nothing has changed then.
      */
-    suspend fun useBuiltIn(which: TripSound) = withContext(io + NonCancellable) {
-        oneAtATime.withLock {
-            settings.clearCustomSound(which)
-            note("${which.inLog}: the built-in sound is used again")
+    suspend fun useBuiltIn(which: TripSound, sound: BuiltInSound) =
+        withContext(io + NonCancellable) {
+            oneAtATime.withLock {
+                settings.useBuiltInSound(which, sound)
+                note("${which.inLog}: ${sound.inLog} is now used")
+            }
         }
-    }
 
     /**
      * Makes the sound of his own at [uri], one of the list, the sound [which] plays.
@@ -143,7 +147,7 @@ class OwnTripSound(
 
     /**
      * Takes the sound at [uri] off the list and removes MilO's copy of it. Each of the two
-     * sounds that played it plays its built-in sound from then on.
+     * sounds that played it plays the first built-in sound of its list from then on.
      *
      * @throws IOException if the settings cannot be written. Nothing has changed then.
      */

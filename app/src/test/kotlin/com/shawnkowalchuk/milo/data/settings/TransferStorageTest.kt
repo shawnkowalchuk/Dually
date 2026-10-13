@@ -134,6 +134,19 @@ class TransferStorageTest {
     private fun MiloSettings.truck() = Triple(truckAddress, truckName, truckAssociationId)
 
     @Test
+    fun `an import leaves the built-in sound this phone chose for each of the two sounds`() =
+        runTest {
+            // A gap, like the trip-start sound's switch: the export file has no place for it.
+            aPhoneInUse()
+            store.useBuiltInSound(TripSound.DRIVING_OFF, BuiltInSound.HORN_TAP)
+
+            store.replaceTransferred(arrived, TruckChange.Keep)
+
+            assertEquals(BuiltInSound.HORN_TAP, store.current().drivingOffBuiltIn)
+            assertEquals("file:/data/sound", store.current().sound(TripSound.CONNECT).ownUri)
+        }
+
+    @Test
     fun `a truck that an import stores is stored without an association`() = runTest {
         aPhoneInUse()
 

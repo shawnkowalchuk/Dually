@@ -11,7 +11,8 @@ import androidx.datastore.preferences.core.stringSetPreferencesKey
 // connect sound, the first sound MilO had; the two `drivingOffSound…` values for the trip-start
 // sound); the one list beside them is what both choose from. Each entry is MilO's copy of a file
 // he picked (`data/sound/OwnSoundStore`), as "address<TAB>name", the name empty when the phone
-// gave none.
+// gave none. The sounds built into MilO, which a sound plays while it plays none of his own, are
+// in `BuiltInSounds.kt`.
 
 private val OWN_SOUNDS = stringSetPreferencesKey("own_sounds")
 
@@ -20,7 +21,8 @@ private const val SEPARATOR = '\t'
 /**
  * The two moments MilO plays a sound at (Shawn's request of 2026-10-08: "i want to use the
  * current one for connecting to a vehicle and another custom one when a trip starts"). Each has
- * its own switch and its own choice: the built-in sound, or one from the one list of his own.
+ * its own switch and its own choice: one of the built-in sounds (`BuiltInSounds.kt`; one each
+ * until 2026-10-13), or one from the one list of his own.
  */
 enum class TripSound {
     /**
@@ -41,18 +43,47 @@ enum class TripSound {
  * One of the two sounds as the settings have it.
  *
  * @param enabled whether it plays.
- * @param ownUri MilO's copy of the sound of his own it plays, or null for the built-in sound.
+ * @param ownUri MilO's copy of the sound of his own it plays, or null for a built-in sound.
  * @param ownName what the file he picked was called, or null if the phone gave no name.
+ * @param builtIn the built-in sound it plays while [ownUri] is null: the one chosen for it, or
+ * the first of its list ([firstBuiltIn]) while none is chosen or the stored one is not known to
+ * this build. While it plays a sound of his own, the built-in sound that is played if that one
+ * cannot be: always the first of its list, whatever was chosen before.
  */
-data class SoundChoice(val enabled: Boolean, val ownUri: String?, val ownName: String?)
+data class SoundChoice(
+    val enabled: Boolean,
+    val ownUri: String?,
+    val ownName: String?,
+    val builtIn: BuiltInSound,
+)
 
 /** One of the two sounds, as these settings have it. */
 fun MiloSettings.sound(which: TripSound): SoundChoice = when (which) {
-    TripSound.CONNECT -> SoundChoice(soundEnabled, customSoundUri, customSoundName)
+    TripSound.CONNECT ->
+        soundChoice(which, soundEnabled, customSoundUri, customSoundName, connectBuiltIn)
 
     TripSound.DRIVING_OFF ->
-        SoundChoice(drivingOffSoundEnabled, drivingOffSoundUri, drivingOffSoundName)
+        soundChoice(
+            which,
+            drivingOffSoundEnabled,
+            drivingOffSoundUri,
+            drivingOffSoundName,
+            drivingOffBuiltIn,
+        )
 }
+
+private fun soundChoice(
+    which: TripSound,
+    enabled: Boolean,
+    ownUri: String?,
+    ownName: String?,
+    chosenBuiltIn: BuiltInSound?,
+) = SoundChoice(
+    enabled = enabled,
+    ownUri = ownUri,
+    ownName = ownName,
+    builtIn = chosenBuiltIn?.takeIf { ownUri == null } ?: which.firstBuiltIn,
+)
 
 /** Where the switch of [this] sound is kept. */
 internal val TripSound.enabledKey: Preferences.Key<Boolean>
@@ -98,6 +129,36 @@ internal fun Preferences.readOwnSounds(): List<OwnSound> {
     return (listed + chosenBefore).sortedBy { it.uri }
 }
 
+/** Switches one of the two sounds on or off. Which sound it plays does not change. */
+suspend fun SettingsStore.setSoundEnabled(which: TripSound, enabled: Boolean) {
+    dataStore.edit { it[which.enabledKey] = enabled }
+}
+
+/**
+ * Stores the sound Shawn chose for [which]. The two values always change together. The list
+ * of his own sounds is not touched: [addOwnSound] adds to it.
+ *
+ * @param uri where MilO's own copy of the audio file is.
+ * @param name what the file he picked was called, or null if the phone gave none. A blank
+ * name is refused: pass null.
+ */
+suspend fun SettingsStore.setCustomSound(which: TripSound, uri: String, name: String?) {
+    require(uri.isNotBlank()) { "A custom sound needs a URI" }
+    require(name == null || name.isNotBlank()) { "A sound's name is text, or null for none" }
+    dataStore.edit { preferences ->
+        preferences[which.uriKey] = uri
+        preferences.setOrRemove(which.nameKey, name)
+    }
+}
+
+/** Has [which] play a built-in sound again: the one stored for it, or the first of its list. */
+suspend fun SettingsStore.clearCustomSound(which: TripSound) {
+    dataStore.edit { preferences ->
+        preferences.remove(which.uriKey)
+        preferences.remove(which.nameKey)
+    }
+}
+
 /** Adds the copy at [uri] to the list, and makes it the sound [which] plays. */
 suspend fun SettingsStore.addOwnSound(which: TripSound, uri: String, name: String?) {
     require(uri.isNotBlank() && SEPARATOR !in uri) { "Not the address of a copy: $uri" }
@@ -125,8 +186,8 @@ suspend fun SettingsStore.chooseOwnSound(which: TripSound, uri: String): Boolean
 }
 
 /**
- * Takes the sound at [uri] off the list. Each of the two sounds that played it plays its
- * built-in sound from then on.
+ * Takes the sound at [uri] off the list. Each of the two sounds that played it plays the first
+ * built-in sound of its list from then on ([firstBuiltIn]).
  */
 suspend fun SettingsStore.removeOwnSound(uri: String) {
     dataStore.edit { stored ->
@@ -153,9 +214,15 @@ private fun MutablePreferences.writeOwnSounds(sounds: List<OwnSound>) {
     this[OWN_SOUNDS] = sounds.map { "${it.uri}$SEPARATOR${it.name.orEmpty()}" }.toSet()
 }
 
+/**
+ * The built-in sound that was chosen for [which] is forgotten with the same write. So when
+ * this sound of his own is removed, or its copy is gone, the first of the list plays, and not
+ * a choice from before he had a sound of his own there.
+ */
 private fun MutablePreferences.useOwnSound(which: TripSound, uri: String, name: String?) {
     this[which.uriKey] = uri
     setOrRemove(which.nameKey, name)
+    remove(which.builtInKey)
 }
 
 private fun ownSoundOf(entry: String): OwnSound? {

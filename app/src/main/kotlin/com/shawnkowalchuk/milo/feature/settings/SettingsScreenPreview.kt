@@ -12,10 +12,10 @@ import com.shawnkowalchuk.milo.core.odometer.OdometerReading
 import com.shawnkowalchuk.milo.core.schedule.DEFAULT_WORK_SCHEDULE
 import com.shawnkowalchuk.milo.core.schedule.withHoursOnEveryDay
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
+import com.shawnkowalchuk.milo.data.settings.BuiltInSound
 import com.shawnkowalchuk.milo.data.settings.LastExport
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.settings.OwnSound
-import com.shawnkowalchuk.milo.data.settings.TripSound
 import com.shawnkowalchuk.milo.platform.transfer.PointsTaken
 import com.shawnkowalchuk.milo.platform.transfer.TransferWork
 import java.time.DayOfWeek
@@ -45,10 +45,8 @@ private fun ready(
     settings: MiloSettings,
     problem: SettingsProblem? = null,
     problemDay: DayOfWeek? = null,
-    copyingSound: Boolean = false,
     refusedEmail: String? = null,
-    pickedFor: TripSound? = null,
-) = settingsUiState(settings, copyingSound, problem, problemDay, refusedEmail, pickedFor)
+) = settingsUiState(settings, problem, problemDay, refusedEmail)
 
 /** The states, in the order an emulator is asked for them by number. */
 internal class SettingsSamples : PreviewParameterProvider<SettingsSample> {
@@ -64,9 +62,9 @@ internal class SettingsSamples : PreviewParameterProvider<SettingsSample> {
                 ),
                 data = DataCardState(),
             ),
-            // 1: in use. A truck, the report's details, two sounds of his own on the list, one
-            // of them for both sounds, a Friday that ends early, an export and an import behind
-            // him.
+            // 1: in use. A truck, the report's details, a sound of his own for the connect sound
+            // and a built-in one chosen for the trip-start sound, a Friday that ends early, an
+            // export and an import behind him.
             SettingsSample(
                 screen =
                     ready(
@@ -75,8 +73,7 @@ internal class SettingsSamples : PreviewParameterProvider<SettingsSample> {
                             truckName = "Work truck",
                             customSoundUri = "file:///sound",
                             customSoundName = "r2d2.mp3",
-                            drivingOffSoundUri = "file:///sound",
-                            drivingOffSoundName = "r2d2.mp3",
+                            drivingOffBuiltIn = BuiltInSound.ENGINE_REV,
                             ownSounds =
                                 listOf(
                                     OwnSound("file:///sound", "r2d2.mp3"),
@@ -108,8 +105,8 @@ internal class SettingsSamples : PreviewParameterProvider<SettingsSample> {
                             ),
                     ),
             ),
-            // 2: the edges. Hours outside the drawn line and a time that was refused, a file
-            // that was refused, a change that could not be stored, an export under way.
+            // 2: the edges. Hours outside the drawn line and a time that was refused, a change
+            // that could not be stored, an export under way.
             SettingsSample(
                 screen =
                     ready(
@@ -131,8 +128,7 @@ internal class SettingsSamples : PreviewParameterProvider<SettingsSample> {
                 ),
                 data = DataCardState(working = TransferWork.EXPORTING),
             ),
-            // 3: switched off. No work day, no reminder, no check, no sound, and a file that
-            // is being copied for the trip-start sound.
+            // 3: switched off. No work day, no reminder, no check, no sound.
             SettingsSample(
                 screen =
                     ready(
@@ -146,9 +142,6 @@ internal class SettingsSamples : PreviewParameterProvider<SettingsSample> {
                             drivingAlertEnabled = false,
                             reminderEnabled = false,
                         ),
-                        problem = SettingsProblem.SOUND_TOO_LARGE,
-                        copyingSound = true,
-                        pickedFor = TripSound.DRIVING_OFF,
                     ),
                 check = NothingRecordedCardState(
                     enabled = false,
@@ -196,9 +189,6 @@ private fun SettingsPreview(@PreviewParameter(SettingsSamples::class) sample: Se
                         {},
                         {},
                         {},
-                        {},
-                        {},
-                        { _, _ -> },
                         {},
                         {},
                         { _, _ -> },

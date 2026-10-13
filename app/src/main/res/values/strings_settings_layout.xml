@@ -79,16 +79,18 @@
     <string name="settings_about_schedule">About the work schedule</string>
     <string name="settings_schedule_slider_note">A slider moves in quarters of an hour. Press a start or an end to set it to the minute. While one slider stands for the week it sets the hours of all seven days, so a day you switch on later has them too.</string>
 
-    <!-- The two sounds: the line under each title, which names the sound in use. -->
-    <string name="settings_sound_line_built_in">Built-in chirp</string>
-    <string name="settings_trip_sound_line_built_in">Built-in chime</string>
-    <!-- For a sound of his own whose file had no name. Otherwise the file's name stands there. -->
+    <!--
+        The two sounds: where the sound in use is named, a sound of his own whose file had no
+        name. Otherwise the file's name stands there, or a built-in sound's own name
+        (strings_sounds.xml).
+    -->
     <string name="settings_sound_line_own">Your own sound</string>
     <!--
         Since 2026-10-07 the sound is played as an alarm, by the owner's decision, and so is the
         second one since 2026-10-08. "Like an alarm" is the whole truth in three words: whatever
         silences the phone's alarms (Do Not Disturb set to let nothing through, an alarm volume
-        of zero) silences these too. Said once, under the second sound.
+        of zero) silences these too. Said at the end of each sound's own screen (until
+        2026-10-13 once, under the second of the two tiles Settings had for them).
     -->
     <string name="settings_sound_alarm_note">Both sounds play like an alarm, at the alarm volume: also when the phone is on silent, on vibrate, in Do Not Disturb or in Bedtime mode.</string>
 

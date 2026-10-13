@@ -18,7 +18,7 @@ class ScheduleWeekStateTest {
         settings: MiloSettings = MiloSettings(),
         problem: SettingsProblem? = null,
         problemDay: DayOfWeek? = null,
-    ) = settingsUiState(settings, copyingSound = false, problem, problemDay)
+    ) = settingsUiState(settings, problem, problemDay)
 
     @Test
     fun `a fresh install shows one week of 08 00 to 16 30, as the design draws it`() {

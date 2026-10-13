@@ -1,9 +1,11 @@
 package com.shawnkowalchuk.milo.platform.trip
 
 import com.shawnkowalchuk.milo.core.party.PopAtTripStart
+import com.shawnkowalchuk.milo.data.settings.BuiltInSound
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.TripSound
+import com.shawnkowalchuk.milo.data.settings.firstBuiltIn
 import com.shawnkowalchuk.milo.data.settings.partyPopHeard
 import com.shawnkowalchuk.milo.data.settings.sound
 import com.shawnkowalchuk.milo.platform.party.OneYearParty
@@ -29,9 +31,17 @@ internal sealed interface StartSound {
     /**
      * One of the two sounds of every day.
      *
-     * @param ownUri MilO's copy of the file Shawn chose for it, or null for its bundled sound.
+     * @param ownUri MilO's copy of the file Shawn chose for it, or null for a bundled sound.
+     * @param builtIn the bundled sound it plays, or falls back on if the file at [ownUri]
+     * cannot be played (`SoundChoice.builtIn`). Until one is chosen that is the first of the
+     * sound's list: the chirp at the connect and the chime at the drive-off, as before there
+     * was a choice (2026-10-13).
      */
-    data class Usual(val which: TripSound, val ownUri: String?) : StartSound
+    data class Usual(
+        val which: TripSound,
+        val ownUri: String?,
+        val builtIn: BuiltInSound = which.firstBuiltIn,
+    ) : StartSound
 
     /** The pop of MilO's one-year party. */
     data object PartyPop : StartSound
@@ -41,7 +51,8 @@ internal sealed interface StartSound {
  * What is played for [sounds], in their order.
  *
  * - **On every day but the party's** ([PopAtTripStart.NOT_TODAY]): each of them that is switched
- *   on, with the file Shawn chose for it or its bundled sound. Nothing about the party has a say.
+ *   on, with the file Shawn chose for it or the bundled sound chosen for it. Nothing about the
+ *   party has a say.
  * - **At a trip's start on the day of the party:** the first of them, the trip's first sound,
  *   is not played, switched on or not. The pop takes its place if the service is to play it
  *   ([PopAtTripStart.AT_ONCE]) and it is heard ([partyPopHeard]); left to the animation, nothing
@@ -59,7 +70,7 @@ internal fun soundsToPlay(
     fun asSet(which: List<TripSound>): List<StartSound> = which
         .map { it to settings.sound(it) }
         .filter { (_, choice) -> choice.enabled }
-        .map { (sound, choice) -> StartSound.Usual(sound, choice.ownUri) }
+        .map { (sound, choice) -> StartSound.Usual(sound, choice.ownUri, choice.builtIn) }
     if (pop == PopAtTripStart.NOT_TODAY || sounds.isEmpty()) return asSet(sounds)
     val popNow = pop == PopAtTripStart.AT_ONCE && settings.partyPopHeard
     return listOfNotNull(StartSound.PartyPop.takeIf { popNow }) + asSet(sounds.drop(1))
@@ -120,7 +131,7 @@ internal suspend fun TripSoundPlayer.playAtMoment(
     mainThread.execute {
         for (sound in toPlay) {
             when (sound) {
-                is StartSound.Usual -> play(sound.which, sound.ownUri)
+                is StartSound.Usual -> play(sound.which, sound.ownUri, sound.builtIn)
                 StartSound.PartyPop -> playPartyPop()
             }
         }

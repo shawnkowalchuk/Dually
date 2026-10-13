@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        The words that came with the twelve built-in sounds and the compact "Sounds" tile
+        (2026-10-13; feature/settings/). The two sounds' older words, which are still in use,
+        are in strings.xml ("Settings: the two sounds") and strings_settings_layout.xml.
+    -->
+
+    <!-- Settings: the one tile for both sounds, and its two rows. -->
+    <string name="settings_sounds_title">Sounds</string>
+    <string name="settings_sounds_connect">Connect</string>
+    <string name="settings_sounds_trip_start">Trip start</string>
+    <!--
+        Spoken by the screen reader for a row's words, after "double tap to": the row opens that
+        sound's own screen. The switch at the row's end is read by the sound's title.
+    -->
+    <string name="settings_sounds_choose_connect">choose the connect sound</string>
+    <string name="settings_sounds_choose_trip_start">choose the trip-start sound</string>
+
+    <!-- A sound's own screen: the labels over its two lists. -->
+    <string name="sound_list_built_in">Built in</string>
+    <string name="sound_list_own">Your sounds</string>
+    <!-- In the second list while it is empty. -->
+    <string name="sound_list_own_none">None yet. A sound you add from this phone can be used for both sounds.</string>
+    <!--
+        Spoken by the screen reader for the two buttons at the end of a row. The argument is
+        the sound's name: "Play Seatbelt chime", "Remove r2d2.mp3".
+    -->
+    <string name="sound_list_play">Play %1$s</string>
+    <string name="sound_list_remove">Remove %1$s</string>
+
+    <!--
+        The twelve built-in sounds, by the names the owner was shown them under. Each is a kind
+        of sound, made by MilO's own scripts, and no maker's or game's own tune.
+    -->
+    <string name="sound_name_chirp">Chirp</string>
+    <string name="sound_name_seatbelt_chime">Seatbelt chime</string>
+    <string name="sound_name_key_fob">Key fob</string>
+    <string name="sound_name_turn_signal">Turn signal</string>
+    <string name="sound_name_counter_bell">Counter bell</string>
+    <string name="sound_name_coin">Coin</string>
+    <string name="sound_name_sonar_ping">Sonar ping</string>
+    <string name="sound_name_chime">Chime</string>
+    <string name="sound_name_horn_tap">Horn tap</string>
+    <string name="sound_name_engine_rev">Engine rev</string>
+    <string name="sound_name_burnout">Burnout</string>
+    <string name="sound_name_race_start">Race start</string>
+</resources>

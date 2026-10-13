@@ -1,8 +1,5 @@
 package com.shawnkowalchuk.milo.feature.settings
 
-import android.content.ActivityNotFoundException
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,9 +8,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.shawnkowalchuk.milo.R
@@ -28,9 +22,6 @@ import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.data.settings.TripSound
 import java.time.DayOfWeek
 
-/** The kind of file the picker offers for the two sounds. */
-private const val ANY_AUDIO = "audio/*"
-
 /** What the tiles of the Settings screen can ask for. */
 internal class SettingsActions(
     val onChangeTruck: () -> Unit,
@@ -39,10 +30,7 @@ internal class SettingsActions(
     val onMinimumDistanceStep: (longer: Boolean) -> Unit,
     val onDistanceUnit: (DistanceUnit) -> Unit,
     val onSoundEnabled: (TripSound, Boolean) -> Unit,
-    val onPlaySound: (TripSound) -> Unit,
-    val onPickOwnSound: (TripSound) -> Unit,
-    val onChooseSound: (TripSound, ownSoundUri: String?) -> Unit,
-    val onRemoveSound: (ownSoundUri: String) -> Unit,
+    val onOpenSounds: (TripSound) -> Unit,
     val onDrivingAlertEnabled: (Boolean) -> Unit,
     val schedule: ScheduleActions,
     val report: ReportDetailActions,
@@ -78,18 +66,21 @@ internal class ScheduleActions(
  * truck may stand still before a trip ends and how short a trip may be; whether distances are
  * shown in kilometres or in miles; the work schedule that
  * makes a trip Business or Personal; what becomes of a trip outside it; the daily check that a
- * work day has a trip; the connect sound and the trip-start sound; and, last, Android's backup
- * with the export and import of all data.
+ * work day has a trip; the connect sound and the trip-start sound, as the two rows of one tile
+ * (since 2026-10-13); and, last, Android's backup with the export and import of all data.
  *
  * Since 2026-10-07 it is a screen of the bottom bar, in Setup's place, and Setup is the tile at
  * its top ([setupTile]).
  *
- * @param dataViewModel the last tile's own ViewModel: see [DataViewModel].
+ * @param dataViewModel the tile of backup, export and import has a ViewModel of its own: see
+ * [DataViewModel].
  * @param checkViewModel the daily check's tile has one of its own too.
  * @param odometerViewModel and so has the odometer's.
  * @param widgetViewModel and the home-screen widget's.
  * @param onChangeTruck opens the truck pairing screen. Navigation belongs to the app, not the
  * feature.
+ * @param onOpenSounds opens the screen of one of the two sounds, where its sound is chosen
+ * (`SoundListScreen`, since 2026-10-13).
  * @param onBack leaves the screen, when it was opened from another one (the Report screen's
  * "Open Settings"). Null when it is the bottom bar's: the bar is how it is left then.
  * @param setupTile the tile that opens the Setup checklist. The app hands it in, because it is
@@ -108,6 +99,7 @@ fun SettingsScreen(
     odometerViewModel: OdometerViewModel,
     widgetViewModel: HomeWidgetViewModel,
     onChangeTruck: () -> Unit,
+    onOpenSounds: (TripSound) -> Unit,
     onBack: (() -> Unit)?,
     setupTile: @Composable () -> Unit,
     versionTile: @Composable () -> Unit,
@@ -115,17 +107,6 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsState()
-
-    // Which of the two sound tiles opened the file picker. Saved, because Android may put MilO
-    // away while the picker is in front, and the answer must still go to that tile's sound.
-    var pickingFor by rememberSaveable { mutableStateOf(TripSound.CONNECT) }
-
-    // Android's own file picker. It answers with the file Shawn chose, or with nothing if he
-    // closed it, in which case nothing changes.
-    val soundPicker =
-        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { picked ->
-            if (picked != null) viewModel.onOwnSoundPicked(pickingFor, picked.toString())
-        }
 
     val actions =
         SettingsActions(
@@ -135,18 +116,7 @@ fun SettingsScreen(
             onMinimumDistanceStep = viewModel::onMinimumDistanceStep,
             onDistanceUnit = viewModel::onDistanceUnit,
             onSoundEnabled = viewModel::onSoundEnabled,
-            onPlaySound = viewModel::onPlaySound,
-            onPickOwnSound = { which ->
-                pickingFor = which
-                try {
-                    soundPicker.launch(arrayOf(ANY_AUDIO))
-                } catch (noPicker: ActivityNotFoundException) {
-                    // A phone with its file picker removed or disabled. The screen says so.
-                    viewModel.onNoFilePicker(which)
-                }
-            },
-            onChooseSound = viewModel::onChooseSound,
-            onRemoveSound = viewModel::onRemoveSound,
+            onOpenSounds = onOpenSounds,
             onDrivingAlertEnabled = viewModel::onDrivingAlertEnabled,
             schedule =
                 ScheduleActions(
@@ -196,8 +166,8 @@ fun SettingsScreen(
  * own.
  * @param odometerTile the truck's odometer, under the truck's tile, handed in whole for the
  * same reason.
- * @param widgetTile the home-screen widget's switch, after the two sounds, handed in whole
- * for the same reason.
+ * @param widgetTile the home-screen widget's switch, after the sounds, handed in whole for the
+ * same reason.
  * @param dataTile the tile for backup, export and import. It is handed in whole, because it
  * has a state of its own: it is shown also when the settings cannot be read, which is when a
  * copy of the trips is wanted most.
@@ -272,9 +242,7 @@ internal fun SettingsContent(
                 OutsideHoursTile(state, actions.schedule)
                 // Under the schedule: the check goes by its work days and their start.
                 checkTile()
-                // The order they play in.
-                SoundTile(state, actions, TripSound.CONNECT)
-                SoundTile(state, actions, TripSound.DRIVING_OFF)
+                SoundsTile(state, actions)
                 widgetTile()
             }
         }

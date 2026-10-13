@@ -7,6 +7,7 @@ import com.shawnkowalchuk.milo.data.settings.ConfirmedStep
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.TripSound
+import com.shawnkowalchuk.milo.data.settings.setCustomSound
 import com.shawnkowalchuk.milo.data.settings.sound
 import com.shawnkowalchuk.milo.data.transfer.BackupNote
 import com.shawnkowalchuk.milo.data.transfer.BackupNoteKind

@@ -2,9 +2,11 @@ package com.shawnkowalchuk.milo.platform.trip
 
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
+import com.shawnkowalchuk.milo.data.settings.BuiltInSound
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.TripSound
+import com.shawnkowalchuk.milo.data.settings.setSoundEnabled
 import com.shawnkowalchuk.milo.data.settings.sound
 import com.shawnkowalchuk.milo.data.sound.MAX_OWN_SOUND_BYTES
 import com.shawnkowalchuk.milo.data.sound.OwnSoundStore
@@ -296,7 +298,7 @@ class OwnTripSoundTest {
         sound.choose(TripSound.CONNECT, "content://music/1")
         settings.setSoundEnabled(TripSound.CONNECT, false)
 
-        sound.useBuiltIn(TripSound.CONNECT)
+        sound.useBuiltIn(TripSound.CONNECT, BuiltInSound.CHIRP)
 
         val now = settings.current()
         assertNull(now.customSoundUri)
@@ -308,9 +310,14 @@ class OwnTripSoundTest {
 
     @Test
     fun `going back when the built-in sound is already in use changes nothing`() = runBlocking {
-        sound.useBuiltIn(TripSound.CONNECT)
+        sound.useBuiltIn(TripSound.CONNECT, BuiltInSound.CHIRP)
 
-        assertEquals(MiloSettings(), settings.current())
+        // Since 2026-10-13 the choice is written down by name. What plays is what played.
+        assertEquals(MiloSettings(connectBuiltIn = BuiltInSound.CHIRP), settings.current())
+        assertEquals(
+            MiloSettings().sound(TripSound.CONNECT),
+            settings.current().sound(TripSound.CONNECT),
+        )
         assertTrue(copies().isEmpty())
     }
 
@@ -375,7 +382,7 @@ class OwnTripSoundTest {
         val added = settings.current().ownSounds.single().uri
         sound.useOwn(TripSound.DRIVING_OFF, added)
 
-        sound.useBuiltIn(TripSound.CONNECT)
+        sound.useBuiltIn(TripSound.CONNECT, BuiltInSound.CHIRP)
 
         val now = settings.current()
         assertNull(now.sound(TripSound.CONNECT).ownUri)

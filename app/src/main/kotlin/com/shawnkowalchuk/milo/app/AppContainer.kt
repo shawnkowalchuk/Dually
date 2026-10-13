@@ -310,7 +310,7 @@ class AppContainer(context: Context, private val trustedClock: TrustedClock) {
 
     /**
      * Makes an audio file Shawn picked the connect sound or the trip-start sound, by copying it
-     * into MilO's own storage, and goes back to the bundled one. The trip service reads the
+     * into MilO's own storage, or one of the bundled sounds. The trip service reads the
      * result from the settings each time it plays a sound.
      */
     val ownTripSound: OwnTripSound by lazy {
@@ -325,10 +325,10 @@ class AppContainer(context: Context, private val trustedClock: TrustedClock) {
     }
 
     /**
-     * Plays a sound for the Settings screen's Play buttons, with the same player a trip uses,
-     * so what is heard there is what a trip plays. The trip service has a player of its own;
-     * this one cuts off a sound that is still playing, rather than waiting for it to end, and
-     * marks its log lines as coming from Settings.
+     * Plays a sound for the Play buttons of the two sounds' screens, with the player a trip
+     * uses, so what is heard there is what a trip plays. The trip service has a player of its
+     * own; this one cuts off a sound that is still playing, rather than waiting for it to end,
+     * and marks its log lines as coming from Settings.
      */
     val soundPreview: TripSoundPlayer by lazy {
         TripSoundPlayer(appContext, waitTurn = false) { note ->
