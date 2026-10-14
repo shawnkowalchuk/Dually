@@ -26,6 +26,9 @@
 
 ### 2026-10-13
 
+**`[CHANGE]` The website's five screenshots show Dually, under new file names**
+The rebrand (#65) went live at `dually.top` with the lime MilO screenshots still in `website/screenshots/`. They are replaced by the rebranded app's Home, Trips, Settings and Log, and a report page, taken on an emulator from the marketing kit's made-up trips (an invented driver, company and addresses: nothing to blur, where the old ones came from Shawn's phone with addresses blurred). **Why new names** (`dually-home.jpg` and so on, where the old were `home.jpg`): browsers keep the site's pictures for a week (`firebase.json`), and the lime ones had been served at `dually.top` for a few minutes, so a picture that changes gets a new name (the website entry's rule). The alt texts and the README say what the new ones show. The app does not change, so no line in `changelog.json`.
+
 **`[CHANGE]` The app's ID is `top.dually.triptracker`**
 Shawn created the new entry in the Play Console, "Dually Trip Tracker", and the Console names it `top.dually.triptracker` (his screenshot, 2026-10-13). It is now the one value in `app/build.gradle.kts`, and `APP=` at the top of the device checklist. Nothing else changed with it: the manifest and the code already took the ID from the build. **From this build on, a cable install is a new app beside MilO on the phone, not an update of it**: its data comes across with "Export all data" in MilO and "Import data" in Dually (device checks RB-1 to RB-9). The signing key stays his own: in the new entry he exports it to Google with Google's PEPK tool (README, "Publishing on Google Play", step 2).
 

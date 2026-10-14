@@ -9,10 +9,10 @@
 **An Android app that logs business kilometres by itself: Dually Trip Tracker, Dually for short** (called MilO until 2026-10-13: `docs/adr/ADR-010-rebrand-dually.md`). When the phone connects to the work truck's Bluetooth, Dually starts a trip, records the drive with GPS, sorts it into Business or Personal by the work hours, and at the end of the month makes the mileage report for the accountant, as a PDF and a CSV file.
 
 <p align="center">
-  <img src="website/screenshots/home.jpg" width="200" alt="Home: Start trip, today's and the month's kilometres, the truck connected and parked, and the last trip">
-  <img src="website/screenshots/trips.jpg" width="200" alt="Trips: October 2026, 96.4 km of Business, and one tile for each day">
-  <img src="website/screenshots/settings.jpg" width="200" alt="Settings: Setup 14 of 14 ready, the truck, the driving alert and the odometer">
-  <img src="website/screenshots/log.jpg" width="200" alt="Log: what Dually did and when, one kind of line at a time">
+  <img src="website/screenshots/dually-home.jpg" width="200" alt="Home: Start trip, today's and the month's kilometres, the truck not connected, the odometer, and today's trips">
+  <img src="website/screenshots/dually-trips.jpg" width="200" alt="Trips: September 2026, 1192.1 km of Business, and one tile for each day">
+  <img src="website/screenshots/dually-settings.jpg" width="200" alt="Settings: Setup 10 of 10 ready, the truck, the driving alert, the odometer and the name on the report">
+  <img src="website/screenshots/dually-log.jpg" width="200" alt="Log: what Dually did and when, one kind of line at a time">
 </p>
 
 > **A personal project, public to read.** Dually was built by Shawn Kowalchuk for one phone (a Xiaomi POCO X5 Pro 5G on Android 14 and HyperOS 2.0) and one truck. It runs on Android 14 and newer. It is not on the Play Store. For a question or a problem, write to [support@dually.top](mailto:support@dually.top): there is no support desk, and one person answers when he has time. The code has no license: it is public to read, and all rights are reserved (see [License](#license)). Everything after [License](#license) is the owner's own guide to running it on that phone.
@@ -43,7 +43,7 @@
 - Export and import all data as one file. Android's own backup carries the rest.
 
 <p align="center">
-  <img src="website/screenshots/report-sample.png" width="520" alt="A sample report: the Business and Personal kilometres at the top, then each day's trips with their times, addresses and kilometres, the total, and lines to sign"><br>
+  <img src="website/screenshots/dually-report-sample.png" width="520" alt="A sample report: the Business and Personal kilometres at the top, then each day's trips with their times, addresses and kilometres, the total, and lines to sign"><br>
   <sub>A sample report page, drawn from the app's own layout code with made-up trips.</sub>
 </p>
 
@@ -60,7 +60,7 @@
 
 ## Privacy
 
-Dually has no account, no server and **no internet permission**. Every trip stays on the phone. It leaves only in files you send or save yourself (the report, an export), in your own Android backup, and as coordinates handed to Android's Geocoder to look up an address. A copy installed from Google Play asks Google Play, at up to three moments, to show its own review card; Google Play learns that Dually asked, and nothing of your trips goes with it. The screenshots above are from the owner's phone, with the street addresses on Home blurred.
+Dually has no account, no server and **no internet permission**. Every trip stays on the phone. It leaves only in files you send or save yourself (the report, an export), in your own Android backup, and as coordinates handed to Android's Geocoder to look up an address. A copy installed from Google Play asks Google Play, at up to three moments, to show its own review card; Google Play learns that Dually asked, and nothing of your trips goes with it. The screenshots above were taken on an emulator with made-up trips: the driver, the company and the addresses are invented.
 
 ## How it is built
 
