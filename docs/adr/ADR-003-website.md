@@ -39,3 +39,26 @@ And so:
 - Worse: a third workflow, and Google sees the site's visitors as any web host does (the privacy page says so).
 - The privacy page makes promises about the app. A change to what the app keeps or sends must change `website/privacy.html` in the same pull request.
 - Locked into: Firebase Hosting for the site, which is easy to leave: the pages are plain files.
+
+## Addendum, 2026-10-13: a new name, a new look, a new address
+
+### Context
+
+Google Play refused the app's listing under its Impersonation policy and named the icon, the name "MilO Trip Log" and the screenshots; another company's mileage app is called "Milo Track". Shawn decided to rebrand ("we need to rebrand the app ... to comply"), gave the name ("So the first thing we will do is change the name to Dually Trip Tracker."), a design canvas for the look ("here is the theme and color and design ... we will start with the website and app do not change the maskot tell we review together"), a line for the footer ("owned and operated by 2795748 Alberta Ltd.") and a new address ("i will register a new domain name Dually.top").
+
+Three things this record decided are no longer so: that the site looks like the app because it copies the app's design system, that its font is a copy of the app's `sora.ttf`, and that its address is `milotriplog.top`.
+
+### Decision
+
+- **The site is "Dually Trip Tracker", Dually for short,** on every page.
+- **The look is Shawn's design, written down in `website/styles.css`:** its colours, corners and typefaces are named once at the top of that file, and the pages use the names. It is no longer a copy of the app's design system; the app is given the same look by a change of its own. The rule of §8 stands as it did: no page has a value of its own.
+- **The typefaces are Archivo and IBM Plex Mono,** served from `website/fonts/` with each one's licence beside it (both the SIL Open Font License 1.1). Sora and its licence left the site. Nothing is fetched from a font service: the design's canvas loads its fonts from Google's, and the site's Content-Security-Policy and its privacy page rule that out.
+- **The address is `https://dually.top`,** and the support address `support@dually.top`. Every page, the sitemap and the link previews name them. The domain was not yet registered when this was built.
+- **Unchanged:** plain HTML and CSS, no build, no script; the Content-Security-Policy, word for word; a deploy on a merge to `main`, with the deploy key in GitHub's Actions secrets; and that the app gets no Firebase. **The Firebase project stays `milotriplog`,** with the secret's name that follows from it: a project's ID cannot be changed, and no visitor sees it.
+
+### Consequences
+
+- **The rebranded site cannot go live by a merge alone.** A merge deploys to the Hosting site whatever domain is connected to it, so the pages would be live at the old address the moment they are merged, naming a new one that does not answer yet. The domain has to be registered and connected, and `support@dually.top` has to forward, before the merge; and the old address should then send its visitors on rather than show the same pages (APP_ENCYCLOPEDIA, Website, "Before the rebrand may go live").
+- Worse: a first visit fetches about 800 KB of fonts where it fetched 111 KB (FINDINGS_LOG, 2026-10-13, `[DEBT]`).
+- Worse: the site's look and the app's are now two descriptions of one design, kept alike by hand, where the site used to copy the app's file and say so.
+- The mascot's pictures were made for the old card's colour and are not changed by this addendum: his review is Shawn's, and until then his wave shows that colour.

@@ -1,33 +1,76 @@
 /*
- * The look of the app, in a web page: the page, tile and text colours, the lime accent and the
- * corners are copied from the app's design system (core/designsystem/theme/Color.kt and
- * Shape.kt), and the typeface is the app's own Sora (fonts/sora.ttf, the same file as
- * app/src/main/res/font/sora.ttf). Change them together. Dark only, like the app.
+ * The look of Dually Trip Tracker, from the owner's design canvas of 2026-10-13 ("Dually
+ * Rebrand Concept": its boards "Hero" and "Icon, colour, type"; FINDINGS_LOG, 2026-10-13):
+ * a dark page, one amber card at the top of the home page, dark cards under it, and Hi-Vis
+ * Orange for the mark and the one main action in the top line. Every colour, corner and
+ * typeface is named once, below; a page uses these names and the parts made from them, and
+ * no value of its own. Dark only.
  */
 
+/*
+ * The typefaces are served from this site (fonts/, each with its licence beside it), like
+ * every picture: Archivo for words, one file that holds every weight and every width, and
+ * IBM Plex Mono for small labels and numbers. Archivo's file is a SemiBold when no weight is
+ * asked for, so the two ranges below are what let a page ask for Regular, for ExtraBold and
+ * for a wider cut by name; body sets the weight for everything that sets none.
+ */
 @font-face {
-  font-family: "Sora";
-  src: url("/fonts/sora.ttf") format("truetype");
-  font-weight: 100 800;
+  font-family: "Archivo";
+  src: url("/fonts/archivo.ttf") format("truetype");
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;
+}
+
+/* The Medium cut is here for running text in the mono face. No page has any today, so no
+   visitor fetches this file: a browser fetches a face only when a page uses it. */
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/ibm-plex-mono-medium.ttf") format("truetype");
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/ibm-plex-mono-semibold.ttf") format("truetype");
+  font-weight: 600;
   font-display: swap;
 }
 
 :root {
-  --page: #121316;
-  --tile: #1e2025;
-  --quiet: #24262b;
-  --outline: #3a3e46;
-  --text: #f2f3f5;
-  --text-secondary: #9298a3;
-  /* The mascot's waving.webp carries this lime: see "The mascot" below before changing it. */
-  --accent: #c6f432;
-  --accent-pressed: #ddff7a;
+  /* The design's colours, under the names of what each is for. */
+  --page: #15120f; /* Asphalt */
+  --tile: #221d18; /* a dark card */
+  --row: #1f1a15; /* a row inside a dark card, with the rule's colour round it */
+  --outline: #2e2721; /* a rule, a border */
+  --outline-strong: #4a3b2e; /* the border of an outlined label */
+  --text: #fff4e8; /* Bone */
+  --text-secondary: #cdbfaf;
+  --accent: #ff5a12; /* Hi-Vis Orange: the mark's ground, the main action, a list's dots */
+  --on-accent: #15120f; /* words on the orange are dark: white on it is too faint to read */
+  --amber: #ffb648; /* the hero's ground, a small tag, a link on a dark ground */
+  --amber-hover: #ffd08a;
+  --ink: #1a1410; /* words on amber */
+  --ember: #b33f0d; /* a pressed button, the Security tag */
   /* Buy Me a Coffee's own yellow, for its button alone (2026-10-08). */
   --coffee: #ffdd00;
   --coffee-pressed: #ffe94d;
-  --tile-radius: 26px;
+
+  --font-sans: "Archivo", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  /* A headline is Archivo ExtraBold set a little wide; the wordmark wider still. */
+  --display-weight: 800;
+  --display-width: 112%;
+  --wordmark-width: 125%;
+
+  --hero-radius: 28px;
+  --tile-radius: 28px;
   --small-radius: 22px;
-  --button-radius: 18px;
+  --row-radius: 14px;
+  --button-radius: 16px;
+  --cta-radius: 12px;
+  --tag-radius: 6px;
   --gap: 12px;
   color-scheme: dark;
 }
@@ -44,15 +87,27 @@ body {
   margin: 0;
   background: var(--page);
   color: var(--text);
-  font-family: "Sora", system-ui, sans-serif;
-  font-size: 16px;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 17px;
   line-height: 1.55;
   /* A web address is one long word: on a phone it breaks rather than run off the page. */
   overflow-wrap: break-word;
 }
 
 a {
-  color: var(--accent);
+  color: var(--amber);
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--amber-hover);
+}
+
+/* Where the keyboard is: a ring in the link colour, dark on the amber card. */
+:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: 3px;
 }
 
 img {
@@ -60,47 +115,109 @@ img {
   height: auto;
 }
 
+/* SemiBold, like every other use of the mono face: no page then fetches its Medium file. */
+code {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.92em;
+}
+
 .page {
-  max-width: 980px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 16px;
 }
 
-/* The top line: the mark and the name, as at the top of Home, and three links. */
+/* A headline: the page's, a card's, and the wordmark. */
+h1,
+h2,
+.wordmark {
+  font-weight: var(--display-weight);
+  font-stretch: var(--display-width);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+/* A small label: capitals in the mono face, set apart. */
+.label,
+.pill,
+.tag,
+.release h2 .secondary {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* The top line: the mark, the wordmark and what the app is, then the pages. The last of
+   them, Install, is the one orange button from a tablet's width up (further down); on a
+   phone it is a link like the others, because the card's own button is right under it. */
 .top {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px 16px;
-  padding: 4px 0 16px;
+  gap: 14px 24px;
+  padding: 4px 0 20px;
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   color: var(--text);
-  font-weight: 700;
-  font-size: 22px;
   text-decoration: none;
+}
+
+.brand:hover {
+  color: var(--text);
+}
+
+.brand img {
+  display: block;
+}
+
+.wordmark {
+  font-size: 26px;
+  font-stretch: var(--wordmark-width);
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.pill {
+  color: var(--amber);
+  border: 1.5px solid var(--outline-strong);
+  border-radius: 999px;
+  padding: 5px 10px;
+  white-space: nowrap;
 }
 
 .top nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 18px;
+  align-items: center;
+  gap: 10px 20px;
+  font-size: 15px;
 }
 
 .top nav a {
   color: var(--text-secondary);
   text-decoration: none;
-  font-weight: 500;
 }
 
 .top nav a:hover,
-.top nav a:focus-visible {
+.top nav a:focus-visible,
+.top nav a[aria-current="page"] {
   color: var(--text);
+}
+
+/* The page a visitor is on is underlined in the orange. */
+.top nav a[aria-current="page"] {
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
 }
 
 main {
@@ -117,14 +234,13 @@ main > * {
 .tile {
   background: var(--tile);
   border-radius: var(--tile-radius);
-  padding: 24px;
+  padding: 24px 22px;
 }
 
 .tile h2 {
-  margin: 0 0 10px;
-  font-size: 20px;
-  font-weight: 600;
-  line-height: 1.3;
+  margin: 0 0 12px;
+  font-size: 22px;
+  line-height: 1.2;
 }
 
 .tile p {
@@ -143,58 +259,111 @@ main > * {
   padding-left: 1.25em;
 }
 
+/* A step's figure is wider than a dot. */
+.tile ol {
+  padding-left: 2em;
+}
+
 .tile li + li {
   margin-top: 6px;
+}
+
+/* A list's dots are the orange; a numbered step's figure is a mono figure in amber. */
+.tile ul > li::marker {
+  color: var(--accent);
+}
+
+.tile ol > li::marker {
+  color: var(--amber);
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+/* Words in a card stop at a line's comfortable length, however wide the card is. */
+.tile > p,
+.tile > ul,
+.tile > ol {
+  max-width: 46em;
 }
 
 .secondary {
   color: var(--text-secondary);
 }
 
-/* The one lime tile of the page, as on Home: dark words on the accent. */
-.accent {
-  background: var(--accent);
-  color: var(--page);
-}
-
-.accent a {
-  color: var(--page);
-}
-
+/* The one amber card, at the top of the home page: dark words on amber, and the mascot. */
 .hero {
-  padding: 32px 24px;
+  background: var(--amber);
+  color: var(--ink);
+  border-radius: var(--hero-radius);
+  padding: 30px 24px 0;
+}
+
+.hero a {
+  color: var(--ink);
+}
+
+.hero :focus-visible {
+  outline-color: var(--ink);
+}
+
+.hero .label {
+  margin: 0 0 16px;
+  font-size: 13px;
+  letter-spacing: 0.14em;
 }
 
 .hero h1 {
-  margin: 0 0 14px;
-  font-size: clamp(32px, 7vw, 52px);
-  font-weight: 700;
-  line-height: 1.08;
-  letter-spacing: -0.02em;
+  margin: 0 0 18px;
+  font-size: clamp(29px, 8.4vw, 44px);
+  line-height: 1.04;
 }
 
 .hero .lead {
-  max-width: 40em;
+  max-width: 30em;
+  margin: 0 0 24px;
   font-size: 18px;
-  margin-bottom: 22px;
+  line-height: 1.5;
 }
 
-/* The main button, dark on the lime tile. Two classes, so the lime tile's own link colour
-   does not reach its words. */
-.accent .button {
-  display: inline-block;
-  background: var(--page);
-  color: var(--accent);
+/* The two actions: the dark button, and a link in words beside it. */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 24px;
+}
+
+.hero .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 0 26px;
+  background: var(--ink);
+  color: var(--text);
   border-radius: var(--button-radius);
-  padding: 16px 26px;
   font-weight: 700;
-  font-size: 18px;
+  font-size: 17px;
   text-decoration: none;
 }
 
-.accent .button:hover,
-.accent .button:focus-visible {
-  color: var(--accent-pressed);
+.hero .button:hover,
+.hero .button:focus-visible {
+  color: var(--amber);
+}
+
+.hero .button svg {
+  flex: none;
+}
+
+.text-link {
+  font-weight: 700;
+  text-underline-offset: 4px;
+}
+
+.hero .small {
+  margin: 18px 0 0;
+  font-size: 14px;
 }
 
 /*
@@ -203,6 +372,7 @@ main > * {
  */
 .coffee {
   display: inline-block;
+  justify-self: start;
   background: var(--coffee);
   color: #000;
   border-radius: var(--button-radius);
@@ -214,25 +384,22 @@ main > * {
 .coffee:hover,
 .coffee:focus-visible {
   background: var(--coffee-pressed);
-}
-
-.hero .small {
-  margin: 14px 0 0;
-  font-size: 14px;
+  color: #000;
 }
 
 /*
- * The mascot stands in the lime tile: small and under the words on a phone, at their right
- * from a tablet's width up, and twice as large on a wide screen (both further down). Its
- * pictures are drawn from the 3D model by design/mascot/scripts/pack_clips.py, 720 by 608
- * pixels, and shown at half of that or at a quarter. The sizes and places here are what that
- * script prints: change them with the pictures.
+ * The mascot stands in the amber card: under the words on a phone, at their right from a
+ * tablet's width up, and larger on a wide screen (further down). Its pictures are drawn from
+ * the 3D model by design/mascot/scripts/pack_clips.py, 720 by 608 pixels a frame, and are
+ * shown at a size that keeps that shape: a width that is a multiple of 45 pixels has a whole
+ * number of pixels for its height. The places of the dials below are what that script
+ * prints: change them with the pictures.
  */
 .mascot {
   position: relative;
-  width: 180px;
-  height: 152px;
-  margin: 16px 0 -16px auto;
+  width: 225px;
+  height: 190px;
+  margin: 6px -8px 16px auto;
 }
 
 .mascot img {
@@ -299,10 +466,17 @@ main > * {
    * browser treats a tap as a pointer that stays, as phones' browsers do.
    *
    * The standing picture is never taken away: a stylesheet cannot know whether the strip has
-   * arrived. Each frame of the strip covers it instead, needles and all, with this tile's
-   * lime wherever the standing mascot would show beside the waving one. So waving.webp
-   * carries --accent: change the colour and it has to be packed again (design/mascot/README.md,
-   * "The website's pictures").
+   * arrived. Each frame of the strip covers it instead, needles and all, with the colour of
+   * the card he stood on when the strip was packed, wherever the standing mascot would show
+   * beside the waving one. So waving.webp carries its ground's colour: stand him on another
+   * and it has to be packed again (design/mascot/README.md, "The website's pictures").
+   *
+   * TODO(debt): the strip still carries the lime of the card before the rebrand (#c6f432),
+   * and the card is amber now, so while he waves a lime shape shows where his lowered arm
+   * was. Neither the mascot nor these rules were touched in the rebrand of 2026-10-13: the
+   * owner reviews the mascot first. Packing the strip again on --amber ends it, and the
+   * packing script must then read --amber here, not --accent as it did (FINDINGS_LOG,
+   * 2026-10-13).
    *
    * Browsers keep these pictures for a week and this stylesheet for an hour. A picture that
    * changes in a way these rules count on, another number of frames most of all, gets another
@@ -323,7 +497,7 @@ main > * {
   }
 }
 
-/* With a pointer that can hover, the strip is fetched as soon as it comes over the lime tile,
+/* With a pointer that can hover, the strip is fetched as soon as it comes over the amber card,
    so that it is there when the pointer reaches him. Not with the page. */
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .hero:hover .mascot::after {
@@ -501,12 +675,12 @@ main > * {
 .shots img {
   display: block;
   width: 100%;
-  border-radius: 14px;
+  border-radius: var(--row-radius);
 }
 
 .shots figcaption {
   margin-top: 8px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.4;
 }
@@ -521,18 +695,20 @@ main > * {
   width: 100%;
   max-width: 620px;
   margin: 4px auto 10px;
-  border-radius: 12px;
+  border-radius: var(--row-radius);
 }
 
 .report .secondary {
+  max-width: none;
   font-size: 14px;
   text-align: center;
 }
 
 footer {
-  margin-top: 24px;
-  padding: 8px 4px 24px;
-  font-size: 13px;
+  margin-top: 28px;
+  padding: 20px 4px 24px;
+  border-top: 1px solid var(--outline);
+  font-size: 14px;
   color: var(--text-secondary);
 }
 
@@ -544,19 +720,25 @@ footer a {
   color: var(--text-secondary);
 }
 
-/* The questions: each opens in place, as the app's "About …" lines do. */
-.faq details {
-  border-top: 1px solid var(--outline);
-  padding: 12px 0;
+footer a:hover {
+  color: var(--text);
 }
 
-.faq details:last-child {
-  padding-bottom: 0;
+/* The questions: each a row that opens in place, as the app's "About …" lines do. */
+.faq details {
+  background: var(--row);
+  border: 1px solid var(--outline);
+  border-radius: var(--row-radius);
+  padding: 14px 18px;
+}
+
+.faq details + details {
+  margin-top: 8px;
 }
 
 .faq summary {
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .faq details p {
@@ -566,9 +748,9 @@ footer a {
 
 /* The comparison: a table that slides sideways inside its tile on a phone, never the page. */
 .page-title {
-  margin: 0 0 12px;
-  font-size: clamp(26px, 5.5vw, 38px);
-  line-height: 1.15;
+  margin: 0 0 14px;
+  font-size: clamp(28px, 5.5vw, 44px);
+  line-height: 1.08;
 }
 
 .table-wrap {
@@ -581,7 +763,7 @@ footer a {
   border-collapse: collapse;
   min-width: 760px;
   width: 100%;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.45;
 }
 
@@ -605,7 +787,7 @@ footer a {
 }
 
 .compare .ours {
-  background: var(--quiet);
+  background: var(--row);
 }
 
 /* The row's name stays in view while the apps slide past it. */
@@ -616,41 +798,41 @@ footer a {
   background: var(--tile);
 }
 
+/* This app's own column is marked at its top in the orange. */
 .compare thead .ours {
-  color: var(--accent);
-  border-radius: 12px 12px 0 0;
+  color: var(--text);
+  border-radius: var(--row-radius) var(--row-radius) 0 0;
+  box-shadow: inset 0 3px 0 var(--accent);
 }
 
 .table-note {
   margin-top: 10px;
-  font-size: 13px;
-}
-
-@media (min-width: 900px) {
-  .table-note {
-    display: none;
-  }
+  font-size: 14px;
 }
 
 /* The privacy policy: one tile of text, read top to bottom. */
 .policy h1 {
-  margin: 0 0 6px;
-  font-size: clamp(28px, 6vw, 40px);
-  line-height: 1.15;
+  margin: 0 0 8px;
+  font-size: clamp(28px, 6vw, 44px);
+  line-height: 1.08;
 }
 
 .policy h2 {
-  margin-top: 28px;
-}
-
-.policy {
-  max-width: 46em;
+  margin-top: 30px;
 }
 
 /* What's new: each version a tile, each change a row with its kind's tag, as in the app's
-   What's new screen. The tags' colours are the app's (MiloChangeTagColors in Color.kt). */
+   What's new screen. A tag is the design's small tag: filled for what is new and for
+   security, outlined for the rest. */
 .release h2 {
-  margin-bottom: 4px;
+  margin-bottom: 14px;
+}
+
+/* A version's date is a small label under its number. */
+.release h2 .secondary {
+  display: block;
+  margin-top: 8px;
+  font-stretch: 100%;
 }
 
 .tile .changes {
@@ -661,20 +843,18 @@ footer a {
 
 .tile .changes li {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
+  gap: 10px 14px;
   align-items: start;
+  justify-items: start;
   margin: 0;
-  padding: 14px 0;
-  border-top: 1px solid var(--outline);
+  padding: 14px 16px;
+  background: var(--row);
+  border: 1px solid var(--outline);
+  border-radius: var(--row-radius);
 }
 
-.tile .changes li:first-child {
-  border-top: 0;
-}
-
-.tile .changes li:last-child {
-  padding-bottom: 0;
+.tile .changes li + li {
+  margin-top: 8px;
 }
 
 .changes p {
@@ -683,41 +863,64 @@ footer a {
 
 .tag {
   display: inline-block;
-  min-width: 6.5em;
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-  font-size: 12px;
-  font-weight: 600;
+  min-width: 7.5em;
+  padding: 2px 7px;
+  border: 1.5px solid transparent;
+  border-radius: var(--tag-radius);
   line-height: 18px;
-  letter-spacing: 0.04em;
   text-align: center;
-  text-transform: uppercase;
 }
 
 .tag-new {
-  background: var(--accent);
-  color: var(--page);
+  background: var(--amber);
+  color: var(--on-accent);
 }
 
 .tag-improved {
-  background: #2a3350;
-  color: #c9d6ff;
+  border-color: var(--outline-strong);
+  color: var(--amber);
 }
 
 .tag-fixed {
-  background: #2a2416;
-  color: #ffe7a8;
+  border-color: var(--outline-strong);
+  color: var(--text-secondary);
 }
 
 .tag-security {
-  background: #3a1c1f;
-  color: #ffb3b3;
+  background: var(--ember);
+  color: var(--text);
 }
 
 @media (min-width: 720px) {
+  :root {
+    --hero-radius: 36px;
+  }
+
   .page {
     padding: 24px;
+  }
+
+  .top nav {
+    gap: 10px 28px;
+  }
+
+  .top nav .cta {
+    background: var(--accent);
+    color: var(--on-accent);
+    border-radius: var(--cta-radius);
+    padding: 10px 18px;
+    font-weight: 700;
+  }
+
+  .top nav .cta:hover,
+  .top nav .cta:focus-visible {
+    background: var(--amber);
+    color: var(--on-accent);
+  }
+
+  .top nav .cta:active {
+    background: var(--ember);
+    color: var(--text);
   }
 
   .shots {
@@ -728,50 +931,114 @@ footer a {
     grid-template-columns: 1fr 1fr;
   }
 
-  .hero {
-    padding: 44px 40px;
-  }
-
   .tile {
-    padding: 28px 32px;
+    padding: 30px 34px;
   }
 
-  /* The headline keeps the tile's whole width; under it the mascot stands at the right of
-     the words, his feet near the tile's lower edge. Whatever else the tile holds goes in
-     the first column, one under the other; a button that is the tile's own child keeps its
-     own width there instead of the column's. */
+  .tile h2 {
+    font-size: 24px;
+  }
+
+  .tile .changes li {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  /* The words at the left, set to the middle of the card's height; the mascot at their
+     right, standing near the card's lower edge. The left part of his picture is empty, for
+     his arm to wave in, so it may reach under the words' column. */
   .hero {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
     column-gap: 16px;
+    padding: 40px 32px 0 40px;
   }
 
-  .hero > * {
-    grid-column: 1;
+  .hero-copy {
+    padding-bottom: 40px;
   }
 
+  /* The headline's first line, "Fire up the truck.", stays one line beside the mascot. */
   .hero h1 {
-    grid-column: 1 / -1;
-  }
-
-  .hero > .button {
-    justify-self: start;
+    font-size: clamp(34px, 5vw, 40px);
   }
 
   .mascot {
-    grid-column: 2;
-    grid-row: 2 / span 3;
     align-self: end;
-    margin: 0 0 -12px;
+    width: 270px;
+    height: 228px;
+    margin: 0 -8px 22px -40px;
   }
 }
 
-/* A wide screen: the mascot at his full size. He is as tall as the words beside him, less
-   what he stands below them, so the tile is no higher for him. */
 @media (min-width: 900px) {
+  .page {
+    padding: 40px;
+  }
+
+  .table-note {
+    display: none;
+  }
+
+  /* A card of words on a wide screen: its headline at the left and the words at its right,
+     a third and two thirds, so that a line keeps a comfortable length in a card 1,200
+     pixels wide. A page's own headline keeps the whole width. */
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    column-gap: 48px;
+    align-items: baseline;
+  }
+
+  .split > * {
+    grid-column: 2;
+  }
+
+  .split > h2 {
+    grid-column: 1;
+  }
+
+  .split > h1 {
+    grid-column: 1 / -1;
+  }
+
+  .hero {
+    padding: 48px 40px 0 56px;
+  }
+
+  .hero-copy {
+    padding-bottom: 48px;
+  }
+
+  .hero h1 {
+    font-size: clamp(40px, 4.4vw, 50px);
+  }
+
+  .hero .lead {
+    font-size: 19px;
+  }
+
   .mascot {
     width: 360px;
     height: 304px;
-    margin: 0 -8px -20px 0;
+    margin: 0 -8px 26px -56px;
+  }
+}
+
+/* A wide screen, as the design draws it: the card 1,200 pixels wide, the mascot large. */
+@media (min-width: 1160px) {
+  .hero {
+    min-height: 500px;
+    padding: 48px 48px 0 64px;
+  }
+
+  .hero h1 {
+    font-size: 54px;
+  }
+
+  .mascot {
+    width: 450px;
+    height: 380px;
+    margin: 0 -12px 30px -72px;
   }
 }
