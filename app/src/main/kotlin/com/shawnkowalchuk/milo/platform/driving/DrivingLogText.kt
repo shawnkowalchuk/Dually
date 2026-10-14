@@ -75,7 +75,7 @@ private fun DrivingVerdict.inWords(): String = when (this) {
 
     DrivingVerdict.DRIVING_TRUCK_NOT_WATCHED ->
         "Alert shown: no trip is being recorded, and the truck is connected but has stood so " +
-            "long that MilO stopped watching it"
+            "long that Dually stopped watching it"
 }
 
 /**
@@ -91,7 +91,7 @@ internal fun judgedText(
 ): String = buildString {
     append("Driving detection: ${reportsText(reports)}. ${verdict.inWords()}")
     if (verdict.step == DrivingAlertStep.SHOW && !seen) {
-        append(". Notifications are off for MilO or for the driving alert, so nobody saw it")
+        append(". Notifications are off for Dually or for the driving alert, so nobody saw it")
     }
 }
 
@@ -118,7 +118,11 @@ internal fun momentText(
             TruckReading.Answer.UNKNOWN -> "could not be read"
         }
     val notWatched =
-        if (moment.truckNoLongerWatched) "; it stood so long that MilO stopped watching it" else ""
+        if (moment.truckNoLongerWatched) {
+            "; it stood so long that Dually stopped watching it"
+        } else {
+            ""
+        }
     val facts =
         listOf(
             "The driving alert is switched ${if (moment.alertEnabled) "on" else "off"}.",

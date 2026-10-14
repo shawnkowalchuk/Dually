@@ -75,7 +75,7 @@ class MonthlyReminderClockJumpTest : MonthlyReminderClockJumpFixture() {
             assertFalse(alarmIsDue())
             assertEquals(
                 listOf(
-                    "The phone's date was set 24 h 0 min ahead. MilO saw it back 10 s later " +
+                    "The phone's date was set 24 h 0 min ahead. Dually saw it back 10 s later " +
                         "and kept its own time.",
                 ),
                 lines(EventCategory.PROCESS),

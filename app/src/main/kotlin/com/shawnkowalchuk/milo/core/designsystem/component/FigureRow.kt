@@ -55,8 +55,9 @@ fun FigureRow(
                     } else {
                         Modifier.semantics { contentDescription = figureSpoken }
                     },
-                // A step larger than the row's own text, as the design sets a row's figure.
-                style = MaterialTheme.typography.titleSmall,
+                // A step larger than the row's own text, as the design sets a row's figure, and
+                // a readout: the figures of a list stand under each other digit by digit.
+                style = MiloTheme.textStyles.listFigure,
                 color =
                     if (counted) {
                         MaterialTheme.colorScheme.onSurface

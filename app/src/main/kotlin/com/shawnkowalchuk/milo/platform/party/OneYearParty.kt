@@ -115,7 +115,7 @@ class OneYearParty(
         throw cancelled
     } catch (failure: Exception) {
         // Every kind of failure, on purpose: see the class comment.
-        report("MilO could not tell whether today is the day of its party", failure)
+        report("Dually could not tell whether today is the day of its party", failure)
         PopAtTripStart.NOT_TODAY
     }
 
@@ -132,7 +132,7 @@ class OneYearParty(
                 settings.setPartyOwedSinceMs(nowMs)
                 true
             } catch (notStored: IOException) {
-                report("MilO could not store that its mascot's party is owed", notStored)
+                report("Dually could not store that its mascot's party is owed", notStored)
                 false
             }
         // A party that could not be stored is not shown, so its popper cannot make the sound.
@@ -148,14 +148,14 @@ class OneYearParty(
                     "The pop takes the place of this trip's first sound, and the mascot's party " +
                         "plays when Home is next in front today"
             }
-        val what = "MilO's party: a trip starts on the day of its first recorded trip ($since)"
+        val what = "Dually's party: a trip starts on the day of its first recorded trip ($since)"
         write(nowMs, EventCategory.SERVICE, "$what. $how", detail = null, unlogged = null)
         return pop
     }
 
     private suspend fun tooSlow(): PopAtTripStart {
         val what =
-            "MilO could not tell in time whether today is the day of its party: the stored " +
+            "Dually could not tell in time whether today is the day of its party: the stored " +
                 "trips took more than $LOOK_LIMIT_MS ms to read. This trip has its usual sounds"
         report(what, failure = null)
         return PopAtTripStart.NOT_TODAY
@@ -176,7 +176,7 @@ class OneYearParty(
         try {
             settings.clearPartyOwed(forMs)
         } catch (notStored: IOException) {
-            report("MilO could not store that its mascot's party has been shown", notStored)
+            report("Dually could not store that its mascot's party has been shown", notStored)
         }
     }
 

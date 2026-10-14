@@ -24,7 +24,7 @@ class TruckReconcileReceiver : BroadcastReceiver() {
         val source =
             when (intent.action) {
                 Intent.ACTION_BOOT_COMPLETED -> bootSource()
-                Intent.ACTION_MY_PACKAGE_REPLACED -> "MilO was updated"
+                Intent.ACTION_MY_PACKAGE_REPLACED -> "Dually was updated"
                 else -> return
             }
         val controller = (context.applicationContext as MiloApplication).container.tripController
@@ -39,7 +39,7 @@ class TruckReconcileReceiver : BroadcastReceiver() {
      */
     private fun bootSource(): String =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            "phone booted, or MilO started again after a force stop"
+            "phone booted, or Dually started again after a force stop"
         } else {
             "phone booted"
         }

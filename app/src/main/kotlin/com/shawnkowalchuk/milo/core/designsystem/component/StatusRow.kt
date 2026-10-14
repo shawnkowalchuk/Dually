@@ -235,7 +235,7 @@ private fun StatusRowPreview() {
                 StatusRow(
                     label = "Background autostart",
                     status = RowStatus.UNKNOWN,
-                    supportingText = "MilO could not read this setting.",
+                    supportingText = "Dually could not read this setting.",
                     action = StatusRowAction(label = "Open", onClick = {}),
                 )
                 StatusRow(

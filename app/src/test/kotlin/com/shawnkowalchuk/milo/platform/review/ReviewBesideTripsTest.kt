@@ -133,7 +133,7 @@ class ReviewBesideTripsTest {
         assertEquals(1, card.requests)
         assertEquals(1, card.launches)
         assertEquals(1, reviewLog.entries.size)
-        assertTrue(reviewLog.entries.single().message.startsWith("Review card: MilO holds 5"))
+        assertTrue(reviewLog.entries.single().message.startsWith("Review card: Dually holds 5"))
     }
 
     @Test

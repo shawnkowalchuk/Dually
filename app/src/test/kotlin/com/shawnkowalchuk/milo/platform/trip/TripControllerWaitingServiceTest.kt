@@ -43,7 +43,7 @@ class TripControllerWaitingServiceTest {
 
             assertEquals(asked + 1, scene.service.startRequests.size)
             val lost =
-                "The trip service stopped while MilO is watching the parked truck. " +
+                "The trip service stopped while Dually is watching the parked truck. " +
                     "Asking Android to start it again"
             assertTrue(world.logged(EventCategory.SERVICE).contains(lost))
             assertTrue(scene.service.watchingParked)

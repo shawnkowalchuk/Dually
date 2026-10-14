@@ -126,7 +126,7 @@ class PartyViewModel(
 
     /** The party's pictures could not be read. Nothing was drawn, and nothing is tried again. */
     fun onUnreadable(why: IOException) {
-        val what = "MilO's mascot did not hold his party: a picture of him could not be read"
+        val what = "Dually's mascot did not hold his party: a picture of him could not be read"
         viewModelScope.launch {
             eventLog.add(clock(), EventCategory.ERROR, what, why.stackTraceToString())
         }

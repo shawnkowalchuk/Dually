@@ -52,7 +52,7 @@ class BluetoothTruckConnectionTest {
 
     @Test
     fun `unknown is never taken for connected`() {
-        val unknown = TruckReading.unknown("MilO is not allowed to use Bluetooth")
+        val unknown = TruckReading.unknown("Dually is not allowed to use Bluetooth")
 
         assertFalse(unknown.connected)
         assertFalse(unknown.known)

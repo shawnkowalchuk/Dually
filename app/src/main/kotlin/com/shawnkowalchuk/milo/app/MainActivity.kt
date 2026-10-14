@@ -119,6 +119,6 @@ class MainActivity : ComponentActivity() {
         const val APP_OPENED = "app opened"
 
         /** What the event log calls the driving alert's look at its permission. */
-        const val IN_FRONT = "MilO in front"
+        const val IN_FRONT = "Dually in front"
     }
 }

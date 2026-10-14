@@ -10,7 +10,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
-private const val FILE_PREFIX = "MilO-export-"
+private const val FILE_PREFIX = "Dually-export-"
 private const val FILE_EXTENSION = ".json"
 
 /**

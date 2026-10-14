@@ -71,6 +71,22 @@ fun readKeystorePassword(): String {
     return password
 }
 
+// --- The application ID -------------------------------------------------------------------
+// What Android and Google Play know the app by. It is written here once and nowhere else: the
+// manifest takes it as ${applicationId} (the report files' provider), and the code asks Android
+// for it (context.packageName). It is not the `namespace` below, which is the package the code
+// is written in and stays `com.shawnkowalchuk.milo` (ADR-010).
+//
+// **Two apps with different IDs are two apps:** they install side by side and share nothing,
+// so changing this value is not an update of the app that has the old one. Its trips come
+// across with "Export all data" there and "Import data" here.
+//
+// The Gradle property is for a build that has to stand beside the installed app without
+// touching it, on an emulator: -Pmilo.applicationId=some.other.id. Without it the ID is the
+// one written here.
+val miloApplicationId: String =
+    providers.gradleProperty("milo.applicationId").getOrElse("com.shawnkowalchuk.milo")
+
 room3 {
     // Room writes the tables of each database version to app/schemas as JSON. The folder is
     // committed: the phone holds real trips from phase 1 on, so every later change to a table
@@ -85,7 +101,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.shawnkowalchuk.milo"
+        applicationId = miloApplicationId
         // The app runs on one phone (Android 14, API 34), and that is the floor: code for an
         // older Android could be tested nowhere (FINDINGS_LOG, 2026-10-07). Do not lower it
         // without putting the Android 12 and 13 branches back.

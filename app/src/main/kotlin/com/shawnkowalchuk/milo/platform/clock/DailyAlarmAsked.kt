@@ -73,9 +73,9 @@ internal fun askForDailyAlarm(
  * what follows "Nothing-recorded check: " or "Monthly reminder: ".
  */
 internal fun askAgainText(waitMs: Long, source: String): String =
-    "MilO's time is not confirmed yet: it was taken from the phone's clock at a start with " +
+    "Dually's time is not confirmed yet: it was taken from the phone's clock at a start with " +
         "nothing to check it against ($source). So Android was asked to count " +
-        "${spanText(waitMs)} from now. MilO then asks for the next daily look, and shows no " +
+        "${spanText(waitMs)} from now. Dually then asks for the next daily look, and shows no " +
         "notification while its time is not confirmed."
 
 /**
@@ -83,6 +83,6 @@ internal fun askAgainText(waitMs: Long, source: String): String =
  * probation and is therefore not shown.
  */
 internal const val HELD_BACK_WHY =
-    "MilO's time is not confirmed yet. It was taken from the phone's clock at a start with " +
-        "nothing to check it against, and the phone's date may be set ahead. MilO looks again " +
+    "Dually's time is not confirmed yet. It was taken from the phone's clock at a start with " +
+        "nothing to check it against, and the phone's date may be set ahead. Dually looks again " +
         "once its time is confirmed."

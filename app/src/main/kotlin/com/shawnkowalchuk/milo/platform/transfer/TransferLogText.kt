@@ -54,11 +54,11 @@ internal fun exportFailureInWords(unfinishedRemoved: Boolean): String = "writing
 internal fun importRefusedLine(problem: ExportProblem): String =
     "A file picked for an import was refused, and nothing was changed: " +
         when (problem) {
-            ExportProblem.NotAnExport -> "it is not an export of MilO's"
+            ExportProblem.NotAnExport -> "it is not an export of Dually's"
 
             is ExportProblem.NewerVersion ->
-                "it was written by a newer MilO, in format version ${problem.version}, which " +
-                    "this MilO does not read"
+                "it was written by a newer Dually, in format version ${problem.version}, which " +
+                    "this Dually does not read"
 
             is ExportProblem.Damaged -> problem.why
         }
@@ -78,11 +78,11 @@ internal fun importBegunLine(
     leftOut: PointsLeftOut?,
 ): String = "An import has replaced the ${stored.storedTrips} trips and " +
     "${stored.storedSentReports} sent reports this phone held with the ${file.trips.size} " +
-    "trips and ${file.sentReports.size} sent reports of an export written by MilO " +
+    "trips and ${file.sentReports.size} sent reports of an export written by Dually " +
     "${file.appVersion}. Its settings and its raw GPS points are stored next. If no later " +
-    "line says that the data was imported, MilO was ended before that was done, and finishes " +
+    "line says that the data was imported, Dually was ended before that was done, and finishes " +
     "it at its next start. What the phone held before is in the safety copy $safetyCopy, " +
-    "inside MilO" + leftOut?.let { ". Left out of that copy: ${it.inWords()}" }.orEmpty()
+    "inside Dually" + leftOut?.let { ". Left out of that copy: ${it.inWords()}" }.orEmpty()
 
 /**
  * @param stored what the phone held before, by number of trips and of sent reports.
@@ -93,11 +93,11 @@ internal fun importedLine(
     done: ImportDone,
     stored: ImportOffer,
     safetyCopy: String,
-): String = "Data imported from an export written by MilO ${file.appVersion}: ${done.trips} " +
+): String = "Data imported from an export written by Dually ${file.appVersion}: ${done.trips} " +
     "trips and ${done.sentReports} sent reports replaced the ${stored.storedTrips} trips and " +
     "${stored.storedSentReports} sent reports this phone held. " +
     done.pointsAndSettingsInWords() +
-    "What the phone held before is in the safety copy $safetyCopy, inside MilO"
+    "What the phone held before is in the safety copy $safetyCopy, inside Dually"
 
 private fun ImportDone.pointsAndSettingsInWords(): String = when (pointsTaken) {
     PointsTaken.TAKEN -> "$points raw GPS points were stored with them. "
@@ -120,27 +120,27 @@ private fun ImportDone.pointsAndSettingsInWords(): String = when (pointsTaken) {
 
 /** The steps that were left have been taken, from MilO's copy of the file. */
 internal fun finishedLaterLine(file: CheckedExport, done: ImportDone, safetyCopy: String): String =
-    "MilO was ended in the middle of an import, and has finished it at this start from its " +
-        "copy of the file (an export written by MilO ${file.appVersion}): the ${done.trips} " +
-        "trips and ${done.sentReports} sent reports were stored before MilO was ended. " +
+    "Dually was ended in the middle of an import, and has finished it at this start from its " +
+        "copy of the file (an export written by Dually ${file.appVersion}): the ${done.trips} " +
+        "trips and ${done.sentReports} sent reports were stored before Dually was ended. " +
         done.pointsAndSettingsInWords() +
-        "What the phone held before the import is in the safety copy $safetyCopy, inside MilO"
+        "What the phone held before the import is in the safety copy $safetyCopy, inside Dually"
 
 internal fun cutOffBeforeReplacingLine(): String =
-    "MilO was ended just as an import began, before the trips were replaced. Everything on " +
-        "this phone is as it was. MilO's copy of the file and the safety copy written for " +
+    "Dually was ended just as an import began, before the trips were replaced. Everything on " +
+        "this phone is as it was. Dually's copy of the file and the safety copy written for " +
         "that import were removed; the file has to be imported again"
 
 /** @param removed how many raw points of the trips that are gone were removed. */
 internal fun cutOffPointsRemovedLine(removed: Int): String =
-    "MilO was ended in the middle of an import, after the trips and the sent reports were " +
+    "Dually was ended in the middle of an import, after the trips and the sent reports were " +
         "replaced and before the file's raw GPS points were all stored. Its copy of the file " +
         "could not be used to finish, so the $removed raw GPS points of the trips that are " +
         "gone were removed: the imported trips have none, and the file's settings may not " +
         "have been stored either. Importing the file again makes it whole"
 
 internal fun cutOffLeftLine(): String =
-    "MilO was ended in the middle of an import, and two later starts could not finish it. " +
+    "Dually was ended in the middle of an import, and two later starts could not finish it. " +
         "It is left as it is: the trips and the sent reports are the file's, and raw GPS " +
         "points of the trips that are gone may still be stored under their trip ids. " +
         "Importing the file again puts that right"

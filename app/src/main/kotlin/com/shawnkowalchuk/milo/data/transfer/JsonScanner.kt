@@ -164,7 +164,9 @@ internal class JsonScanner(private val source: Reader) {
 
     private fun keep(into: StringBuilder?, char: Int) {
         if (into == null) return
-        if (into.length >= MAX_VALUE_CHARS) throw broken("one value is longer than any MilO writes")
+        if (into.length >= MAX_VALUE_CHARS) {
+            throw broken("one value is longer than any Dually writes")
+        }
         into.append(char.toChar())
     }
 

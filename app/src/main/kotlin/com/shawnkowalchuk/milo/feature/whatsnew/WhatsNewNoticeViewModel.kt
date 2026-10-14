@@ -64,7 +64,7 @@ class WhatsNewNoticeViewModel(
             try {
                 settings.setWhatsNewSeenVersion(installedVersion)
             } catch (notStored: IOException) {
-                val what = "MilO could not store that What's new was shown for $installedVersion"
+                val what = "Dually could not store that What's new was shown for $installedVersion"
                 eventLog.add(clock(), EventCategory.ERROR, what, notStored.stackTraceToString())
             }
         }

@@ -46,7 +46,7 @@ class TripServiceStarter(
         if (shown) return failure
         // The warning went unseen. Say so in the event log, which is where the caller sends
         // the detail.
-        val unseen = "Notifications are off for MilO, so the warning was not shown."
+        val unseen = "Notifications are off for Dually, so the warning was not shown."
         return failure.copy(detail = listOfNotNull(failure.detail, unseen).joinToString("\n"))
     }
 }

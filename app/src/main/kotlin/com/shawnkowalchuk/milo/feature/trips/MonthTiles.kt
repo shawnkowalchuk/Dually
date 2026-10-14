@@ -184,7 +184,7 @@ internal fun PersonalTile(
                             it.count,
                         )
                     } ?: stringResource(R.string.home_figure_reading),
-                style = MiloTheme.textStyles.appName,
+                style = MiloTheme.textStyles.smallTileFigure,
             )
         }
         val unsorted = totals?.unsorted

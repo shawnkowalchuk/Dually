@@ -205,7 +205,8 @@ private fun WheelRow(
         Spacer(Modifier.width(spacing.buttonGap))
         Text(
             text = unit,
-            style = MaterialTheme.typography.labelLarge,
+            // The unit's size, in the digits' typeface: the row is one readout.
+            style = MaterialTheme.typography.labelLarge.copy(fontFamily = style.fontFamily),
             color = scheme.onSurfaceVariant,
         )
     }

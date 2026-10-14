@@ -29,12 +29,16 @@ import com.shawnkowalchuk.milo.platform.system.readInstalledVersion
 import java.net.URLEncoder
 
 /**
- * Where a question about MilO is sent (Shawn's request of 2026-10-10: "what about adding a
+ * Where a question about the app is sent (Shawn's request of 2026-10-10: "what about adding a
  * support link? can we have it send email to me?"). It is an address at the website's domain
  * that forwards to his own, which he asked to keep out of sight ("can we hide my email
  * address?"). The website's Support link is the same address.
+ *
+ * At the brand's domain since 2026-10-13 (ADR-010; until then `support@milotriplog.top`).
+ * **The domain was chosen that day and not yet registered:** before a release it has to be
+ * registered, and this address has to forward and be tried with a real email.
  */
-internal const val SUPPORT_ADDRESS = "support@milotriplog.top"
+internal const val SUPPORT_ADDRESS = "support@dually.top"
 
 /**
  * The tile above Buy me a coffee that starts an email to [SUPPORT_ADDRESS] in the phone's

@@ -33,8 +33,8 @@ import com.shawnkowalchuk.milo.core.util.formatDistance
  * dark cell. There is no cell for the tenth: he read it as one more digit ("the 1/10 at the
  * end looks like it is another zero on the odometer").
  *
- * **While a trip moves an odometer,** a lime dot pulses before the tile's label, that
- * odometer's last cell is lime, its last wheel turns slowly on to the next digit as the
+ * **While a trip moves an odometer,** a dot in the accent pulses before the tile's label, that
+ * odometer's last cell is the accent, its last wheel turns slowly on to the next digit as the
  * kilometre is driven, and the line under it says how far this trip has come. **Otherwise**
  * the cells stand still and alike, showing the number Settings shows, over the line that says
  * where the figure comes from.

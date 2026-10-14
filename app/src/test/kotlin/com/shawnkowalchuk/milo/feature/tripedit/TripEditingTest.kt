@@ -42,7 +42,7 @@ class TripEditingTest : TripEditingFixture() {
                 "Trip 1: changed by hand on the edit screen: end 2026-10-05 08:39:02 → " +
                     "2026-10-05 08:45:00; distance 12345 m → 13000 m (times in " +
                     "America/Edmonton). It is now marked as edited, and \"Restore recorded " +
-                    "values\" puts back what MilO recorded",
+                    "values\" puts back what Dually recorded",
             ),
             logged(EventCategory.TRIP),
         )

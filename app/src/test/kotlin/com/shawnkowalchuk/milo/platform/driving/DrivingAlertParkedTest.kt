@@ -63,7 +63,7 @@ class DrivingAlertParkedTest {
             assertTrue(notification.showing)
             val shown =
                 "Alert shown: no trip is being recorded, and the truck is connected but has " +
-                    "stood so long that MilO stopped watching it"
+                    "stood so long that Dually stopped watching it"
             assertTrue(lastLine().message, lastLine().message.endsWith(shown))
         }
 }

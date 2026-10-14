@@ -139,29 +139,15 @@ private fun footer(
     locale: Locale,
 ): List<PageItem> {
     val style = ReportTextStyle.FOOTER
-    val markStyle = ReportTextStyle.FOOTER_MARK
     val quiet = ReportInk.QUIET
     val page = String.format(locale, report.words.page, number, count)
     val textX = CONTENT_LEFT + FOOTER_MARK_SIZE + FOOTER_MARK_GAP
     val room = CONTENT_RIGHT - textX - measure.width(page, style) - FOOTER_GAP
     // The mark's middle is level with the middle of the words' capitals.
     val middle = FOOTER_BASELINE - style.size * CAP_MIDDLE
-    val mark = report.words.appMark
-    return listOf(
-        PageItem.Box(
-            CONTENT_LEFT,
-            middle - FOOTER_MARK_SIZE / 2,
-            CONTENT_LEFT + FOOTER_MARK_SIZE,
-            middle + FOOTER_MARK_SIZE / 2,
-            FOOTER_MARK_RADIUS,
-            ReportInk.ACCENT,
-        ),
-        PageItem.Text(
-            mark,
-            CONTENT_LEFT + (FOOTER_MARK_SIZE - measure.width(mark, markStyle)) / 2,
-            middle + markStyle.size * CAP_MIDDLE,
-            markStyle,
-        ),
+    val mark =
+        appMark(CONTENT_LEFT, middle - FOOTER_MARK_SIZE / 2, FOOTER_MARK_SIZE, FOOTER_MARK_RADIUS)
+    return mark + listOf(
         PageItem.Text(
             cutToFit(report.footer, room, style, measure),
             textX,

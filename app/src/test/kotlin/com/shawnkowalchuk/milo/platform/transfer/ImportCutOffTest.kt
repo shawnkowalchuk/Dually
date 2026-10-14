@@ -65,7 +65,7 @@ class ImportCutOffTest : ImportCutOffCase() {
         val line = world.lines(EventCategory.REPORT).single()
         assertTrue(line, line.contains("has finished it at this start"))
         assertTrue(line, line.contains("4 raw GPS points were stored"))
-        assertTrue(line, line.contains("MilO-before-import-${world.nowMs}.json"))
+        assertTrue(line, line.contains("Dually-before-import-${world.nowMs}.json"))
         assertTrue(world.lines(EventCategory.ERROR).isEmpty())
         assertEquals(listOf("data imported"), world.toldAfterImport)
         // What the phone held before is still there to be put back.

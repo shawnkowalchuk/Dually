@@ -208,13 +208,13 @@ class BackupAftermathTest {
 
     @Test
     fun `a backup that was refused for its size is an error line that says what to do`() = runTest {
-        val sizes = "MilO's files are 26.1 MB and the limit is 25.0 MB"
+        val sizes = "Dually's files are 26.1 MB and the limit is 25.0 MB"
         notes.leave(BackupNote(BackupNoteKind.QUOTA_EXCEEDED, 3_000, sizes))
 
         aftermath().settle()
 
         val line = lines(EventCategory.ERROR).single()
-        assertTrue(line, line.startsWith("Android did not back MilO up: $sizes."))
+        assertTrue(line, line.startsWith("Android did not back Dually up: $sizes."))
         assertTrue(line, line.contains("Nothing at all is backed up"))
         assertTrue(line, line.contains("Export all data"))
         assertEquals(3_000L, log.entries.single().atMs)
@@ -231,7 +231,10 @@ class BackupAftermathTest {
             aftermath().settle()
 
             val collected = lines(EventCategory.PROCESS).single()
-            assertTrue(collected, collected.startsWith("Android collected MilO's data for a cloud"))
+            assertTrue(
+                collected,
+                collected.startsWith("Android collected Dually's data for a cloud"),
+            )
             assertTrue(lines(EventCategory.ERROR).single().contains("milo.db: it stayed in use"))
             // Oldest first.
             assertEquals(listOf(900L, 1_000L), log.entries.map { it.atMs })

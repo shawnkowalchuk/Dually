@@ -62,7 +62,7 @@ class MonthlyReminderFailureTest : MonthlyReminderFixture() {
         assertEquals(listOf(september), shownFor)
         assertTrue(
             lines().single().endsWith(
-                "Notifications are switched off for MilO or for the monthly reminder, so " +
+                "Notifications are switched off for Dually or for the monthly reminder, so " +
                     "nobody saw it.",
             ),
         )

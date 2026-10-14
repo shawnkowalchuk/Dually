@@ -53,7 +53,7 @@ internal fun judgedText(
                 if (seen) {
                     ""
                 } else {
-                    " Notifications are switched off for MilO or for the monthly reminder, " +
+                    " Notifications are switched off for Dually or for the monthly reminder, " +
                         "so nobody saw it."
                 }
             val again = notStored?.let { " $it" }.orEmpty()
@@ -105,7 +105,7 @@ internal fun alarmAskedText(
 /** The line for the daily alarm being asked for. */
 internal fun alarmText(atMs: Long, zone: ZoneId, source: String): String =
     "Monthly reminder: the next daily look is asked for at ${formatLogTime(atMs, zone)}, or " +
-        "within about an hour after it ($source). MilO also looks at every start and every " +
+        "within about an hour after it ($source). Dually also looks at every start and every " +
         "time it is opened."
 
 /**
@@ -115,7 +115,7 @@ internal fun alarmText(atMs: Long, zone: ZoneId, source: String): String =
 internal fun alarmCountedText(atMs: Long, zone: ZoneId, delayMs: Long, source: String): String =
     "Monthly reminder: the next daily look is asked for at ${formatLogTime(atMs, zone)}, or " +
         "within about an hour after it ($source). The phone's clock is set differently from " +
-        "MilO's own, so Android was asked to count ${spanText(delayMs)} from now and not to go " +
+        "Dually's own, so Android was asked to count ${spanText(delayMs)} from now and not to go " +
         "by the phone's clock. It is asked in the normal way as soon as the two agree."
 
 /**

@@ -44,7 +44,7 @@ internal class ReviewNotes(
         otherwise
     } catch (failure: Exception) {
         // Every kind of failure, on purpose: see the class comment.
-        report("MilO could not look at the moments of Google Play's review card", failure)
+        report("Dually could not look at the moments of Google Play's review card", failure)
         otherwise
     }
 

@@ -87,7 +87,7 @@ class WallClockReadersTest {
 
         val notAllowed = readers.filterNot { it.substringBeforeLast(':') in allowed }
         assertEquals(
-            "These lines read the phone's wall clock. Hand them MilO's clock instead " +
+            "These lines read the phone's wall clock. Hand them Dually's clock instead " +
                 "(AppContainer.clock), or the phone's date trick reaches them (ADR-006)",
             emptyList<String>(),
             notAllowed,

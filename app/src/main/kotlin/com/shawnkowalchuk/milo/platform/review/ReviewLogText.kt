@@ -22,7 +22,7 @@ internal fun reachedInWords(moments: Set<ReviewMoment>, recordedTrips: Int): Str
         numbers.isEmpty() -> "A report was recorded as sent with \"I sent it\""
 
         else ->
-            "MilO holds $recordedTrips recorded trips, and asks at " +
+            "Dually holds $recordedTrips recorded trips, and asks at " +
                 numbers.joinToString(" and at ")
     }
 }
@@ -30,23 +30,23 @@ internal fun reachedInWords(moments: Set<ReviewMoment>, recordedTrips: Int): Str
 /** Google Play's flow was launched. */
 internal fun askedLine(moments: Set<ReviewMoment>, recordedTrips: Int): String {
     val forAll = if (moments.size > 1) ", once for all of them" else ""
-    return "$REVIEW_LINE: ${reachedInWords(moments, recordedTrips)}. MilO asked Google Play to " +
-        "show its review card$forAll. Google Play decides whether the card appears, and MilO " +
-        "is not told. MilO does not ask for this again, and asks for nothing else for " +
+    return "$REVIEW_LINE: ${reachedInWords(moments, recordedTrips)}. Dually asked Google Play to " +
+        "show its review card$forAll. Google Play decides whether the card appears, and Dually " +
+        "is not told. Dually does not ask for this again, and asks for nothing else for " +
         "$DAYS_BETWEEN_LAUNCHES days"
 }
 
 /** Google Play gave no flow to launch. */
 internal fun noFlowLine(moments: Set<ReviewMoment>, recordedTrips: Int, why: String): String =
-    "$REVIEW_LINE: ${reachedInWords(moments, recordedTrips)}. MilO asked Google Play for its " +
-        "review card, and Google Play gave none to show: $why. Nothing counts as asked. MilO " +
+    "$REVIEW_LINE: ${reachedInWords(moments, recordedTrips)}. Dually asked Google Play for its " +
+        "review card, and Google Play gave none to show: $why. Nothing counts as asked. Dually " +
         "tries again at the next such moment, not before tomorrow"
 
 /** Google Play gave a flow, and the moment for it had passed before it could be launched. */
 internal fun passedLine(moments: Set<ReviewMoment>, recordedTrips: Int): String =
     "$REVIEW_LINE: ${reachedInWords(moments, recordedTrips)}. Google Play had a review card " +
-        "ready, but by then MilO had left that screen or a drive may have begun, so MilO did " +
-        "not have it shown. Nothing counts as asked, and MilO asks at the next such moment"
+        "ready, but by then Dually had left that screen or a drive may have begun, so Dually did " +
+        "not have it shown. Nothing counts as asked, and Dually asks at the next such moment"
 
 /**
  * A moment was reached and MilO did not go to Google Play at all.
@@ -64,12 +64,12 @@ internal fun notAskedLine(
     val reason =
         when (why) {
             NotAskedWhy.NOT_FROM_GOOGLE_PLAY ->
-                "this copy of MilO was not installed by Google Play, and Google Play shows its " +
+                "this copy of Dually was not installed by Google Play, and Google Play shows its " +
                     "review card only in one that was. Nothing is used up: a copy from Google " +
                     "Play asks. This is written once"
 
             NotAskedWhy.MAY_BE_DRIVING ->
-                "a trip is being recorded or a vehicle is connected, and MilO never asks " +
+                "a trip is being recorded or a vehicle is connected, and Dually never asks " +
                     "while a drive may be under way. Nothing is used up. ${nextTime(occasion)}"
 
             NotAskedWhy.ASKED_WITHIN_THIRTY_DAYS ->
@@ -82,7 +82,7 @@ internal fun notAskedLine(
                 "it went to Google Play for the card once already today, and never does twice " +
                     "in one day. Nothing is used up. ${nextTime(occasion, onAnotherDay = true)}"
         }
-    return "$REVIEW_LINE: $reached. MilO asked Google Play for nothing: $reason"
+    return "$REVIEW_LINE: $reached. Dually asked Google Play for nothing: $reason"
 }
 
 private fun inDays(days: Int): String = if (days == 1) "in 1 day" else "in $days days"
@@ -100,10 +100,10 @@ private fun nextTime(
 ): String = when (occasion) {
     ReviewOccasion.HOME -> {
         val day = if (onAnotherDay) " on another day" else ""
-        "MilO asks the next time Home is open$day, with no trip being recorded and no vehicle " +
+        "Dually asks the next time Home is open$day, with no trip being recorded and no vehicle " +
             "connected$notBefore"
     }
 
     ReviewOccasion.REPORT_SENT ->
-        "MilO asks after the next report that is recorded as sent with \"I sent it\"$notBefore"
+        "Dually asks after the next report that is recorded as sent with \"I sent it\"$notBefore"
 }

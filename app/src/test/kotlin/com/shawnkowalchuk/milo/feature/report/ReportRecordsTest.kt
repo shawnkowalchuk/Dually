@@ -69,7 +69,8 @@ class ReportRecordsTest {
         assertEquals(
             listOf(
                 "Report for 2026-10 handed to the email app: 31 trips, 412.3 km. Android does " +
-                    "not say whether the email is sent, so that is asked when MilO is in front again",
+                    "not say whether the email is sent, so that is asked when Dually is in " +
+                    "front again",
             ),
             logged(EventCategory.REPORT),
         )

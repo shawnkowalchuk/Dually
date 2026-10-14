@@ -27,7 +27,7 @@ private const val HOUR_MS = 3_600 * SECOND_MS
 private const val EVENING_MS = 1_791_419_562_000L
 
 private const val STARTED_AHEAD_LINE =
-    "MilO started while the phone's date was set 24 h 0 min ahead, and took the phone's time " +
+    "Dually started while the phone's date was set 24 h 0 min ahead, and took the phone's time " +
         "when it came back."
 
 private val ASKED_FOR_BOTH =

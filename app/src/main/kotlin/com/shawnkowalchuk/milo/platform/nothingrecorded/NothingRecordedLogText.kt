@@ -148,12 +148,12 @@ internal fun shownText(verdict: NothingRecordedVerdict, seen: Boolean, notStored
         if (seen) {
             ""
         } else {
-            " Notifications are switched off for MilO or for this kind of notification, so " +
+            " Notifications are switched off for Dually or for this kind of notification, so " +
                 "nobody saw it."
         }
     val again = notStored?.let { " $it" }.orEmpty()
     return "Nothing-recorded notification shown for ${verdict.today}: \"No trip recorded " +
-        "today\". A tap opens MilO on the Home screen.$unseen$again"
+        "today\". A tap opens Dually on the Home screen.$unseen$again"
 }
 
 /**
@@ -182,7 +182,7 @@ internal fun alarmAskedText(
 /** The line for the daily alarm being asked for. */
 internal fun alarmText(atMs: Long, zone: ZoneId, source: String): String =
     "Nothing-recorded check: the next daily look is asked for at ${formatLogTime(atMs, zone)}, " +
-        "or soon after it ($source). MilO also looks at every start and every time it is opened."
+        "or soon after it ($source). Dually also looks at every start and every time it is opened."
 
 /** The line for the daily alarm being taken back. */
 internal fun noAlarmText(source: String): String =
@@ -195,7 +195,7 @@ internal fun noAlarmText(source: String): String =
  */
 internal fun alarmCountedText(atMs: Long, zone: ZoneId, delayMs: Long, source: String): String =
     "Nothing-recorded check: the next daily look is asked for at ${formatLogTime(atMs, zone)}, " +
-        "or soon after it ($source). The phone's clock is set differently from MilO's own, so " +
+        "or soon after it ($source). The phone's clock is set differently from Dually's own, so " +
         "Android was asked to count ${spanText(delayMs)} from now and not to go by the phone's " +
         "clock. It is asked in the normal way as soon as the two agree."
 

@@ -394,7 +394,9 @@ class PartyViewModelTest {
             runCurrent()
 
             assertEquals(
-                listOf("MilO's mascot did not hold his party: a picture of him could not be read"),
+                listOf(
+                    "Dually's mascot did not hold his party: a picture of him could not be read",
+                ),
                 errors,
             )
             assertNull(viewModel.showing.value)

@@ -105,7 +105,7 @@ class OnboardingViewModelTest {
 
         assertEquals(FirstRunStage.SETUP, viewModel.stage.value)
         assertEquals(
-            listOf("MilO could not store how far the first start has got (SETUP)"),
+            listOf("Dually could not store how far the first start has got (SETUP)"),
             errors,
         )
     }
@@ -118,7 +118,7 @@ class OnboardingViewModelTest {
 
         assertEquals(FirstRunStage.DONE, viewModel.stage.value)
         assertEquals(
-            listOf("MilO could not read how far the first start has got; it is not shown"),
+            listOf("Dually could not read how far the first start has got; it is not shown"),
             errors,
         )
     }

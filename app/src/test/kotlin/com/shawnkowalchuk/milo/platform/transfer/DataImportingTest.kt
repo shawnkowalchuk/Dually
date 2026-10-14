@@ -68,7 +68,7 @@ class DataImportingTest {
         }
     }
 
-    private val picked = "content://files/MilO-export-2026-10-06.json"
+    private val picked = "content://files/Dually-export-2026-10-06.json"
 
     private fun TestScope.offered(text: String = fileOf()): DataTransfer {
         world.documents.files[picked] = text.toByteArray()
@@ -252,7 +252,7 @@ class DataImportingTest {
                 line.contains("8 trips and 3 sent reports replaced the 2 trips and 1 sent"),
             )
             assertTrue(line, line.contains("4 raw GPS points were stored"))
-            assertTrue(line, line.contains("MilO-before-import-${world.nowMs}.json"))
+            assertTrue(line, line.contains("Dually-before-import-${world.nowMs}.json"))
             assertTrue(world.lines(EventCategory.ERROR).isEmpty())
         }
 

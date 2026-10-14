@@ -4,40 +4,53 @@
         The colours in a values file, and none is for a screen. Every colour of a screen
         is a token in core/designsystem/theme/Color.kt; these are read by Android, outside
         Compose, where those tokens cannot be reached. Each repeats a colour of the theme, and a
-        unit test fails if the two ever differ. The only other colours in XML are inside the
-        launcher icon's and the notification icon's drawables (res/drawable/).
+        unit test fails if the two ever differ. The only other colour in XML is the white of the
+        notification icon's and the car screen's icons (res/drawable/), which Android and the car
+        replace with a colour of their own.
+
+        The values are the brand's since 2026-10-13, when the app became Dually (ADR-010). The
+        names kept their first word, "milo": a resource's name is the code's business, and no
+        user sees it.
     -->
     <!--
         Android paints the window with it before Compose has drawn anything
         (res/values/themes.xml). The page colour of the theme; kept equal by
         WindowBackgroundTest.
     -->
-    <color name="milo_window_background">#121316</color>
+    <color name="milo_window_background">#15120F</color>
     <!--
-        The colour of MilO's notifications (Notification.Builder.setColor): Android paints the
-        small icon's surroundings with it in the notification shade, so the mark's lime shows
+        The colour of the app's notifications (Notification.Builder.setColor): Android paints the
+        small icon's surroundings with it in the notification shade, so the mark's orange shows
         where the icon itself cannot carry it (res/drawable/ic_stat_trip.xml). The accent of
-        the theme; kept equal by NotificationAccentTest. Android may darken it on a light shade
-        so that the icon stays readable.
+        the theme; kept equal by NotificationAccentTest. Android may change it on a light or a
+        dark shade so that the icon stays readable.
     -->
-    <color name="milo_notification_accent">#C6F432</color>
+    <color name="milo_notification_accent">#FF5A12</color>
     <!--
         The Android Auto screen's colour (platform/car/TripStatusScreen.kt): the icons of its
         two rows and its button. The car draws the screen, outside Compose. The accent of the
         theme; kept equal by NotificationAccentTest. The car may replace it with a colour of its
         own where it judges the accent hard to read.
     -->
-    <color name="milo_car_accent">#C6F432</color>
+    <color name="milo_car_accent">#FF5A12</color>
+    <!--
+        The app's mark where Compose cannot draw it: the launcher icon
+        (res/drawable/ic_launcher_background.xml and ic_launcher_foreground.xml) and the widget's
+        mark (res/drawable/widget_mark.xml). The orange square and the dark of the letter on it:
+        the theme's pair for the mark, kept equal by AppMarkTest.
+    -->
+    <color name="milo_mark_ground">#FF5A12</color>
+    <color name="milo_mark_letter">#1E1A17</color>
     <!--
         The home-screen widget's colours (res/layout/widget_home.xml): the home screen app draws
         it, outside Compose. Each is a colour of the theme, kept equal by WidgetColorsTest: the
         tile, the main and the secondary text, the accent, the text on the accent, and the fill
         of a quiet control.
     -->
-    <color name="milo_widget_tile">#1E2025</color>
-    <color name="milo_widget_text">#F2F3F5</color>
-    <color name="milo_widget_text_secondary">#9298A3</color>
-    <color name="milo_widget_accent">#C6F432</color>
-    <color name="milo_widget_on_accent">#121316</color>
-    <color name="milo_widget_control">#2C2F36</color>
+    <color name="milo_widget_tile">#221D18</color>
+    <color name="milo_widget_text">#FFF4E8</color>
+    <color name="milo_widget_text_secondary">#CDBFAF</color>
+    <color name="milo_widget_accent">#FF5A12</color>
+    <color name="milo_widget_on_accent">#15120F</color>
+    <color name="milo_widget_control">#2E2721</color>
 </resources>

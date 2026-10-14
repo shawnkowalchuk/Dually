@@ -113,7 +113,7 @@ class ReportFileStoreTest {
     @Test
     fun `a file written piece by piece is complete or not there, like any other`() = runBlocking {
         val whole =
-            store.writeInPieces("MilO-log-2026-10-06.txt") { out ->
+            store.writeInPieces("Dually-log-2026-10-06.txt") { out ->
                 // A piece, a wait as for the next read of storage, and another piece.
                 out.write("first\n".toByteArray())
                 yield()
@@ -122,7 +122,7 @@ class ReportFileStoreTest {
         assertEquals("first\nsecond\n", whole.readText())
 
         try {
-            store.writeInPieces("MilO-log-2026-10-06.txt") { out ->
+            store.writeInPieces("Dually-log-2026-10-06.txt") { out ->
                 out.write("half".toByteArray())
                 throw IOException("the log could not be read on")
             }
@@ -133,7 +133,7 @@ class ReportFileStoreTest {
 
         // The file from before is as it was, and nothing half-written lies beside it.
         assertEquals("first\nsecond\n", whole.readText())
-        assertEquals(listOf("MilO-log-2026-10-06.txt"), names())
+        assertEquals(listOf("Dually-log-2026-10-06.txt"), names())
     }
 
     @Test

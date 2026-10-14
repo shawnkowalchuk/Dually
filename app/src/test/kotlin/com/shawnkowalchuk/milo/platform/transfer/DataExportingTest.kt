@@ -35,7 +35,7 @@ class DataExportingTest {
         }
     }
 
-    private val file = "content://files/MilO-export.json"
+    private val file = "content://files/Dually-export.json"
 
     @Test
     fun `an export holds every trip, every sent report, the settings and every point`() = runTest {

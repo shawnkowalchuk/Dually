@@ -15,7 +15,7 @@ import kotlinx.coroutines.withContext
 // a trip did not start, without plugging the phone into the Mac. The text is made by pure
 // functions, so its form is tested without a phone.
 
-private const val FILE_PREFIX = "MilO-log-"
+private const val FILE_PREFIX = "Dually-log-"
 private const val FILE_EXTENSION = ".txt"
 
 /** What a line of an entry's detail is set in by, so that it reads as belonging to its line. */
@@ -33,9 +33,9 @@ fun eventLogFileName(writtenAtMs: Long, zone: ZoneId): String =
  * in, and how much of the log it holds. Whoever reads the file was not there when it was made.
  */
 fun eventLogFileHeader(writtenAtMs: Long, zone: ZoneId, lineCount: Int): String =
-    "MilO event log\n" +
+    "Dually event log\n" +
         "Written ${formatLogTime(writtenAtMs, zone)}. Every time is in $zone.\n" +
-        "$lineCount lines, oldest first. MilO removes lines older than $EVENT_LOG_KEEP_DAYS " +
+        "$lineCount lines, oldest first. Dually removes lines older than $EVENT_LOG_KEEP_DAYS " +
         "days, except the newest $EVENT_LOG_KEEP_NEWEST.\n\n"
 
 /**

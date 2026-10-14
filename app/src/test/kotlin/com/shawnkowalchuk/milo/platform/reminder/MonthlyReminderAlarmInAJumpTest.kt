@@ -50,7 +50,7 @@ class MonthlyReminderAlarmInAJumpTest : MonthlyReminderClockJumpFixture() {
                     it.startsWith(
                         "Monthly reminder: the next daily look is asked for at 2026-10-07 " +
                             "09:00:00, or within about an hour after it (the daily alarm). The " +
-                            "phone's clock is set differently from MilO's own, so Android was " +
+                            "phone's clock is set differently from Dually's own, so Android was " +
                             "asked to count 14 h 30 min from now",
                     )
                 },

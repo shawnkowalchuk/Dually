@@ -159,7 +159,7 @@ class TripService :
     private fun couldNotEnterForeground(intent: Intent?, failure: Exception, startId: Int): Int {
         val shown = container.tripNotifications.showCouldNotStart()
         val unseen =
-            if (shown) "" else "\nNotifications are off for MilO, so the warning was not shown."
+            if (shown) "" else "\nNotifications are off for Dually, so the warning was not shown."
         val request = intent?.let { startRequestFrom(it, nowMs = clock()) }
         controller.onServiceStartFailed(request, StartFailure(emptyList(), "$failure$unseen"))
         // A service that is already in the foreground from an earlier start carries on: one
@@ -365,7 +365,7 @@ class TripService :
 
     /** MilO was swiped out of the recent apps. The trip carries on (`stopWithTask="false"`). */
     override fun onTaskRemoved(rootIntent: Intent?) {
-        controller.note(EventCategory.SERVICE, "MilO was removed from the recent apps")
+        controller.note(EventCategory.SERVICE, "Dually was removed from the recent apps")
     }
 
     override fun onDestroy() {

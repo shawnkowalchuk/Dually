@@ -100,7 +100,7 @@ class ReportRecords(
             "Report for ${report.period.inLogWords()} handed to the email app: " +
                 "${figures(report.tripCount, report.tenths, report.unit)}. Android does not " +
                 "say whether " +
-                "the email is sent, so that is asked when MilO is in front again",
+                "the email is sent, so that is asked when Dually is in front again",
         )
     }
 

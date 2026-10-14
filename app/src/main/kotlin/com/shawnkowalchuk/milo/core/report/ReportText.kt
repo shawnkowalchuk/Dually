@@ -30,8 +30,7 @@ private const val DETAIL_JOINER = " · "
  * [odometerEstimated]) are handed in already written for the report's unit, kilometres or
  * miles: this package prints them and knows neither word.
  *
- * @param appName and [appMark] are the app's name and the initial on its mark, as the screens
- * write them at the top.
+ * @param appName the app's name, as the screens write it at the top.
  * @param generatedOn a format with one place, the day the report was made.
  * @param revisionNote a format with two places: the revision's number and the day the report
  * it replaces was sent.
@@ -51,12 +50,12 @@ private const val DETAIL_JOINER = " · "
  * @param odometerNote what "est." means, under the heading when a figure carries it.
  * @param odometerOfVehicle a format with two places, the vehicle's name and the label of one
  * of its odometer figures: for a report with more than one vehicle's odometer (2026-10-08).
- * @param footer a format with two places, the sender's name and the period.
+ * @param footer a format with two places, the sender's name and the period. The string
+ * resource starts it with the app's name in full.
  * @param page a format with two places: this page's number and the number of pages.
  */
 data class ReportWords(
     val appName: String,
-    val appMark: String,
     val title: String,
     val name: String,
     val company: String,

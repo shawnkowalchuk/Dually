@@ -71,7 +71,7 @@ internal fun editText(tripId: Long, outcome: ByHandOutcome, zone: ZoneId): Strin
 
                 outcome.after.editedByHand && !outcome.before.editedByHand ->
                     "It is now marked as edited, and \"Restore recorded values\" puts back " +
-                        "what MilO recorded"
+                        "what Dually recorded"
 
                 outcome.after.editedByHand -> "It was marked as edited already"
 

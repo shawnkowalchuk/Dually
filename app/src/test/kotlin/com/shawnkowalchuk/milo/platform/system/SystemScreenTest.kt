@@ -10,7 +10,7 @@ import org.junit.Test
  */
 class SystemScreenTest {
     private val milo =
-        AppIdentity(packageName = "com.shawnkowalchuk.milo", uid = 10_234, label = "MilO")
+        AppIdentity(packageName = "com.shawnkowalchuk.milo", uid = 10_234, label = "Dually")
 
     private val appDetails =
         ScreenIntent(
@@ -60,7 +60,7 @@ class SystemScreenTest {
                 component =
                     "com.miui.powerkeeper" to "com.miui.powerkeeper.ui.HiddenAppsConfigActivity",
                 stringExtras =
-                    mapOf("package_name" to "com.shawnkowalchuk.milo", "package_label" to "MilO"),
+                    mapOf("package_name" to "com.shawnkowalchuk.milo", "package_label" to "Dually"),
             ),
             first,
         )

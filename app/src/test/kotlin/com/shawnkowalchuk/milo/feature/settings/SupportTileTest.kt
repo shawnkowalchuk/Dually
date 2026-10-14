@@ -13,13 +13,14 @@ import org.junit.Test
 class SupportTileTest {
     @Test
     fun `the draft goes to the support address, in the form email apps read`() {
-        val body = supportBody("MilO Trip Log 0.3.1 (build 4) · Android 16 · Xiaomi 23078PND5G")
+        val body =
+            supportBody("Dually Trip Tracker 0.3.1 (build 4) · Android 16 · Xiaomi 23078PND5G")
 
-        val mailto = supportMailto(SUPPORT_ADDRESS, "MilO Trip Log support", body)
+        val mailto = supportMailto(SUPPORT_ADDRESS, "Dually Trip Tracker support", body)
 
         assertEquals(
-            "mailto:support@milotriplog.top?subject=MilO%20Trip%20Log%20support" +
-                "&body=%0A%0A%0AMilO%20Trip%20Log%200.3.1%20%28build%204%29%20%C2%B7%20" +
+            "mailto:support@dually.top?subject=Dually%20Trip%20Tracker%20support" +
+                "&body=%0A%0A%0ADually%20Trip%20Tracker%200.3.1%20%28build%204%29%20%C2%B7%20" +
                 "Android%2016%20%C2%B7%20Xiaomi%2023078PND5G",
             mailto,
         )

@@ -1,8 +1,6 @@
 package com.shawnkowalchuk.milo.platform.report
 
 import android.content.Context
-import android.graphics.Typeface
-import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.report.MileageReport
 import com.shawnkowalchuk.milo.core.report.layoutReport
 import com.shawnkowalchuk.milo.core.report.printedReport
@@ -39,12 +37,12 @@ data class ReportFile(val file: File, val pageCount: Int)
  *
  * @param texts the report's words, and how the phone writes dates and times.
  * @param files where the files are kept: the app's cache.
- * @param typeface reads the app's typeface, which the PDF is written in.
+ * @param typefaces reads the app's typefaces, which the PDF is written in.
  */
-class ReportDocuments(
+class ReportDocuments internal constructor(
     private val texts: ReportTexts,
     private val files: ReportFileStore,
-    private val typeface: () -> Typeface,
+    private val typefaces: () -> ReportTypefaces,
 ) {
     // Android's PdfDocument is not thread safe, and making a PDF is real work that must stay
     // off the main thread. One file at a time, on a background thread.
@@ -60,7 +58,7 @@ class ReportDocuments(
         val format = texts.format()
         val words = texts.words(report.tripCount, report.personal.tripCount, report.unit)
         val printed = printedReport(report, words, format)
-        val paints = ReportPaints(typeface())
+        val paints = ReportPaints(typefaces())
         val pages = layoutReport(printed, paints, format.locale)
         val file = files.write(fileName(report, PDF_EXTENSION)) { out ->
             writeReportPdf(pages, paints, out)
@@ -114,12 +112,12 @@ class ReportDocuments(
     )
 }
 
-/** Builds [ReportDocuments] on the report files in the app's cache, in the app's typeface. */
+/** Builds [ReportDocuments] on the report files in the app's cache, in the app's typefaces. */
 fun buildReportDocuments(context: Context, texts: ReportTexts): ReportDocuments {
     val appContext = context.applicationContext
     return ReportDocuments(
         texts = texts,
         files = buildReportFileStore(appContext),
-        typeface = { appContext.resources.getFont(R.font.sora) },
+        typefaces = { readReportTypefaces(appContext) },
     )
 }

@@ -115,7 +115,7 @@ class TripEditLogTextTest {
         assertEquals(
             "Trip 12: changed by hand on the edit screen: distance 12345 m → 13000 m (times in " +
                 "America/Edmonton). It is now marked as edited, and \"Restore recorded values\" " +
-                "puts back what MilO recorded",
+                "puts back what Dually recorded",
             editText(12, ByHandOutcome.Done(recorded, after), edmonton),
         )
     }

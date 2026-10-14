@@ -8,7 +8,7 @@ import org.junit.Test
 
 /**
  * The notifications' colour is written in XML, because Android reads it outside Compose. It is
- * the theme's accent, the lime of the app's mark, so that the notification icon in the shade
+ * the theme's accent, the orange of the app's mark, so that the notification icon in the shade
  * looks like the mark. Nothing but this test would notice the two drifting apart.
  */
 class NotificationAccentTest {
@@ -29,6 +29,16 @@ class NotificationAccentTest {
         val accent = "%06X".format(MiloColorScheme.primary.toArgb() and 0xFFFFFF)
 
         assertEquals(accent, written(file, "milo_car_accent"))
+    }
+
+    @Test
+    fun `both are the brand's orange, and no lime is left in the values file`() {
+        // The lime was the accent until 2026-10-13, and Google Play named it (ADR-010).
+        val file = File("src/main/res/values/colors.xml")
+
+        assertEquals("FF5A12", written(file, "milo_notification_accent"))
+        assertEquals("FF5A12", written(file, "milo_car_accent"))
+        assertTrue(!file.readText().contains("C6F432", ignoreCase = true))
     }
 
     private fun written(file: File, name: String): String? = Regex(

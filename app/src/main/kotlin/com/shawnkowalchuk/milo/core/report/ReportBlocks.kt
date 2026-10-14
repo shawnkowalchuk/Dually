@@ -35,7 +35,7 @@ private const val TILE_RADIUS = 10f
 private const val TILE_PADDING = 12f
 private const val SMALL_TILE_PADDING = 10f
 
-/** The app's mark: a square of the accent with the app's initial, its corner as on Home. */
+/** The app's mark: a square of the accent with the app's letter, its corner as on Home. */
 private const val MARK_SIZE = 28f
 private const val MARK_RADIUS = 8f
 
@@ -141,10 +141,35 @@ private class BlockBuilder {
         items += PageItem.Box(left, y, right, y + height, radius, ink)
     }
 
+    /** The app's mark from the present height down: its square, and the letter in its middle. */
+    fun mark(left: Float, size: Float, radius: Float) {
+        items += appMark(left, y, size, radius)
+    }
+
     fun build(): Block = Block(y, items.toList())
 }
 
 private fun block(build: BlockBuilder.() -> Unit): Block = BlockBuilder().apply(build).build()
+
+/**
+ * The app's mark with its top left corner at [left], [top]: a square of the accent, [size]
+ * wide and high, and the letter in its middle, as large on the square as the design draws it.
+ */
+internal fun appMark(left: Float, top: Float, size: Float, radius: Float): List<PageItem> {
+    val letterWidth = size * MARK_LETTER_WIDTH_SHARE
+    val letterHeight = size * MARK_LETTER_HEIGHT_SHARE
+    val letterLeft = left + (size - letterWidth) / 2
+    val letterTop = top + (size - letterHeight) / 2
+    return listOf(
+        PageItem.Box(left, top, left + size, top + size, radius, ReportInk.ACCENT),
+        PageItem.MarkLetter(
+            letterLeft,
+            letterTop,
+            letterLeft + letterWidth,
+            letterTop + letterHeight,
+        ),
+    )
+}
 
 /**
  * Where the five columns stand. The two times and the kilometres are as wide as their widest
@@ -169,16 +194,17 @@ internal fun columnsFor(report: PrintedReport, measure: TextMeasure): Columns {
     val words = report.words
     val rows = report.days.flatMap { it.rows }
     val cell = ReportTextStyle.CELL
+    val figure = ReportTextStyle.CELL_FIGURE
     val title = ReportTextStyle.COLUMN
     val timeWidth =
         (
-            rows.flatMap { listOf(it.start, it.end) }.map { measure.width(it, cell) } +
+            rows.flatMap { listOf(it.start, it.end) }.map { measure.width(it, figure) } +
                 measure.width(words.columnStart, title) +
                 measure.width(words.columnEnd, title)
             ).max()
     val kmWidth =
         (
-            rows.map { measure.width(it.km, cell) } +
+            rows.map { measure.width(it.km, figure) } +
                 report.days.map { measure.width(it.subtotalKm, ReportTextStyle.SUM) } +
                 measure.width(words.columnKm, title)
             ).max()
@@ -214,7 +240,7 @@ internal fun headingBlock(report: PrintedReport, measure: TextMeasure): Block = 
     senderTile(report.fields, measure)
     down(TILE_GAP)
     if (report.odometer.isNotEmpty()) {
-        senderTile(report.odometer, measure)
+        senderTile(report.odometer, measure, ReportTextStyle.VALUE_FIGURE)
         down(TILE_GAP)
     }
     for (note in report.notes) {
@@ -226,7 +252,7 @@ internal fun headingBlock(report: PrintedReport, measure: TextMeasure): Block = 
 }
 
 /**
- * The dark tile at the top: the app's mark, "MilO" over "Mileage report" at the start, and the
+ * The dark tile at the top: the app's mark, its name over "Mileage report" at the start, and the
  * period over the day the report was made at the end, as a screen's top line is laid out. A
  * period too long for its room (a date range) takes more lines, and the tile grows.
  */
@@ -253,14 +279,7 @@ private fun BlockBuilder.brandTile(report: PrintedReport, measure: TextMeasure) 
     val top = y
     box(CONTENT_LEFT, CONTENT_RIGHT, height, TILE_RADIUS, ReportInk.DARK)
     down(TILE_PADDING)
-    box(markLeft, markLeft + MARK_SIZE, MARK_SIZE, MARK_RADIUS, ReportInk.ACCENT)
-    val mark = ReportTextStyle.MARK
-    textAt(
-        words.appMark,
-        markLeft + (MARK_SIZE - measure.width(words.appMark, mark)) / 2,
-        y + MARK_SIZE / 2 + mark.size * CAP_MIDDLE,
-        mark,
-    )
+    mark(markLeft, MARK_SIZE, MARK_RADIUS)
     textAt(words.appName, nameX, top + firstBaseline, name, ink = ReportInk.ON_DARK)
     textAt(words.title, nameX, top + secondBaseline, line, ink = ReportInk.ON_DARK_QUIET)
     column(
@@ -284,8 +303,9 @@ private fun BlockBuilder.brandTile(report: PrintedReport, measure: TextMeasure) 
 
 /**
  * The period's kilometres on two tiles side by side: Business, the trips the report lists, on
- * the accent, and Personal, which it does not list, on a quiet tile. Each has its label, the
- * kilometres in large figures, and how many trips they add up.
+ * Amber (since 2026-10-13; on the lime accent until then), and Personal, which it does not
+ * list, on a quiet tile. Each has its label, the kilometres in large figures, and how many
+ * trips they add up.
  */
 private fun BlockBuilder.tallyTiles(report: PrintedReport, measure: TextMeasure) {
     val label = ReportTextStyle.TILE_LABEL
@@ -303,7 +323,7 @@ private fun BlockBuilder.tallyTiles(report: PrintedReport, measure: TextMeasure)
         val left = CONTENT_LEFT + index * (width + TILE_GAP)
         val x = left + SMALL_TILE_PADDING
         val quiet = if (business) ReportInk.DARK else ReportInk.QUIET
-        val fill = if (business) ReportInk.ACCENT else ReportInk.PANEL
+        val fill = if (business) ReportInk.AMBER else ReportInk.PANEL
         box(left, left + width, height, TILE_RADIUS, fill)
         textAt(tally.label, x, top + labelBaseline, label, ink = quiet)
         textAt(tally.km, x, top + figureBaseline, figure)
@@ -317,11 +337,16 @@ private fun BlockBuilder.tallyTiles(report: PrintedReport, measure: TextMeasure)
 /**
  * Who the report is from, on a quiet tile: each detail under its small label, side by side in
  * equal columns. A long one (a vehicle described with its plate) wraps inside its column. The
- * odometer's two figures are set on a tile of this kind too.
+ * odometer's two figures are set on a tile of this kind too, in the report's figures.
+ *
+ * @param value what the details are set in.
  */
-private fun BlockBuilder.senderTile(fields: List<Pair<String, String>>, measure: TextMeasure) {
+private fun BlockBuilder.senderTile(
+    fields: List<Pair<String, String>>,
+    measure: TextMeasure,
+    value: ReportTextStyle = ReportTextStyle.VALUE,
+) {
     val label = ReportTextStyle.LABEL
-    val value = ReportTextStyle.VALUE
     val inside = CONTENT_RIGHT - CONTENT_LEFT - SMALL_TILE_PADDING * 2
     val columnWidth = (inside - (fields.size - 1) * SMALL_TILE_PADDING) / fields.size
     val values = fields.map { (_, content) -> wrap(content, columnWidth, value, measure) }
@@ -370,17 +395,18 @@ internal fun columnTitlesBlock(words: ReportWords, columns: Columns): Block = bl
  */
 internal fun rowBlock(row: PrintedRow, columns: Columns, measure: TextMeasure): Block = block {
     val style = ReportTextStyle.CELL
+    val figure = ReportTextStyle.CELL_FIGURE
     val from = wrap(row.from, columns.addressWidth, style, measure)
     val to = wrap(row.to, columns.addressWidth, style, measure)
     val detailWidth = columns.toX + columns.addressWidth - columns.fromX
     val detail = row.detail?.let { wrap(it, detailWidth, style, measure) }.orEmpty()
     rule(THIN_RULE, columns.startX, CONTENT_RIGHT - TABLE_INSET, ReportInk.HAIRLINE)
     down(ROW_PADDING)
-    text(row.start, columns.startX, style)
-    text(row.end, columns.endX, style)
+    text(row.start, columns.startX, figure)
+    text(row.end, columns.endX, figure)
     column(from, columns.fromX, style, ReportInk.DARK)
     column(to, columns.toX, style, ReportInk.DARK)
-    text(row.km, columns.kmRight, style, rightAligned = true)
+    text(row.km, columns.kmRight, figure, rightAligned = true)
     if (row.marked) text(REPORT_MARK, columns.markX, style)
     down(maxOf(from.size, to.size) * style.leading)
     if (detail.isNotEmpty()) {
@@ -393,9 +419,10 @@ internal fun rowBlock(row: PrintedRow, columns: Columns, measure: TextMeasure): 
 /** A day's subtotal, under a rule, with the kilometres under the column they add up. */
 internal fun subtotalBlock(day: PrintedDay, words: ReportWords, columns: Columns): Block = block {
     val style = ReportTextStyle.SUM
+    val label = ReportTextStyle.SUM_LABEL
     rule(RULE, columns.startX, CONTENT_RIGHT - TABLE_INSET)
     down(ROW_PADDING)
-    text(words.subtotal, columns.sumLabelRight, style, rightAligned = true, ink = ReportInk.QUIET)
+    text(words.subtotal, columns.sumLabelRight, label, rightAligned = true, ink = ReportInk.QUIET)
     text(day.subtotalKm, columns.kmRight, style, rightAligned = true)
     down(style.leading)
 }

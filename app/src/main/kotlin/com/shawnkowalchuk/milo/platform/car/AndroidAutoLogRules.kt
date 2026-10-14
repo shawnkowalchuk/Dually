@@ -58,10 +58,10 @@ internal fun androidAutoLogText(note: AndroidAutoNote, connected: Boolean, rawTy
     return when (note) {
         AndroidAutoNote.FIRST_READING ->
             if (connected) {
-                "Android Auto is connected ($raw). First reading since MilO's process " +
-                    "started, so MilO did not see it connect. No trip is being recorded"
+                "Android Auto is connected ($raw). First reading since Dually's process " +
+                    "started, so Dually did not see it connect. No trip is being recorded"
             } else {
-                "Android Auto is not connected ($raw). First reading since MilO's process " +
+                "Android Auto is not connected ($raw). First reading since Dually's process " +
                     "started. No trip is being recorded"
             }
 

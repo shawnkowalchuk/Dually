@@ -44,14 +44,14 @@ private val BOTH = setOf(ReviewMoment.FIVE_TRIPS, ReviewMoment.HUNDRED_TRIPS)
 private val REPORT = setOf(ReviewMoment.REPORT_SENT)
 
 private const val DECIDES =
-    "Google Play decides whether the card appears, and MilO is not told. MilO does not ask " +
+    "Google Play decides whether the card appears, and Dually is not told. Dually does not ask " +
         "for this again, and asks for nothing else for 30 days"
 
 private const val DAY_MS = 24 * 3_600_000L
 
 /** Why a moment waits inside the thirty days after a launch, as the Log says it. */
 private const val WAITS =
-    "MilO asked Google Play for nothing: it asked Google Play to show the card less than 30 " +
+    "Dually asked Google Play for nothing: it asked Google Play to show the card less than 30 " +
         "days ago, and leaves 30 days between two requests, because Google Play does not " +
         "show its card more often. Nothing is used up. "
 
@@ -131,7 +131,7 @@ class ReviewPromptsTest {
         assertEquals(nowMs, stored().lastLaunchAtMs)
         assertEquals(
             listOf(
-                "Review card: MilO holds 5 recorded trips, and asks at 5. MilO asked " +
+                "Review card: Dually holds 5 recorded trips, and asks at 5. Dually asked " +
                     "Google Play to show its review card. $DECIDES",
             ),
             lines(),
@@ -182,7 +182,7 @@ class ReviewPromptsTest {
         assertEquals(MomentStanding.ASKED, stored().of(ReviewMoment.HUNDRED_TRIPS))
         assertEquals(
             listOf(
-                "Review card: MilO holds 150 recorded trips, and asks at 5 and at 100. MilO " +
+                "Review card: Dually holds 150 recorded trips, and asks at 5 and at 100. Dually " +
                     "asked Google Play to show its review card, once for all of them. $DECIDES",
             ),
             lines(),
@@ -210,8 +210,8 @@ class ReviewPromptsTest {
             assertEquals(MomentStanding.OPEN, stored().of(ReviewMoment.HUNDRED_TRIPS))
             assertEquals(launchedAt, stored().lastLaunchAtMs)
             assertEquals(
-                "Review card: MilO holds 100 recorded trips, and asks at 100. $WAITS" +
-                    "MilO asks the next time Home is open, with no trip being recorded and no " +
+                "Review card: Dually holds 100 recorded trips, and asks at 100. $WAITS" +
+                    "Dually asks the next time Home is open, with no trip being recorded and no " +
                     "vehicle connected: in 16 days at the earliest",
                 lines().last(),
             )
@@ -227,7 +227,7 @@ class ReviewPromptsTest {
             assertEquals(2, card.launches)
             assertEquals(nowMs, stored().lastLaunchAtMs)
             assertEquals(
-                "Review card: MilO holds 131 recorded trips, and asks at 100. MilO asked " +
+                "Review card: Dually holds 131 recorded trips, and asks at 100. Dually asked " +
                     "Google Play to show its review card. $DECIDES",
                 lines().last(),
             )
@@ -270,7 +270,7 @@ class ReviewPromptsTest {
         assertEquals(MomentStanding.ASKED, stored().of(ReviewMoment.REPORT_SENT))
         assertEquals(
             listOf(
-                "Review card: A report was recorded as sent with \"I sent it\". MilO asked " +
+                "Review card: A report was recorded as sent with \"I sent it\". Dually asked " +
                     "Google Play to show its review card. $DECIDES",
             ),
             lines(),
@@ -296,10 +296,10 @@ class ReviewPromptsTest {
             assertEquals(0, card.requests)
             assertEquals(
                 listOf(
-                    "Review card: MilO holds 5 recorded trips, and asks at 5. MilO asked " +
-                        "Google Play for nothing: this copy of MilO was not installed by Google " +
-                        "Play, and Google Play shows its review card only in one that was. " +
-                        "Nothing is used up: a copy from Google Play asks. This is written once",
+                    "Review card: Dually holds 5 recorded trips, and asks at 5. Dually asked " +
+                        "Google Play for nothing: this copy of Dually was not installed by " +
+                        "Google Play, and Google Play shows its review card only in one that " +
+                        "was. Nothing is used up: a copy from Google Play asks. This is written once",
                 ),
                 lines(),
             )
@@ -342,7 +342,7 @@ class ReviewPromptsTest {
         assertEquals(3, lines().size)
         assertTrue(
             lines()[1].startsWith(
-                "Review card: MilO holds 100 recorded trips, and asks at 100.",
+                "Review card: Dually holds 100 recorded trips, and asks at 100.",
             ),
         )
         assertTrue(lines()[2].startsWith("Review card: A report was recorded as sent"))
@@ -381,10 +381,10 @@ class ReviewPromptsTest {
         assertEquals(MiloSettings(), settings.current())
         assertEquals(
             listOf(
-                "Review card: A report was recorded as sent with \"I sent it\". MilO asked " +
+                "Review card: A report was recorded as sent with \"I sent it\". Dually asked " +
                     "Google Play for nothing: a trip is being recorded or a vehicle is " +
-                    "connected, and MilO never asks while a drive may be under way. Nothing is " +
-                    "used up. MilO asks after the next report that is recorded as sent with " +
+                    "connected, and Dually never asks while a drive may be under way. Nothing is " +
+                    "used up. Dually asks after the next report that is recorded as sent with " +
                     "\"I sent it\"",
             ),
             lines(),
@@ -412,10 +412,10 @@ class ReviewPromptsTest {
             assertEquals(MiloSettings(), settings.current())
             assertEquals(
                 listOf(
-                    "Review card: MilO holds 5 recorded trips, and asks at 5. Google Play " +
-                        "had a review card ready, but by then MilO had left that screen or a " +
-                        "drive may have begun, so MilO did not have it shown. Nothing counts " +
-                        "as asked, and MilO asks at the next such moment",
+                    "Review card: Dually holds 5 recorded trips, and asks at 5. Google Play " +
+                        "had a review card ready, but by then Dually had left that screen or a " +
+                        "drive may have begun, so Dually did not have it shown. Nothing counts " +
+                        "as asked, and Dually asks at the next such moment",
                 ),
                 lines(),
             )
@@ -460,7 +460,7 @@ class ReviewPromptsTest {
         assertEquals(at(11, 8), stored().lastLaunchAtMs)
         assertEquals(
             "Review card: A report was recorded as sent with \"I sent it\". $WAITS" +
-                "MilO asks after the next report that is recorded as sent with \"I sent it\": " +
+                "Dually asks after the next report that is recorded as sent with \"I sent it\": " +
                 "in 30 days at the earliest",
             lines().last(),
         )
@@ -493,8 +493,8 @@ class ReviewPromptsTest {
 
         assertEquals(2, lines().size)
         assertEquals(
-            "Review card: MilO holds 5 recorded trips, and asks at 5. $WAITS" +
-                "MilO asks the next time Home is open, with no trip being recorded and no " +
+            "Review card: Dually holds 5 recorded trips, and asks at 5. $WAITS" +
+                "Dually asks the next time Home is open, with no trip being recorded and no " +
                 "vehicle connected: in 30 days at the earliest",
             lines().last(),
         )
@@ -525,7 +525,7 @@ class ReviewPromptsTest {
         repeat(3) { assertEquals(emptySet<ReviewMoment>(), prompts.look(ReviewOccasion.HOME)) }
 
         assertEquals(4, lines().size)
-        assertTrue(lines().last().startsWith("Review card: MilO holds 100 recorded trips"))
+        assertTrue(lines().last().startsWith("Review card: Dually holds 100 recorded trips"))
         assertTrue(lines().last().endsWith("in 30 days at the earliest"))
     }
 
@@ -545,10 +545,10 @@ class ReviewPromptsTest {
             assertEquals(nowMs, stored().lastAttemptAtMs)
             assertEquals(
                 listOf(
-                    "Review card: MilO holds 5 recorded trips, and asks at 5. MilO asked " +
+                    "Review card: Dually holds 5 recorded trips, and asks at 5. Dually asked " +
                         "Google Play for its review card, and Google Play gave none to show: " +
                         "the Play Store app was not found on this phone. Nothing counts as " +
-                        "asked. MilO tries again at the next such moment, not before tomorrow",
+                        "asked. Dually tries again at the next such moment, not before tomorrow",
                 ),
                 lines(),
             )
@@ -586,9 +586,9 @@ class ReviewPromptsTest {
             assertEquals(1, card.requests)
             assertEquals(2, lines().size)
             assertEquals(
-                "Review card: MilO holds 5 recorded trips, and asks at 5. MilO asked Google " +
+                "Review card: Dually holds 5 recorded trips, and asks at 5. Dually asked Google " +
                     "Play for nothing: it went to Google Play for the card once already today, " +
-                    "and never does twice in one day. Nothing is used up. MilO asks the next " +
+                    "and never does twice in one day. Nothing is used up. Dually asks the next " +
                     "time Home is open on another day, with no trip being recorded and no " +
                     "vehicle connected",
                 lines().last(),
@@ -652,7 +652,7 @@ class ReviewPromptsTest {
             prompts.askAt(ReviewOccasion.HOME)
 
             assertEquals(MiloSettings(), settings.current())
-            assertTrue(lines().single().contains("so MilO did not have it shown"))
+            assertTrue(lines().single().contains("so Dually did not have it shown"))
             // On the screen that was built in its place: asked.
             card.answer = { card.given() }
             prompts.askAt(ReviewOccasion.HOME)
@@ -685,7 +685,7 @@ class ReviewPromptsTest {
 
         assertEquals(1, card.launches)
         assertEquals(
-            listOf("MilO could not store what it asked Google Play's review card for"),
+            listOf("Dually could not store what it asked Google Play's review card for"),
             lines(EventCategory.ERROR),
         )
         // Home is opened again and again, that day and the next: Google Play is not asked again.
@@ -729,7 +729,7 @@ class ReviewPromptsTest {
 
             assertEquals(0, card.requests)
             assertEquals(
-                List(2) { "MilO could not look at the moments of Google Play's review card" },
+                List(2) { "Dually could not look at the moments of Google Play's review card" },
                 lines(EventCategory.ERROR),
             )
             assertEquals(MiloSettings(), settings.current())
@@ -752,7 +752,7 @@ class ReviewPromptsTest {
         assertEquals(MomentStanding.ASKED, stored().of(ReviewMoment.FIVE_TRIPS))
         val crashFiles = CrashFileStore(folder.root)
         val record = crashFiles.read(crashFiles.pendingFiles().single())
-        assertTrue(record.summary.contains("MilO asked Google Play to show its review card"))
+        assertTrue(record.summary.contains("Dually asked Google Play to show its review card"))
     }
 
     // ---- What the screens are told --------------------------------------------------------------

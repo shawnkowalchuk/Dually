@@ -43,7 +43,7 @@ data class ProcessExit(
      */
     fun messageDatedAhead(): String =
         "${message()}. It ended while the phone's clock was set ahead; this line stands at the " +
-            "time MilO read the record, not at the time the process ended"
+            "time Dually read the record, not at the time the process ended"
 
     /** [detail], with the time Android gave the record, which tells it from every other. */
     fun detailDatedAhead(): String =

@@ -11,6 +11,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.em
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
 import kotlin.math.roundToInt
 
@@ -51,8 +52,8 @@ enum class FigureSize {
  *
  * **How high it is.** The design sets its largest figures on a line exactly as high as the
  * figure (44 for 44), and the theme's styles say the same. Compose does not go by that for a
- * single line: it never makes a text lower than its typeface asks for, which for Sora is 1.26
- * times the size. The figure on an accent tile ([FigureSize.TOTAL]) is therefore told to take
+ * single line: it never makes a text lower than its typeface asks for, which for the readout's
+ * typeface is 1.3 times the size. The figure on an accent tile ([FigureSize.TOTAL]) is therefore told to take
  * up the figure's own height, with the text standing in the middle of it; a digit is lower
  * than that, so nothing is cut off. A figure that a very large font sends onto a second line
  * is left as high as it is. (Until 2026-10-10 there was a sixth size, 56 with 18, for the
@@ -107,17 +108,25 @@ fun FigureText(
         } else {
             MaterialTheme.colorScheme.onSurfaceVariant
         }
-    // The design pulls the unit's letters together by as much as the figure's: the same length,
-    // not the same share of a smaller size. Both of the figure's values are of the theme, in
-    // sp and in em, so the product is in sp and grows with the phone's font size.
-    val unitTracking = figureStyle.fontSize * figureStyle.letterSpacing.value
+    // The unit's letters are left as their typeface spaces them, whatever pull the figure has.
+    // (With Sora, until 2026-10-13, they were pulled by the same length as the figure's: a
+    // monospace's letters fill their cells, and any pull runs "km" together.)
+    val unitTracking = 0.em
+    // A unit is part of the readout and is set in its typeface ("48.2 km"). The words after a
+    // count ("of 14 ready") are a sentence's, and stay running text.
+    val unitFamily =
+        if (size == FigureSize.COUNT) unitStyle.fontFamily else figureStyle.fontFamily
     Text(
         text =
             buildAnnotatedString {
                 append(figure)
                 // The space belongs to the unit, so it is as narrow as the unit is small.
                 withStyle(
-                    unitStyle.toSpanStyle().copy(color = unitColor, letterSpacing = unitTracking),
+                    unitStyle.toSpanStyle().copy(
+                        color = unitColor,
+                        letterSpacing = unitTracking,
+                        fontFamily = unitFamily,
+                    ),
                 ) {
                     append(" $unit")
                 }

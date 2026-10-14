@@ -45,7 +45,7 @@ class DataViewModelTest {
         val world = TransferWorld(temporaryFolder.root)
         world.main.trips = everyKindOfTrip
         val transfer = world.transfer(backgroundScope)
-        transfer.exportTo("content://files/MilO-export.json", includePoints = false)
+        transfer.exportTo("content://files/Dually-export.json", includePoints = false)
         transfer.settled()
 
         // The Settings screen is opened: a new ViewModel, as after leaving it and coming back.

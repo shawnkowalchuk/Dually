@@ -23,23 +23,23 @@ internal fun clockNewsText(news: ClockNews): String? = when (news) {
     is ClockNews.SetAside -> null
 
     is ClockNews.CameBack ->
-        "The phone's ${setText(news.offsetMs)}. MilO saw it back ${spanText(news.lastedMs)} " +
+        "The phone's ${setText(news.offsetMs)}. Dually saw it back ${spanText(news.lastedMs)} " +
             "later and kept its own time."
 
     is ClockNews.ChangedAgain ->
-        "The phone's ${setText(news.offsetMs)}. MilO saw it changed again " +
+        "The phone's ${setText(news.offsetMs)}. Dually saw it changed again " +
             "${spanText(news.lastedMs)} later and kept its own time."
 
     is ClockNews.Followed -> {
         val where = if (news.offsetMs >= 0) "ahead of" else "behind"
         "The phone's clock is ${spanText(abs(news.offsetMs))} $where where it was and has " +
-            "stayed so for ${spanText(news.heldMs)}. MilO now follows it."
+            "stayed so for ${spanText(news.heldMs)}. Dually now follows it."
     }
 
     // It does not say for how long: the process that took the date may be long gone, and the
     // one that writes this only knows that the phone's clock is back.
     is ClockNews.StartedAhead ->
-        "MilO started while the phone's ${setText(news.aheadMs)}, and took the phone's time " +
+        "Dually started while the phone's ${setText(news.aheadMs)}, and took the phone's time " +
             "when it came back."
 }
 
@@ -77,8 +77,8 @@ private fun wholeSeconds(spanMs: Long): Long =
  * an `ERROR` line: the clock still works while a process lives, and not across two of them.
  */
 internal const val NO_BOOT_NUMBER =
-    "MilO's clock: this phone gives no boot number, so MilO's time cannot be kept from one " +
-        "start of MilO to the next. A MilO that Android starts while the phone's date is set " +
+    "Dually's clock: this phone gives no boot number, so Dually's time cannot be kept from one " +
+        "start of Dually to the next. A Dually that Android starts while the phone's date is set " +
         "ahead will go by that date until the phone's clock comes back."
 
 /** What the event log calls the asking and the look that follow the phone's clock coming back. */
@@ -91,4 +91,4 @@ internal const val CLOCK_FOLLOWED = "the phone's clock was changed and is follow
 internal const val CLOCK_SET = "the phone's clock was set"
 
 /** ...and those that follow the phone's clock being set back by more than MilO follows. */
-internal const val CLOCK_SET_BACK = "the phone's clock was set back and MilO keeps its own time"
+internal const val CLOCK_SET_BACK = "the phone's clock was set back and Dually keeps its own time"

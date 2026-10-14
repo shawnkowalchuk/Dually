@@ -16,7 +16,7 @@ import org.junit.Test
 private const val SECOND_MS = 1_000L
 
 private const val STARTED_AHEAD_LINE =
-    "MilO started while the phone's date was set 24 h 0 min ahead, and took the phone's time " +
+    "Dually started while the phone's date was set 24 h 0 min ahead, and took the phone's time " +
         "when it came back."
 
 /**
@@ -61,14 +61,15 @@ class NothingRecordedOnProbationTest : NothingRecordedClockJumpFixture() {
             lines().any {
                 it.startsWith(
                     "Nothing-recorded check (process start): no notification yet: no trip has " +
-                        "been started today, Thu 2026-10-08, but MilO's time is not confirmed yet.",
+                        "been started today, Thu 2026-10-08, but Dually's time is not " +
+                        "confirmed yet.",
                 )
             },
         )
         assertTrue(
             lines().any {
                 it.startsWith(
-                    "Nothing-recorded check: MilO's time is not confirmed yet: it was taken " +
+                    "Nothing-recorded check: Dually's time is not confirmed yet: it was taken " +
                         "from the phone's clock at a start with nothing to check it against " +
                         "(process start). So Android was asked to count 2 min from now.",
                 )
@@ -144,7 +145,7 @@ class NothingRecordedOnProbationTest : NothingRecordedClockJumpFixture() {
 
             // MilO opened in between does not show it either, and the alarm is not due yet.
             phone.advance(60 * SECOND_MS)
-            check.look("MilO was opened")
+            check.look("Dually was opened")
             letItLook()
             assertEquals(0, shown)
             assertFalse(alarmIsDue())

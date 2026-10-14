@@ -264,7 +264,7 @@ class TripControllerWaitingTest {
             assertEquals(150.0, trip.distanceMetres, 1.0)
             assertTrue(
                 world.logged(EventCategory.TRIP).any {
-                    "started by MANUAL while MilO waited beside the parked truck" in it
+                    "started by MANUAL while Dually waited beside the parked truck" in it
                 },
             )
         }

@@ -52,8 +52,8 @@ class DrivingAlertWatchTest {
         val alert = alertBeside(controller)
 
         alert.arm("process start")
-        alert.arm("MilO in front")
-        alert.arm("MilO in front")
+        alert.arm("Dually in front")
+        alert.arm("Dually in front")
         runCurrent()
 
         assertEquals(listOf("watch"), detection.asked)
@@ -78,11 +78,11 @@ class DrivingAlertWatchTest {
 
         // Granted on the Setup screen; MilO is in front again.
         detection.granted = true
-        alert.arm("MilO in front")
+        alert.arm("Dually in front")
         runCurrent()
 
         assertEquals(listOf("watch"), detection.asked)
-        assertEquals("Driving alert: watching for driving (MilO in front)", logged().last())
+        assertEquals("Driving alert: watching for driving (Dually in front)", logged().last())
     }
 
     @Test
@@ -133,7 +133,7 @@ class DrivingAlertWatchTest {
         detection.refuseWith = "ApiException: 17: API: ActivityRecognition.API is not available"
 
         alert.arm("process start")
-        alert.arm("MilO in front")
+        alert.arm("Dually in front")
         runCurrent()
 
         assertEquals(listOf("watch", "watch"), detection.asked)
@@ -143,10 +143,10 @@ class DrivingAlertWatchTest {
         assertEquals(emptyList<String>(), logged())
 
         detection.refuseWith = null
-        alert.arm("MilO in front")
+        alert.arm("Dually in front")
         runCurrent()
 
-        assertEquals("Driving alert: watching for driving (MilO in front)", logged().single())
+        assertEquals("Driving alert: watching for driving (Dually in front)", logged().single())
     }
 
     @Test

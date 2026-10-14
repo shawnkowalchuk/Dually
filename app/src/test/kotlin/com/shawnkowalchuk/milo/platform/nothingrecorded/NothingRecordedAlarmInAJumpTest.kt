@@ -50,7 +50,7 @@ class NothingRecordedAlarmInAJumpTest : NothingRecordedClockJumpFixture() {
                     it.startsWith(
                         "Nothing-recorded check: the next daily look is asked for at " +
                             "2026-10-08 12:00:00, or soon after it (the daily alarm). The " +
-                            "phone's clock is set differently from MilO's own, so Android was " +
+                            "phone's clock is set differently from Dually's own, so Android was " +
                             "asked to count 17 h 27 min from now",
                     )
                 },
@@ -154,7 +154,7 @@ class NothingRecordedAlarmInAJumpTest : NothingRecordedClockJumpFixture() {
 
         val untilNoon = at("2026-10-08T12:00") - at("2026-10-07T18:32:42")
         assertEquals(listOf(untilNoon), alarmsAskedAfter)
-        assertTrue(lines().any { it.contains("(the phone's clock was set back and MilO keeps") })
+        assertTrue(lines().any { it.contains("(the phone's clock was set back and Dually keeps") })
         phone.advanceTo(at("2026-10-08T11:59:59"))
         assertFalse(alarmIsDue())
         phone.advanceTo(at("2026-10-08T12:00:00"))

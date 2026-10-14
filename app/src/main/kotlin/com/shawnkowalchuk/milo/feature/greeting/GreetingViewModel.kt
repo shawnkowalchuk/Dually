@@ -79,11 +79,11 @@ class GreetingViewModel(
             val what =
                 when (kind) {
                     MascotGreetingKind.WAVE ->
-                        "MilO did not greet: a picture of its mascot could not be read"
+                        "Dually did not greet: a picture of its mascot could not be read"
 
                     MascotGreetingKind.MOONWALK ->
-                        "MilO's mascot did not moonwalk: a picture of him could not be read. " +
-                            "MilO shows the wave instead"
+                        "Dually's mascot did not moonwalk: a picture of him could not be read. " +
+                            "Dually shows the wave instead"
                 }
             eventLog.add(clock(), EventCategory.ERROR, what, why.stackTraceToString())
         }
@@ -93,7 +93,7 @@ class GreetingViewModel(
         try {
             settings.setGreetingsShown(shown)
         } catch (notStored: IOException) {
-            val what = "MilO could not store how many greetings it has shown ($shown)"
+            val what = "Dually could not store how many greetings it has shown ($shown)"
             eventLog.add(clock(), EventCategory.ERROR, what, notStored.stackTraceToString())
         }
     }

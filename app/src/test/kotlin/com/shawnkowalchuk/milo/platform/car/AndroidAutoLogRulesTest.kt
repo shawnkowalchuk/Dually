@@ -90,12 +90,12 @@ class AndroidAutoLogRulesTest {
     fun `a first reading says that it is one, and claims no change`() {
         assertEquals(
             "Android Auto is not connected (CarConnection reports type 0). First reading " +
-                "since MilO's process started. No trip is being recorded",
+                "since Dually's process started. No trip is being recorded",
             androidAutoLogText(AndroidAutoNote.FIRST_READING, connected = false, notConnected),
         )
         assertEquals(
             "Android Auto is connected (CarConnection reports type 2). First reading since " +
-                "MilO's process started, so MilO did not see it connect. No trip is being " +
+                "Dually's process started, so Dually did not see it connect. No trip is being " +
                 "recorded",
             androidAutoLogText(AndroidAutoNote.FIRST_READING, connected = true, projection),
         )

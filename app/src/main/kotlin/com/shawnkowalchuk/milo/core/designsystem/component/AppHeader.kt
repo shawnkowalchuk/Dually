@@ -1,6 +1,5 @@
 package com.shawnkowalchuk.milo.core.designsystem.component
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -26,7 +25,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -37,9 +35,6 @@ import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
 import com.shawnkowalchuk.milo.core.util.formatShortDay
 import com.shawnkowalchuk.milo.core.util.localDateOf
 import java.time.ZoneId
-
-/** How large the design draws the app's mark. */
-private val MarkSize = 36.dp
 
 /**
  * Android's smallest target for a finger. The top line is never lower, so it is as high on a
@@ -53,7 +48,8 @@ private val ChevronSize = 20.dp
 /**
  * The top line of every screen (Shawn's decision of 2026-10-07: "the top MilO icon, name and
  * date on the top left of the screen stays on all interfaces"). At the start, the app's mark
- * (its initial on a square of the accent colour), its name and today's date under it. At the
+ * ([AppMark]: since 2026-10-13 the "D" on the orange square), its name and today's date under
+ * it. At the
  * end, the name of the screen; on a screen that was opened from another one, an arrowhead
  * before the name, and the two are one button that goes back.
  *
@@ -94,27 +90,7 @@ fun AppHeader(
     }
 }
 
-/** The app's initial on a square of the accent colour. */
-@Composable
-private fun AppMark() {
-    val scheme = MaterialTheme.colorScheme
-    Box(
-        modifier =
-            Modifier
-                .size(MarkSize)
-                .background(scheme.primary, MiloTheme.shapes.appMark)
-                .clearAndSetSemantics {},
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = stringResource(R.string.app_mark),
-            style = MiloTheme.textStyles.markLetter,
-            color = scheme.onPrimary,
-        )
-    }
-}
-
-/** "MilO" over today's date, which is read again each time MilO is looked at. */
+/** The app's name over today's date, which is read again each time the app is looked at. */
 @Composable
 private fun AppNameAndDay() {
     val locale = LocalConfiguration.current.locales[0]

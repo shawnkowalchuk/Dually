@@ -32,9 +32,23 @@ internal fun reportOf(vararg tripsPerDay: Int): MileageReport = report(
 internal val ReportPage.texts: List<PageItem.Text>
     get() = items.filterIsInstance<PageItem.Text>()
 
-/** True for the line at the bottom of every page: its words, and the small mark before them. */
+/** True for the words of the line at the bottom of every page. */
 internal val PageItem.Text.inFooter: Boolean
-    get() = style == ReportTextStyle.FOOTER || style == ReportTextStyle.FOOTER_MARK
+    get() = style == ReportTextStyle.FOOTER
+
+/** The letters of the app's mark on the page: one at the top of the first, one in each footer. */
+internal val ReportPage.markLetters: List<PageItem.MarkLetter>
+    get() = items.filterIsInstance<PageItem.MarkLetter>()
+
+/** The filled rectangles on the page: the tiles, and the squares of the app's mark. */
+internal val ReportPage.boxes: List<PageItem.Box>
+    get() = items.filterIsInstance<PageItem.Box>()
+
+/** True if [letter] stands inside [square], with room on every side. */
+internal fun PageItem.Box.holds(letter: PageItem.MarkLetter): Boolean = letter.left > left &&
+    letter.right < right &&
+    letter.top > top &&
+    letter.bottom < bottom
 
 internal fun ReportPage.has(text: String): Boolean = texts.any { it.text == text }
 

@@ -115,7 +115,7 @@ class SentRunViewModel(
     fun onUnreadable(why: IOException) {
         viewModelScope.launch {
             val what =
-                "MilO's mascot did not run across the Report screen: a picture of him could " +
+                "Dually's mascot did not run across the Report screen: a picture of him could " +
                     "not be read"
             eventLog.add(clock(), EventCategory.ERROR, what, why.stackTraceToString())
         }
