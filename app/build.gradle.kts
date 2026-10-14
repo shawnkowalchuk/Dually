@@ -230,6 +230,17 @@ kotlin {
     }
 }
 
+// Some unit tests read files of the app and of the website straight from disk: the mascot's
+// pictures, the icon's drawings, the strings, the list of changes, the website's pages. Gradle
+// does not see such reads, so after one of those files changed it could take the test run from
+// its build cache and report a pass that never ran (it did on 2026-10-14, for a picture the
+// mascot's redraw had changed). Named as inputs, a change to any of them runs the tests again.
+tasks.withType<Test>().configureEach {
+    inputs.dir("src/main/res").withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.dir("src/main/assets").withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.dir(rootProject.file("website")).withPathSensitivity(PathSensitivity.RELATIVE)
+}
+
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)

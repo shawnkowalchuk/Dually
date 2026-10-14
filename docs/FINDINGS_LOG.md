@@ -26,6 +26,13 @@
 
 ### 2026-10-13
 
+**`[FIX]` The unit tests could pass from Gradle's cache after a picture they check had changed**
+Found on 2026-10-14 while stacking the mascot's redraw on the app's rebrand: the gate passed with `testDebugUnitTest FROM-CACHE`, and the same tests run with `--rerun` failed one (`MascotPicturesTest`, below). Several tests read files straight from disk (the mascot's pictures, the icon's drawings, `colors.xml`, the strings, `changelog.json`, the website's `index.html`), and Gradle did not count those files as the tests' inputs, so a run whose code had not changed could be handed back from the build cache after one of them had. `app/build.gradle.kts` now names `src/main/res`, `src/main/assets` and `website/` as inputs of every test task; a file added to `website/` was seen to make the tests run again. The mascot job's own "gate passed" was such a cached pass.
+
+**`[DECISION]` A patch of the moonwalk's middle part may be stored without a see-through channel**
+`MascotPicturesTest` asked that every frame of `mascot_stop_and_spin.webp` carry one. Since the redraw one patch does not: frame 51, 75 by 65 pixels on his chest while the grin squashes, where every pixel is his body, so `cwebp` stores no see-through channel for it. It replaces only what lies under it, which was his body too, so it draws the same either way; the emulator's showing of the moonwalk played it. The test now asks it of every whole frame, and says why a patch may lack it.
+
+
 **`[CHANGE]` The opening screen shows the face and the words "Trip Tracker"**
 Phone only. Shawn had seen the big "D" on Android's opening screen and wrote: "should be the face icon. i think it looks better with the text under it Trip Tracker. the D at the top of the app when app is loaded is good." The opening screen draws the launcher icon, so the face icon of the same evening already put the face there; the words were added as Android's "branding image" (`android:windowSplashScreenBrandingImage`), which Android places near the foot of the screen, not straight under the icon. They are pictures in five densities, because a vector drawing cannot hold letters: `tools/make_splash_wordmark.py` has Google Chrome draw them (it applies the typeface's kerning, which Pillow without its layout library does not) and Pillow make the smaller sizes; 52 KB in all. Seen on an emulator (Android 16) on a cold start; not yet on the phone.
 

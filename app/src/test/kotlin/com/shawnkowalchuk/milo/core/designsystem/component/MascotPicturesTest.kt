@@ -223,7 +223,12 @@ class MascotPicturesTest {
     fun `the middle part is an animated, see-through picture the size of one frame`() {
         assertTrue("the middle part is animated", middle.animated)
         assertTrue("the middle part is see-through", middle.seeThrough)
-        assertTrue("every frame is see-through", middle.frames.all { it.seeThrough })
+        // Every whole frame is see-through. A patch may be stored without a see-through
+        // channel: the packer keeps one only where the patch has a see-through pixel, and a
+        // patch that lies inside his body has none (since 2026-10-13 the grin's squash makes
+        // one such patch). It replaces only what lies under it, which was his body too.
+        val whole = middle.frames.filter { it.width == moonWidth && it.height == moonHeight }
+        assertTrue("every whole frame is see-through", whole.all { it.seeThrough })
         // So it lies exactly over the glide's last frame, and the glide's first over it.
         assertEquals(moonWidth, middle.width)
         assertEquals(moonHeight, middle.height)
