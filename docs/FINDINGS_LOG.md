@@ -24,6 +24,11 @@
 
 ## Log
 
+### 2026-10-14
+
+**`[DECISION]` Health apps in the Play Console: "Other", not "no health features" (corrects the entry of 2026-10-13 below)**
+The Health apps form of the new entry says, above its boxes: "Your app uses the android.permission.ACTIVITY_RECOGNITION permission and must meet Health apps policy requirements. If you don't have any health features in your app, remove this permission from your app's manifest." So "My app does not have any health features" contradicts the manifest while the driving alert holds that permission. Driving-detection SDK makers (HyperTrack, Zendrive, DriveQuant) advise apps like this to tick "Other" and describe the use, and that is what Shawn was told to do, with a 242-character description in the kit's `google-play/listing.md`. If Google refuses it, the fallback is a build without `ACTIVITY_RECOGNITION`: trips still start by Bluetooth, the "You seem to be driving" alert goes, and GPS runs the whole parked wait (ADR-002). Not built; his call.
+
 ### 2026-10-13
 
 **`[CHANGE]` The marketing kit made again for Dually, and nothing of the old one left in it**
