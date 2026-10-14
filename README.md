@@ -425,7 +425,7 @@ Each update that others can download is a GitHub Release with the APK attached. 
 
 6. **Never publish an APK from CI, or one built with `-Pmilo.signing.debugKey=true`.** Both carry the throwaway debug key and could not update anyone's Dually.
 
-Because a release is signed with the phone's own key, its APK also installs over the phone's Dually, and the trips stay. **The first release, 0.1.0, was published on 2026-10-09, and 0.3.0 the same evening,** after its APK was installed over the phone's Dually this way. Those two were not minified and have no mapping file: their stack traces read as they are. 0.3.1 is the first release that goes through R8.
+Because a release is signed with the phone's own key, its APK also installs over the phone's Dually, and the trips stay. **The first release, 0.1.0, was published on 2026-10-09, and 0.3.0 the same evening** (both under the old name, MilO Trip Log; on 2026-10-14 they were turned back into drafts, so the public sees only Dually's releases), after its APK was installed over the phone's Dually this way. Those two were not minified and have no mapping file: their stack traces read as they are. 0.3.1 is the first release that goes through R8.
 
 ### Reading a stack trace from a release
 

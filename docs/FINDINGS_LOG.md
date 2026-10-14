@@ -26,6 +26,9 @@
 
 ### 2026-10-14
 
+**`[CHANGE]` The two MilO releases on GitHub are taken down**
+Shawn: "please take down the old releases". `v0.1.0` and `v0.3.0` ("MilO Trip Log", with `MilO-0.1.0.apk` and `MilO-0.3.0.apk`) were turned into drafts, not deleted: nobody outside the repository's owners sees them, their files answer "not found", and a draft can be published again. Their tags stay (a tag page shows only the commit). Nothing on the website or in the README linked to them; "Download for Android" opens `releases/latest`, which is `v0.3.1`. Deleting them for good is Shawn's to do on GitHub (Releases, the draft, Delete), if he wants it.
+
 **`[CHANGE]` 0.3.1 released: the first release of Dually, on GitHub and to Google Play**
 Shawn: "please upadate the build on github to the latest too", while he created the production release in the new Play entry. GitHub Release `v0.3.1`, "Dually Trip Tracker 0.3.1", carries `Dually-0.3.1.apk` and its packed mapping file (`pg_map_id` 11e7aa58…), tagged at `7ecc735`: the APK of the same build run as the bundle he uploaded to Play (versionCode 4, his key, SHA-256 95a951…14b4), whose app code is identical to `main`. He tested that APK on his phone the evening before ("everything is good"), which was README step 4. **`[DEBT]` The version was dated after the build** (README step 2 wants it before): rebuilding after the date would have made a second, different build 4 beside the one already on Play. So this build's own What's new still says "not released yet" for 0.3.1; the website's `/changes` page has the date. The next version's build carries it. Cost to fix: nothing, it passes with the next release.
 
