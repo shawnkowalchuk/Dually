@@ -1,4 +1,7 @@
 # ADR-003: A website on Firebase Hosting, deployed from GitHub with a deploy key
+
+> **Note, 2026-10-13:** the product was renamed from MilO to Dually Trip Tracker on 2026-10-13 (ADR-010). This record keeps the old name, and the old addresses, in everything written before that day.
+
 Date: 2026-10-08
 Status: Accepted
 

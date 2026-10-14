@@ -1,27 +1,27 @@
-# MilO
+# Dually Trip Tracker
 
 <p align="center">
-  <a href="https://github.com/shawnkowalchuk/MilO/releases/latest"><img src="https://img.shields.io/badge/%E2%AC%87%EF%B8%8F%20Download%20latest%20APK-C6F432?style=for-the-badge&logo=android&logoColor=121316" height="48" alt="Download latest APK"></a>
+  <a href="https://github.com/shawnkowalchuk/Dually/releases/latest"><img src="https://img.shields.io/badge/%E2%AC%87%EF%B8%8F%20Download%20latest%20APK-FF5A12?style=for-the-badge&logo=android&logoColor=15120F" height="48" alt="Download latest APK"></a>
   <br>
-  <a href="https://github.com/shawnkowalchuk/MilO/releases/latest"><b>⬇️ Download Latest APK</b></a> · Android 14 or newer · <a href="#installing-the-apk">How to install</a> · <a href="https://milotriplog.top">milotriplog.top</a> · <a href="mailto:support@milotriplog.top">Support</a>
+  <a href="https://github.com/shawnkowalchuk/Dually/releases/latest"><b>⬇️ Download Latest APK</b></a> · Android 14 or newer · <a href="#installing-the-apk">How to install</a> · <a href="https://dually.top">dually.top</a> · <a href="mailto:support@dually.top">Support</a>
 </p>
 
-**An Android app that logs business kilometres by itself.** When the phone connects to the work truck's Bluetooth, MilO starts a trip, records the drive with GPS, sorts it into Business or Personal by the work hours, and at the end of the month makes the mileage report for the accountant, as a PDF and a CSV file.
+**An Android app that logs business kilometres by itself: Dually Trip Tracker, Dually for short** (called MilO until 2026-10-13: `docs/adr/ADR-010-rebrand-dually.md`). When the phone connects to the work truck's Bluetooth, Dually starts a trip, records the drive with GPS, sorts it into Business or Personal by the work hours, and at the end of the month makes the mileage report for the accountant, as a PDF and a CSV file.
 
 <p align="center">
   <img src="website/screenshots/home.jpg" width="200" alt="Home: Start trip, today's and the month's kilometres, the truck connected and parked, and the last trip">
   <img src="website/screenshots/trips.jpg" width="200" alt="Trips: October 2026, 96.4 km of Business, and one tile for each day">
   <img src="website/screenshots/settings.jpg" width="200" alt="Settings: Setup 14 of 14 ready, the truck, the driving alert and the odometer">
-  <img src="website/screenshots/log.jpg" width="200" alt="Log: what MilO did and when, one kind of line at a time">
+  <img src="website/screenshots/log.jpg" width="200" alt="Log: what Dually did and when, one kind of line at a time">
 </p>
 
-> **A personal project, public to read.** MilO was built by Shawn Kowalchuk for one phone (a Xiaomi POCO X5 Pro 5G on Android 14 and HyperOS 2.0) and one truck. It runs on Android 14 and newer. It is not on the Play Store. For a question or a problem, write to [support@milotriplog.top](mailto:support@milotriplog.top): there is no support desk, and one person answers when he has time. The code has no license: it is public to read, and all rights are reserved (see [License](#license)). Everything after [License](#license) is the owner's own guide to running it on that phone.
+> **A personal project, public to read.** Dually was built by Shawn Kowalchuk for one phone (a Xiaomi POCO X5 Pro 5G on Android 14 and HyperOS 2.0) and one truck. It runs on Android 14 and newer. It is not on the Play Store. For a question or a problem, write to [support@dually.top](mailto:support@dually.top): there is no support desk, and one person answers when he has time. The code has no license: it is public to read, and all rights are reserved (see [License](#license)). Everything after [License](#license) is the owner's own guide to running it on that phone.
 
 ## What it does
 
 **By itself**
 
-- Starts a trip when the phone connects to the truck's Bluetooth, through Android's companion-device service, so it works with MilO closed. It records the drive with GPS and ends the trip two minutes after the truck disconnects.
+- Starts a trip when the phone connects to the truck's Bluetooth, through Android's companion-device service, so it works with Dually closed. It records the drive with GPS and ends the trip two minutes after the truck disconnects.
 - Pairs several work vehicles if you drive more than one: any of them starts a trip, each trip records which vehicle it was in, and each vehicle has its own odometer.
 - Ends a trip when the truck has stood still for ten minutes even though it is still connected (a parked truck can stay connected for hours), then watches beside it and starts the next trip when the truck drives off.
 - Plays two sounds you can hear even on silent: one when it connects to the truck, one when the truck drives off. Each can be one of twelve built-in sounds or an audio file of your own.
@@ -39,7 +39,7 @@
 - Edit, delete or add a missed trip on the Trips screen, and mark any trip Business or Personal.
 - Label a trip with what it was for, picked from the labels used before: the label used where the trip ended is chosen already. The report prints it as the trip's purpose.
 - Show every distance in kilometres or miles, the report included: one setting, "Units", in Settings.
-- Send the report: MilO opens the email app with the PDF attached, and you press send. Back in MilO, answer "I sent it", and the mascot runs across the foot of the screen, brakes and slides out, with a whirr and a squeal that stay silent when the phone is on silent or on vibrate.
+- Send the report: Dually opens the email app with the PDF attached, and you press send. Back in Dually, answer "I sent it", and the mascot runs across the foot of the screen, brakes and slides out, with a whirr and a squeal that stay silent when the phone is on silent or on vibrate.
 - Export and import all data as one file. Android's own backup carries the rest.
 
 <p align="center">
@@ -49,18 +49,18 @@
 
 ## Installing the APK
 
-1. On the phone, open the [latest release](https://github.com/shawnkowalchuk/MilO/releases/latest) and download the `.apk` file under "Assets".
+1. On the phone, open the [latest release](https://github.com/shawnkowalchuk/Dually/releases/latest) and download the `.apk` file under "Assets".
 2. Open the downloaded file. The first time, Android asks you to allow the app you opened it with (your browser or Files) to **install unknown apps**: allow it, go back, and press Install. Developer options are not needed.
-3. Google Play Protect may warn that the app is from an unknown developer, or offer to scan it. That is because MilO is not on the Play Store; choose to install anyway if you trust it.
-4. Open MilO. A first page says what it does; **OK** leads to Setup: work through it (the permissions, then pairing your truck) and press **Done, go to Settings** at its end.
+3. Google Play Protect may warn that the app is from an unknown developer, or offer to scan it. That is because Dually is not on the Play Store; choose to install anyway if you trust it.
+4. Open Dually. A first page says what it does; **OK** leads to Setup: work through it (the permissions, then pairing your truck) and press **Done, go to Settings** at its end.
 
-**To update,** install the newer APK over the old one: your trips and settings stay. Never uninstall MilO to update it, because that deletes every trip.
+**To update,** install the newer APK over the old one: your trips and settings stay. Never uninstall Dually to update it, because that deletes every trip.
 
-**Worth knowing first:** MilO is built and tested on one Xiaomi phone. On other phones the automatic start depends on how hard the maker stops apps in the background; Setup shows what it can check. The Android Auto screen is not expected to show on a car's display for an app installed this way (Android Auto shows apps from the Play Store). The phone side works the same with or without it.
+**Worth knowing first:** Dually is built and tested on one Xiaomi phone. On other phones the automatic start depends on how hard the maker stops apps in the background; Setup shows what it can check. The Android Auto screen is not expected to show on a car's display for an app installed this way (Android Auto shows apps from the Play Store). The phone side works the same with or without it.
 
 ## Privacy
 
-MilO has no account, no server and **no internet permission**. Every trip stays on the phone. It leaves only in files you send or save yourself (the report, an export), in your own Android backup, and as coordinates handed to Android's Geocoder to look up an address. A copy installed from Google Play asks Google Play, at up to three moments, to show its own review card; Google Play learns that MilO asked, and nothing of your trips goes with it. The screenshots above are from the owner's phone, with the street addresses on Home blurred.
+Dually has no account, no server and **no internet permission**. Every trip stays on the phone. It leaves only in files you send or save yourself (the report, an export), in your own Android backup, and as coordinates handed to Android's Geocoder to look up an address. A copy installed from Google Play asks Google Play, at up to three moments, to show its own review card; Google Play learns that Dually asked, and nothing of your trips goes with it. The screenshots above are from the owner's phone, with the street addresses on Home blurred.
 
 ## How it is built
 
@@ -79,13 +79,13 @@ Each entry of `docs/APP_ENCYCLOPEDIA.md` opens with a status line that says what
 
 ## License
 
-No license. The code is public so that it can be read; all rights are reserved, and it may not be copied, changed or redistributed without permission. The typeface, Sora, is under the SIL Open Font License 1.1 (`licenses/Sora-OFL.txt`).
+No license. The code is public so that it can be read; all rights are reserved, and it may not be copied, changed or redistributed without permission. The two typefaces the app carries, Archivo and IBM Plex Mono, are under the SIL Open Font License 1.1 (`licenses/Archivo-OFL.txt`, `licenses/IBMPlexMono-OFL.txt`).
 
 ---
 
 # The owner's guide
 
-The rest of this page is written for the owner and the one phone MilO runs on: installing it from the Mac, setting it up, the HyperOS settings it needs, and everyday use.
+The rest of this page is written for the owner and the one phone Dually runs on: installing it from the Mac, setting it up, the HyperOS settings it needs, and everyday use.
 
 ## Install and run from Android Studio
 
@@ -99,43 +99,43 @@ The rest of this page is written for the owner and the one phone MilO runs on: i
 
 ### Open the project and let it sync
 
-1. In Android Studio choose **File, Open** and pick the `MilO` folder itself (the one that holds `settings.gradle.kts`), not the `app` folder inside it.
+1. In Android Studio choose **File, Open** and pick the `Dually` folder itself (the one that holds `settings.gradle.kts`), not the `app` folder inside it.
 2. If Android Studio asks whether to trust the project, say yes.
 3. Wait for the first sync to finish. It reads the build files and fetches what is missing, which takes a few minutes and needs the internet. The bar at the bottom says when it is done.
 4. Android Studio writes `local.properties`, the file that says where the Android SDK is. Git ignores that file on purpose.
 
 ### The signing key
 
-Android only lets a new build replace the MilO on the phone if both are signed with the same key. MilO has one key of its own for that.
+Android only lets a new build replace the Dually on the phone if both are signed with the same key. Dually has one key of its own for that.
 
 - The key is the file `~/keys/milo.jks`. Its password is in the macOS Keychain under the name `milo-keystore`. Neither is in the project folder or on GitHub.
 - **The build finds both by itself.** You should not be asked for a password, and there is nothing to set up in Android Studio's signing dialogs.
 - If the key file or the Keychain entry is missing, the build stops and says what to do. It never signs with another key in silence.
 - **If Android Studio ever says the app on the phone has a different signature and offers to uninstall it, press Cancel.** Uninstalling deletes every trip. Ask for help with the key first.
-- Not yet confirmed in Android Studio: that Run installs a build signed with this key. A sync is handed a placeholder in place of the password, so that Android Studio cannot save it. After the first Run, check that MilO was updated in place and your trips are still there.
+- Not yet confirmed in Android Studio: that Run installs a build signed with this key. A sync is handed a placeholder in place of the password, so that Android Studio cannot save it. After the first Run, check that Dually was updated in place and your trips are still there.
 
 ### Run it on the phone
 
 1. Connect the phone to the Mac with the USB cable and unlock it. If the phone asks whether to allow USB debugging from this computer, allow it.
 2. In Android Studio's toolbar, pick the phone in the device list. The configuration beside it is `app`.
-3. Press **Run** (the green triangle). Android Studio builds MilO, installs it over the one on the phone and opens it.
-4. Keep the phone in your hand until MilO is open: HyperOS asks on the phone before it installs (below).
+3. Press **Run** (the green triangle). Android Studio builds Dually, installs it over the one on the phone and opens it.
+4. Keep the phone in your hand until Dually is open: HyperOS asks on the phone before it installs (below).
 
 ### What to expect on HyperOS
 
 - **Developer options are already set on your phone.** HyperOS needs three switches for an install from the Mac: "USB debugging", "Install via USB" and "USB debugging (Security settings)". Read from the phone on 2026-10-05, the two Xiaomi ones were on. Nothing to change.
 - If they are ever switched off again (*from the research notes for HyperOS, check on your phone*): Settings, About phone, tap "OS version" seven times; then Settings, Additional settings, Developer options. Switching "Install via USB" on is reported to need a signed-in Xiaomi account, a SIM in the phone, and mobile data on with Wi-Fi off.
 - **The "Install via USB" prompt.** At each install the phone is reported to show a prompt with a countdown of a few seconds. Press Install before it runs out. If you miss it, Android Studio reports `INSTALL_FAILED_USER_RESTRICTED`; press Run again. (*From the research notes for HyperOS, check on your phone.* The installs so far went through the first time; whether the prompt showed was not written down.)
-- **MilO may start by itself right after an install.** Seen on your phone on 2026-10-06: HyperOS started MilO straight after the update, with Background autostart on.
-- **An update can take a moment before MilO opens.** If the new build stores trips in a newer form, it converts what the phone holds first. Your trips are kept.
+- **Dually may start by itself right after an install.** Seen on your phone on 2026-10-06: HyperOS started Dually straight after the update, with Background autostart on.
+- **An update can take a moment before Dually opens.** If the new build stores trips in a newer form, it converts what the phone holds first. Your trips are kept.
 
 ---
 
 ## First-time setup in the app
 
-**The first time MilO opens** (and once on a phone that already had it, after the update that brings this; built on 2026-10-08, not yet seen on the phone), a page says what MilO does and how it works. **OK** opens Setup, which then has **Done, go to Settings** at its end: press it when you are happy with Setup, even with a row still to fix, and Settings opens for your work hours, name and the accountant's address. After that MilO opens on Home as usual, and Setup is where it always is:
+**The first time Dually opens** (and once on a phone that already had it, after the update that brings this; built on 2026-10-08, not yet seen on the phone), a page says what Dually does and how it works. **OK** opens Setup, which then has **Done, go to Settings** at its end: press it when you are happy with Setup, even with a row still to fix, and Settings opens for your work hours, name and the accountant's address. After that Dually opens on Home as usual, and Setup is where it always is:
 
-Open MilO, press **Settings** in the bottom bar (its third button, three sliders; the bar shows icons and no words), and press the **Setup** tile at the top. Home's warning "Setup needs attention" opens it too. The screen lists everything MilO needs, each row with its state and a button that leads to the place to set it. The tile at its top says how many of the rows are ready. Until every required row is in order, the Home screen shows "Setup needs attention" and a trip may not start by itself.
+Open Dually, press **Settings** in the bottom bar (its third button, three sliders; the bar shows icons and no words), and press the **Setup** tile at the top. Home's warning "Setup needs attention" opens it too. The screen lists everything Dually needs, each row with its state and a button that leads to the place to set it. The tile at its top says how many of the rows are ready. Until every required row is in order, the Home screen shows "Setup needs attention" and a trip may not start by itself.
 
 On 2026-10-05 you went through this screen once, everything except pairing the truck. The Physical activity row was added after that.
 
@@ -143,18 +143,18 @@ On 2026-10-05 you went through this screen once, everything except pairing the t
 
 A row that is to be fixed (a red mark) stands at the top of its group until it is in order; the tables give the order with nothing to fix.
 
-"Android" (MilO reads the state of all ten by itself):
+"Android" (Dually reads the state of all ten by itself):
 
 | # | Row | What to do |
 |---|---|---|
 | 1 | Precise location | Press Allow. Choose "While using the app", with Precise on. |
-| 2 | Location: Allow all the time | Press Allow. Android opens its own location page for MilO: choose "Allow all the time". The button is there once row 1 is done. |
+| 2 | Location: Allow all the time | Press Allow. Android opens its own location page for Dually: choose "Allow all the time". The button is there once row 1 is done. |
 | 3 | Notifications | Press Allow. |
 | 4 | Nearby devices (Bluetooth) | Press Allow. Without it no trip starts at all, not even with the Start trip button. |
 | 5 | Location switched on | Location must be on for the whole phone. |
 | 6 | Truck paired and watched | Leave this for last: see "Pair the truck" below. |
-| 7 | Battery use: unrestricted | Press Open settings and allow MilO to run without battery optimisation. |
-| 8 | Not paused when unused | Recommended. Switch off "Pause app activity if unused" for MilO. |
+| 7 | Battery use: unrestricted | Press Open settings and allow Dually to run without battery optimisation. |
+| 8 | Not paused when unused | Recommended. Switch off "Pause app activity if unused" for Dually. |
 | 9 | Battery Saver off | The phone's Battery Saver must be off while you work. |
 | 10 | Physical activity | Recommended. Only the driving alert needs it. |
 
@@ -162,85 +162,85 @@ A row that is to be fixed (a red mark) stands at the top of its group until it i
 
 | # | Row | What to do |
 |---|---|---|
-| 11 | Background autostart | Press Open settings, find MilO in the list and switch it on. The row then says "Looks on". |
+| 11 | Background autostart | Press Open settings, find Dually in the list and switch it on. The row then says "Looks on". |
 | 12 | Battery saver: No restrictions | Press Open settings, choose "No restrictions", come back and press "I have set this". |
 | 13 | Other permissions | Recommended. Press Open settings, switch the three on, come back and press "I have set this". |
 | 14 | Locked in recent apps | No button: it is a gesture. Do it, then press "I have set this". |
 
-A row you confirmed says "You confirmed this on (date). MilO cannot check it." If a button opens MilO's App info page in place of the page its row names, the setting is reported to be one tap further in from there (*from the research notes for HyperOS, check on your phone*); the Log screen then has an `ERROR` line that says which screen could not be opened. Whether each button opens the right HyperOS screen on your phone was not written down.
+A row you confirmed says "You confirmed this on (date). Dually cannot check it." If a button opens Dually's App info page in place of the page its row names, the setting is reported to be one tap further in from there (*from the research notes for HyperOS, check on your phone*); the Log screen then has an `ERROR` line that says which screen could not be opened. Whether each button opens the right HyperOS screen on your phone was not written down.
 
 ### Pair the truck
 
 Do this at the truck, with every other row in order.
 
 1. Pair the phone with the truck in the phone's own Bluetooth settings, if it is not paired already.
-2. In MilO: Setup, the row "Truck paired and watched", **Pair truck**.
+2. In Dually: Setup, the row "Truck paired and watched", **Pair truck**.
 3. Under "Paired with this phone", find the truck and press **Pair**.
 4. Android shows a dialog of its own and asks you to allow it. Choose **Allow**.
 5. The screen says "Paired with (the truck's name)" and "Paired, and Android is watching for it. A trip starts by itself when it connects." On Setup the truck's row now has its tick, and the warning on Home is gone.
 
 **Another vehicle** is paired the same way: Settings, the tile "Vehicles", **Pair or remove**, then **Add**. Each vehicle on that screen has **Remove**. Any paired vehicle starts a trip by itself.
 
-Bluetooth and Location must both be on for this, and the screen says so if one is not. The truck was paired this way on 2026-10-06, and started its first trips by itself that day. If the screen ever fails, `docs/DEVICE_TEST_CHECKLIST.md` ("Pairing MilO with the truck") has a second way from the Mac.
+Bluetooth and Location must both be on for this, and the screen says so if one is not. The truck was paired this way on 2026-10-06, and started its first trips by itself that day. If the screen ever fails, `docs/DEVICE_TEST_CHECKLIST.md` ("Pairing Dually with the truck") has a second way from the Mac.
 
 ---
 
 ## Phone settings for the POCO X5 Pro (HyperOS 2.0)
 
-HyperOS stops apps in the background harder than plain Android does. These are the settings that keep it from putting MilO to sleep. Why they matter comes from research into HyperOS, not from tests on your phone: the drives that prove them are checks 31 to 43 of `docs/DEVICE_TEST_CHECKLIST.md`.
+HyperOS stops apps in the background harder than plain Android does. These are the settings that keep it from putting Dually to sleep. Why they matter comes from research into HyperOS, not from tests on your phone: the drives that prove them are checks 31 to 43 of `docs/DEVICE_TEST_CHECKLIST.md`.
 
 **Every menu path below is from the research notes for HyperOS, and each is marked so.** The FINDINGS_LOG records what was read back from your phone (a permission granted, a switch on), never the path that was taken to set it, so none of the paths counts as confirmed. Menu names differ between HyperOS versions; if a path does not match, search the phone's Settings for the name of the switch. The research is in `docs/research/2026-10-03-miui-background-limits.md` and `docs/research/2026-10-03-miui-dev-bluetooth-audio.md`.
 
 ### 1. Background autostart: on
 
-- **Where:** Settings, Apps, Permissions, Background autostart, MilO on. Or: Settings, Apps, Manage apps, MilO, Autostart. *(From the research notes for HyperOS, check on your phone.)*
-- **Why:** it is the switch that lets HyperOS start a closed app. With it off, HyperOS is reported to drop the truck's Bluetooth signal and refuse to start MilO for it. It is off by default for an app you install yourself. This is the most important one.
-- **MilO's Setup:** reads it, through an unofficial check, as "Looks on" or "Looks off". On your phone the reading answered and followed the switch (2026-10-05).
+- **Where:** Settings, Apps, Permissions, Background autostart, Dually on. Or: Settings, Apps, Manage apps, Dually, Autostart. *(From the research notes for HyperOS, check on your phone.)*
+- **Why:** it is the switch that lets HyperOS start a closed app. With it off, HyperOS is reported to drop the truck's Bluetooth signal and refuse to start Dually for it. It is off by default for an app you install yourself. This is the most important one.
+- **Dually's Setup:** reads it, through an unofficial check, as "Looks on" or "Looks off". On your phone the reading answered and followed the switch (2026-10-05).
 - **On your phone so far:** read as on, on 2026-10-05.
 
-### 2. Battery saver for MilO: "No restrictions"
+### 2. Battery saver for Dually: "No restrictions"
 
-- **Where:** Settings, Apps, Manage apps, MilO, Battery saver, No restrictions. *(From the research notes for HyperOS, check on your phone.)*
+- **Where:** Settings, Apps, Manage apps, Dually, Battery saver, No restrictions. *(From the research notes for HyperOS, check on your phone.)*
 - **Why:** it is the one choice of the four that is reported to keep Xiaomi's own freezer and automatic clean-ups away from an app.
-- **MilO's Setup:** cannot read it. The row waits for "I have set this".
+- **Dually's Setup:** cannot read it. The row waits for "I have set this".
 - **On your phone so far:** not recorded.
 
 ### 3. Battery optimisation exemption (Android's own)
 
-- **Where:** MilO's Setup, the row "Battery use: unrestricted", Open settings. Since 2026-10-09 that opens Android's list of every app's battery optimisation (the dialog for MilO alone needed a permission Google Play restricts): show all apps, choose MilO, then "Don't optimise". The research found no HyperOS menu path for it, so use the row's button.
-- **Why:** it lets Android start a recording while MilO is in the background, and keeps Android's own battery saving off MilO. It is treated as a separate setting from number 2: set both.
-- **MilO's Setup:** reads it.
+- **Where:** Dually's Setup, the row "Battery use: unrestricted", Open settings. Since 2026-10-09 that opens Android's list of every app's battery optimisation (the dialog for Dually alone needed a permission Google Play restricts): show all apps, choose Dually, then "Don't optimise". The research found no HyperOS menu path for it, so use the row's button.
+- **Why:** it lets Android start a recording while Dually is in the background, and keeps Android's own battery saving off Dually. It is treated as a separate setting from number 2: set both.
+- **Dually's Setup:** reads it.
 - **On your phone so far:** granted, read from the phone on 2026-10-05.
 
 ### 4. "Pause app activity if unused": off
 
-- **Where:** Settings, Apps, Manage apps, MilO, switch off "Pause app activity if unused". *(From the research notes for HyperOS, check on your phone.)*
+- **Where:** Settings, Apps, Manage apps, Dually, switch off "Pause app activity if unused". *(From the research notes for HyperOS, check on your phone.)*
 - **Why:** with it on, Android takes an app's permissions away and stops its background work after months without being opened.
-- **MilO's Setup:** reads it (the row "Not paused when unused", recommended). Whether HyperOS has this switch, and whether the row follows it there, is not known.
+- **Dually's Setup:** reads it (the row "Not paused when unused", recommended). Whether HyperOS has this switch, and whether the row follows it there, is not known.
 - **On your phone so far:** not recorded.
 
 ### 5. "Other permissions": three switches on
 
-- **Where:** Settings, Apps, Manage apps, MilO, Other permissions. Switch on "Show on Lock screen", "Start in background" (also seen as "Display pop-up windows while running in the background" or "Open new windows while running in the background") and "Permanent notification". *(From the research notes for HyperOS, check on your phone.)*
-- **Why:** they decide whether an app may show a screen from the background and keep its permanent notification. The research says a recording does not depend on them, and that apps of MilO's kind ask for them all the same; switching them on does no harm. The names on HyperOS 2.0 are not confirmed.
-- **MilO's Setup:** cannot read them. One recommended row, which waits for "I have set this".
+- **Where:** Settings, Apps, Manage apps, Dually, Other permissions. Switch on "Show on Lock screen", "Start in background" (also seen as "Display pop-up windows while running in the background" or "Open new windows while running in the background") and "Permanent notification". *(From the research notes for HyperOS, check on your phone.)*
+- **Why:** they decide whether an app may show a screen from the background and keep its permanent notification. The research says a recording does not depend on them, and that apps of Dually's kind ask for them all the same; switching them on does no harm. The names on HyperOS 2.0 are not confirmed.
+- **Dually's Setup:** cannot read them. One recommended row, which waits for "I have set this".
 - **On your phone so far:** not recorded.
 
-### 6. MilO locked in the recent apps
+### 6. Dually locked in the recent apps
 
-- **Where:** open MilO, open the recent apps, press and hold MilO's card, tap the padlock. *(From the research notes for HyperOS, check on your phone.)*
+- **Where:** open Dually, open the recent apps, press and hold Dually's card, tap the padlock. *(From the research notes for HyperOS, check on your phone.)*
 - **Why:** a locked app is left alone by the clear-all button and by Xiaomi's cleaners. It is not protected from a swipe on its own card, and not from every automatic clean-up.
-- **MilO's Setup:** cannot read it, and has no button for it. The row waits for "I have set this".
+- **Dually's Setup:** cannot read it, and has no button for it. The row waits for "I have set this".
 - **On your phone so far:** not recorded.
 
 ### 7. Location: "Allow all the time"
 
-- **Where:** MilO's Setup, the row "Location: Allow all the time", Allow. MilO first says what location it collects and why ("MilO uses your location", since 2026-10-09); Continue, then choose "Allow all the time" on Android's page. By hand: Settings, Apps, Manage apps, MilO, Permissions, Location, "Allow all the time", with "Use precise location" on. *(From the research notes for HyperOS, check on your phone.)* That it is granted was read from the phone; the path was not written down.
-- **Why:** a trip that starts by itself starts while MilO is closed. Android 14 refuses to start a location recording from the background without it, and there is no way round that.
-- **MilO's Setup:** reads it.
+- **Where:** Dually's Setup, the row "Location: Allow all the time", Allow. Dually first says what location it collects and why ("Dually uses your location", since 2026-10-09); Continue, then choose "Allow all the time" on Android's page. By hand: Settings, Apps, Manage apps, Dually, Permissions, Location, "Allow all the time", with "Use precise location" on. *(From the research notes for HyperOS, check on your phone.)* That it is granted was read from the phone; the path was not written down.
+- **Why:** a trip that starts by itself starts while Dually is closed. Android 14 refuses to start a location recording from the background without it, and there is no way round that.
+- **Dually's Setup:** reads it.
 - **On your phone so far:** granted, read from the phone on 2026-10-05.
 
-### What MilO's Setup can read, in one place
+### What Dually's Setup can read, in one place
 
 | Setting | Setup reads it? |
 |---|---|
@@ -258,15 +258,15 @@ What you confirmed is your word, with its date. HyperOS is reported to put some 
 
 ### Habits
 
-- **Do not force stop MilO.** A force-stopped app is told nothing by Android until you open it again: no trip starts.
-- **Do not swipe MilO away** in the recent apps. While it waits for the truck, a swipe ends it even when it is locked, and only Background autostart brings it back.
+- **Do not force stop Dually.** A force-stopped app is told nothing by Android until you open it again: no trip starts.
+- **Do not swipe Dually away** in the recent apps. While it waits for the truck, a swipe ends it even when it is locked, and only Background autostart brings it back.
 - **Avoid the clear-all button** (the X in the recent apps) and the Security app's Cleaner and Boost speed on work days. Clear-all is reported to end apps that are not locked, a recording included.
 - **Keep Battery saver mode off on work days.** Settings, Battery, Current mode: Balanced or Performance, not Battery saver or Ultra battery saver. *(From the research notes for HyperOS, check on your phone.)*
 - **Keep the alarm volume up: both sounds follow it.** Since 2026-10-07 the sound (since 2026-10-08 both sounds, the connect sound and the trip-start sound) is played like an alarm, so that it is heard when the phone is on silent, on vibrate, in Do Not Disturb or in Bedtime mode. (On 2026-10-05 Bedtime mode silenced it on your phone; the trip was recorded all the same.) A Do Not Disturb that is set to silence alarms too still silences it. *(Not yet tried on your phone: device checks NL-70 to NL-74.)*
 - **After the phone restarts, unlock it once.** Android holds Bluetooth events back until the first unlock.
-- **Do not press "Back up now" in the phone's Google settings during a trip.** On an emulator a backup that was asked for from the Mac ended MilO in the middle of a recording. Whether the phone's own button does the same is not known.
+- **Do not press "Back up now" in the phone's Google settings during a trip.** On an emulator a backup that was asked for from the Mac ended Dually in the middle of a recording. Whether the phone's own button does the same is not known.
 
-Two more settings from the same research notes, which MilO's Setup does not show: Settings, Battery, the cog or "Additional features": set "Clear cache when device is locked" and "Turn off mobile data when device is locked" to Never. *(From the research notes for HyperOS, check on your phone.)*
+Two more settings from the same research notes, which Dually's Setup does not show: Settings, Battery, the cog or "Additional features": set "Clear cache when device is locked" and "Turn off mobile data when device is locked" to Never. *(From the research notes for HyperOS, check on your phone.)*
 
 ---
 
@@ -278,11 +278,11 @@ This is what is built. A start by the truck and an end by its disconnect were se
 
 - the connect sound plays once from the phone, at the alarm volume;
 - a notification "Trip in progress" appears and stays, with the kilometres so far;
-- Home turns its lime tile into the trip: "Recording", the kilometres so far, the minutes it has run and "since (time)", and the button End trip. Its small Truck tile says "Connected".
+- Home turns its orange tile into the trip: "Recording", the kilometres so far, the minutes it has run and "since (time)", and the button End trip. Its small Truck tile says "Connected".
 
-**When the truck drives off** (since 2026-10-08), the trip-start sound plays once: the first time MilO sees the truck moving at 15 km/h or more. After the connect sound when the truck connected, and on its own when a parked truck drives off and the next trip starts. *Not yet tried anywhere but in unit tests: device checks TS-1 to TS-10.*
+**When the truck drives off** (since 2026-10-08), the trip-start sound plays once: the first time Dually sees the truck moving at 15 km/h or more. After the connect sound when the truck connected, and on its own when a parked truck drives off and the next trip starts. *Not yet tried anywhere but in unit tests: device checks TS-1 to TS-10.*
 
-If Home is open at that moment, its truck tile first says "Connecting…" and then "Connected", for about four seconds, and only then does the lime tile change. The trip is being recorded all that time. Built on 2026-10-07 and seen on an emulator only.
+If Home is open at that moment, its truck tile first says "Connecting…" and then "Connected", for about four seconds, and only then does the orange tile change. The trip is being recorded all that time. Built on 2026-10-07 and seen on an emulator only.
 
 **When a trip ends.** In one of two ways, whichever comes first.
 
@@ -291,15 +291,15 @@ If Home is open at that moment, its truck tile first says "Connecting…" and th
 
 Either way there is no sound, and the trip is the newest of today's trips on Home and a row on the Trips screen, with its times, from and to addresses, Business or Personal, and kilometres. A trip under 0.3 km is discarded and can be counted after all on Trips.
 
-**"Truck connected and parked".** Your truck can stay connected to the phone long after it is switched off. When a trip has ended because the truck stood still and the truck is still connected (by Bluetooth, or by Android Auto on the cable), the notification stays and says "Truck connected and parked", "A trip starts when the truck moves", and the truck's tile on Home says the same. Nothing is being recorded. For the first hour MilO looks at the phone's position every 30 seconds, and every 5 seconds for ten minutes after the phone reports that you got into a vehicle; after the hour it turns GPS off and lets that report from the phone's motion sensor turn it back on. When the truck drives off (at 15 km/h or more), a new trip starts by itself, from where the truck was parked, **without the trip-start sound**. When the truck finally disconnects, the notification goes. You can press Start trip at any time; the trip then starts from where the truck was parked too. While MilO waits there is no End trip button: the lime tile on Home reads Start trip.
+**"Truck connected and parked".** Your truck can stay connected to the phone long after it is switched off. When a trip has ended because the truck stood still and the truck is still connected (by Bluetooth, or by Android Auto on the cable), the notification stays and says "Truck connected and parked", "A trip starts when the truck moves", and the truck's tile on Home says the same. Nothing is being recorded. For the first hour Dually looks at the phone's position every 30 seconds, and every 5 seconds for ten minutes after the phone reports that you got into a vehicle; after the hour it turns GPS off and lets that report from the phone's motion sensor turn it back on. When the truck drives off (at 15 km/h or more), a new trip starts by itself, from where the truck was parked, **without the trip-start sound**. When the truck finally disconnects, the notification goes. You can press Start trip at any time; the trip then starts from where the truck was parked too. While Dually waits there is no End trip button: the lime tile on Home reads Start trip.
 
-**If you end a trip yourself with End trip while the truck is still connected,** MilO does not wait. It starts nothing by itself until the truck has disconnected and connected again, or until twelve hours have passed and MilO is opened, or you press Start trip. If the truck stays connected all that time, as yours can, nothing tells you that the next drive is not being recorded: open MilO before you drive off, and press Start trip if the lime tile on Home reads Start trip. After a trip you started that way, a stop is waited out as before.
+**If you end a trip yourself with End trip while the truck is still connected,** Dually does not wait. It starts nothing by itself until the truck has disconnected and connected again, or until twelve hours have passed and Dually is opened, or you press Start trip. If the truck stays connected all that time, as yours can, nothing tells you that the next drive is not being recorded: open Dually before you drive off, and press Start trip if the lime tile on Home reads Start trip. After a trip you started that way, a stop is waited out as before.
 
-After three days of standing MilO stops watching, to spare the battery, and the truck's tile on Home says "Truck connected. MilO has stopped watching it". Open MilO or press Start trip before you drive off then.
+After three days of standing Dually stops watching, to spare the battery, and the truck's tile on Home says "Truck connected. Dually has stopped watching it". Open Dually or press Start trip before you drive off then.
 
-**If a trip did not start.** Press **Start trip** on Home, on the home-screen widget or on the Android Auto screen; **End trip** ends it. If MilO tried and could not start, it posts "MilO could not start this trip. Tap to start". If the phone notices driving during the work hours with no trip being recorded and the truck not connected, it posts "You seem to be driving": tap it to start one (this needs the Physical activity row of Setup and a paired truck). A trip that was missed altogether is typed in on Trips with "Add missed trip".
+**If a trip did not start.** Press **Start trip** on Home, on the home-screen widget or on the Android Auto screen; **End trip** ends it. If Dually tried and could not start, it posts "Dually could not start this trip. Tap to start". If the phone notices driving during the work hours with no trip being recorded and the truck not connected, it posts "You seem to be driving": tap it to start one (this needs the Physical activity row of Setup and a paired truck). A trip that was missed altogether is typed in on Trips with "Add missed trip".
 
-**If MilO has stopped noticing the truck.** Once a day MilO asks itself whether a trip has been started. On a work day (a day that is switched on in the work schedule) that has none by 12:00 noon, it posts one notification: "No trip recorded today". If the truck has not been driven that day, there is nothing to do. If it has, tap the notification: MilO opens on Home, which says "Setup needs attention" if something it needs is switched off. The time and the switch are in Settings, on the card "Daily check"; a trip you add by hand does not count. Built on 2026-10-06 and seen on an emulator only: whether this phone lets MilO wake up for it at noon is one of the things still to be tried.
+**If Dually has stopped noticing the truck.** Once a day Dually asks itself whether a trip has been started. On a work day (a day that is switched on in the work schedule) that has none by 12:00 noon, it posts one notification: "No trip recorded today". If the truck has not been driven that day, there is nothing to do. If it has, tap the notification: Dually opens on Home, which says "Setup needs attention" if something it needs is switched off. The time and the switch are in Settings, on the card "Daily check"; a trip you add by hand does not count. Built on 2026-10-06 and seen on an emulator only: whether this phone lets Dually wake up for it at noon is one of the things still to be tried.
 
 **Where things are.**
 
@@ -307,16 +307,16 @@ After three days of standing MilO stops watching, to spare the battery, and the 
 |---|---|
 | Start trip and End trip, the trip in progress, today's and the month's Business kilometres, whether the truck is connected, each vehicle's odometer, today's trips | **Home**, the first button of the bottom bar (a house) |
 | Every trip, a month at a time: press a day to see its trips, and a trip to edit it, label it, mark it Business or Personal, or delete it; add a missed trip | **Trips**, the second button (a list) |
-| The report for the accountant | Trips, the dark pill on the month's lime tile (**Not submitted** or **Submitted**) |
+| The report for the accountant | Trips, the dark pill on the month's orange tile (**Not submitted** or **Submitted**) |
 | The vehicles and an odometer for each, your name, company, vehicle, the accountant's email address, the work hours, the three trip numbers (how long to wait for the truck to reconnect, how long it may stand still, the shortest trip that counts), kilometres or miles (the tile "Units"), the driving alert, the daily check, the reminder, the connect and trip-start sounds (the tile "Sounds"; press a row for the twelve built-in sounds and the list of your own), the home-screen widget and its rate, export and import, the version and what changed in it, and Buy me a coffee | **Settings**, the third button (three sliders) |
 | The permissions and phone settings, and the truck's pairing | **Setup**, the tile at the top of Settings |
-| What MilO did and when | **Log**, the last button (a sheet of paper) |
+| What Dually did and when | **Log**, the last button (a sheet of paper) |
 
-**The report.** Set your name and the accountant's address in Settings first. The report is in the unit chosen in Settings under "Units" at the moment it is made: kilometres, or miles (built on 2026-10-07, not yet tried on the phone). On the Report screen, "Preview PDF" lets you look at it; **Email the report** opens the email app with the address, the subject and the PDF filled in. MilO sends nothing itself: press send there. Back in MilO it asks "Did you send it?"; "I sent it" marks the month as submitted. "Save PDF and CSV" hands both files to Android's share sheet, "Export CSV" the spreadsheet file alone, and "Mark as sent" records a report you sent some other way. No email draft has been seen yet, on any device: the emulator had no email account.
+**The report.** Set your name and the accountant's address in Settings first. The report is in the unit chosen in Settings under "Units" at the moment it is made: kilometres, or miles (built on 2026-10-07, not yet tried on the phone). On the Report screen, "Preview PDF" lets you look at it; **Email the report** opens the email app with the address, the subject and the PDF filled in. Dually sends nothing itself: press send there. Back in Dually it asks "Did you send it?"; "I sent it" marks the month as submitted. "Save PDF and CSV" hands both files to Android's share sheet, "Export CSV" the spreadsheet file alone, and "Mark as sent" records a report you sent some other way. No email draft has been seen yet, on any device: the emulator had no email account.
 
 **The log, and how to send it.** The Log screen lists the newest lines first. Each day's lines are one tile, with the day above it (today's has none). The chips under the title show one kind of line at a time (Trips, Bluetooth, Android Auto, Errors); "Tap for details" opens what a line holds. **The square button beside the title shares the whole log:** it asks first, saying what the file holds, then makes a text file of every line and opens Android's share sheet: pick your email app and send it to whoever is helping you. The file names the truck and the phone's other Bluetooth devices with their addresses, and every address you typed on the edit screen. It holds no GPS position. Lines older than 90 days are removed, except the newest 1,000.
 
-MilO only sees Android Auto connect or disconnect while MilO itself is running; a connection that came and went while it was closed is not in the log.
+Dually only sees Android Auto connect or disconnect while Dually itself is running; a connection that came and went while it was closed is not in the log.
 
 ---
 
@@ -324,20 +324,20 @@ MilO only sees Android Auto connect or disconnect while MilO itself is running; 
 
 There are three things to keep. The first two are yours to do.
 
-**1. An export file.** Settings, the last tile ("Backup, export and import"), **Export**, with "Include the GPS points" left on. Android's file picker asks where to put `MilO-export-(date).json`: choose Downloads or Drive, then copy the file off the phone. Make one after each month's report, and before each update of MilO. It is the one copy that depends on nothing else: not the signing key, not a Google account, not this phone. "Import data" on the same card puts such a file back, and replaces everything the phone holds.
+**1. An export file.** Settings, the last tile ("Backup, export and import"), **Export**, with "Include the GPS points" left on. Android's file picker asks where to put `Dually-export-(date).json`: choose Downloads or Drive, then copy the file off the phone. Make one after each month's report, and before each update of Dually. It is the one copy that depends on nothing else: not the signing key, not a Google account, not this phone. "Import data" on the same card puts such a file back, and replaces everything the phone holds.
 
-**2. The signing key and its password.** Copy `~/keys/milo.jks` to somewhere that is not the Mac, and keep its password with it (it is in the macOS Keychain under `milo-keystore`; a password manager is a good place for the copy). Never put the password in a file inside the project. Without the key and its password, a new build cannot replace the MilO on the phone: the only way forward would be to uninstall, which deletes the trips, and Android's backup would then refuse to restore them.
+**2. The signing key and its password.** Copy `~/keys/milo.jks` to somewhere that is not the Mac, and keep its password with it (it is in the macOS Keychain under `milo-keystore`; a password manager is a good place for the copy). Never put the password in a file inside the project. Without the key and its password, a new build cannot replace the Dually on the phone: the only way forward would be to uninstall, which deletes the trips, and Android's backup would then refuse to restore them.
 
-**3. Android's own backup.** If Google's backup is switched on for the phone, Android copies MilO's trips, sent reports, settings and event log to your Google account by itself, and gives them back when MilO is installed afresh with the same signing key. The raw GPS points are not in it. **It has never been seen to happen on your phone**, and a restore cannot be tried there without removing MilO. When Android has collected a backup, the Log says so in a `PROCESS` line ("Android collected MilO's data for a cloud backup …"). Until that line has been seen, count on the export file only.
+**3. Android's own backup.** If Google's backup is switched on for the phone, Android copies Dually's trips, sent reports, settings and event log to your Google account by itself, and gives them back when Dually is installed afresh with the same signing key. The raw GPS points are not in it. **It has never been seen to happen on your phone**, and a restore cannot be tried there without removing Dually. When Android has collected a backup, the Log says so in a `PROCESS` line ("Android collected Dually's data for a cloud backup …"). Until that line has been seen, count on the export file only.
 
-**Never uninstall MilO to see whether a restore works.**
+**Never uninstall Dually to see whether a restore works.**
 
 ---
 
 ## Updating the app
 
-1. Make an export first (above). If the MilO on the phone does not have that card yet: the last install the FINDINGS_LOG records, on the morning of 2026-10-06, is of a build from before the export existed. The trips the phone held then were copied to `~/MilO-backups/` on the Mac before that install, and check 232 of `docs/DEVICE_TEST_CHECKLIST.md` says how to take such a copy again.
-2. Get the new code. In Android Studio: Git, Pull. Or in a terminal in the `MilO` folder:
+1. Make an export first (above). If the Dually on the phone does not have that card yet: the last install the FINDINGS_LOG records, on the morning of 2026-10-06, is of a build from before the export existed. The trips the phone held then were copied to `~/MilO-backups/` on the Mac before that install, and check 232 of `docs/DEVICE_TEST_CHECKLIST.md` says how to take such a copy again.
+2. Get the new code. In Android Studio: Git, Pull. Or in a terminal in the `Dually` folder:
 
    ```bash
    git pull
@@ -347,9 +347,9 @@ There are three things to keep. The first two are yours to do.
 
 **Updates only go forward.** Never install an older build over a newer one. A newer build may store trips in a form an older one cannot read, and the older build then stops at every start. Until the first release every build called itself version 0.1.0, so Android did not prevent it; each release raises the number (For developers, "Making a release"), and Android then refuses an older build over a newer one. If it happens, no trip is lost: install the newer build again.
 
-**Never uninstall MilO to fix a problem,** and never clear its data. Both delete every trip. If MilO misbehaves: open the Log, share it, and install a fixed build over the one on the phone.
+**Never uninstall Dually to fix a problem,** and never clear its data. Both delete every trip. If Dually misbehaves: open the Log, share it, and install a fixed build over the one on the phone.
 
-After an update, open MilO once and look at Setup.
+After an update, open Dually once and look at Setup.
 
 ---
 
@@ -387,11 +387,11 @@ Never install that build on the phone: it cannot update the real one.
 
 **Your own connect sound, in builds from this Mac.** The repo ships twelve original synthesized sounds: a chirp, which the connect sound plays until another is chosen, and a chime, which the trip-start sound plays (`tools/make_trip_start_chirp.py`), and since 2026-10-13 ten more to choose from (`tools/make_more_sounds.py`: edit one sound's function, run the script, and that sound's file in `app/src/main/res/raw/` is written again). A file saved as `app/src/debug/res/raw/trip_start_chirp.mp3` (or `.wav` / `.ogg`; the name must be `trip_start_chirp`) replaces the chirp in debug builds made on this machine. That folder is git-ignored on purpose: a personal clip may be someone else's copyright and must stay off GitHub. Delete the file to go back to the bundled chirp. There is no such file for the other eleven. (Settings in the app can also choose any audio file on the phone for either sound, without a rebuild: that is how the Mario, Mario Kart and "Giggity" clips go in, since they are someone else's recordings and the repository is public. Put them on the phone, then in Settings press "Connect" or "Trip start" on the tile "Sounds" and "Add a sound" on the screen that opens; once added, a clip can be chosen for both.)
 
-**The typeface.** The screens are set in Sora, which the app carries as `app/src/main/res/font/sora.ttf`. Its licence, the SIL Open Font License 1.1, is `licenses/Sora-OFL.txt`, and stays in the repository for as long as the font does.
+**The typefaces** (the brand's, since 2026-10-13). The screens and the PDF are set in Archivo, with headlines and the app's name in its extra bold, widened cut, and figures that stand by themselves in IBM Plex Mono. The app carries them as `app/src/main/res/font/archivo.ttf`, `ibm_plex_mono_medium.ttf` and `ibm_plex_mono_semibold.ttf`. Both are under the SIL Open Font License 1.1: `licenses/Archivo-OFL.txt` and `licenses/IBMPlexMono-OFL.txt`, which stay in the repository for as long as the fonts do. (Until that day the typeface was Sora.)
 
 ### Making a release
 
-Each update that others can download is a GitHub Release with the APK attached. It is built and signed on the Mac, with the same key as the phone's MilO, and uploaded by hand, so the key never leaves the Mac (the owner's choice of 2026-10-08, over building it on GitHub). The download button at the top of this page always opens the newest release.
+Each update that others can download is a GitHub Release with the APK attached. It is built and signed on the Mac, with the same key as the phone's Dually, and uploaded by hand, so the key never leaves the Mac (the owner's choice of 2026-10-08, over building it on GitHub). The download button at the top of this page always opens the newest release.
 
 1. **Start from `main`,** with everything merged: `git checkout main && git pull`.
 2. **Date the version.** In `app/src/main/assets/changelog.json` the newest version has `"date": null`. Set it to the day (`"2026-10-12"`), run `python3 tools/changes_page.py`, and merge that as its own small pull request. Its number is already the build's `versionName`: CI makes sure of it. (The version itself was raised when its first change was merged: "The list of changes", below.)
@@ -399,9 +399,9 @@ Each update that others can download is a GitHub Release with the APK attached. 
 
    ```bash
    ./gradlew assembleRelease bundleRelease
-   mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/MilO-0.3.1.apk
-   "$(ls -d "$ANDROID_HOME"/build-tools/*/ | tail -1)apksigner" verify --print-certs app/build/outputs/apk/release/MilO-0.3.1.apk | grep SHA-256
-   gzip -9 -c app/build/outputs/mapping/release/mapping.txt > app/build/outputs/apk/release/MilO-0.3.1-mapping.txt.gz
+   mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/Dually-0.3.1.apk
+   "$(ls -d "$ANDROID_HOME"/build-tools/*/ | tail -1)apksigner" verify --print-certs app/build/outputs/apk/release/Dually-0.3.1.apk | grep SHA-256
+   gzip -9 -c app/build/outputs/mapping/release/mapping.txt > app/build/outputs/apk/release/Dually-0.3.1-mapping.txt.gz
    ```
 
    It is signed with `~/keys/milo.jks`, like the phone's builds, whose certificate's SHA-256 is `95a951079ea89ce645392c404cccacc5e42aba781ba52efe7afb27dd6e9414b4`. Any other digest: stop, and publish nothing.
@@ -410,26 +410,26 @@ Each update that others can download is a GitHub Release with the APK attached. 
 4. **Install it on the phone first, and look it over.** `"$ANDROID_HOME/platform-tools/adb" devices` names the phone; then:
 
    ```bash
-   "$ANDROID_HOME/platform-tools/adb" -s PHONE_SERIAL install -r app/build/outputs/apk/release/MilO-0.3.1.apk
+   "$ANDROID_HOME/platform-tools/adb" -s PHONE_SERIAL install -r app/build/outputs/apk/release/Dually-0.3.1.apk
    ```
 
-   Not `./gradlew installRelease`: it installs on every device adb sees, and an emulator's MilO, signed with the throwaway debug key, refuses it with `INSTALL_FAILED_UPDATE_INCOMPATIBLE`, which stops the task. The same error from the phone itself means a different key: stop there, and never uninstall.
+   Not `./gradlew installRelease`: it installs on every device adb sees, and an emulator's Dually, signed with the throwaway debug key, refuses it with `INSTALL_FAILED_UPDATE_INCOMPATIBLE`, which stops the task. The same error from the phone itself means a different key: stop there, and never uninstall.
 
-   **This step is the only test the release build gets.** CI and the unit tests run the debug build, which R8 does not touch; a fault R8 causes exists in this APK alone. So before publishing: open MilO twice (the mascot greets: one time he walks in and waves, the next he moonwalks); play the one-year party once (Settings, Version, then rest a finger for two seconds on the first grey line of What's new, the one that ends "on this phone": MilO goes to Home, the mascot fires his party popper and you hear its pop); look at Home, Trips, Settings and the Log; start a trip with Start trip, let it run a minute, end it, and see it on Trips; open What's new from the Version tile; read the Log from the install on, and expect no `ERROR` and no `CRASH` line. If the change touched the Android Auto screen, the report, the export or the widget, use that too. Anything wrong: publish nothing, and say what the Log shows.
-5. **Publish it.** On GitHub: Releases, **Draft a new release**, tag `v0.3.1` on `main`, title "MilO Trip Log 0.3.1", the version's lines from What's new (`milotriplog.top/changes`) as the notes, drop the APK and the packed mapping file on "Attach binaries", **Publish release**. Or with GitHub's command-line tool, with the notes written from the list of changes:
+   **This step is the only test the release build gets.** CI and the unit tests run the debug build, which R8 does not touch; a fault R8 causes exists in this APK alone. So before publishing: open Dually twice (the mascot greets: one time he walks in and waves, the next he moonwalks); play the one-year party once (Settings, Version, then rest a finger for two seconds on the first grey line of What's new, the one that ends "on this phone": Dually goes to Home, the mascot fires his party popper and you hear its pop); look at Home, Trips, Settings and the Log; start a trip with Start trip, let it run a minute, end it, and see it on Trips; open What's new from the Version tile; read the Log from the install on, and expect no `ERROR` and no `CRASH` line. If the change touched the Android Auto screen, the report, the export or the widget, use that too. Anything wrong: publish nothing, and say what the Log shows.
+5. **Publish it.** On GitHub: Releases, **Draft a new release**, tag `v0.3.1` on `main`, title "Dually Trip Tracker 0.3.1", the version's lines from What's new (`dually.top/changes`) as the notes, drop the APK and the packed mapping file on "Attach binaries", **Publish release**. Or with GitHub's command-line tool, with the notes written from the list of changes:
 
    ```bash
    python3 -c "import json;r=json.load(open('app/src/main/assets/changelog.json'))['releases'][0];print('\n'.join('- **%s.** %s'%(c['title'],c.get('body','')) for c in r['changes']))" > app/build/release-notes.md
-   gh release create v0.3.1 app/build/outputs/apk/release/MilO-0.3.1.apk app/build/outputs/apk/release/MilO-0.3.1-mapping.txt.gz --target main --title "MilO Trip Log 0.3.1" --notes-file app/build/release-notes.md
+   gh release create v0.3.1 app/build/outputs/apk/release/Dually-0.3.1.apk app/build/outputs/apk/release/Dually-0.3.1-mapping.txt.gz --target main --title "Dually Trip Tracker 0.3.1" --notes-file app/build/release-notes.md
    ```
 
-6. **Never publish an APK from CI, or one built with `-Pmilo.signing.debugKey=true`.** Both carry the throwaway debug key and could not update anyone's MilO.
+6. **Never publish an APK from CI, or one built with `-Pmilo.signing.debugKey=true`.** Both carry the throwaway debug key and could not update anyone's Dually.
 
-Because a release is signed with the phone's own key, its APK also installs over the phone's MilO, and the trips stay. **The first release, 0.1.0, was published on 2026-10-09, and 0.3.0 the same evening,** after its APK was installed over the phone's MilO this way. Those two were not minified and have no mapping file: their stack traces read as they are. 0.3.1 is the first release that goes through R8.
+Because a release is signed with the phone's own key, its APK also installs over the phone's Dually, and the trips stay. **The first release, 0.1.0, was published on 2026-10-09, and 0.3.0 the same evening,** after its APK was installed over the phone's Dually this way. Those two were not minified and have no mapping file: their stack traces read as they are. 0.3.1 is the first release that goes through R8.
 
 ### Reading a stack trace from a release
 
-In a release from 0.3.1 on, a stack trace in MilO's Log looks like this (from a test build of 2026-10-10 with a failure put in on purpose):
+In a release from 0.3.1 on, a stack trace in Dually's Log looks like this (from a test build of 2026-10-10 with a failure put in on purpose):
 
 ```
 kotlinx.serialization.json.JsonDecodingException: Unexpected JSON token at offset 4 …
@@ -438,34 +438,38 @@ kotlinx.serialization.json.JsonDecodingException: Unexpected JSON token at offse
 	at com.shawnkowalchuk.milo.feature.trips.TripCorrections.mark(r8-map-id-5288aac6…c54:105)
 ```
 
-- **The exception and MilO's own classes and methods are named as in the source code.** Often that is enough to find the place.
+- **The exception and Dually's own classes and methods are named as in the source code.** Often that is enough to find the place.
 - **A library's line is a short name** (`mz1.k`): R8 renamed it.
 - **Where the file name was, there is an id** (`r8-map-id-…`), and the number after it is R8's own, not a line of the source file. The id says which mapping file the trace belongs to: it is the `pg_map_id` in the first lines of that release's `mapping.txt`.
 
 To turn it back, save the trace (or the whole shared Log) as a text file, get that release's mapping file from its GitHub release, and run R8's own tool, which the Android build already has on the Mac:
 
 ```bash
-gunzip -k MilO-0.3.1-mapping.txt.gz
-java -cp "$(find ~/.gradle/caches/modules-2 -name 'builder-9.4.1.jar' | head -1)" com.android.tools.r8.retrace.Retrace MilO-0.3.1-mapping.txt trace.txt
+gunzip -k Dually-0.3.1-mapping.txt.gz
+java -cp "$(find ~/.gradle/caches/modules-2 -name 'builder-9.4.1.jar' | head -1)" com.android.tools.r8.retrace.Retrace Dually-0.3.1-mapping.txt trace.txt
 ```
 
 (`9.4.1` is the Android Gradle plugin's version in `gradle/libs.versions.toml`; a newer one reads an older mapping file.) The same lines then read `TripRepository.setCategoryByHand(TripRepository.kt:229)` and `TripCorrections.mark(TripCorrections.kt:63)`, and the library's lines have their real names. Text that is not a stack trace passes through unchanged. A Log from a copy installed from Google Play is turned back with the same file: the two copies of a version are one build. The crash reports the Play Console shows need nothing: the bundle carries the mapping file.
 
 ### Publishing on Google Play
 
-MilO is being prepared for Google Play as a second channel beside GitHub Releases (ADR-004, 2026-10-09). The app exists in the Play Console of 2795748 Alberta Ltd. as "MilO Trip Log" (`com.shawnkowalchuk.milo`, English (Canada), free, automatic protection turned off), and Play App Signing uses MilO's own key. 0.2.0 (build 2) went to open testing on 2026-10-09, and 0.3.0 (build 3) is the first for the production track. Each version goes to both channels with the same number.
+Dually is being prepared for Google Play as a second channel beside GitHub Releases (ADR-004, 2026-10-09). Each version goes to both channels with the same number.
+
+**The app has to be created in the Play Console anew** (ADR-010, 2026-10-13). Until then it existed there, in the Console of 2795748 Alberta Ltd., as "MilO Trip Log" (`com.shawnkowalchuk.milo`): 0.2.0 (build 2) went to open testing on 2026-10-09 and 0.3.0 (build 3) to review for the production track. Google refused that listing under its Impersonation policy, naming the icon, the name and the screenshots, and Shawn deleted the entry. The rebranded app is a new entry, "Dually Trip Tracker", **with a new application ID:** a deleted entry's ID cannot be counted on to be free again. The ID is one value in `app/build.gradle.kts`; **until Shawn has chosen it and it is written there, nothing can be uploaded.** Everything below is done again for the new entry, from the first step: the signing key, the app content, the two videos, Android Auto and the listing.
+
+**A new ID is a new app on a phone too.** It installs beside a MilO that is there and starts empty. The trips come across with "Export all data" in the old app and "Import data" in the new one; what does not come across is listed in ADR-010, and the move on Shawn's phone is device checks RB-1 to RB-9.
 
 1. **Build the app bundle** on the Mac, from the same `main` as the GitHub release and in the same run as its APK: `./gradlew assembleRelease bundleRelease` ("Making a release", step 3). **Google Play takes a build number once:** a second bundle of the same version needs `versionCode` in `app/build.gradle.kts` raised by one first. The file is `app/build/outputs/bundle/release/app-release.aab`, signed with `~/keys/milo.jks`. Since 2026-10-10 it has been through R8 (ADR-008) and carries two things for the Play Console inside it: R8's mapping file, so crash reports are shown with real names, and R8's own figures, which the Console's "DEX code optimization" page asked for. Nothing is uploaded by hand for either. **After the upload, read that page** (App bundle explorer, or the warning on the release) and write its percentages into FINDINGS_LOG: the first minified bundle is the first time Google's own count is seen.
-2. **The first upload decides the signing key, for good.** In Testing, Internal testing, create a release. When the Console asks how the app is signed, choose to use your own key (exporting and uploading a key from a Java keystore), and run the command it shows with `~/keys/milo.jks` and the alias `milo`. **Never let Google create the key:** a copy signed with another key can never update the phone's MilO without wiping its trips. **Done on 2026-10-09:** Google had made a key of its own when the app was created (its "deployment" certificate starts `0D:85:65`), and it was changed to `milo.jks` under Protected with Play, App signing, Change key, before anything was uploaded. The app signing key certificate there reads `95:A9:51:07:…:94:14:B4`; check it again if the page ever offers to change it.
-3. **App content** (Policy, App content). Privacy policy: `https://milotriplog.top/privacy`. App access: no sign-in; reviewers start a trip with Start on Home, as they have no truck. Ads: No (change it before an update with ads, if one ever comes). Content rating: the questionnaire. Target audience: 18 and over. Data safety: MilO's own code sends nothing anywhere; location stays on the phone, except the two ends of each trip given to the phone's address lookup (Google's on most phones) and Android's backup if it is switched on, which Google's guidance in the form says how to declare. **Since 0.3.1 the app holds Google Play's In-App Review library** (ADR-009): the rating and text a person enters on Google Play's review card are collected by Google Play, not by MilO; Google's page for the library ("Google Play In-App Reviews API", Data safety) says what it collects, and how the form is answered for it is still the publisher's to decide. Look at the form again before 0.3.1 is published.
-4. **The two declarations that need a video.** Location in the background: a recording that shows Setup's "Location: Allow all the time" button, MilO's question "MilO uses your location", Continue, Android's page with "Allow all the time", and a trip that starts with MilO closed. Foreground service (location): a trip being recorded with its notification.
+2. **The first upload decides the signing key, for good.** In Testing, Internal testing, create a release. When the Console asks how the app is signed, choose to use your own key (exporting and uploading a key from a Java keystore), and run the command it shows with `~/keys/milo.jks` and the alias `milo`. **Never let Google create the key:** a copy signed with another key can never update the phone's Dually without wiping its trips. **This was done on 2026-10-09 for the entry that was deleted, and has to be done again for the new one:** Google made a key of its own when that app was created (its "deployment" certificate started `0D:85:65`), and it was changed to `milo.jks` under Protected with Play, App signing, Change key, before anything was uploaded. Expect the same of the new entry. The app signing key certificate must then read `95:A9:51:07:…:94:14:B4`, the certificate of `milo.jks`; check it before the first upload, and again if the page ever offers to change it.
+3. **App content** (Policy, App content). Privacy policy: `https://dually.top/privacy`. App access: no sign-in; reviewers start a trip with Start on Home, as they have no truck. Ads: No (change it before an update with ads, if one ever comes). Content rating: the questionnaire. Target audience: 18 and over. Data safety: Dually's own code sends nothing anywhere; location stays on the phone, except the two ends of each trip given to the phone's address lookup (Google's on most phones) and Android's backup if it is switched on, which Google's guidance in the form says how to declare. **Since 0.3.1 the app holds Google Play's In-App Review library** (ADR-009): the rating and text a person enters on Google Play's review card are collected by Google Play, not by Dually; Google's page for the library ("Google Play In-App Reviews API", Data safety) says what it collects, and how the form is answered for it is still the publisher's to decide. Look at the form again before 0.3.1 is published.
+4. **The two declarations that need a video.** Location in the background: a recording that shows Setup's "Location: Allow all the time" button, Dually's question "Dually uses your location", Continue, Android's page with "Allow all the time", and a trip that starts with Dually closed. Foreground service (location): a trip being recorded with its notification.
 5. **Android Auto:** in Advanced settings, Form factors, add Android Auto. Google reviews the car screen before it reaches cars.
-6. **Store listing:** a short description (80 characters), the full description, a 512 × 512 icon, a 1024 × 500 feature graphic and at least two phone screenshots (`website/screenshots/`); category Business.
+6. **Store listing:** the name "Dually Trip Tracker", a short description (80 characters), the full description, a 512 × 512 icon (the dark D on orange: `website/icon-512.png` once the website's rebrand is merged), a 1024 × 500 feature graphic and at least two phone screenshots; category Business. **Every picture has to be made anew:** the screenshots in `website/screenshots/` and the old feature graphic show the lime interface, the M and the name MilO, which are the three things Google named. The website and privacy links are `https://dually.top` and `https://dually.top/privacy`, and the support address `support@dually.top`: the domain has to be registered and the address has to forward before the listing is sent for review (ADR-010).
 7. **Roll out** to Internal testing first, read Google's report on it, then promote the same release to Production for Canada (and any other countries). **Internal testing is also the only place Google Play's review card can be tried:** a copy installed from there shows it, without Google Play's limit on how often (`docs/DEVICE_TEST_CHECKLIST.md`, "Google Play's review card", RV-1 to RV-9).
 
 ### The list of changes
 
-What the app's What's new screen (Settings, Version) and the website's `/changes` page show is one file, `app/src/main/assets/changelog.json` (since 2026-10-08, in place of the database GopherForms and SeaWingman use: MilO has no server). Each version has a `version`, a `date` (`null` until it is released) and its `changes`, each a `kind` (`new`, `improved`, `fixed` or `security`), a `title` and, if needed, a `body`:
+What the app's What's new screen (Settings, Version) and the website's `/changes` page show is one file, `app/src/main/assets/changelog.json` (since 2026-10-08, in place of the database GopherForms and SeaWingman use: Dually has no server). Each version has a `version`, a `date` (`null` until it is released) and its `changes`, each a `kind` (`new`, `improved`, `fixed` or `security`), a `title` and, if needed, a `body`:
 
 ```json
 { "kind": "fixed", "title": "The odometer after an import", "body": "It counts the imported trips again." }
@@ -478,7 +482,7 @@ What the app's What's new screen (Settings, Version) and the website's `/changes
 
 ### The website
 
-`https://milotriplog.top` is a landing page, a comparison, What's new and a privacy policy (ADR-003), under the name "MilO Trip Log" (since 2026-10-08): plain HTML and CSS in `website/`, served by Firebase Hosting from the Firebase project `milotriplog`. **A merge to `main` that changes `website/` puts it live by itself** (`.github/workflows/website.yml`); the Actions tab's "Website", **Run workflow**, does the same by hand. The app has nothing to do with it and gets no Firebase.
+`https://dually.top` is a landing page, a comparison, What's new and a privacy policy (ADR-003), under the name "Dually Trip Tracker" (since 2026-10-13; "MilO Trip Log" from 2026-10-08, at `milotriplog.top`, where the live site stays until the rebranded one is put live: ADR-003's addendum says what that needs): plain HTML and CSS in `website/`, served by Firebase Hosting from the Firebase project `milotriplog`. **A merge to `main` that changes `website/` puts it live by itself** (`.github/workflows/website.yml`); the Actions tab's "Website", **Run workflow**, does the same by hand. The app has nothing to do with it and gets no Firebase.
 
 To look at a change before merging, open `website/index.html` in a browser, or run `firebase serve --only hosting` in the repository and open the address it prints.
 
@@ -492,9 +496,9 @@ To look at a change before merging, open `website/index.html` in a browser, or r
    - **On a Windows PC** (how it was done on 2026-10-08): download the Firebase tool as one program, [firebase-tools-instant-win.exe](https://firebase.tools/bin/win/instant/latest), and open it: it opens a window where `firebase` works. There, `mkdir %USERPROFILE%\milo-setup`, then `cd %USERPROFILE%\milo-setup`.
    - **On the Mac:** `npm install -g firebase-tools`, then `mkdir ~/milo-setup && cd ~/milo-setup`.
 
-   Then `firebase login`, and `firebase init hosting`, answering: proceed **Y**; **Use an existing project**, `milotriplog`; public directory: press Enter; single-page app **N**; **set up automatic builds and deploys with GitHub: Y**; the repository `shawnkowalchuk/MilO` (it signs in to GitHub in the browser); run a build script **N**; automatic deployment when a pull request is merged **N** (MilO has its own workflow). It makes a service account that may deploy to Hosting and nothing more, and stores its key in GitHub as the secret `FIREBASE_SERVICE_ACCOUNT_MILOTRIPLOG` (GitHub, the repository's **Settings**, **Secrets and variables**, **Actions**, where it can be checked). Then delete the `milo-setup` folder. (`firebase init hosting:github` alone refuses to run in a folder without this repository's `firebase.json`: "Didn't find a Hosting config in firebase.json".) The key is never saved in the repository; do not download one from the Firebase console.
+   Then `firebase login`, and `firebase init hosting`, answering: proceed **Y**; **Use an existing project**, `milotriplog`; public directory: press Enter; single-page app **N**; **set up automatic builds and deploys with GitHub: Y**; the repository `shawnkowalchuk/Dually` (it signs in to GitHub in the browser); run a build script **N**; automatic deployment when a pull request is merged **N** (Dually has its own workflow). It makes a service account that may deploy to Hosting and nothing more, and stores its key in GitHub as the secret `FIREBASE_SERVICE_ACCOUNT_MILOTRIPLOG` (GitHub, the repository's **Settings**, **Secrets and variables**, **Actions**, where it can be checked). Then delete the `milo-setup` folder. (`firebase init hosting:github` alone refuses to run in a folder without this repository's `firebase.json`: "Didn't find a Hosting config in firebase.json".) The key is never saved in the repository; do not download one from the Firebase console.
 4. **Deploy:** merge a change to `website/`, or run "Website" from the Actions tab. The site is then at `https://milotriplog.web.app`.
-5. **Connect the domain:** Firebase console, **Hosting**, **Add custom domain**, `milotriplog.top`. Firebase shows the DNS records to enter at the registrar `milotriplog.top` was bought from (a TXT record that proves it is yours, then the A record): enter them there, and press **Verify**. Then add `www.milotriplog.top` the same way, set to redirect to `milotriplog.top`. Firebase makes the HTTPS certificate itself, within minutes or up to a day.
+5. **Connect the domain:** Firebase console, **Hosting**, **Add custom domain**, `dually.top`. Firebase shows the DNS records to enter at the registrar `dually.top` was bought from (a TXT record that proves it is yours, then the A record): enter them there, and press **Verify**. Then add `www.dually.top` the same way, set to redirect to `dually.top`. Firebase makes the HTTPS certificate itself, within minutes or up to a day.
 
 **If the key ever leaks,** delete it in the Google Cloud console (IAM, **Service accounts**, the `github-action-…` account, **Keys**) and run step 3 again. It can replace the website and nothing else.
 

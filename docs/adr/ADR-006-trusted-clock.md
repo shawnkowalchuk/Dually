@@ -1,5 +1,7 @@
 # ADR-006: MilO keeps its own clock
 
+> **Note, 2026-10-13:** the product was renamed from MilO to Dually Trip Tracker on 2026-10-13 (ADR-010). This record keeps the old name, and the old addresses, in everything written before that day.
+
 Date: 2026-10-07
 Status: Accepted. Built and unit tested. It ran on a stock-Android emulator on 2026-10-09 (FINDINGS_LOG, "MilO's clock ran on an emulator"); what was decided after that run (C and D below) has run in unit tests only. Nothing of it has run on the phone (device checks CJ-1 to CJ-15).
 Changed: 2026-10-09, after two independent verifications of the build: decisions 2 and 4 below, and the section "Decided on 2026-10-09, after the verification". Changed again the same day, after the run on an emulator: the section "Decided on 2026-10-09, after the emulator run".
