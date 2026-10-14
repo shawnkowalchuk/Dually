@@ -48,7 +48,7 @@ class AnchorStoringTest {
         val written = crashFiles.read(crashFiles.pendingFiles().single())
         assertEquals(anchor.wallMs, written.atMs)
         // Dated by the anchor itself: MilO's time at the moment the anchor was made.
-        assertTrue(written.summary, "MilO's clock could not store its anchor" in written.summary)
+        assertTrue(written.summary, "Dually's clock could not store its anchor" in written.summary)
         assertTrue(written.stackTrace, written.stackTrace.contains("Cannot create the folder"))
     }
 }

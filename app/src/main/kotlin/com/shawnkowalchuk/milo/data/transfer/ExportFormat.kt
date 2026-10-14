@@ -62,7 +62,7 @@ val EXPORT_POINT_COLUMNS: List<String> =
 
 /** The sentence under "about": for a person who opens the file, years from now. */
 const val EXPORT_ABOUT =
-    "MilO mileage log. Every closed trip (finished, discarded and deleted), every report " +
+    "Dually mileage log. Every closed trip (finished, discarded and deleted), every report " +
         "recorded as sent, the settings that mean the same on another phone, and the raw GPS " +
         "points if \"points\" is not null. Times are milliseconds since 1970-01-01 UTC, " +
         "distances are metres. Not in this file: the event log, the companion device " +

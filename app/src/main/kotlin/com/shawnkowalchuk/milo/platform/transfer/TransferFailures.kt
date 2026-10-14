@@ -29,7 +29,7 @@ internal class TransferFailures(
      * @param doing what was being done, in words that finish "… failed while".
      */
     suspend fun report(doing: String, failure: Exception) {
-        val message = "MilO's backup, export or import failed while $doing"
+        val message = "Dually's backup, export or import failed while $doing"
         val atMs = clock()
         try {
             eventLog.add(atMs, EventCategory.ERROR, message, failure.stackTraceToString())

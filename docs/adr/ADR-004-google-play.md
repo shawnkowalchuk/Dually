@@ -1,4 +1,7 @@
 # ADR-004: Google Play as a second channel, with the phone's own key
+
+> **Note, 2026-10-13:** the product was renamed from MilO to Dually Trip Tracker on 2026-10-13 (ADR-010). This record keeps the old name, and the old addresses, in everything written before that day.
+
 Date: 2026-10-09
 Status: Accepted (the app's changes are made; Play App Signing uses `milo.jks` since 2026-10-09; nothing has been uploaded to Google Play yet)
 

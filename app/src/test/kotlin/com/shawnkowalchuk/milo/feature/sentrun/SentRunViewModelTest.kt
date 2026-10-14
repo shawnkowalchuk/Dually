@@ -336,7 +336,7 @@ class SentRunViewModelTest {
         val line = log.entries.single()
         assertEquals(EventCategory.ERROR, line.category)
         assertEquals(
-            "MilO's mascot did not run across the Report screen: a picture of him could not " +
+            "Dually's mascot did not run across the Report screen: a picture of him could not " +
                 "be read",
             line.message,
         )

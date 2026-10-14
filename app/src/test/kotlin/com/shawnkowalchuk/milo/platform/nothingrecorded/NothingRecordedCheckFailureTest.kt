@@ -75,7 +75,7 @@ class NothingRecordedCheckFailureTest : NothingRecordedCheckFixture() {
             assertEquals(1, shown)
             assertTrue(
                 lines()[1].endsWith(
-                    "Notifications are switched off for MilO or for this kind of notification, " +
+                    "Notifications are switched off for Dually or for this kind of notification, " +
                         "so nobody saw it.",
                 ),
             )

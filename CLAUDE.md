@@ -26,7 +26,7 @@ If you skip this, you will make a decision that's already been made, and that's 
 
 1. **"Has this already been built?"** Search `docs/APP_ENCYCLOPEDIA.md` first. If a capability for this exists, **extend it — do not rebuild it.**
    - *Concrete example:* before adding "award a badge when a user does X," check the encyclopedia for an existing badge capability. If badges already exist, plug into that system. Don't create a second, parallel way to do badges. This is the exact failure mode — half-remembered features getting reinvented — that this whole setup prevents.
-2. **"Which surfaces?"** MilO has two: the phone UI and the Android Auto screen. **Ask explicitly: phone only, Android Auto only, or both?** Never default to one or assume both. Then put all non-UI logic (trip rules, distance, schedule, data access) in the shared `core/`, `data/` and `platform/` packages so the two surfaces can't drift.
+2. **"Which surfaces?"** Dually has two: the phone UI and the Android Auto screen. **Ask explicitly: phone only, Android Auto only, or both?** Never default to one or assume both. Then put all non-UI logic (trip rules, distance, schedule, data access) in the shared `core/`, `data/` and `platform/` packages so the two surfaces can't drift.
 3. **"Does the UI already have a pattern for this?"** If yes, reuse the existing component/pattern exactly. If no, you're adding to the design system deliberately — flag it and say so. Never create a one-off style. (STANDARDS §8.)
 4. **"Where does it live?"** Place it in the feature-first structure (STANDARDS §3). One feature, one folder.
 5. **"What's the smallest version that delivers the value?"** Build that first.
@@ -50,8 +50,8 @@ The recurring pain: deps go stale, then updating them is a nightmare. Prevent it
 ## Secrets & passwords — never hardcoded
 
 - Never write a password, API key, token, or secret into code, a script, or anything committed to git. Ever. (It lives in git history forever.)
-- MilO has no backend, no API keys and no sign-in. The app's only secrets are the signing keystore and its passwords. They live outside the repository and are **prompted for or read at build time** from a git-ignored file, never committed.
-- The website (`website/`, milotriplog.top) has one secret of its own since 2026-10-08: the Firebase Hosting deploy key, kept only in GitHub's Actions secrets (ADR-003). It is never downloaded into the repository. The website is not one of the app's two surfaces; the app gets no Firebase.
+- Dually has no backend, no API keys and no sign-in. The app's only secrets are the signing keystore and its passwords. They live outside the repository and are **prompted for or read at build time** from a git-ignored file, never committed.
+- The website (`website/`, dually.top) has one secret of its own since 2026-10-08: the Firebase Hosting deploy key, kept only in GitHub's Actions secrets (ADR-003). It is never downloaded into the repository. The website is not one of the app's two surfaces; the app gets no Firebase.
 - If a secret is ever added (an API key, a token), it follows the same rule and gets an ADR first.
 - If a required secret is missing, fail loudly. (STANDARDS §12.)
 

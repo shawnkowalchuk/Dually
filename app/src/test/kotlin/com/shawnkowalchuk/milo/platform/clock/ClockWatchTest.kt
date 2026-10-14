@@ -28,7 +28,7 @@ private const val HOUR_MS = 3_600 * SECOND_MS
 private const val EVENING_MS = 1_791_419_562_000L
 
 private const val BACK_LINE =
-    "The phone's date was set 24 h 0 min ahead. MilO saw it back 9 s later and kept its own time."
+    "The phone's date was set 24 h 0 min ahead. Dually saw it back 9 s later and kept its own time."
 
 /**
  * What MilO does about a change of the phone's clock beside keeping its own time: the one line
@@ -130,7 +130,7 @@ class ClockWatchTest {
 
         // The line says when MilO saw it, which is all MilO knows: 9 s, and the half minute.
         assertEquals(
-            "The phone's date was set 24 h 0 min ahead. MilO saw it back 39 s later and kept " +
+            "The phone's date was set 24 h 0 min ahead. Dually saw it back 39 s later and kept " +
                 "its own time.",
             clockLines().single().message,
         )
@@ -197,7 +197,7 @@ class ClockWatchTest {
         val line = clockLines().single()
         assertEquals(
             "The phone's clock is 3 h 0 min behind where it was and has stayed so for 10 min. " +
-                "MilO now follows it.",
+                "Dually now follows it.",
             line.message,
         )
         // Dated by the clock MilO now follows.
@@ -231,8 +231,8 @@ class ClockWatchTest {
 
             assertEquals(
                 listOf(
-                    "reminder, the phone's clock was set back and MilO keeps its own time",
-                    "daily check, the phone's clock was set back and MilO keeps its own time",
+                    "reminder, the phone's clock was set back and Dually keeps its own time",
+                    "daily check, the phone's clock was set back and Dually keeps its own time",
                 ),
                 asked,
             )
@@ -267,7 +267,7 @@ class ClockWatchTest {
         assertEquals(2, asked.size)
         assertEquals(2, broadcastsDone)
         val written = crashFiles.read(crashFiles.pendingFiles().single())
-        assertTrue(written.summary, written.summary.contains("MilO's clock watch failed while"))
+        assertTrue(written.summary, written.summary.contains("Dually's clock watch failed while"))
     }
 
     @Test
@@ -309,7 +309,7 @@ class ClockWatchTest {
 
         val line = log.entries.single()
         assertEquals(EventCategory.ERROR, line.category)
-        assertTrue(line.message, line.message.startsWith("MilO's clock: this phone gives no"))
+        assertTrue(line.message, line.message.startsWith("Dually's clock: this phone gives no"))
         // The phone of every other test here has one, and writes nothing of the kind.
         watch()
         assertEquals(1, log.entries.size)

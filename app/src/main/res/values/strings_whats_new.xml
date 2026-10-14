@@ -8,8 +8,12 @@
     -->
     <string name="whats_new_title">What\'s new</string>
     <string name="whats_new_version_label">Version</string>
-    <!-- The versionName and the versionCode: "0.1.0 · build 1". -->
-    <string name="whats_new_version_value">%1$s · build %2$d</string>
+    <!--
+        The app's name in full, the versionName and the versionCode: "Dually Trip Tracker 0.1.0 ·
+        build 1". The name stands here since 2026-10-13, so that the tile says which app the
+        number is of, as the support email's last line does.
+    -->
+    <string name="whats_new_version_value">Dually Trip Tracker %1$s · build %2$d</string>
     <string name="whats_new_version_hint">What changed in each version</string>
     <!-- What a screen reader says a press of the Version tile does, after "double tap to". -->
     <string name="whats_new_version_open">see what\'s new</string>

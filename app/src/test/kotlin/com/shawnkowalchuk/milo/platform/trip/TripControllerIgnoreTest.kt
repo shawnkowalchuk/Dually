@@ -161,7 +161,7 @@ class TripControllerIgnoreTest {
             assertTrue(
                 damaged.logged(EventCategory.TRIP).last().endsWith(
                     "; not sorted into Business or Personal: the settings cannot be read. " +
-                        "It is sorted at a later start of MilO",
+                        "It is sorted at a later start of Dually",
                 ),
             )
         }

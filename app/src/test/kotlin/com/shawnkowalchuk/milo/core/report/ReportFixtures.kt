@@ -26,8 +26,7 @@ internal fun edmonton(text: String): Long =
 /** The words the string resources hold, written out here so the tests need no Android. */
 internal val WORDS =
     ReportWords(
-        appName = "MilO",
-        appMark = "M",
+        appName = "Dually",
         title = "Mileage report",
         name = "Name",
         company = "Company",
@@ -56,7 +55,7 @@ internal val WORDS =
         odometerOn = "Odometer, %1\$s",
         odometerKm = "%1\$s km",
         odometerEstimated = "%1\$s km est.",
-        odometerNote = "est.: worked out by MilO from a reading of the dashboard and the truck " +
+        odometerNote = "est.: worked out by Dually from a reading of the dashboard and the truck " +
             "trips recorded since, not read off the dashboard on that day.",
         odometerOfVehicle = "%1\$s, %2\$s",
         footer = "%1\$s · %2\$s",

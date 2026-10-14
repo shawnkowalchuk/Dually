@@ -70,9 +70,9 @@ class DailyAlarmAskedTest {
     @Test
     fun `the line for an alarm asked to ask again says why and for how long`() {
         assertEquals(
-            "MilO's time is not confirmed yet: it was taken from the phone's clock at a start " +
+            "Dually's time is not confirmed yet: it was taken from the phone's clock at a start " +
                 "with nothing to check it against (process start). So Android was asked to " +
-                "count 2 min from now. MilO then asks for the next daily look, and shows no " +
+                "count 2 min from now. Dually then asks for the next daily look, and shows no " +
                 "notification while its time is not confirmed.",
             askAgainText(PROBATION_MS, "process start"),
         )

@@ -151,11 +151,11 @@ internal class TruckPairingCheck(
                 // The one adopt() turned down.
                 1 ->
                     "Android lists one association, for ${associations.single().address}, " +
-                        "which was not adopted: MilO does not find that address among the " +
+                        "which was not adopted: Dually does not find that address among the " +
                         "devices paired with the phone."
 
                 else ->
-                    "Android lists ${associations.size} associations, and MilO does not guess " +
+                    "Android lists ${associations.size} associations, and Dually does not guess " +
                         "between them."
             }
         if (stored == null) {

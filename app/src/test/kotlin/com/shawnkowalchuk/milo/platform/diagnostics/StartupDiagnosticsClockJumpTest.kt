@@ -99,7 +99,7 @@ class StartupDiagnosticsClockJumpTest {
         val first = exitLines().single()
         assertEquals(
             "Process 100 ended: OTHER (SwipeUpClean). It ended while the phone's clock was " +
-                "set ahead; this line stands at the time MilO read the record, not at the " +
+                "set ahead; this line stands at the time Dually read the record, not at the " +
                 "time the process ended",
             first.message,
         )

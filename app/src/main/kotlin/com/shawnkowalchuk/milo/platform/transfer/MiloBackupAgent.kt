@@ -81,7 +81,7 @@ class MiloBackupAgent : BackupAgent() {
             }
         note(
             BackupNoteKind.QUOTA_EXCEEDED,
-            "MilO's files are ${megabytes(backupDataBytes)} and the limit is " +
+            "Dually's files are ${megabytes(backupDataBytes)} and the limit is " +
                 megabytes(quotaBytes) + collectedNoteStays,
         )
     }

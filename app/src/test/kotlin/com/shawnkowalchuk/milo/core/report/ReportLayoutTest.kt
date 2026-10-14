@@ -17,7 +17,7 @@ class ReportLayoutTest {
     fun `a short report is one page that holds everything`() {
         val page = layout(reportOf(2, 1)).single()
 
-        val top = listOf("MilO", "Mileage report", "Sam Driver", "October 2026")
+        val top = listOf("Dually", "Mileage report", "Sam Driver", "October 2026")
         for (text in top + "Generated October 6, 2026") {
             assertTrue(text, page.has(text))
         }
@@ -220,7 +220,7 @@ class ReportLayoutTest {
         assertEquals(ReportInk.DARK, tile.ink)
         assertEquals(CONTENT_TOP, tile.top, 0f)
         for (text in listOf(
-            "MilO",
+            "Dually",
             "Mileage report",
             "October 2026",
             "Generated October 6, 2026",
@@ -228,19 +228,22 @@ class ReportLayoutTest {
             val line = page.find(text)
             assertTrue(text, line.baseline > tile.top && line.baseline < tile.bottom)
         }
-        // The mark is the accent's square with the initial in it, at the tile's start.
-        val mark = page.items.filterIsInstance<PageItem.Box>()[1]
+        // The mark is the accent's square with the dark letter in its middle, at the tile's
+        // start. The letter is a drawn shape, so no text of the page is the mark.
+        val mark = page.boxes[1]
         assertEquals(ReportInk.ACCENT, mark.ink)
-        val initial = page.texts.first { it.style == ReportTextStyle.MARK }
-        assertEquals("M", initial.text)
-        assertTrue(initial.x > mark.left && initial.end() < mark.right)
-        assertTrue(page.find("MilO").x > mark.right)
+        val letter = page.markLetters.first()
+        assertEquals(ReportInk.MARK_LETTER, letter.ink)
+        assertTrue(mark.holds(letter))
+        assertEquals((mark.left + mark.right) / 2, (letter.left + letter.right) / 2, 0.01f)
+        assertEquals((mark.top + mark.bottom) / 2, (letter.top + letter.bottom) / 2, 0.01f)
+        assertTrue(page.find("Dually").x > mark.right)
         // The period ends where the tile's words end, on the right.
         assertTrue(page.find("October 2026").rightAligned)
     }
 
     @Test
-    fun `Business and Personal stand side by side, Business on the accent`() {
+    fun `Business and Personal stand side by side, Business on Amber`() {
         val page = layout(reportOf(2)).single()
 
         val business = page.find("Business")
@@ -252,7 +255,9 @@ class ReportLayoutTest {
             text.x > it.left && text.x < it.right &&
                 text.baseline in it.top..it.bottom
         }
-        assertEquals(ReportInk.ACCENT, tileOf(business).ink)
+        // Amber since 2026-10-13: the brand's ground for what stands out without being the
+        // accent, which is kept for the mark and the total.
+        assertEquals(ReportInk.AMBER, tileOf(business).ink)
         assertEquals(ReportInk.PANEL, tileOf(personal).ink)
         // Each with its kilometres in large figures, and its trips.
         val figures = page.texts.filter { it.style == ReportTextStyle.FIGURE }.map { it.text }

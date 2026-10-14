@@ -153,7 +153,7 @@ internal fun startedText(
                 "was parked ($carriedOver points carried over), with no connect sound"
 
         carriedOver != null ->
-            "$started while MilO waited beside the parked truck. The trip starts where it " +
+            "$started while Dually waited beside the parked truck. The trip starts where it " +
                 "was parked ($carriedOver points carried over)"
 
         else -> started
@@ -203,8 +203,8 @@ internal fun waitingEndedText(reason: WaitingEnd): String {
             WaitingEnd.END_PRESSED -> "End was pressed"
 
             WaitingEnd.TIME_LIMIT ->
-                "it has stood too long, and MilO has stopped watching it to spare the battery. " +
-                    "The next trip starts when the truck reconnects, when MilO is opened or " +
+                "it has stood too long, and Dually has stopped watching it to spare the battery. " +
+                    "The next trip starts when the truck reconnects, when Dually is opened or " +
                     "restarted, or with Start"
 
             WaitingEnd.TRIP_OPEN -> "a trip is open"
@@ -231,7 +231,7 @@ internal fun filedText(
     val classification = filing.classification
     if (classification == null || schedule == null) {
         return "not sorted into Business or Personal: the settings cannot be read. " +
-            "It is sorted at a later start of MilO"
+            "It is sorted at a later start of Dually"
     }
     val verb = if (kept) "saved as" else "if it is counted, it is"
     return "$verb ${classificationText(classification, startedAtMs, schedule, zone)}"
@@ -266,7 +266,7 @@ internal fun TruckReading.describe(waitStands: Boolean = false): String = when (
         val unread = "the truck's connection could not be read ($evidence)"
         val then =
             if (waitStands) {
-                "MilO was waiting beside the parked truck, and waits on until it can be read"
+                "Dually was waiting beside the parked truck, and waits on until it can be read"
             } else {
                 "so it counts as not connected"
             }
@@ -324,7 +324,7 @@ internal fun serviceNeededText(recording: Boolean): String = if (recording) {
 
 /** The line for a trip service that Android destroyed while it was needed. */
 internal fun serviceLostText(recording: Boolean): String {
-    val during = if (recording) "a trip is open" else "MilO is watching the parked truck"
+    val during = if (recording) "a trip is open" else "Dually is watching the parked truck"
     return "The trip service stopped while $during. Asking Android to start it again"
 }
 

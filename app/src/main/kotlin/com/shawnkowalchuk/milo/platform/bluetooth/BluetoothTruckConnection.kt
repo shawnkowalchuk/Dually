@@ -78,7 +78,7 @@ class BluetoothTruckConnection(context: Context, private val settings: SettingsS
     override suspend fun read(): TruckReading = withContext(Dispatchers.Default) {
         val permission = appContext.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
         if (permission != PackageManager.PERMISSION_GRANTED) {
-            return@withContext TruckReading.unknown("MilO is not allowed to use Bluetooth")
+            return@withContext TruckReading.unknown("Dually is not allowed to use Bluetooth")
         }
         val addresses =
             try {

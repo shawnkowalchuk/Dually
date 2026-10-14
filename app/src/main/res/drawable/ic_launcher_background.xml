@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    The launcher draws this outside the app, so it cannot read the Compose colour tokens.
-    The lime is copied from the design system: the accent (C6F432) in
-    core/designsystem/theme/Color.kt, which is also the square of the app's mark at the top of
-    Home. Change both together.
+    The ground of the app's icon: the orange of the app's mark (since 2026-10-13, ADR-010; a
+    lime until then). The launcher draws this outside the app, so it cannot read the Compose
+    colour tokens; the colour is in res/values/colors.xml, where AppMarkTest keeps it equal to
+    the theme's.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -11,6 +11,6 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:fillColor="#FFC6F432"
+        android:fillColor="@color/milo_mark_ground"
         android:pathData="M0,0h108v108h-108z" />
 </vector>

@@ -38,13 +38,13 @@ class NothingRecordedCheckTest : NothingRecordedCheckFixture() {
             assertEquals(
                 listOf(
                     "Nothing-recorded check: the next daily look is asked for at 2026-10-07 " +
-                        "12:00:00, or soon after it (process start). MilO also looks at every " +
+                        "12:00:00, or soon after it (process start). Dually also looks at every " +
                         "start and every time it is opened.",
                     "Nothing-recorded check (process start): notify: no trip has been started " +
                         "today, Tue 2026-10-06. It is a work day, checked from 12:00, the time " +
                         "set, and it is 12:30.",
                     "Nothing-recorded notification shown for 2026-10-06: \"No trip recorded " +
-                        "today\". A tap opens MilO on the Home screen.",
+                        "today\". A tap opens Dually on the Home screen.",
                 ),
                 lines(),
             )

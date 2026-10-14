@@ -1,9 +1,15 @@
 package com.shawnkowalchuk.milo.platform.report
 
 import android.graphics.Canvas
+import android.graphics.Matrix
 import android.graphics.Paint
-import android.graphics.Typeface
+import android.graphics.Path
+import android.graphics.RectF
 import android.graphics.pdf.PdfDocument
+import com.shawnkowalchuk.milo.core.report.MARK_COUNTER_HALF_HEIGHT
+import com.shawnkowalchuk.milo.core.report.MARK_COUNTER_HALF_WIDTH
+import com.shawnkowalchuk.milo.core.report.MARK_LETTER_HALF_HEIGHT
+import com.shawnkowalchuk.milo.core.report.MARK_LETTER_HALF_WIDTH
 import com.shawnkowalchuk.milo.core.report.PageItem
 import com.shawnkowalchuk.milo.core.report.REPORT_PAGE_HEIGHT
 import com.shawnkowalchuk.milo.core.report.REPORT_PAGE_WIDTH
@@ -18,7 +24,11 @@ import java.io.OutputStream
 //
 // A PDF page is measured in points, and so is everything here: a text size of 10 is a 10 pt
 // font, whatever the phone's screen density or font scale. The colours are the layout pass's
-// (`ReportInk`): ink on white paper, four of them the app's own.
+// (`ReportInk`): ink on white paper, the app's own and the brand's for a light ground.
+
+/** Where the half-ellipse of the mark's letter starts, at its top, and how far it turns. */
+private const val BOWL_START_DEGREES = -90f
+private const val BOWL_SWEEP_DEGREES = 180f
 
 /**
  * The paints the report is drawn with, one for each kind of text, and the answer to "how wide
@@ -27,11 +37,10 @@ import java.io.OutputStream
  *
  * Not thread safe, like the PdfDocument it draws into: one report, one thread.
  *
- * @param sora the app's typeface, `res/font/sora.ttf`. It is a variable font, one file that
- * holds every weight, so each paint tells it how heavy to draw itself, as the screens do
- * (`Type.kt`); without that, every text would come out at the file's default weight.
+ * @param typefaces the app's font files. Each paint is set up for its kind of text by them
+ * (`ReportTypefaces.applyTo`): which file, and for the variable one how heavy and how wide.
  */
-internal class ReportPaints(sora: Typeface) : TextMeasure {
+internal class ReportPaints(typefaces: ReportTypefaces) : TextMeasure {
     private val text: Map<ReportTextStyle, Paint> =
         ReportTextStyle.entries.associateWith { style ->
             // Without hinting and with sub-pixel positions, a text's width does not depend on
@@ -40,8 +49,7 @@ internal class ReportPaints(sora: Typeface) : TextMeasure {
             Paint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG or Paint.LINEAR_TEXT_FLAG)
                 .apply {
                     textSize = style.size
-                    typeface = sora
-                    setFontVariationSettings("'wght' ${style.weight}")
+                    typefaces.applyTo(this, style)
                 }
         }
 
@@ -69,6 +77,11 @@ internal class ReportPaints(sora: Typeface) : TextMeasure {
                 canvas.drawLine(item.fromX, item.y, item.toX, item.y, rule)
             }
 
+            is PageItem.MarkLetter -> {
+                fill.color = item.ink.argb
+                canvas.drawPath(markLetter(item), fill)
+            }
+
             is PageItem.Box -> {
                 fill.color = item.ink.argb
                 canvas.drawRoundRect(
@@ -83,6 +96,43 @@ internal class ReportPaints(sora: Typeface) : TextMeasure {
             }
         }
     }
+}
+
+/**
+ * The letter of the app's mark, filling the box of [item]: the letter and, as a hole in it, its
+ * counter. Each is a stem on the left and half an ellipse on the right, drawn around 0, 0 in
+ * the design's own measure and then sized and moved to the box.
+ */
+private fun markLetter(item: PageItem.MarkLetter): Path {
+    val letter =
+        Path().apply {
+            fillType = Path.FillType.EVEN_ODD
+            stemAndBowl(MARK_LETTER_HALF_WIDTH, MARK_LETTER_HALF_HEIGHT)
+            stemAndBowl(MARK_COUNTER_HALF_WIDTH, MARK_COUNTER_HALF_HEIGHT)
+        }
+    val toBox =
+        Matrix().apply {
+            setScale(
+                (item.right - item.left) / (MARK_LETTER_HALF_WIDTH * 2),
+                (item.bottom - item.top) / (MARK_LETTER_HALF_HEIGHT * 2),
+            )
+            postTranslate((item.left + item.right) / 2, (item.top + item.bottom) / 2)
+        }
+    letter.transform(toBox)
+    return letter
+}
+
+/** A closed outline: straight on the left, half an ellipse on the right, around 0, 0. */
+private fun Path.stemAndBowl(halfWidth: Float, halfHeight: Float) {
+    moveTo(-halfWidth, -halfHeight)
+    lineTo(0f, -halfHeight)
+    arcTo(
+        RectF(-halfWidth, -halfHeight, halfWidth, halfHeight),
+        BOWL_START_DEGREES,
+        BOWL_SWEEP_DEGREES,
+    )
+    lineTo(-halfWidth, halfHeight)
+    close()
 }
 
 /**

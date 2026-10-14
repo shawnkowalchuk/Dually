@@ -34,8 +34,9 @@ enum class TruckLinkLook {
     IDLE,
 
     /**
-     * The truck has just been found: lime dashes that run toward the truck, a Bluetooth mark
-     * that pulses in a lime ring, and a ring that spreads from it. Both ends are lit a little.
+     * The truck has just been found: dashes in the accent that run toward the truck, a Bluetooth
+     * mark that pulses in a ring of the accent, and a ring that spreads from it. Both ends are
+     * lit a little.
      */
     CONNECTING,
 
@@ -255,7 +256,7 @@ private fun TruckTileLongWordsPreview() {
                     look = TruckLinkLook.CONNECTED,
                     words =
                         TruckTileWords(
-                            title = "Truck connected. MilO has stopped watching it",
+                            title = "Truck connected. Dually has stopped watching it",
                             sentence =
                                 "It has not moved for a long time. Press Start trip before " +
                                     "you drive off.",

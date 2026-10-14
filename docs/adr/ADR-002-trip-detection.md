@@ -1,5 +1,7 @@
 # ADR-002: Trip detection and background start
 
+> **Note, 2026-10-13:** the product was renamed from MilO to Dually Trip Tracker on 2026-10-13 (ADR-010). This record keeps the old name, and the old addresses, in everything written before that day.
+
 Date: 2026-10-03
 Status: Accepted (design). Amended 2026-10-03, twice (after the review of the phase 1 foundation, and when the recording core was built), 2026-10-05, four times (when the triggers were built, after the review of the recording core and the triggers, when the screens were built, and for the addresses), and 2026-10-06, four times (the driving alert, a new way for the system to start MilO that starts no trip, whose conditions were completed after a review the same day; that evening, the parked rule, which ends a trip when the truck has stood still although Bluetooth is still connected; the review of the parked rule; and, that night, the verification of the finished work before the second day in the truck). The changes are listed under "Amendments" at the end. Automatic start and stop were seen on the phone in the truck on 2026-10-06 (FINDINGS_LOG, 2026-10-06 (evening)); the parked rule of amendments 28 to 30 has not been.
 

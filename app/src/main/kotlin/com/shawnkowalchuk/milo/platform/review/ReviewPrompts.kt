@@ -106,7 +106,7 @@ class ReviewPrompts(
             .map { }
             .catch { failure ->
                 if (failure !is Exception) throw failure
-                val what = "MilO could not watch for the moments of Google Play's review card"
+                val what = "Dually could not watch for the moments of Google Play's review card"
                 notes.report(what, failure)
             }
 
@@ -291,7 +291,7 @@ class ReviewPrompts(
             settings.changeReviews(change)
         } catch (notWritten: IOException) {
             notStored = change(notStored)
-            val what = "MilO could not store what it asked Google Play's review card for"
+            val what = "Dually could not store what it asked Google Play's review card for"
             notes.report(what, notWritten)
         }
     }

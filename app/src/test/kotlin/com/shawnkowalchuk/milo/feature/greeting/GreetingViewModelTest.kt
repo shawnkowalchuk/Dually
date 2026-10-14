@@ -191,7 +191,7 @@ class GreetingViewModelTest {
         runCurrent()
 
         assertEquals(MascotGreetingKind.MOONWALK, viewModel.due.value)
-        assertEquals(listOf("MilO could not store how many greetings it has shown (2)"), errors)
+        assertEquals(listOf("Dually could not store how many greetings it has shown (2)"), errors)
     }
 
     @Test
@@ -206,7 +206,10 @@ class GreetingViewModelTest {
         val line = log.entries.single()
         assertEquals(42L, line.atMs)
         assertEquals(EventCategory.ERROR, line.category)
-        assertEquals("MilO did not greet: a picture of its mascot could not be read", line.message)
+        assertEquals(
+            "Dually did not greet: a picture of its mascot could not be read",
+            line.message,
+        )
         assertTrue(line.detail.orEmpty().contains(why))
     }
 
@@ -222,8 +225,8 @@ class GreetingViewModelTest {
             val line = log.entries.single()
             assertEquals(EventCategory.ERROR, line.category)
             assertEquals(
-                "MilO's mascot did not moonwalk: a picture of him could not be read. " +
-                    "MilO shows the wave instead",
+                "Dually's mascot did not moonwalk: a picture of him could not be read. " +
+                    "Dually shows the wave instead",
                 line.message,
             )
             assertTrue(line.detail.orEmpty().contains(why))

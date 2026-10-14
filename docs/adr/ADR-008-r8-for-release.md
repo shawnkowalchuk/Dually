@@ -1,4 +1,7 @@
 # ADR-008: The release build goes through R8, and MilO's own names stay readable
+
+> **Note, 2026-10-13:** the product was renamed from MilO to Dually Trip Tracker on 2026-10-13 (ADR-010). This record keeps the old name, and the old addresses, in everything written before that day.
+
 Date: 2026-10-10
 Status: Accepted (built, and run on an emulator; not yet on the phone, and not yet read by the Play Console)
 

@@ -39,7 +39,7 @@ import java.time.DayOfWeek
 /**
  * The work schedule.
  *
- * **The seven days,** Monday first, each a button that is lime while the day is a work day. A
+ * **The seven days,** Monday first, each a button in the accent while the day is a work day. A
  * press switches the day; its hours are kept either way.
  *
  * **One slider for the week, while every work day has the same hours,** which is how the

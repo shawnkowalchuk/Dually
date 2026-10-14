@@ -30,10 +30,13 @@ class EventLogFilesTest {
 
     @Test
     fun `the file is named by the day it was written, in the phone's time zone`() {
-        assertEquals("MilO-log-2026-10-06.txt", eventLogFileName(at("2026-10-06T23:59"), edmonton))
+        assertEquals(
+            "Dually-log-2026-10-06.txt",
+            eventLogFileName(at("2026-10-06T23:59"), edmonton),
+        )
         // The same moment is already the 7th in UTC.
         val utc = ZoneId.of("UTC")
-        assertEquals("MilO-log-2026-10-07.txt", eventLogFileName(at("2026-10-06T23:59"), utc))
+        assertEquals("Dually-log-2026-10-07.txt", eventLogFileName(at("2026-10-06T23:59"), utc))
     }
 
     @Test
@@ -41,9 +44,9 @@ class EventLogFilesTest {
         val header = eventLogFileHeader(at("2026-10-06T14:32:10"), edmonton, lineCount = 1_234)
 
         assertEquals(
-            "MilO event log\n" +
+            "Dually event log\n" +
                 "Written 2026-10-06 14:32:10. Every time is in America/Edmonton.\n" +
-                "1234 lines, oldest first. MilO removes lines older than 90 days, except the " +
+                "1234 lines, oldest first. Dually removes lines older than 90 days, except the " +
                 "newest 1000.\n\n",
             header,
         )
@@ -92,9 +95,9 @@ class EventLogFilesTest {
                 ReportFileStore(folder),
             ).write(at("2026-10-06T14:32"), edmonton)
 
-            assertEquals(File(folder, "MilO-log-2026-10-06.txt"), file)
+            assertEquals(File(folder, "Dually-log-2026-10-06.txt"), file)
             val lines = file.readLines()
-            assertEquals("MilO event log", lines[0])
+            assertEquals("Dually event log", lines[0])
             assertTrue(lines[2].startsWith("1100 lines, oldest first."))
             assertEquals("", lines[3])
             val body = lines.drop(4)
@@ -102,7 +105,7 @@ class EventLogFilesTest {
             assertEquals("2026-10-01 00:00:01  TRIP  line 1", body.first())
             assertEquals("2026-10-01 00:18:20  TRIP  line 1100", body.last())
             // Complete or not there: nothing half-written is left beside it.
-            assertEquals(listOf("MilO-log-2026-10-06.txt"), folder.list()?.toList())
+            assertEquals(listOf("Dually-log-2026-10-06.txt"), folder.list()?.toList())
         }
 
     @Test

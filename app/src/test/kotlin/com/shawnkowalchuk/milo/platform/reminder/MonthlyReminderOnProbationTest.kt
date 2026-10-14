@@ -50,7 +50,7 @@ class MonthlyReminderOnProbationTest : MonthlyReminderClockJumpFixture() {
             lines().any {
                 it.startsWith(
                     "Monthly reminder: nothing shown for 2026-10 yet (process start): it is " +
-                        "due by today's date, 2026-11-01, but MilO's time is not confirmed yet.",
+                        "due by today's date, 2026-11-01, but Dually's time is not confirmed yet.",
                 )
             },
         )
@@ -87,7 +87,7 @@ class MonthlyReminderOnProbationTest : MonthlyReminderClockJumpFixture() {
             assertEquals(listOf(PROBATION_MS), alarmsAskedAfter)
 
             // MilO opened in between shows nothing either, and says so once, not twice.
-            reminder.look("MilO was opened")
+            reminder.look("Dually was opened")
             runCurrent()
             assertEquals(emptyList<YearMonth>(), shownFor)
             assertEquals(1, lines().count { it.contains("nothing shown for 2026-09 yet") })

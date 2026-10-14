@@ -110,7 +110,7 @@ class WhatsNewNoticeViewModelTest {
         runCurrent()
 
         assertFalse(viewModel.due.value)
-        assertEquals(listOf("MilO could not store that What's new was shown for 0.2.0"), errors)
+        assertEquals(listOf("Dually could not store that What's new was shown for 0.2.0"), errors)
     }
 
     @Test

@@ -41,7 +41,7 @@
     <string name="report_email">Email the report</string>
     <string name="report_save_both">Save PDF and CSV</string>
     <string name="report_mark_sent">Mark as sent</string>
-    <string name="report_email_note">MilO opens your email app with the PDF attached. You press send.</string>
+    <string name="report_email_note">Dually opens your email app with the PDF attached. You press send.</string>
     <!--
         The question before a report is marked as sent without the email app. The first three
         arguments are the period, its number of trips and its distance, such as 5 trips and
@@ -55,7 +55,7 @@
     <string name="report_mark_text_month_again">The report for %1$s is added to the list of sent reports as Revision %4$d, sent today, with %2$s and %3$s. The month stays marked as submitted on %5$s, the day its first report was sent.</string>
     <string name="report_mark_text_range">The report for %1$s is added to the list of sent reports, as sent today, with %2$s and %3$s. A report for a date range does not mark a month as submitted.</string>
     <string name="report_mark_not_ended">%1$s has not ended yet. Trips you make later this month are then on no report until the month is sent again, as a revision.</string>
-    <string name="report_mark_use">Use this if you sent the report some other way, or answered \"Not sent\" by mistake. MilO sends nothing. You can take it out of the list again under \"Sent reports\".</string>
+    <string name="report_mark_use">Use this if you sent the report some other way, or answered \"Not sent\" by mistake. Dually sends nothing. You can take it out of the list again under \"Sent reports\".</string>
 
     <!--
         Edit trip: the small labels over the two times on their buttons, what a button says

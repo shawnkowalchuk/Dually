@@ -5,9 +5,19 @@
       "date": null,
       "changes": [
         {
+          "kind": "improved",
+          "title": "The mascot in the new colours",
+          "body": "Dually's mascot is orange now, with the dark D of Dually's icon on his chest. When he waves, moonwalks and holds his party, the D turns on its side and becomes a grin. His soles are smoked black and light up amber whenever a foot is on the ground, like a car's lights, so they flash with his steps. Everything he does is as it was."
+        },
+        {
+          "kind": "improved",
+          "title": "A new name and a new look: Dually Trip Tracker",
+          "body": "The app is now called Dually Trip Tracker, Dually for short. Its icon is a dark D on orange, its screens are orange on a warm black, and its words are set in new typefaces. The report for your accountant has the same new look. Everything the app does is as it was. Dually is a new app on your phone, beside the one you had under the earlier name, and it starts empty. To bring your trips across: in the earlier app, open Settings and press Export all data; then in Dually, open Settings, press Import data and pick that file. Every trip with its route comes across, and so does every report you sent, your work hours and what the report says about you. Then pair your truck again in Setup, type the odometer's reading again, look over the rest of Settings, and remove the earlier app, so that only one app records the truck."
+        },
+        {
           "kind": "new",
           "title": "Ten more sounds to choose from",
-          "body": "MilO has twelve built-in sounds where it had two. Beside the chirp and the chime there are a seatbelt chime, a key fob, a turn signal, a counter bell, a coin and a sonar ping, made for the moment MilO connects to the truck, and a horn tap, an engine rev, a burnout and a race start, made for the moment the trip is under way. Either sound can use any of the twelve, or a sound you add from your phone. Every one has a Play button, so you can hear it before you choose it. Nothing changes until you choose: after this update the connect sound is still the chirp and the trip-start sound the chime, and a sound of your own that is in use stays in use."
+          "body": "Dually has twelve built-in sounds where it had two. Beside the chirp and the chime there are a seatbelt chime, a key fob, a turn signal, a counter bell, a coin and a sonar ping, made for the moment Dually connects to the truck, and a horn tap, an engine rev, a burnout and a race start, made for the moment the trip is under way. Either sound can use any of the twelve, or a sound you add from your phone. Every one has a Play button, so you can hear it before you choose it. Nothing changes until you choose: after this update the connect sound is still the chirp and the trip-start sound the chime, and a sound of your own that is in use stays in use."
         },
         {
           "kind": "improved",
@@ -17,27 +27,27 @@
         {
           "kind": "new",
           "title": "A run across the screen when a report is sent",
-          "body": "When you come back from your email app and answer \"I sent it\", MilO's mascot runs in from the left along the foot of the Report screen, runs on the spot for two seconds with his shoes smoking, then brakes with his brake lights on and slides out to the right. Wheels whirr while he runs on the spot, and tyres squeal as he slides. The two sounds play like the phone's own screen sounds: a phone on silent or on vibrate stays silent. They are also silent when both sounds are switched off in Settings. He does not run after \"Mark as sent\". Everything under him can be pressed while he is there, and he is gone at once if you leave the screen."
+          "body": "When you come back from your email app and answer \"I sent it\", Dually's mascot runs in from the left along the foot of the Report screen, runs on the spot for two seconds with his shoes smoking, then brakes with his brake lights on and slides out to the right. Wheels whirr while he runs on the spot, and tyres squeal as he slides. The two sounds play like the phone's own screen sounds: a phone on silent or on vibrate stays silent. They are also silent when both sounds are switched off in Settings. He does not run after \"Mark as sent\". Everything under him can be pressed while he is there, and he is gone at once if you leave the screen."
         },
         {
           "kind": "improved",
-          "title": "MilO stays upright",
-          "body": "MilO no longer turns on its side when you turn the phone. Every screen stays upright. On a tablet or an unfolded phone Android still turns it."
+          "title": "Dually stays upright",
+          "body": "Dually no longer turns on its side when you turn the phone. Every screen stays upright. On a tablet or an unfolded phone Android still turns it."
         },
         {
           "kind": "new",
           "title": "Google Play may ask for a review",
-          "body": "In a copy of MilO installed from Google Play, Google Play may show its own review card over MilO at three moments: once MilO holds 5 trips it recorded, once it holds 100, and after you answer \"I sent it\" for a report. MilO asks for the card once for each of the three, and leaves 30 days between two requests. It never asks while a trip is being recorded or a vehicle is connected. Google Play decides whether the card appears, and MilO is not told whether it did or what you wrote. A copy installed from the website asks for nothing."
+          "body": "In a copy of Dually installed from Google Play, Google Play may show its own review card over Dually at three moments: once Dually holds 5 trips it recorded, once it holds 100, and after you answer \"I sent it\" for a report. Dually asks for the card once for each of the three, and leaves 30 days between two requests. It never asks while a trip is being recorded or a vehicle is connected. Google Play decides whether the card appears, and Dually is not told whether it did or what you wrote. A copy installed from the website asks for nothing."
         },
         {
           "kind": "new",
-          "title": "A party after a year of MilO",
-          "body": "One year after your first recorded trip, and on that date every year after, MilO's mascot holds a small party. Each trip that starts that day begins with the pop of a party popper in place of its usual first sound, wherever the phone is. If MilO is open on Home when the trip starts, the mascot fades in in a party cap, brings a popper out from behind his back and fires it, and confetti comes down round him; if not, he does it the next time you open MilO that day. Everything under him can be pressed while he is there. The pop has no switch of its own: it is silent when both sounds are switched off in Settings."
+          "title": "A party after a year of Dually",
+          "body": "One year after your first recorded trip, and on that date every year after, Dually's mascot holds a small party. Each trip that starts that day begins with the pop of a party popper in place of its usual first sound, wherever the phone is. If Dually is open on Home when the trip starts, the mascot fades in in a party cap, brings a popper out from behind his back and fires it, and confetti comes down round him; if not, he does it the next time you open Dually that day. Everything under him can be pressed while he is there. The pop has no switch of its own: it is silent when both sounds are switched off in Settings."
         },
         {
           "kind": "new",
           "title": "A second greeting: the moonwalk",
-          "body": "MilO's mascot has a second way to say hello. In a hat, he moonwalks in from the right, skids to a stop in the middle with his brake lights on, thrusts his hips, spins once and moonwalks off to the left. He takes turns with the wave: one time you open MilO he waves, the next he moonwalks. After this update the moonwalk comes first. As before, everything under him can be pressed while he is there."
+          "body": "Dually's mascot has a second way to say hello. In a hat, he moonwalks in from the right, skids to a stop in the middle with his brake lights on, thrusts his hips, spins once and moonwalks off to the left. He takes turns with the wave: one time you open Dually he waves, the next he moonwalks. After this update the moonwalk comes first. As before, everything under him can be pressed while he is there."
         },
         {
           "kind": "improved",
@@ -47,17 +57,17 @@
         {
           "kind": "fixed",
           "title": "The odometer after a reading typed before driving off",
-          "body": "A reading typed in the truck before you drive off no longer loses that drive. MilO starts the trip when the phone connects, so the reading was typed during the trip, and the whole trip was left out of the odometer. Now what you drive after the reading is added. If your odometer is short from a reading typed before this version, type the dashboard's figure once more."
+          "body": "A reading typed in the truck before you drive off no longer loses that drive. Dually starts the trip when the phone connects, so the reading was typed during the trip, and the whole trip was left out of the odometer. Now what you drive after the reading is added. If your odometer is short from a reading typed before this version, type the dashboard's figure once more."
         },
         {
           "kind": "new",
           "title": "Email support",
-          "body": "Settings has a new tile, Email support. It opens your email app with a message to support@milotriplog.top, with MilO's version and your phone's model filled in at the end. MilO is one person's project: answers come when he has time."
+          "body": "Settings has a new tile, Email support. It opens your email app with a message to support@dually.top, with Dually's version and your phone's model filled in at the end. Dually is one person's project: answers come when he has time."
         },
         {
           "kind": "improved",
           "title": "A smaller download",
-          "body": "MilO is less than a third of the size it was to download: the file from the website is 12 MB where it was 40 MB, and the copy from Google Play shrinks in the same way. Code that MilO never used is no longer packed in. Nothing in the app works differently."
+          "body": "Dually is less than a third of the size it was to download: the file from the website is 12 MB where it was 40 MB, and the copy from Google Play shrinks in the same way. Code that Dually never used is no longer packed in. Nothing in the app works differently."
         },
         {
           "kind": "improved",
@@ -83,17 +93,17 @@
         {
           "kind": "fixed",
           "title": "The phone's date set ahead",
-          "body": "MilO keeps its own time. Setting the phone's date a day ahead for a few seconds no longer brings \"No trip recorded today\" after a day of trips, and no longer cuts a trip short or dates it tomorrow. The Log gets a line when MilO sees the date change."
+          "body": "Dually keeps its own time. Setting the phone's date a day ahead for a few seconds no longer brings \"No trip recorded today\" after a day of trips, and no longer cuts a trip short or dates it tomorrow. The Log gets a line when Dually sees the date change."
         },
         {
           "kind": "new",
-          "title": "MilO waves hello",
-          "body": "When you open MilO, its mascot walks in along the bottom of the screen, turns to you and waves. He is in nobody's way: everything under him can be pressed while he is there."
+          "title": "Dually waves hello",
+          "body": "When you open Dually, its mascot walks in along the bottom of the screen, turns to you and waves. He is in nobody's way: everything under him can be pressed while he is there."
         },
         {
           "kind": "improved",
           "title": "Android Auto: everything on one screen",
-          "body": "MilO's screen in the car no longer scrolls. It shows the trip, then today's and the month's business distance and the month's dollars, with the button under them."
+          "body": "Dually's screen in the car no longer scrolls. It shows the trip, then today's and the month's business distance and the month's dollars, with the button under them."
         },
         {
           "kind": "new",
@@ -103,7 +113,7 @@
         {
           "kind": "improved",
           "title": "A GPS point every 2 seconds",
-          "body": "During a trip MilO now reads the truck's position every 2 seconds. It was every 5. The recorded route follows bends more closely."
+          "body": "During a trip Dually now reads the truck's position every 2 seconds. It was every 5. The recorded route follows bends more closely."
         },
         {
           "kind": "improved",
@@ -134,12 +144,12 @@
         {
           "kind": "improved",
           "title": "Location, explained first",
-          "body": "Before Android asks you to allow location all the time, MilO says what it collects, why, and that it stays on this phone."
+          "body": "Before Android asks you to allow location all the time, Dually says what it collects, why, and that it stays on this phone."
         },
         {
           "kind": "improved",
           "title": "The battery setting",
-          "body": "Setup's battery button opens Android's list of apps. Show all apps, choose MilO, then \"Don't optimise\"."
+          "body": "Setup's battery button opens Android's list of apps. Show all apps, choose Dually, then \"Don't optimise\"."
         },
         {
           "kind": "improved",
@@ -155,12 +165,12 @@
         {
           "kind": "new",
           "title": "What's new",
-          "body": "Settings shows the version of MilO on the phone. Tap it for this list: every version and what changed in it. After an update it opens once by itself."
+          "body": "Settings shows the version of Dually on the phone. Tap it for this list: every version and what changed in it. After an update it opens once by itself."
         },
         {
           "kind": "new",
           "title": "Trips start by themselves",
-          "body": "When the phone connects to your truck's Bluetooth, a trip starts and MilO records the drive with GPS, even with the app closed. It ends when the truck disconnects, or once the truck has stood still for 10 minutes."
+          "body": "When the phone connects to your truck's Bluetooth, a trip starts and Dually records the drive with GPS, even with the app closed. It ends when the truck disconnects, or once the truck has stood still for 10 minutes."
         },
         {
           "kind": "new",
@@ -190,7 +200,7 @@
         {
           "kind": "new",
           "title": "Two sounds of your choosing",
-          "body": "One when the truck connects, one when it drives off. Each can be MilO's own sound or an audio file from the phone."
+          "body": "One when the truck connects, one when it drives off. Each can be Dually's own sound or an audio file from the phone."
         },
         {
           "kind": "new",
@@ -205,7 +215,7 @@
         {
           "kind": "new",
           "title": "Buy me a coffee",
-          "body": "A tile above Version in Settings opens MilO's page on Buy Me a Coffee in the browser, for anyone who would like to say thanks. MilO stays free, with no ads."
+          "body": "A tile above Version in Settings opens Dually's page on Buy Me a Coffee in the browser, for anyone who would like to say thanks. Dually stays free, with no ads."
         }
       ]
     }

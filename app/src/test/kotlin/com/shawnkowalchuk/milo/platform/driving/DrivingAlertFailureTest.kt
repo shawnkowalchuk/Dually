@@ -140,12 +140,12 @@ class DrivingAlertFailureTest {
         )
         assertTrue(error.detail.orEmpty().contains("Play services fell over"))
 
-        alert.arm("MilO in front")
+        alert.arm("Dually in front")
         runCurrent()
 
         assertEquals(listOf("watch", "watch"), detection.asked)
         assertEquals(
-            "Driving alert: watching for driving (MilO in front)",
+            "Driving alert: watching for driving (Dually in front)",
             world.logged(EventCategory.DRIVING).single(),
         )
     }

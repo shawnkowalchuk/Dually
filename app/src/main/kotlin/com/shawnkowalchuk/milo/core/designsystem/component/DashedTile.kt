@@ -114,7 +114,7 @@ private fun DashedTilePreview() {
     MiloTheme {
         Surface {
             DashedTile(
-                title = "What MilO recorded",
+                title = "What Dually recorded",
                 line = "7:42 – 8:06 AM · 18.4 km",
                 actionLabel = "Restore",
                 onAction = {},

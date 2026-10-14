@@ -39,7 +39,7 @@ class MonthlyReminderTest : MonthlyReminderFixture() {
         assertEquals(
             listOf(
                 "Monthly reminder: the next daily look is asked for at 2026-10-07 09:00:00, or " +
-                    "within about an hour after it (process start). MilO also looks at every " +
+                    "within about an hour after it (process start). Dually also looks at every " +
                     "start and every time it is opened.",
                 "Monthly reminder shown for 2026-09 (process start): today, 2026-10-06, is on " +
                     "or after 2026-10-01, 2026-09 has 2 Business trips, and no report for it " +

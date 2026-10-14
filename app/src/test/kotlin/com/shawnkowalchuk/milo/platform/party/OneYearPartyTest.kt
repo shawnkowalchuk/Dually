@@ -154,7 +154,10 @@ class OneYearPartyTest {
             // Nothing was left for an animation to take.
             assertFalse(party.takePop())
             val line = lines(EventCategory.SERVICE).single()
-            assertTrue(line, line.startsWith("MilO's party: a trip starts on the day of its first"))
+            assertTrue(
+                line,
+                line.startsWith("Dually's party: a trip starts on the day of its first"),
+            )
             assertTrue(line, "2026-10-06" in line)
             assertTrue(line, "The pop takes the place of this trip's first sound" in line)
         }
@@ -279,7 +282,7 @@ class OneYearPartyTest {
             assertEquals(PopAtTripStart.NOT_TODAY, party.atTripStart())
 
             assertEquals(
-                listOf("MilO could not tell whether today is the day of its party"),
+                listOf("Dually could not tell whether today is the day of its party"),
                 lines(EventCategory.ERROR),
             )
             assertNull(settings.current().partyOwedSinceMs)
@@ -297,7 +300,7 @@ class OneYearPartyTest {
 
             assertEquals(1_000L, currentTime - began)
             val line = lines(EventCategory.ERROR).single()
-            assertTrue(line, line.startsWith("MilO could not tell in time"))
+            assertTrue(line, line.startsWith("Dually could not tell in time"))
         }
 
     @Test
@@ -311,7 +314,7 @@ class OneYearPartyTest {
 
             assertFalse(party.takePop())
             assertEquals(
-                listOf("MilO could not store that its mascot's party is owed"),
+                listOf("Dually could not store that its mascot's party is owed"),
                 lines(EventCategory.ERROR),
             )
             // And Home, which cannot read the file either, is owed nothing.
@@ -334,7 +337,7 @@ class OneYearPartyTest {
             assertEquals(nowMs, settings.current().partyOwedSinceMs)
             val crashFiles = CrashFileStore(folder.root)
             val record = crashFiles.read(crashFiles.pendingFiles().single())
-            assertTrue(record.summary, "MilO's party: a trip starts on the day" in record.summary)
+            assertTrue(record.summary, "Dually's party: a trip starts on the day" in record.summary)
         }
 
     @Test
@@ -344,7 +347,7 @@ class OneYearPartyTest {
         party.shown(forMs = nowMs)
 
         assertEquals(
-            listOf("MilO could not store that its mascot's party has been shown"),
+            listOf("Dually could not store that its mascot's party has been shown"),
             lines(EventCategory.ERROR),
         )
     }

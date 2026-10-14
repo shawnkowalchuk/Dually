@@ -13,10 +13,16 @@
         moment before the first screen is drawn. The two "light bar" items are false so that the
         clock and the gesture line are drawn light on that dark window from the first moment on;
         after that MainActivity keeps them so (MiloSystemBarStyle).
+
+        The splash screen shows the launcher icon, so since 2026-10-13 the face; under it, near
+        the foot of the screen where Android puts a "branding image", the words "Trip Tracker"
+        (Shawn: "i think it looks better with the text under it Trip Tracker"). They are
+        pictures, one per screen density, drawn by tools/make_splash_wordmark.py.
     -->
     <style name="Theme.MilO" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/milo_window_background</item>
         <item name="android:windowSplashScreenBackground">@color/milo_window_background</item>
+        <item name="android:windowSplashScreenBrandingImage">@drawable/splash_wordmark</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
     </style>

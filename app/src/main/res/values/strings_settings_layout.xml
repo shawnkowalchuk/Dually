@@ -112,12 +112,12 @@
         (2026-10-10). The address itself is in SupportTile.kt, as it is not to be translated.
     -->
     <string name="settings_support_label">Email support</string>
-    <string name="settings_support_hint">Opens your email app with a new message. MilO\'s version and your phone\'s model are filled in at the end, to help with the answer. MilO is one person\'s project: answers come when he has time.</string>
+    <string name="settings_support_hint">Opens your email app with a new message. Dually\'s version and your phone\'s model are filled in at the end, to help with the answer. Dually is one person\'s project: answers come when he has time.</string>
     <!-- Spoken by the screen reader for what a press on the tile does. -->
     <string name="settings_support_open">write an email to support</string>
     <!-- The subject of the email, and the line at the end of its text. -->
-    <string name="settings_support_subject">MilO Trip Log support</string>
-    <string name="settings_support_about">MilO Trip Log %1$s (build %2$d) · Android %3$s · %4$s</string>
+    <string name="settings_support_subject">Dually Trip Tracker support</string>
+    <string name="settings_support_about">Dually Trip Tracker %1$s (build %2$d) · Android %3$s · %4$s</string>
     <!-- On the tile after a press, on a phone with no email app. -->
     <string name="settings_support_no_email_app">No app on this phone writes emails. You can write to the address above from another device.</string>
     <!--
@@ -126,7 +126,7 @@
     -->
     <string name="settings_coffee_label">Buy me a coffee</string>
     <string name="settings_coffee_value">buymeacoffee.com/SeaWingman</string>
-    <string name="settings_coffee_hint">MilO is free, with no ads and no account. A coffee helps keep it that way. Opens in your browser.</string>
+    <string name="settings_coffee_hint">Dually is free, with no ads and no account. A coffee helps keep it that way. Opens in your browser.</string>
     <!-- Spoken by the screen reader for what a press on the tile does. -->
     <string name="settings_coffee_open">open the page in the browser</string>
     <!-- On the tile after a press, on a phone with no app that opens a web page. -->

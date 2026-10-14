@@ -70,7 +70,7 @@ class LogListClockJumpTest {
         writeNow("check (the daily alarm): 10 trips today, Wed 2026-10-07")
         phone.advance(5_000)
         phone.setBack()
-        writeNow("The phone's date was set 24 h 0 min ahead. MilO saw it back")
+        writeNow("The phone's date was set 24 h 0 min ahead. Dually saw it back")
         phone.advanceTo(at("2026-10-07T19:30:10"))
         writeNow("check (app opened): 10 trips today, Wed 2026-10-07")
     }
@@ -138,7 +138,7 @@ class LogListClockJumpTest {
             listOf(
                 "(today, no heading)",
                 "  19:30:10 check (app opened): 10 trips today, Wed 2026-10-07",
-                "  18:32:51 The phone's date was set 24 h 0 min ahead. MilO saw it back",
+                "  18:32:51 The phone's date was set 24 h 0 min ahead. Dually saw it back",
                 "  18:32:46 check (the daily alarm): 10 trips today, Wed 2026-10-07",
                 "  18:32:42 Monthly reminder: the next daily look is not asked for now",
                 "  18:23:13 check (app opened): 10 trips today, Wed 2026-10-07",
@@ -163,7 +163,7 @@ class LogListClockJumpTest {
             2026-10-07 18:23:13  TRIP  check (app opened): 10 trips today, Wed 2026-10-07
             2026-10-07 18:32:42  TRIP  Monthly reminder: the next daily look is not asked for now
             2026-10-07 18:32:46  TRIP  check (the daily alarm): 10 trips today, Wed 2026-10-07
-            2026-10-07 18:32:51  TRIP  The phone's date was set 24 h 0 min ahead. MilO saw it back
+            2026-10-07 18:32:51  TRIP  The phone's date was set 24 h 0 min ahead. Dually saw it back
             2026-10-07 19:30:10  TRIP  check (app opened): 10 trips today, Wed 2026-10-07
             2026-10-08 07:41:02  TRIP  Trip 16: started by the truck
             """.trimIndent() + "\n",

@@ -47,7 +47,6 @@ class ReportTexts(context: Context) {
     fun words(tripCount: Int, personalTripCount: Int, unit: DistanceUnit): ReportWords =
         ReportWords(
             appName = text(R.string.app_name),
-            appMark = text(R.string.app_mark),
             title = text(R.string.report_pdf_title),
             name = text(R.string.report_pdf_name),
             company = text(R.string.report_pdf_company),

@@ -206,7 +206,7 @@ private class ExportParts(
 
             "pointColumns" ->
                 if (decode<List<String>>(key) != EXPORT_POINT_COLUMNS) {
-                    throw damaged("Its points have other columns than MilO writes")
+                    throw damaged("Its points have other columns than Dually writes")
                 }
 
             // Already read by the first pass, or written for a person and not for MilO.
@@ -216,7 +216,7 @@ private class ExportParts(
 
             "databaseVersion" -> decode<Int>(key)
 
-            else -> throw damaged("It has a part this MilO does not know, \"$key\"")
+            else -> throw damaged("It has a part this Dually does not know, \"$key\"")
         }
     }
 

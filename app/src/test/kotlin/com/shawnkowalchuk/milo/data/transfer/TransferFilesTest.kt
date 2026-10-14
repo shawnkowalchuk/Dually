@@ -90,7 +90,7 @@ class TransferFilesTest {
         copies.remove(9_999)
 
         assertEquals(listOf(3_000L, 1_000L), copies.all().map { it.writtenAtMs })
-        assertEquals("MilO-before-import-1000.json", copies.nameOf(1_000))
+        assertEquals("Dually-before-import-1000.json", copies.nameOf(1_000))
         assertEquals(0, copies.keepNewest(Int.MAX_VALUE))
     }
 
@@ -147,7 +147,29 @@ class TransferFilesTest {
 
         assertEquals(listOf(3_000L, 2_000L, 1_000L), copies.all().map { it.writtenAtMs })
         assertEquals("copy 3000", copies.all().first().file.readText())
-        assertEquals("MilO-before-import-3000.json", copies.all().first().file.name)
+        assertEquals("Dually-before-import-3000.json", copies.all().first().file.name)
+    }
+
+    @Test
+    fun `a safety copy written under the app's old name is still one`() = runTest {
+        // Until 2026-10-13 a copy was called "MilO-before-import-…". One that is on a phone
+        // from then must still be listed, put back and removed, or "Put that data back" would
+        // be gone after the update that renamed the app.
+        val copies = SafetyCopies(folder)
+        folder.mkdirs()
+        File(folder, "MilO-before-import-1000.json").writeText("the old copy")
+        copies.write(2_000) { it.write("a new copy".toByteArray()) }
+
+        assertEquals(listOf(2_000L, 1_000L), copies.all().map { it.writtenAtMs })
+        assertEquals("the old copy", copies.all().last().file.readText())
+        // Each is called what its file is called; a new one is named after Dually.
+        assertEquals("MilO-before-import-1000.json", copies.nameOf(1_000))
+        assertEquals("Dually-before-import-2000.json", copies.nameOf(2_000))
+        assertEquals("Dually-before-import-3000.json", copies.nameOf(3_000))
+
+        copies.remove(1_000)
+
+        assertEquals(listOf("Dually-before-import-2000.json"), folder.list()?.toList())
     }
 
     @Test
@@ -176,11 +198,11 @@ class TransferFilesTest {
             }
         }
         // What a writer that dies without an I/O failure can leave behind.
-        File(folder, "MilO-before-import-3.json.part").writeText("half")
+        File(folder, "Dually-before-import-3.json.part").writeText("half")
 
         assertEquals(listOf(1L), copies.all().map { it.writtenAtMs })
         copies.keepNewest()
-        assertEquals(listOf("MilO-before-import-1.json"), folder.list()?.toList())
+        assertEquals(listOf("Dually-before-import-1.json"), folder.list()?.toList())
     }
 
     @Test

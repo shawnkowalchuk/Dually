@@ -16,7 +16,7 @@ class ClockLogTextTest {
     @Test
     fun `the date trick reads as it happened`() {
         assertEquals(
-            "The phone's date was set 24 h 0 min ahead. MilO saw it back 9 s later and kept " +
+            "The phone's date was set 24 h 0 min ahead. Dually saw it back 9 s later and kept " +
                 "its own time.",
             clockNewsText(ClockNews.CameBack(offsetMs = DAY_MS, lastedMs = 9 * SECOND_MS)),
         )
@@ -28,7 +28,7 @@ class ClockLogTextTest {
         val line = clockNewsText(ClockNews.CameBack(offsetMs = DAY_MS - 12, lastedMs = 5_356))
 
         assertEquals(
-            "The phone's date was set 24 h 0 min ahead. MilO saw it back 5 s later and kept " +
+            "The phone's date was set 24 h 0 min ahead. Dually saw it back 5 s later and kept " +
                 "its own time.",
             line,
         )
@@ -37,7 +37,7 @@ class ClockLogTextTest {
     @Test
     fun `a clock set back by less than a day is called a clock, and back`() {
         assertEquals(
-            "The phone's clock was set 3 h 0 min back. MilO saw it back 1 min 15 s later and " +
+            "The phone's clock was set 3 h 0 min back. Dually saw it back 1 min 15 s later and " +
                 "kept its own time.",
             clockNewsText(ClockNews.CameBack(-3 * HOUR_MS, 75 * SECOND_MS)),
         )
@@ -47,12 +47,12 @@ class ClockLogTextTest {
     fun `a change that held says that MilO follows it now`() {
         assertEquals(
             "The phone's clock is 3 h 0 min behind where it was and has stayed so for 10 min. " +
-                "MilO now follows it.",
+                "Dually now follows it.",
             clockNewsText(ClockNews.Followed(-3 * HOUR_MS, HOLD_MS)),
         )
         assertEquals(
             "The phone's clock is 24 h 0 min ahead of where it was and has stayed so for 10 min. " +
-                "MilO now follows it.",
+                "Dually now follows it.",
             clockNewsText(ClockNews.Followed(DAY_MS, HOLD_MS)),
         )
     }
@@ -60,7 +60,7 @@ class ClockLogTextTest {
     @Test
     fun `a change that was changed again says so`() {
         assertEquals(
-            "The phone's date was set 24 h 0 min ahead. MilO saw it changed again 5 min later " +
+            "The phone's date was set 24 h 0 min ahead. Dually saw it changed again 5 min later " +
                 "and kept its own time.",
             clockNewsText(ClockNews.ChangedAgain(DAY_MS, 5 * MINUTE_MS)),
         )
@@ -69,13 +69,13 @@ class ClockLogTextTest {
     @Test
     fun `a start that took a date which was set ahead says so, without a length of time`() {
         assertEquals(
-            "MilO started while the phone's date was set 24 h 0 min ahead, and took the phone's " +
-                "time when it came back.",
+            "Dually started while the phone's date was set 24 h 0 min ahead, and took the " +
+                "phone's time when it came back.",
             clockNewsText(ClockNews.StartedAhead(aheadMs = DAY_MS - 12)),
         )
         assertEquals(
-            "MilO started while the phone's clock was set 3 h 0 min ahead, and took the phone's " +
-                "time when it came back.",
+            "Dually started while the phone's clock was set 3 h 0 min ahead, and took the " +
+                "phone's time when it came back.",
             clockNewsText(ClockNews.StartedAhead(aheadMs = 3 * HOUR_MS)),
         )
     }

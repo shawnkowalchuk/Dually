@@ -55,10 +55,10 @@ class TransferLogTextTest {
             importedLine(file, done(PointsTaken.TAKEN, SettingsTaken.TAKEN), asked, "copy.json")
 
         assertEquals(
-            "Data imported from an export written by MilO 0.1.0: 8 trips and 3 sent reports " +
+            "Data imported from an export written by Dually 0.1.0: 8 trips and 3 sent reports " +
                 "replaced the 2 trips and 1 sent reports this phone held. 4 raw GPS points " +
                 "were stored with them. The file's settings are in force. What the phone held " +
-                "before is in the safety copy copy.json, inside MilO",
+                "before is in the safety copy copy.json, inside Dually",
             line,
         )
     }
@@ -97,11 +97,11 @@ class TransferLogTextTest {
         val justBeforeMidnightInEdmonton = 1_791_352_740_000L
 
         assertEquals(
-            "MilO-export-2026-10-06.json",
+            "Dually-export-2026-10-06.json",
             exportFileName(justBeforeMidnightInEdmonton, ZoneId.of("America/Edmonton")),
         )
         assertEquals(
-            "MilO-export-2026-10-07.json",
+            "Dually-export-2026-10-07.json",
             exportFileName(justBeforeMidnightInEdmonton, ZoneId.of("UTC")),
         )
     }
@@ -132,11 +132,11 @@ class TransferLogTextTest {
 
         assertEquals(
             "An import has replaced the 2 trips and 1 sent reports this phone held with the " +
-                "8 trips and 3 sent reports of an export written by MilO 0.1.0. Its settings " +
+                "8 trips and 3 sent reports of an export written by Dually 0.1.0. Its settings " +
                 "and its raw GPS points are stored next. If no later line says that the data " +
-                "was imported, MilO was ended before that was done, and finishes it at its " +
+                "was imported, Dually was ended before that was done, and finishes it at its " +
                 "next start. What the phone held before is in the safety copy copy.json, " +
-                "inside MilO",
+                "inside Dually",
             line,
         )
         val strays = PointsLeftOut(212, (1L..12L).toList())
@@ -156,10 +156,10 @@ class TransferLogTextTest {
 
         assertTrue(
             finished,
-            finished.startsWith("MilO was ended in the middle of an import, and has"),
+            finished.startsWith("Dually was ended in the middle of an import, and has"),
         )
         assertTrue(finished, finished.contains("4 raw GPS points were stored with them"))
-        assertTrue(finished, finished.endsWith("safety copy c.json, inside MilO"))
+        assertTrue(finished, finished.endsWith("safety copy c.json, inside Dually"))
         assertTrue(cutOffBeforeReplacingLine().contains("Everything on this phone is as it was"))
         assertTrue(cutOffPointsRemovedLine(5_400).contains("the 5400 raw GPS points of the trips"))
         assertTrue(cutOffLeftLine().contains("left as it is"))

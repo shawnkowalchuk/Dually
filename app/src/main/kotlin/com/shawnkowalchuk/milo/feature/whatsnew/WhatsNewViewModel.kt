@@ -37,7 +37,7 @@ class WhatsNewViewModel(
                     whatsNewState(changelog(), installed)
                 } catch (unreadable: ChangelogUnreadableException) {
                     // Only a build made with a broken file gets here: CI checks the file.
-                    val what = "The list of changes of MilO ${installed.name} cannot be read"
+                    val what = "The list of changes of Dually ${installed.name} cannot be read"
                     val detail = unreadable.stackTraceToString()
                     eventLog.add(clock(), EventCategory.ERROR, what, detail)
                     WhatsNewUiState.Unreadable

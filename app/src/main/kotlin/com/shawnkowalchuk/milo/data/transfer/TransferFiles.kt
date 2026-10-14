@@ -20,7 +20,14 @@ private const val IMPORT_FOLDER = "import"
 private const val INCOMING_NAME = "incoming.json"
 private const val BEGUN_NAME = "begun.txt"
 private const val SAFETY_FOLDER = "safety_copies"
-private const val SAFETY_PREFIX = "MilO-before-import-"
+private const val SAFETY_PREFIX = "Dually-before-import-"
+
+// What a safety copy was called until 2026-10-13, when the app was renamed (ADR-010). A copy
+// that is on a phone under this name is still a safety copy: it is listed, put back and removed
+// like one written today. Without this, "Put that data back" would be gone after an update, and
+// the file would lie in the folder for good.
+private const val SAFETY_PREFIX_UNTIL_THE_RENAME = "MilO-before-import-"
+private val SAFETY_PREFIXES = listOf(SAFETY_PREFIX, SAFETY_PREFIX_UNTIL_THE_RENAME)
 private const val SAFETY_SUFFIX = ".json"
 private const val COPY_BUFFER_BYTES = 64 * 1024
 
@@ -156,31 +163,42 @@ class SafetyCopies(private val folder: File) {
      * @throws IOException if the file cannot be written. No half-written copy is left behind.
      */
     suspend fun write(atMs: Long, content: suspend (OutputStream) -> Unit): SafetyCopy {
-        val file = files.writeInPieces(nameOf(atMs), content)
+        val file = files.writeInPieces(namesOf(atMs).first(), content)
         return SafetyCopy(file, atMs)
     }
 
-    /** Every copy that is there, newest first. */
+    /** Every copy that is there, newest first, whichever of its two names it was written under. */
     fun all(): List<SafetyCopy> = folder
-        .listFiles { file -> file.name.startsWith(SAFETY_PREFIX) }
+        .listFiles { file -> SAFETY_PREFIXES.any { file.name.startsWith(it) } }
         .orEmpty()
         .mapNotNull { file ->
+            val prefix = SAFETY_PREFIXES.first { file.name.startsWith(it) }
             val writtenAtMs =
-                file.name.removePrefix(SAFETY_PREFIX).removeSuffix(SAFETY_SUFFIX).toLongOrNull()
+                file.name.removePrefix(prefix).removeSuffix(SAFETY_SUFFIX).toLongOrNull()
             writtenAtMs?.let { SafetyCopy(file, it) }
         }.sortedByDescending { it.writtenAtMs }
 
     /**
-     * Removes the copy written at [writtenAtMs], if it is there.
+     * Removes the copy written at [writtenAtMs], if it is there, under either of its names.
      *
      * @throws IOException if it is still there afterwards.
      */
     fun remove(writtenAtMs: Long) {
-        Files.deleteIfExists(File(folder, nameOf(writtenAtMs)).toPath())
+        for (name in namesOf(writtenAtMs)) Files.deleteIfExists(File(folder, name).toPath())
     }
 
-    /** What the copy written at [writtenAtMs] is called. */
-    fun nameOf(writtenAtMs: Long): String = "$SAFETY_PREFIX$writtenAtMs$SAFETY_SUFFIX"
+    /**
+     * What the copy written at [writtenAtMs] is called: the name of the file that is there,
+     * and for a copy that is not there, the name it would be written under today.
+     */
+    fun nameOf(writtenAtMs: Long): String {
+        val names = namesOf(writtenAtMs)
+        return names.firstOrNull { File(folder, it).exists() } ?: names.first()
+    }
+
+    /** The names a copy written at [writtenAtMs] can have: today's first. */
+    private fun namesOf(writtenAtMs: Long): List<String> =
+        SAFETY_PREFIXES.map { prefix -> "$prefix$writtenAtMs$SAFETY_SUFFIX" }
 
     /**
      * Removes all but the newest [kept] copies, and anything a failed write left behind.

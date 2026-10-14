@@ -235,7 +235,7 @@ class ClockWatch(
 
     /** If the log is what failed, the failure goes to a crash file, as the reminder's does. */
     private suspend fun report(doing: String, failure: Exception) {
-        val message = "MilO's clock watch failed while $doing"
+        val message = "Dually's clock watch failed while $doing"
         val atMs = clock.now()
         try {
             eventLog.add(atMs, EventCategory.ERROR, message, failure.stackTraceToString())

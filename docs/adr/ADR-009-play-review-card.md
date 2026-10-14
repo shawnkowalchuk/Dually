@@ -1,4 +1,7 @@
 # ADR-009: MilO asks Google Play for its review card, with Google's own library
+
+> **Note, 2026-10-13:** the product was renamed from MilO to Dually Trip Tracker on 2026-10-13 (ADR-010). This record keeps the old name, and the old addresses, in everything written before that day.
+
 Date: 2026-10-11
 Changed: 2026-10-11, later the same day: decision 4. After a launch MilO waits 30 days before it asks again, where it had waited for the next day ("Decided on 2026-10-11, after the first build", below).
 Status: Accepted (built and unit tested; run on an emulator with the real library and the real Play Store app, in the debug build and in the minified release build, where Google Play was asked and showed nothing; **the card itself has not been seen anywhere,** and can only be seen in a copy installed from Google Play)

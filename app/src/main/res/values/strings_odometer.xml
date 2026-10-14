@@ -10,12 +10,12 @@
     <!-- Where several vehicles are paired: "Odometer · Van". -->
     <string name="settings_odometer_title_of">Odometer · %1$s</string>
     <!-- Before the first reading has been typed in. -->
-    <string name="settings_odometer_none">Type the number on the truck\'s dashboard once. MilO adds every truck trip to it from then on.</string>
+    <string name="settings_odometer_none">Type the number on the truck\'s dashboard once. Dually adds every truck trip to it from then on.</string>
     <!--
         The same with miles chosen. It names the unit, because the number is taken as miles
         whatever the dashboard shows; in kilometres the words stay as they were.
     -->
-    <string name="settings_odometer_none_miles">Type the miles on the truck\'s dashboard once. MilO adds every truck trip to it from then on.</string>
+    <string name="settings_odometer_none_miles">Type the miles on the truck\'s dashboard once. Dually adds every truck trip to it from then on.</string>
     <!--
         Under the figure when it is the reading itself. The argument is the reading in the
         unit it was typed in, such as 123,456 km.
@@ -37,7 +37,7 @@
     <string name="settings_odometer_save">Save reading</string>
     <string name="settings_about_odometer">About the odometer</string>
     <!-- The argument is the unit's whole word, kilometres or miles. -->
-    <string name="settings_odometer_detail">MilO adds the %1$s of every trip in the truck to your last reading: Business, Personal, and trips you added by hand. A trip started with the button that the truck never joined is left out. Adjust it whenever the dashboard shows something else; each reading is kept with its date. The report for the accountant shows the odometer at the start and the end of its period, marked est. where MilO worked it out.</string>
+    <string name="settings_odometer_detail">Dually adds the %1$s of every trip in the truck to your last reading: Business, Personal, and trips you added by hand. A trip started with the button that the truck never joined is left out. Adjust it whenever the dashboard shows something else; each reading is kept with its date. The report for the accountant shows the odometer at the start and the end of its period, marked est. where Dually worked it out.</string>
 
     <!--
         The report for the accountant: the odometer at the start and the end of the period, on a
@@ -53,7 +53,7 @@
     <string name="report_pdf_odometer_estimated_mi">%1$s mi est.</string>
     <!-- With more than one vehicle's odometer: the vehicle's name, then "Odometer, 1 Oct 2026". -->
     <string name="report_pdf_odometer_of_vehicle">%1$s · %2$s</string>
-    <string name="report_pdf_odometer_note">est.: worked out by MilO from a reading of the dashboard and the truck trips recorded since, not read off the dashboard on that day.</string>
+    <string name="report_pdf_odometer_note">est.: worked out by Dually from a reading of the dashboard and the truck trips recorded since, not read off the dashboard on that day.</string>
     <!--
         Home's odometer tile (Shawn's request of 2026-10-09: "i want the milage on the home
         screen"; he chose the odometer reading). The figures are the ones Settings shows; a
@@ -61,7 +61,7 @@
     -->
     <string name="home_odometer_title">Odometer</string>
     <string name="home_odometer_from_reading">Your last reading in Settings, plus every trip since</string>
-    <string name="home_odometer_none">Type the number on the dashboard in Settings once. MilO adds every trip to it from then on.</string>
+    <string name="home_odometer_none">Type the number on the dashboard in Settings once. Dually adds every trip to it from then on.</string>
     <!-- A vehicle, among several, that has no reading yet. -->
     <string name="home_odometer_no_reading">No reading yet</string>
 </resources>

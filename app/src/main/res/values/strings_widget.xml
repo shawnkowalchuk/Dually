@@ -5,7 +5,7 @@
         list of widgets, its dollar line, and its tile in Settings. The status line and the
         button are the Android Auto screen's words (car_status_*, home_start_trip, home_end_trip).
     -->
-    <string name="widget_label">MilO trip</string>
+    <string name="widget_label">Dually trip</string>
     <string name="widget_description">The trip in progress, Start and End, and business kilometres in dollars</string>
     <!--
         The arguments: the month, short (Oct), its business kilometres at the rate set in
@@ -14,7 +14,7 @@
     -->
     <string name="widget_dollars">%1$s %2$s · %3$s %4$s at %5$s/km</string>
     <string name="widget_dollars_unknown">Business dollars: not available</string>
-    <string name="widget_switched_off">MilO\'s widget is switched off. Turn it on in MilO, Settings.</string>
+    <string name="widget_switched_off">Dually\'s widget is switched off. Turn it on in Dually, Settings.</string>
 
     <!-- Settings: the widget's tile. -->
     <string name="settings_widget_title">Home-screen widget</string>
@@ -37,7 +37,7 @@
     <string name="settings_widget_rate_refused">Type the dollars a kilometre, such as 0.70: from %1$s to %2$s.</string>
     <string name="settings_widget_rate_save">Save rate</string>
     <string name="settings_widget_add">Add to home screen</string>
-    <string name="settings_widget_how">To add it yourself: touch and hold an empty spot on the home screen, then Widgets, then MilO.</string>
+    <string name="settings_widget_how">To add it yourself: touch and hold an empty spot on the home screen, then Widgets, then Dually.</string>
     <string name="settings_about_widget">About the widget</string>
     <!--
         The same while Miles is chosen: the report is then in miles, and the dollars still come

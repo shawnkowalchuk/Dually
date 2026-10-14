@@ -16,12 +16,12 @@ class ReportPaginationTest {
         val pages = layout(reportOf(100))
 
         val first = pages.first()
-        val name = first.find("MilO")
-        val initial = first.texts.first { it.style == ReportTextStyle.MARK }
+        val name = first.find("Dually")
+        val letter = first.markLetters.first()
         assertTrue(first.texts.filterNot { it.inFooter }.none { it.baseline < name.baseline - 6 })
-        assertTrue(initial.x < name.x)
+        assertTrue(letter.right < name.x)
         assertTrue(first.has("Mileage report"))
-        val again = listOf("MilO", "Mileage report", "Name", "Business", "Personal")
+        val again = listOf("Dually", "Mileage report", "Name", "Business", "Personal")
         assertTrue(pages.drop(1).none { page -> again.any { page.has(it) } })
     }
 
@@ -30,16 +30,12 @@ class ReportPaginationTest {
         val pages = layout(reportOf(100))
 
         for (page in pages) {
-            val mark = page.texts.single { it.style == ReportTextStyle.FOOTER_MARK }
-            assertEquals("M", mark.text)
+            val letter = page.markLetters.single { it.top > CONTENT_BOTTOM }
             val whose = page.texts.single { it.style == ReportTextStyle.FOOTER && !it.rightAligned }
-            assertTrue(mark.end() < whose.x)
-            val square = page.items.filterIsInstance<PageItem.Box>().single {
-                it.top >
-                    CONTENT_BOTTOM
-            }
+            assertTrue(letter.right < whose.x)
+            val square = page.boxes.single { it.top > CONTENT_BOTTOM }
             assertEquals(ReportInk.ACCENT, square.ink)
-            assertTrue(mark.x > square.left && mark.end() < square.right)
+            assertTrue(square.holds(letter))
         }
     }
 

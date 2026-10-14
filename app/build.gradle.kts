@@ -71,6 +71,25 @@ fun readKeystorePassword(): String {
     return password
 }
 
+// --- The application ID -------------------------------------------------------------------
+// What Android and Google Play know the app by. It is written here once and nowhere else: the
+// manifest takes it as ${applicationId} (the report files' provider), and the code asks Android
+// for it (context.packageName). It is not the `namespace` below, which is the package the code
+// is written in and stays `com.shawnkowalchuk.milo` (ADR-010).
+//
+// **Two apps with different IDs are two apps:** they install side by side and share nothing,
+// so changing this value is not an update of the app that has the old one. Its trips come
+// across with "Export all data" there and "Import data" here.
+//
+// It is `top.dually.triptracker` since 2026-10-13, the ID of the "Dually Trip Tracker" entry
+// Shawn created in the Play Console (ADR-010); MilO was `com.shawnkowalchuk.milo`.
+//
+// The Gradle property is for a build that has to stand beside the installed app without
+// touching it, on an emulator: -Pmilo.applicationId=some.other.id. Without it the ID is the
+// one written here.
+val miloApplicationId: String =
+    providers.gradleProperty("milo.applicationId").getOrElse("top.dually.triptracker")
+
 room3 {
     // Room writes the tables of each database version to app/schemas as JSON. The folder is
     // committed: the phone holds real trips from phase 1 on, so every later change to a table
@@ -85,7 +104,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.shawnkowalchuk.milo"
+        applicationId = miloApplicationId
         // The app runs on one phone (Android 14, API 34), and that is the floor: code for an
         // older Android could be tested nowhere (FINDINGS_LOG, 2026-10-07). Do not lower it
         // without putting the Android 12 and 13 branches back.
@@ -212,6 +231,17 @@ kotlin {
         // The Kotlin equivalent of a strict type check: a compiler warning fails the build.
         allWarningsAsErrors = true
     }
+}
+
+// Some unit tests read files of the app and of the website straight from disk: the mascot's
+// pictures, the icon's drawings, the strings, the list of changes, the website's pages. Gradle
+// does not see such reads, so after one of those files changed it could take the test run from
+// its build cache and report a pass that never ran (it did on 2026-10-14, for a picture the
+// mascot's redraw had changed). Named as inputs, a change to any of them runs the tests again.
+tasks.withType<Test>().configureEach {
+    inputs.dir("src/main/res").withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.dir("src/main/assets").withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.dir(rootProject.file("website")).withPathSensitivity(PathSensitivity.RELATIVE)
 }
 
 dependencies {

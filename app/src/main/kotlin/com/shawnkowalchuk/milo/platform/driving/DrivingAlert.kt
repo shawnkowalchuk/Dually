@@ -267,7 +267,7 @@ class DrivingAlert(
             truckPaired = true,
             problem =
                 "The settings cannot be read ($unreadable). The defaults were used: the " +
-                    "alert switched on, the work hours MilO starts out with, a truck taken " +
+                    "alert switched on, the work hours Dually starts out with, a truck taken " +
                     "to be paired, and no earlier alert.",
         )
     }

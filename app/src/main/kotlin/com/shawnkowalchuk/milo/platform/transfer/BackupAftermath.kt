@@ -98,11 +98,11 @@ class BackupAftermath internal constructor(
 // The lines are in English, like every line of the event log, and pure, so they are tested.
 
 internal fun collectedLine(detail: String): String =
-    "Android collected MilO's data $detail: the trips, the sent reports, the event log and " +
+    "Android collected Dually's data $detail: the trips, the sent reports, the event log and " +
         "the settings. Whether the copy arrived is Android's to say (Settings, Google, Backup)"
 
 internal fun quotaExceededLine(detail: String): String =
-    "Android did not back MilO up: $detail. Nothing at all is backed up while MilO is over " +
+    "Android did not back Dually up: $detail. Nothing at all is backed up while Dually is over " +
         "the limit, and the last backup that worked stays as it was. \"Export all data\" in " +
         "Settings writes a copy that has no limit"
 
@@ -111,7 +111,7 @@ internal fun notSettledLine(detail: String): String =
         "backed up together with its log file instead"
 
 internal fun restoredLine(soundGone: Boolean): String =
-    "MilO's data was put back by Android, from a backup or from another phone: the trips, " +
+    "Dually's data was put back by Android, from a backup or from another phone: the trips, " +
         "the sent reports, the event log and the settings are the restored ones. Raw GPS " +
         "points come with a transfer from another phone and not with a cloud backup. Taken " +
         "out of the settings, because it was only true of the installation they came from: " +

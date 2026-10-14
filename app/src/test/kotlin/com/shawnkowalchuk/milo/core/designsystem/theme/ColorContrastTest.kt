@@ -1,9 +1,7 @@
 package com.shawnkowalchuk.milo.core.designsystem.theme
 
 import androidx.compose.ui.graphics.Color
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.pow
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -12,6 +10,12 @@ import org.junit.Test
  * accessibility guidelines (WCAG 2) ask for. The colours are the owner's design and are changed
  * in one file; this is what says so when a change makes something hard to read, before it is
  * found in sunlight on the dashboard.
+ *
+ * Since 2026-10-13 the accent is an orange, where it was a lime (ADR-010). Every pair that was
+ * held before is still held, to the same measure; the tags of the What's new screen and the
+ * app's mark were added, which no test held; and two tests at the end are new, for what a
+ * warm accent puts at risk: that what is waiting (amber) and what is wrong (red) could be
+ * taken for the accent, or the error red for the brand's own red, which is for gauges.
  */
 class ColorContrastTest {
     private val scheme = MiloColorScheme
@@ -66,6 +70,10 @@ class ColorContrastTest {
                 "the log's error tag" to colors.logTags.error,
                 "a wheel's digit" to colors.wheels.whole,
                 "the last wheel's digit while it counts" to colors.wheels.counting,
+                "the tag of something new" to colors.changeTags.new,
+                "the tag of something improved" to colors.changeTags.improved,
+                "the tag of something fixed" to colors.changeTags.fixed,
+                "the tag of a security fix" to colors.changeTags.security,
             )
         for ((name, pair) in pairs) {
             assertReadable(name, pair.text, pair.fill, TEXT)
@@ -166,6 +174,83 @@ class ColorContrastTest {
     }
 
     @Test
+    fun `the letter of the app's mark stands out from its square, and the square from the page`() {
+        assertReadable("the mark's letter", colors.mark.text, colors.mark.fill, MARK)
+        assertReadable("the mark's square on the page", colors.mark.fill, scheme.background, MARK)
+        assertReadable(
+            "the mark's square on a tile",
+            colors.mark.fill,
+            scheme.surfaceContainer,
+            MARK,
+        )
+    }
+
+    @Test
+    fun `white words are never put on the accent`() {
+        // The brand's own rule: white on this orange is too faint for words, so every pair that
+        // has the accent as its fill has the page's dark as its words.
+        assertFalse(contrast(Color.White, scheme.primary) >= TEXT)
+        val onAccent =
+            listOf(
+                scheme.onPrimary,
+                scheme.onPrimaryContainer,
+                colors.logTags.trip.text,
+                colors.changeTags.new.text,
+                colors.wheels.counting.text,
+            )
+        onAccent.forEach { assertTrue(it == scheme.background) }
+    }
+
+    @Test
+    fun `what is told apart by its colour is still told apart beside the orange accent`() {
+        // Each of these is on a screen beside something in the accent, and says something else
+        // than the accent does: a tick's dot beside a problem's, the tile that starts a trip
+        // above the tile for what is waiting, the tags of the log in one column.
+        val accent = scheme.primary
+        val others =
+            mapOf(
+                "what is waiting" to colors.attentionTile.text,
+                "what is wrong" to scheme.error,
+                "what takes something away" to colors.danger.text,
+                "the Bluetooth tag" to colors.logTags.bluetooth.text,
+                "the Android Auto tag" to colors.logTags.androidAuto.text,
+                "what could not be found out" to status.unknown,
+                "what is to confirm" to status.toConfirm,
+            )
+        for ((name, other) in others) {
+            assertApart("the accent and $name", accent, other)
+        }
+        assertApart("what is waiting and what is wrong", colors.attentionTile.text, scheme.error)
+        assertApart(
+            "the tag of something new and of something fixed",
+            colors.changeTags.new.fill,
+            colors.changeTags.fixed.fill,
+        )
+    }
+
+    @Test
+    fun `the brand's red for gauges is no colour of a screen, and no error looks like it`() {
+        // Redline is the red zone of a gauge and nothing else: never a button, an error or a
+        // warning. Beside the orange accent it could hardly be told from it, which is why what
+        // is wrong is said in another red, lighter and pinker.
+        val redline = Color(0xFFFF3D2E)
+        assertFalse(difference(scheme.primary, redline) >= APART)
+        val reds =
+            listOf(
+                scheme.error,
+                scheme.errorContainer,
+                status.problem,
+                colors.danger.text,
+                colors.danger.fill,
+                colors.logTags.error.text,
+                colors.logTags.error.fill,
+                colors.changeTags.security.text,
+                colors.changeTags.security.fill,
+            )
+        reds.forEach { assertApart("a red of the app and the brand's Redline", it, redline) }
+    }
+
+    @Test
     fun `the measure itself agrees with the guidelines' own examples`() {
         // Black on white is 21 to 1, the most there is, and a colour on itself is 1 to 1.
         assertTrue(contrast(Color.Black, Color.White) in 20.99..21.01)
@@ -180,19 +265,9 @@ class ColorContrastTest {
         assertTrue("$name: %.2f to 1, and it needs $needed".format(ratio), ratio >= needed)
     }
 
-    /** The contrast of two colours as WCAG 2 counts it: from 1 (none) to 21 (black on white). */
-    private fun contrast(a: Color, b: Color): Double {
-        val lighter = max(luminance(a), luminance(b))
-        val darker = min(luminance(a), luminance(b))
-        return (lighter + 0.05) / (darker + 0.05)
-    }
-
-    private fun luminance(color: Color): Double =
-        0.2126 * linear(color.red) + 0.7152 * linear(color.green) + 0.0722 * linear(color.blue)
-
-    private fun linear(channel: Float): Double {
-        val c = channel.toDouble()
-        return if (c <= 0.04045) c / 12.92 else ((c + 0.055) / 1.055).pow(2.4)
+    private fun assertApart(name: String, one: Color, other: Color) {
+        val apart = difference(one, other)
+        assertTrue("$name are %.1f apart, and need $APART".format(apart), apart >= APART)
     }
 
     private companion object {
@@ -201,5 +276,8 @@ class ColorContrastTest {
 
         /** What an icon, a dot or an outline needs when it carries meaning. */
         const val MARK = 3.0
+
+        /** How far apart two colours have to be to be told apart at a glance (`difference`). */
+        const val APART = 40.0
     }
 }

@@ -149,7 +149,7 @@ class NothingRecordedCheckWaitTest : NothingRecordedCheckFixture() {
         assertEquals(2, alarmsAskedFor.size)
         assertEquals(
             "Nothing-recorded check: the next daily look is asked for at 2026-10-07 08:00:00, " +
-                "or soon after it (the work schedule was changed). MilO also looks at every " +
+                "or soon after it (the work schedule was changed). Dually also looks at every " +
                 "start and every time it is opened.",
             lines()[2],
         )

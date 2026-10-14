@@ -114,7 +114,7 @@ class AndroidAutoLogTest {
         assertEquals(
             listOf(
                 "Android Auto is not connected (CarConnection reports type 0). First reading " +
-                    "since MilO's process started. No trip is being recorded",
+                    "since Dually's process started. No trip is being recorded",
                 "Android Auto connected (CarConnection reports type 2). No trip is being " +
                     "recorded, and Android Auto does not start one",
                 "Android Auto disconnected (CarConnection reports type 0). No trip is being " +

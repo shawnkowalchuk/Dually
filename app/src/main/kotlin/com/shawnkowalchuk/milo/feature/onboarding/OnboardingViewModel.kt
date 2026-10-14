@@ -60,7 +60,7 @@ class OnboardingViewModel(
             try {
                 settings.setFirstRunStage(stage)
             } catch (notStored: IOException) {
-                val what = "MilO could not store how far the first start has got ($stage)"
+                val what = "Dually could not store how far the first start has got ($stage)"
                 eventLog.add(clock(), EventCategory.ERROR, what, notStored.stackTraceToString())
             }
         }
@@ -70,7 +70,7 @@ class OnboardingViewModel(
         .map { it.firstRunStage }
         .catch { unreadable ->
             if (unreadable !is IOException) throw unreadable
-            val what = "MilO could not read how far the first start has got; it is not shown"
+            val what = "Dually could not read how far the first start has got; it is not shown"
             eventLog.add(clock(), EventCategory.ERROR, what, unreadable.stackTraceToString())
             emit(FirstRunStage.DONE)
         }

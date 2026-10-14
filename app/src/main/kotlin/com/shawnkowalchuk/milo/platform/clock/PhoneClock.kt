@@ -100,7 +100,7 @@ internal class AnchorStoring(
         if (!failureWritten.compareAndSet(false, true)) return
         val lost =
             IllegalStateException(
-                "MilO's clock could not store its anchor. A MilO started while the phone's " +
+                "Dually's clock could not store its anchor. A Dually started while the phone's " +
                     "date is set ahead will go by that date until the phone's clock comes back.",
                 notWritten,
             )
