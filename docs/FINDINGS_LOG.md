@@ -26,6 +26,10 @@
 
 ### 2026-10-13
 
+**`[CHANGE]` The opening screen shows the face and the words "Trip Tracker"**
+Phone only. Shawn had seen the big "D" on Android's opening screen and wrote: "should be the face icon. i think it looks better with the text under it Trip Tracker. the D at the top of the app when app is loaded is good." The opening screen draws the launcher icon, so the face icon of the same evening already put the face there; the words were added as Android's "branding image" (`android:windowSplashScreenBrandingImage`), which Android places near the foot of the screen, not straight under the icon. They are pictures in five densities, because a vector drawing cannot hold letters: `tools/make_splash_wordmark.py` has Google Chrome draw them (it applies the typeface's kerning, which Pillow without its layout library does not) and Pillow make the smaller sizes; 52 KB in all. Seen on an emulator (Android 16) on a cold start; not yet on the phone.
+
+
 **`[CHANGE]` The launcher icon is the face: the mascot's dials and his grin**
 Phone only (the car screen shows no launcher icon of its own drawing). **Built, not yet seen on a phone or an emulator.** Shawn sent the design's "Icon A, Face" and asked: "what about using this for the app icon". The rebrand of the morning had taken "Icon B, Monogram" (the "D") for the icon, because the face was the mascot's and the mascot was not to be touched then; by the evening he had asked for the mascot in orange, with the "D" that turns into this grin.
 - **What is not obvious.** Android's vector drawings have no dashed strokes, and the design draws the dials' marks as dashes, so `tools/make_launcher_icon.py` writes each mark as a line of its own from the design's numbers, and writes the same drawing as an SVG to look at. The file in `res/drawable` is the script's, and CI says so (`--check`).
