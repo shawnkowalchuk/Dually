@@ -81,11 +81,14 @@ fun readKeystorePassword(): String {
 // so changing this value is not an update of the app that has the old one. Its trips come
 // across with "Export all data" there and "Import data" here.
 //
+// It is `top.dually.triptracker` since 2026-10-13, the ID of the "Dually Trip Tracker" entry
+// Shawn created in the Play Console (ADR-010); MilO was `com.shawnkowalchuk.milo`.
+//
 // The Gradle property is for a build that has to stand beside the installed app without
 // touching it, on an emulator: -Pmilo.applicationId=some.other.id. Without it the ID is the
 // one written here.
 val miloApplicationId: String =
-    providers.gradleProperty("milo.applicationId").getOrElse("com.shawnkowalchuk.milo")
+    providers.gradleProperty("milo.applicationId").getOrElse("top.dually.triptracker")
 
 room3 {
     // Room writes the tables of each database version to app/schemas as JSON. The folder is

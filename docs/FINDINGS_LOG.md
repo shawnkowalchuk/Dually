@@ -26,6 +26,10 @@
 
 ### 2026-10-13
 
+**`[CHANGE]` The app's ID is `top.dually.triptracker`**
+Shawn created the new entry in the Play Console, "Dually Trip Tracker", and the Console names it `top.dually.triptracker` (his screenshot, 2026-10-13). It is now the one value in `app/build.gradle.kts`, and `APP=` at the top of the device checklist. Nothing else changed with it: the manifest and the code already took the ID from the build. **From this build on, a cable install is a new app beside MilO on the phone, not an update of it**: its data comes across with "Export all data" in MilO and "Import data" in Dually (device checks RB-1 to RB-9). The signing key stays his own: in the new entry he exports it to Google with Google's PEPK tool (README, "Publishing on Google Play", step 2).
+
+
 **`[FIX]` The unit tests could pass from Gradle's cache after a picture they check had changed**
 Found on 2026-10-14 while stacking the mascot's redraw on the app's rebrand: the gate passed with `testDebugUnitTest FROM-CACHE`, and the same tests run with `--rerun` failed one (`MascotPicturesTest`, below). Several tests read files straight from disk (the mascot's pictures, the icon's drawings, `colors.xml`, the strings, `changelog.json`, the website's `index.html`), and Gradle did not count those files as the tests' inputs, so a run whose code had not changed could be handed back from the build cache after one of them had. `app/build.gradle.kts` now names `src/main/res`, `src/main/assets` and `website/` as inputs of every test task; a file added to `website/` was seen to make the tests run again. The mascot job's own "gate passed" was such a cached pass.
 

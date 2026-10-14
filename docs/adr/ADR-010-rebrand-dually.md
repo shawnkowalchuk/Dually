@@ -53,7 +53,7 @@ These keep "milo" on purpose. It is a decision, not work that is owed.
 
 The first plan for the rebrand kept the application ID, so that the rebranded app would be an update of the one people have. Shawn then deleted the app's entry in the Play Console, and a deleted entry's ID cannot be counted on to be free again. So:
 
-- **The rebranded app has a new application ID.** Its value is Shawn's to choose. Until it is written into the build, the ID is still `com.shawnkowalchuk.milo`.
+- **The rebranded app has a new application ID: `top.dually.triptracker`.** Shawn created the entry "Dually Trip Tracker" in the Play Console with it on 2026-10-13, and it is written into the build the same night. MilO's was `com.shawnkowalchuk.milo`.
 - **It is one value, in `app/build.gradle.kts`, and nothing repeats it.** The manifest takes it as `${applicationId}`, the code asks Android for it, and the device checklist calls it `$APP`. A Gradle property, `-Pmilo.applicationId=…`, builds the app under another ID without touching the file, for trying two installs side by side on an emulator.
 - **A new ID is a new app.** On a phone that has MilO it installs beside it and starts with nothing in it. Android's backup of the old app is not restored into it.
 - **The trips come across with "Export all data" in the old app and "Import data" in the new one.** Every closed trip, every GPS point and every report recorded as sent come across, and thirteen settings (the truck's name, the wait after a disconnect, the shortest trip, the connect sound's switch, the work schedule and what becomes of a trip outside it, the driving alert's switch, the report's name, company and vehicle, the accountant's address, the reminder's switch and day).
@@ -75,7 +75,7 @@ His pictures, his code, his greetings, his party, his run and their sounds are e
 
 Nothing was released by this change. Before one is:
 
-1. **The new application ID is chosen** and written into `app/build.gradle.kts`, and `APP=` at the top of the device checklist with it.
+1. ~~**The new application ID is chosen**~~ Done 2026-10-13: `top.dually.triptracker`, in `app/build.gradle.kts` and as `APP=` at the top of the device checklist.
 2. **`dually.top` is registered and pointed at the hosting,** and the rebranded website is live there (ADR-003's addendum says what that needs: a merge alone would put the new pages live at the old address).
 3. **`support@dually.top` forwards,** and one real email sent to it has arrived. The app's Email support tile and the listing both give that address.
 4. **The app is created anew in the Play Console** as "Dually Trip Tracker" with the new ID, and **the first upload is signed with Shawn's own key** (`milo.jks`), as before: the Console makes a key of its own when an app is created, and it has to be changed to his before anything is uploaded (README, "Publishing on Google Play").

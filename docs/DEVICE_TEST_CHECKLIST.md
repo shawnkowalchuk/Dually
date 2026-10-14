@@ -11,10 +11,10 @@
 > **`$APP` is the application ID.** Every adb command below names the app by it. Set it once in the terminal the commands are pasted into, before the first one:
 >
 > ```
-> APP=com.shawnkowalchuk.milo
+> APP=top.dually.triptracker
 > ```
 >
-> That is the ID today, the value of `applicationId` in `app/build.gradle.kts`. **It is to change with the rebrand** (ADR-010): when the new one is written there, this one line changes with it, and no command below. While both apps are on the phone (RB-1 to RB-9), a command reaches the app whose ID `$APP` holds at that moment.
+> That is the ID, the value of `applicationId` in `app/build.gradle.kts`, since 2026-10-13: the "Dually Trip Tracker" entry in the Play Console (ADR-010). MilO's was `com.shawnkowalchuk.milo`. While both apps are on the phone (RB-1 to RB-9), a command reaches the app whose ID `$APP` holds at that moment.
 
 ---
 
