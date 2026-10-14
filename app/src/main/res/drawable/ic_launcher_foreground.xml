@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    The "D" of the app's mark (since 2026-10-13, ADR-010; until then the "M" of the old name):
-    the brand design's "Icon B, Monogram". The letter is a drawn shape, the same one the mark at
-    the top of every screen is drawn with (core/designsystem/component/AppMark.kt): its path is
-    written around the point 0, 0 in a box 72 wide and 76 high, and the group moves it to the
-    middle of the icon and sizes it. AppMarkTest fails if the path here is another one.
+    The face on the app's icon (since 2026-10-13, ADR-010): the brand design's "Icon A, Face",
+    the mascot's two dials and his grin. WRITTEN BY tools/make_launcher_icon.py, which holds the
+    design's numbers and says how they come here: change it there and run it, not here.
 
-    It is as large on the icon as the design draws it: there the letter takes up 0.528 of the
-    square's width, and a launcher shows the middle 72 of this 108 x 108 canvas, so the letter
-    is 38 wide and 40.1 high here, in the middle, well inside the central 66 x 66 safe zone
-    that every launcher shape leaves uncut.
+    The design's square of 150 is the middle 72 of this canvas of 108, which is what a launcher
+    with a square shape shows; all of the face lies inside the central 66 that every launcher
+    shape leaves uncut. The mouth is the letter of the app's mark, its outer outline, turned a
+    quarter turn (LauncherIconTest holds it to the letter's path). The colours are in
+    res/values/colors.xml, because a launcher draws this outside the app.
 
-    The dark is the colour of the letter on the mark (res/values/colors.xml). As the monochrome
-    layer only the shape is used.
+    The layer for "themed icons" is not this drawing but the letter alone
+    (ic_launcher_monochrome.xml): one colour cannot show a face.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -20,13 +19,68 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
     <group
-        android:scaleX="0.528"
-        android:scaleY="0.528"
-        android:translateX="54"
-        android:translateY="54">
+        android:scaleX="0.48"
+        android:scaleY="0.48"
+        android:translateX="18"
+        android:translateY="18">
         <path
-            android:fillColor="@color/milo_mark_letter"
-            android:fillType="evenOdd"
-            android:pathData="M-36,-38H0A36,38 0 0 1 0,38H-36ZM-18,-20H0A18,20 0 0 1 0,20H-18Z" />
+            android:fillColor="@color/milo_icon_bezel"
+            android:pathData="M25,56a31,31 0 1 0 62,0a31,31 0 1 0 -62,0Z" />
+        <path
+            android:fillColor="@color/milo_icon_dial"
+            android:pathData="M30,56a26,26 0 1 0 52,0a26,26 0 1 0 -52,0Z" />
+        <path
+            android:strokeColor="@color/milo_icon_dial_mark"
+            android:strokeWidth="0.84"
+            android:pathData="M43.37,68.11L39.76,71.57M39.01,60.17L34.15,61.37M39.19,51.12L34.39,49.72M43.89,43.37L40.43,39.76M51.83,39.01L50.63,34.15M60.88,39.19L62.28,34.39M68.63,43.89L72.24,40.43M72.99,51.83L77.85,50.63M72.81,60.88L77.61,62.28M68.11,68.63L71.57,72.24" />
+        <path
+            android:strokeColor="@color/milo_icon_redline"
+            android:strokeWidth="2"
+            android:pathData="M78.5,56A22.5,22.5 0 0 1 71.91,71.91" />
+        <path
+            android:strokeColor="@color/milo_icon_needle"
+            android:strokeWidth="3"
+            android:strokeLineCap="round"
+            android:pathData="M58.83,58.83L43.27,43.27" />
+        <path
+            android:fillColor="@color/milo_icon_bezel"
+            android:pathData="M52.5,56a3.5,3.5 0 1 0 7,0a3.5,3.5 0 1 0 -7,0Z" />
+        <path
+            android:fillColor="@color/milo_icon_bezel"
+            android:pathData="M82,64a20,20 0 1 0 40,0a20,20 0 1 0 -40,0Z" />
+        <path
+            android:fillColor="@color/milo_icon_dial"
+            android:pathData="M86,64a16,16 0 1 0 32,0a16,16 0 1 0 -32,0Z" />
+        <path
+            android:strokeColor="@color/milo_icon_dial_mark"
+            android:strokeWidth="0.5"
+            android:pathData="M94.6,71.09L92.08,73.52M91.91,65.79L88.46,66.4M92.61,59.88L89.41,58.47M96.49,55.36L94.6,52.41M102.21,53.75L102.29,50.25M107.87,55.6L109.88,52.73M111.55,60.28L114.81,59.01M112.01,66.21L115.43,66.96M109.09,71.4L111.52,73.92" />
+        <path
+            android:strokeColor="@color/milo_icon_needle"
+            android:strokeWidth="2.2"
+            android:strokeLineCap="round"
+            android:pathData="M100.5,66.6L107.5,54.47" />
+        <path
+            android:fillColor="@color/milo_icon_bezel"
+            android:pathData="M99.5,64a2.5,2.5 0 1 0 5,0a2.5,2.5 0 1 0 -5,0Z" />
+        <group
+            android:rotation="90"
+            android:scaleX="0.5"
+            android:scaleY="0.5"
+            android:translateX="78"
+            android:translateY="112">
+            <path
+                android:fillColor="@color/milo_icon_mouth"
+                android:strokeColor="@color/milo_mark_letter"
+                android:strokeWidth="5"
+                android:strokeLineJoin="round"
+                android:pathData="M-36,-38H0A36,38 0 0 1 0,38H-36Z" />
+            <path
+                android:fillColor="@color/milo_icon_tongue"
+                android:pathData="M5,0a13,21 0 1 0 26,0a13,21 0 1 0 -26,0Z" />
+            <path
+                android:fillColor="@color/milo_icon_teeth"
+                android:pathData="M-30,-30h3a3,3 0 0 1 3,3v54a3,3 0 0 1 -3,3h-3a3,3 0 0 1 -3,-3v-54a3,3 0 0 1 3,-3Z" />
+        </group>
     </group>
 </vector>

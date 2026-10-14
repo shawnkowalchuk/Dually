@@ -38,7 +38,7 @@ class AppMarkTest {
 
     @Test
     fun `the launcher icon and the widget's mark are drawn with the same letter`() {
-        for (name in listOf("ic_launcher_foreground.xml", "widget_mark.xml")) {
+        for (name in listOf("ic_launcher_monochrome.xml", "widget_mark.xml")) {
             val xml = File(drawables, name).readText()
             assertTrue("$name holds another letter", xml.contains(letterInXml))
             assertTrue("$name: the counter must be a hole", xml.contains("""fillType="evenOdd""""))
@@ -57,7 +57,7 @@ class AppMarkTest {
     @Test
     fun `no drawable still holds the letter of the old name`() {
         // The "M" was sixteen straight lines, written with the letter L: the "D" has none.
-        for (name in listOf("ic_launcher_foreground.xml", "ic_stat_trip.xml", "widget_mark.xml")) {
+        for (name in listOf("ic_launcher_monochrome.xml", "ic_stat_trip.xml", "widget_mark.xml")) {
             val paths =
                 Regex("""android:pathData="([^"]+)"""")
                     .findAll(File(drawables, name).readText())
@@ -107,7 +107,7 @@ class AppMarkTest {
         // The launcher icon and the widget's mark take both from there, and write none.
         for (name in listOf(
             "ic_launcher_background.xml",
-            "ic_launcher_foreground.xml",
+            "ic_launcher_monochrome.xml",
             "widget_mark.xml",
         )) {
             val drawable = File(drawables, name).readText()

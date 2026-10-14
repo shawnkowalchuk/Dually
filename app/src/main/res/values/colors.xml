@@ -34,13 +34,28 @@
     -->
     <color name="milo_car_accent">#FF5A12</color>
     <!--
-        The app's mark where Compose cannot draw it: the launcher icon
-        (res/drawable/ic_launcher_background.xml and ic_launcher_foreground.xml) and the widget's
-        mark (res/drawable/widget_mark.xml). The orange square and the dark of the letter on it:
+        The app's mark where Compose cannot draw it: the launcher icon's ground and its layer
+        for themed icons (res/drawable/ic_launcher_background.xml and ic_launcher_monochrome.xml)
+        and the widget's mark (res/drawable/widget_mark.xml). The orange square and the dark of the letter on it:
         the theme's pair for the mark, kept equal by AppMarkTest.
     -->
     <color name="milo_mark_ground">#FF5A12</color>
     <color name="milo_mark_letter">#1E1A17</color>
+    <!--
+        The face on the launcher icon (res/drawable/ic_launcher_foreground.xml, written by
+        tools/make_launcher_icon.py from the brand design's "Icon A, Face"): the mascot's dials
+        and his grin. The launcher draws it outside the app. These are the design's values for
+        the drawing and belong to no screen; the line round the mouth is the mark's letter
+        colour above. LauncherIconTest holds the drawing to these names.
+    -->
+    <color name="milo_icon_bezel">#E6E2DE</color>
+    <color name="milo_icon_dial">#141210</color>
+    <color name="milo_icon_dial_mark">#FFFFFF</color>
+    <color name="milo_icon_redline">#FF3D2E</color>
+    <color name="milo_icon_needle">#FF4A1C</color>
+    <color name="milo_icon_mouth">#2A1712</color>
+    <color name="milo_icon_tongue">#F2546B</color>
+    <color name="milo_icon_teeth">#FFFFFF</color>
     <!--
         The home-screen widget's colours (res/layout/widget_home.xml): the home screen app draws
         it, outside Compose. Each is a colour of the theme, kept equal by WidgetColorsTest: the
