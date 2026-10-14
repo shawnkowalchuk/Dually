@@ -60,7 +60,9 @@ The first plan for the rebrand kept the application ID, so that the rebranded ap
 - **What does not come across is set again by hand:** the permissions and the truck's pairing; the odometer's reading; the time after which a parked truck ends a trip; the unit; the daily check; which sound each of the two sounds plays; the widget and its rate. **One thing cannot be typed in again:** the odometer's earlier readings with their days. The export format was not extended for any of this in this change.
 - **Then the old app is removed,** or both hear the truck connect and each records the drive.
 
-### 5. The mascot is left out
+### 5. The mascot, rebranded apart
+
+**Rebranded later on 2026-10-13, after Shawn's review of him:** orange, the brand's "D" on his chest that turns into a grin, and smoked black soles that light up amber as he steps. His pictures were drawn again and nothing else changed: his code, his greetings, his party, his run and their sounds are as they were (ADR-007, addendum of 2026-10-13). What follows is how this record first left him.
 
 His pictures, his code, his greetings, his party, his run and their sounds are exactly as they were: the green figure with the "M" on his chest, now over an orange interface. Shawn reviews him separately ("do not change the maskot tell we review together"). Until then he is the one place a user still sees the old colour and the old letter.
 
@@ -78,7 +80,7 @@ Nothing was released by this change. Before one is:
 3. **`support@dually.top` forwards,** and one real email sent to it has arrived. The app's Email support tile and the listing both give that address.
 4. **The app is created anew in the Play Console** as "Dually Trip Tracker" with the new ID, and **the first upload is signed with Shawn's own key** (`milo.jks`), as before: the Console makes a key of its own when an app is created, and it has to be changed to his before anything is uploaded (README, "Publishing on Google Play").
 5. **The listing is made from the new brand only:** the name, the icon, a feature graphic and screenshots that show the orange interface and the D. The old screenshots are the third thing Google named. The listing's website and privacy links are the new addresses.
-6. **The mascot has been reviewed,** or the release goes out knowing that the app's greeting shows a green figure with an M.
+6. **The mascot has been reviewed,** or the release goes out knowing that the app's greeting shows a green figure with an M. **Done on 2026-10-13:** he is rebranded (section 5); seeing him on the phone is device checks MR-1 to MR-5.
 7. **The move has been done on Shawn's phone** (device checks RB-1 to RB-9) and the new look seen there (RB-10 to RB-19).
 
 ## Consequences

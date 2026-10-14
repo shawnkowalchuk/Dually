@@ -415,7 +415,7 @@ main > * {
 @media (prefers-reduced-motion: no-preference) {
   /*
    * His needles keep moving. The website runs no script, so the stylesheet turns them:
-   * dials.webp holds the two dials' faces without a needle, and under them the two needles'
+   * dually-dials.webp holds the two dials' faces without a needle, and under them the two needles'
    * blades pointing straight up. Each face is laid over its dial in the standing picture, and
    * its blade over it, turned about the middle of the dial. The two turn to their own times,
    * 7 and 11 seconds, so the pair does not repeat for over a minute. A needle's angle is its
@@ -425,14 +425,14 @@ main > * {
     position: absolute;
     width: 17.7778%;
     height: 21.0526%;
-    background: url("/mascot/dials.webp") 0 0 / 200% 200% no-repeat;
+    background: url("/mascot/dually-dials.webp") 0 0 / 200% 200% no-repeat;
   }
 
   .dial::after {
     content: "";
     position: absolute;
     inset: 0;
-    background: url("/mascot/dials.webp") 0 100% / 200% 200% no-repeat;
+    background: url("/mascot/dually-dials.webp") 0 100% / 200% 200% no-repeat;
   }
 
   .dial-speed {
@@ -459,28 +459,25 @@ main > * {
 
   /*
    * Roll the pointer over him and he waves for as long as it stays: his arm goes up once, then
-   * his hand waves again and again. waving.webp holds the frames one under the other, five of
-   * the arm going up and six of one wave of the hand, twelve to the second. It is laid over
-   * the standing picture and stepped through. When the pointer leaves, he stands again at
-   * once. On a touch screen a tap on him does the same until the next tap elsewhere, where the
+   * his hand waves again and again. dually-waving.webp holds the frames one under the other,
+   * five of the arm going up and six of one wave of the hand, twelve to the second. It is
+   * laid over the standing picture and stepped through. While his arm goes up the D on his
+   * chest turns a quarter turn and both needles go up, like eyebrows; while he waves the D is
+   * a grin. All of that is drawn into the strip's frames. When the pointer leaves, he stands
+   * again at once, the D a letter. On a touch screen a tap on him does the same until the next tap elsewhere, where the
    * browser treats a tap as a pointer that stays, as phones' browsers do.
    *
    * The standing picture is never taken away: a stylesheet cannot know whether the strip has
    * arrived. Each frame of the strip covers it instead, needles and all, with the colour of
    * the card he stood on when the strip was packed, wherever the standing mascot would show
-   * beside the waving one. So waving.webp carries its ground's colour: stand him on another
-   * and it has to be packed again (design/mascot/README.md, "The website's pictures").
-   *
-   * TODO(debt): the strip still carries the lime of the card before the rebrand (#c6f432),
-   * and the card is amber now, so while he waves a lime shape shows where his lowered arm
-   * was. Neither the mascot nor these rules were touched in the rebrand of 2026-10-13: the
-   * owner reviews the mascot first. Packing the strip again on --amber ends it, and the
-   * packing script must then read --amber here, not --accent as it did (FINDINGS_LOG,
-   * 2026-10-13).
+   * beside the waving one. So the strip carries its ground's colour, this card's --amber, which
+   * the packing script reads from this stylesheet: stand him on another and it has to be
+   * packed again (design/mascot/README.md, "The website's pictures").
    *
    * Browsers keep these pictures for a week and this stylesheet for an hour. A picture that
    * changes in a way these rules count on, another number of frames most of all, gets another
-   * name: the strip was wave.webp while it had 24 frames.
+   * name: the strip was wave.webp while it had 24 frames and waving.webp while he was green,
+   * and all three pictures got the names they have when he became orange (2026-10-13).
    */
   .mascot::after {
     content: "";
@@ -492,7 +489,7 @@ main > * {
   }
 
   .mascot:hover::after {
-    background-image: url("/mascot/waving.webp");
+    background-image: url("/mascot/dually-waving.webp");
     animation: mascot-raise 0.4167s steps(5) forwards, mascot-wave 0.5s steps(6) 0.4167s infinite;
   }
 }
@@ -501,7 +498,7 @@ main > * {
    so that it is there when the pointer reaches him. Not with the page. */
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .hero:hover .mascot::after {
-    background-image: url("/mascot/waving.webp");
+    background-image: url("/mascot/dually-waving.webp");
   }
 }
 

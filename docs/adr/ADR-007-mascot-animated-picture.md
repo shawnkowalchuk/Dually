@@ -4,7 +4,7 @@
 
 > **Note, 2026-10-11:** `design/mascot/`, which this record refers to, is kept on the owner's Mac only and is no longer in the repository (FINDINGS_LOG, 2026-10-11). The record is left as it was written.
 Date: 2026-10-09
-Status: Accepted. Supersedes ADR-005. Four addenda at the end. Two of 2026-10-10: a second greeting, the moonwalk, as two more pictures; and the one-year party, as two more again. Two of 2026-10-11: the wave has another course and two other pictures, and what the Decision below says of the wave is how it was until then; and the run across the Report screen, as three more pictures.
+Status: Accepted. Supersedes ADR-005. Five addenda at the end. Two of 2026-10-10: a second greeting, the moonwalk, as two more pictures; and the one-year party, as two more again. Two of 2026-10-11: the wave has another course and two other pictures, and what the Decision below says of the wave is how it was until then; and the run across the Report screen, as three more pictures. One of 2026-10-13: all nine pictures drawn again for the rebrand, with the same frames, sizes and decoder.
 
 ## Context
 
@@ -303,3 +303,38 @@ The APK grows by 1,834 KB, 11.6 %: the three pictures' 1,524 KB, the two sounds'
 - **Every further thing of this kind is this much again.** One in which he moves and leaves nothing behind needs no wide picture: its moving parts can be sheets.
 
 **It has run on an emulator only** (Android 16), at four widths, laid beside the film at every quarter second, with every recorded frame held against the 118 packed pictures. Device checks RS-1 to RS-14.
+
+## Addendum, 2026-10-13: every picture drawn again for the rebrand
+
+### Context
+
+On 2026-10-13 the app became Dually Trip Tracker, in the brand's orange (ADR-010). The mascot was left as he was at first: Shawn wanted to review him apart ("do not change the maskot tell we review together"). Shown the green mascot on the orange website, he said "oh. i thougth we were going to change the mascot color", then "lets change it. can you also make the change to the soles of the feet?" He asked for soles that "light up amber. same as a cars lights", and for the D on his chest to "rotate to the horizontal side ways smile. same as the supplied claude design". Shown the review sheets and films, he asked for a more amber light in the soles: "everything else is perfect".
+
+### Decision
+
+**Nothing this record decided changes.** The mascot is still pictures drawn in Blender, committed, and read by Android's own decoder. The model got the brand's orange, the brand's D in place of the M, a grin the D turns into, and soles that light up amber while a foot is on the floor (APP_ENCYCLOPEDIA, The greeting, "How he looks"). All of it is drawn into the frames, as the brake lights' glow is.
+
+**The nine pictures were drawn again by the same scripts and packed by the same packers,** under their own names, with the same frames, sizes and times. His shape and every motion are as they were: every one of the 4,729 curves of the 28 clips, 140,094 keys, is identical before and after, and the outline of every frame differs from the picture it replaces only along a rim one pixel wide.
+
+**Every number the packers print is the one the app's code holds,** so no code changed: no Kotlin, and none of `MascotPicturesTest`'s limits.
+
+**One setting of the packing changed:** the run on the spot is packed with colour at 49, where the packer's is 50 (`SPOT_COLOUR` in `pack_run_slide.py`). Its soles flash four times a second, and at 50 it came to 665,534 bytes, 534 over its limit. At 49 it is 661,660.
+
+### Consequences
+
+**What it costs, measured:**
+
+| | Before (bytes) | After (bytes) |
+|---|---|---|
+| The greetings' four | 2,023,136 | 2,083,492 |
+| The party's two | 2,311,300 | 2,345,454 |
+| The run's three | 1,523,866 | 1,545,210 |
+| All nine | 5,858,302 | 5,974,156 |
+
+The pictures grow by 115,854 bytes, 2.0 %. Each group stays under its limit in `MascotPicturesTest`: the wave's two 1,160,308 under 1,200,000, the party's two 2,345,454 under 2,400,000, the run's three 1,545,210 under 1,600,000. No limit was raised.
+
+- **The course, the decoder and the memory are as they were:** the frames have the same sizes, so a sheet takes the graphics memory it took.
+- **A change of his look is pictures only, as this record said:** "The look is fixed when the pictures are drawn". This one was nine files and no line of code.
+- **The numbers that stand in the code** (an axis, a sole's height, a reach, a stride) were held against what the packers printed, one by one. A later drawing of him must be checked the same way: most of them are held by no test.
+
+**Not yet seen on the phone.** Device checks MR-1 to MR-5.
