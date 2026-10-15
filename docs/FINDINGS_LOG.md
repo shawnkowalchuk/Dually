@@ -26,6 +26,11 @@
 
 ### 2026-10-14
 
+**`[CHANGE]` Three guide pages on the website**
+Shawn passed on advice from ChatGPT: "several short, focused pages that answer actual questions people ask". Of its five he chose three (`/bluetooth-mileage-tracking`, `/canada-mileage-logbook`, `/private-mileage-tracker`); `/free-mileage-tracker-android` would repeat the home page and `/dually-vs-mileiq` the compare page. Rewrites in `firebase.json`, entries in the sitemap, links in the home page's footer; looked at in a browser at phone width. APP_ENCYCLOPEDIA, Website.
+- **The CRA page goes by the CRA's own "Motor vehicle records" page** (modified 2026-08-31, read 2026-10-14): date, destination, purpose and kilometres per business trip, odometer readings at the start and end of the fiscal period, and the simplified logbook. It links there and says it is not tax advice. If the CRA changes that page, this one is to follow.
+- **No page says a distance is exact,** because of ADR-011's built-in adjustment; and the privacy page's list of what can leave the phone is not cut short: the guide says "your trips" leave only in those ways and points to the policy for the rest.
+
 **`[CHANGE]` The website: the headline people search for, shorter descriptions, a font a seventh the size**
 Shawn's list: "Check robots.txt and AI crawler access", "Add SoftwareApplication structured data", "Check canonical URLs and meta descriptions", "Test mobile performance and Core Web Vitals", and SEO advice he passed on for the title and the headline. Website only; looked at in a browser at phone and desktop width.
 - **Already right, not changed:** robots.txt lets every crawler in, the AI ones included; the home page already has `SoftwareApplication` data, valid, with a download link that works (a star rating needs real ratings, which the site does not have); every page has its canonical address, and the not-found page is `noindex`.
