@@ -38,6 +38,7 @@ internal data class HomeUi(
     val unit: DistanceUnit,
     val odometers: List<HomeOdometer>? = null,
     val centsPerKm: Int? = null,
+    val batterySaverOn: Boolean = false,
 )
 
 /**
@@ -66,6 +67,7 @@ internal data class HomeRead(
     val reportWaiting: YearMonth?,
     val nowMs: Long,
     val odometers: List<HomeOdometer>? = null,
+    val batterySaverOn: Boolean = false,
 )
 
 /**
@@ -98,5 +100,6 @@ internal fun homeUi(now: HomeNow, read: HomeRead): HomeUi = HomeUi(
     nowMs = read.nowMs,
     unit = now.unit,
     odometers = read.odometers,
+    batterySaverOn = read.batterySaverOn,
     centsPerKm = now.stored?.homeWidgetCentsPerKm,
 )

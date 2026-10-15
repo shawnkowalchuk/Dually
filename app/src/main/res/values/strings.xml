@@ -103,6 +103,10 @@
     <string name="home_setup_warning_title">Setup needs attention</string>
     <string name="home_setup_warning_text">Something Dually needs is not set, or no truck is paired. A trip may not start by itself.</string>
     <string name="home_setup_warning_action">Open Setup</string>
+    <!-- Home's note while the phone-wide Battery Saver is on (2026-10-14): a recommendation, not a Setup problem. -->
+    <string name="home_battery_saver_title">Battery Saver is on</string>
+    <string name="home_battery_saver_text">While it is on, Android can limit GPS and background work, so a trip may be missed or cut short.</string>
+    <string name="setup_detail_battery_after_pairing">Pair your truck first: that usually takes care of this.</string>
     <!-- Home: the tile with today's Business kilometres. -->
     <string name="home_today_business">Today · business</string>
     <!-- Home: in place of a figure while the trips are being read. A dash, not a zero. -->
@@ -292,7 +296,7 @@
     <!-- Since 2026-10-09 the button opens Android's list of every app, not a dialog for MilO alone (ADR-004). -->
     <string name="setup_fix_battery_exemption">Android may stop Dually to save battery. In the list that opens, show all apps, choose Dually, then "Don't optimise".</string>
     <string name="setup_fix_unused_app_pause">Recommended. Switch off \"Pause app activity if unused\" for Dually, or Android stops it after months without being opened.</string>
-    <string name="setup_fix_battery_saver_off">Battery Saver is on. It limits location and background work, so a trip can be missed or cut short.</string>
+    <string name="setup_fix_battery_saver_off">Recommended. Battery Saver is on. It can limit location and background work, so a trip can be missed or cut short while it is on.</string>
     <string name="setup_fix_physical_activity">Recommended. The driving alert needs this: it is how the phone tells Dually that you are driving. Dually only sends a notification then, and never starts a trip by itself.</string>
     <string name="setup_fix_xiaomi_battery_saver">Dually cannot read this setting. On Dually\'s app page, set Battery saver to \"No restrictions\", then confirm it here.</string>
     <string name="setup_fix_xiaomi_other_permissions">Recommended. Dually cannot read these. Under \"Other permissions\", switch on \"Show on Lock screen\", the permission to start or open windows in the background, and \"Permanent notification\". Then confirm it here.</string>

@@ -173,6 +173,8 @@ internal fun HomeContent(shown: HomeShown, actions: HomeActions, modifier: Modif
 
         // The two things that can stop a trip from being recorded come before everything else.
         if (ui.setupNeedsAttention) SetupWarningTile(actions.onOpenSetup)
+        // The Setup warning already sends to the checklist, which names Battery Saver too.
+        if (ui.batterySaverOn && !ui.setupNeedsAttention) BatterySaverTile(actions.onOpenSetup)
         ui.activity.startFailure?.let { StartFailureTile(it) }
 
         TripOrNoTrip(shown, actions, format)
@@ -235,6 +237,21 @@ private fun SetupWarningTile(onOpenSetup: () -> Unit) {
     AttentionTile(
         title = stringResource(R.string.home_setup_warning_title),
         text = stringResource(R.string.home_setup_warning_text),
+        actionLabel = stringResource(R.string.home_setup_warning_action),
+        onAction = onOpenSetup,
+    )
+}
+
+/**
+ * Since 2026-10-14 the phone-wide Battery Saver is a recommendation, not a Setup problem: this
+ * tile says what it costs while it is on, and leads to the checklist, whose row opens Android's
+ * Battery Saver settings.
+ */
+@Composable
+private fun BatterySaverTile(onOpenSetup: () -> Unit) {
+    AttentionTile(
+        title = stringResource(R.string.home_battery_saver_title),
+        text = stringResource(R.string.home_battery_saver_text),
         actionLabel = stringResource(R.string.home_setup_warning_action),
         onAction = onOpenSetup,
     )

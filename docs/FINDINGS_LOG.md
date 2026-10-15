@@ -26,6 +26,12 @@
 
 ### 2026-10-14
 
+**`[CHANGE]` Setup: Battery Saver is recommended, not required; the battery row points to pairing first (version 0.3.2)**
+Shawn: "since we turn battery saver off on the phone. is this allways? is it 100% necessary? is there a better way to do this. i dont want to drain my battery and other users", then "so should we remove it or atleast not require on phones that cant change the option". Unit tests only; BS-1 to BS-3. APP_ENCYCLOPEDIA, Permission checklist.
+- **`[FINDING]` Pairing the truck already exempts Dually from battery optimisation** on Android itself. Android 14's companion service adds an app that asks for `REQUEST_COMPANION_RUN_IN_BACKGROUND` to the battery allow-list when an association is stored (`AssociationRequestsProcessor.addAssociationToStore` → `updateSpecialAccessPermissionAsSystem` → `PowerWhitelistManager.addToWhitelist`, read in AOSP's android14-release). On Shawn's phone `dumpsys deviceidle whitelist` lists Dually (`user,…`) and `dumpsys companiondevice` its association with "Baby Mav"; the two ways onto the list cannot be told apart there. Xiaomi's own Battery saver is a separate thing and stays a row of its own on those phones.
+- **So the exemption row, before a truck is paired, says "Pair your truck first"** and its button opens pairing; after pairing it is read as before. **The phone-wide Battery Saver row is recommended:** a setting of the whole phone is the user's; Home shows "Battery Saver is on" with what it costs while it is on, and no longer "Setup needs attention" for it.
+- **Not measured:** what Dually costs the battery in a day. Offered: a day or two of normal use, then Android's battery statistics.
+
 **`[CHANGE]` Three guide pages on the website**
 Shawn passed on advice from ChatGPT: "several short, focused pages that answer actual questions people ask". Of its five he chose three (`/bluetooth-mileage-tracking`, `/canada-mileage-logbook`, `/private-mileage-tracker`); `/free-mileage-tracker-android` would repeat the home page and `/dually-vs-mileiq` the compare page. Rewrites in `firebase.json`, entries in the sitemap, links in the home page's footer; looked at in a browser at phone width. APP_ENCYCLOPEDIA, Website.
 - **The CRA page goes by the CRA's own "Motor vehicle records" page** (modified 2026-08-31, read 2026-10-14): date, destination, purpose and kilometres per business trip, odometer readings at the start and end of the fiscal period, and the simplified logbook. It links there and says it is not tax advice. If the CRA changes that page, this one is to follow.

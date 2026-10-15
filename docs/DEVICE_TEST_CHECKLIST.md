@@ -1829,6 +1829,16 @@ Shawn: "can we please add expandable cards on the settings screen". Eleven tiles
 | SF-4 | Empty the name on the report, leave Settings, come back. | "Report for the accountant" starts open and its line says the name or the email is missing. | not run |
 | SF-5 | Export all data, then turn the phone. | The backup tile stays open with "Exported: …"; an open tile stays open through the turn. | not run |
 
+## Battery rows in Setup (2026-10-14)
+
+Unit tests only.
+
+| # | Do this | Expect | Result |
+|---|---|---|---|
+| BS-1 | Switch the phone's Battery Saver on, open Dually. | Home shows "Battery Saver is on" with what it costs, not "Setup needs attention" (if nothing else is missing). Setup's Battery Saver row says "Recommended. …". | not run |
+| BS-2 | Switch Battery Saver off, come back to Dually. | The tile is gone. | not run |
+| BS-3 | (A phone with no truck paired, Dually not exempt.) Open Setup. | "Battery use: unrestricted" says "Pair your truck first: that usually takes care of this.", and its button opens pairing. After pairing, the row has its tick without any battery setting being touched (not on a Xiaomi, whose own Battery saver is a separate row). | not run |
+
 ## Later work packages
 
 Nothing waiting. A work package that adds behaviour only the phone can prove adds its checks above.
