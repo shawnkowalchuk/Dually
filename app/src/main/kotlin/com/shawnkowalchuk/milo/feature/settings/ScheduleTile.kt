@@ -111,12 +111,13 @@ internal fun ScheduleTile(state: SettingsUiState.Ready, actions: ScheduleActions
             onPick = picker::open,
         )
 
-    Tile(
-        modifier = Modifier.fillMaxWidth(),
-        padding = TilePadding.EVEN,
+    val summary = weekSummary(workDays.size, shownWeeklyMinutes(state.schedule, hold.held))
+    SettingsFold(
+        title = stringResource(R.string.settings_schedule_label),
+        // "5 days · 42.5 h a week", the line the tile itself shows under the hours.
+        summary = summary,
         gap = MiloTheme.spacing.medium,
     ) {
-        TileHeading(stringResource(R.string.settings_schedule_label))
         ToggleButtonRow(
             buttons =
                 state.schedule.map { day ->
@@ -130,7 +131,6 @@ internal fun ScheduleTile(state: SettingsUiState.Ready, actions: ScheduleActions
             onWords = stringResource(R.string.settings_schedule_day_on),
             offWords = stringResource(R.string.settings_schedule_day_off),
         )
-        val summary = weekSummary(workDays.size, shownWeeklyMinutes(state.schedule, hold.held))
         if (eachDay) {
             SummaryLine(summary)
         } else {

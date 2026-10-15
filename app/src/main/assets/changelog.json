@@ -6,6 +6,11 @@
       "changes": [
         {
           "kind": "improved",
+          "title": "A shorter Settings screen",
+          "body": "Most Settings tiles now fold away under their title and a line that says how they are set, such as \"Work schedule: 5 days, 42.5 h a week\". Press a tile to open it, and again to close it. Setup, the truck and the odometer stay open. A tile that is missing something, such as the name for the report, starts open so you can see what to fill in."
+        },
+        {
+          "kind": "improved",
           "title": "Personal kilometres on each day",
           "body": "On the Trips screen, a day with a Personal trip now says what its Personal trips add up to, after its Business kilometres: \"4 trips · 48.2 km business · 12.0 km personal\"."
         },

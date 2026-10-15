@@ -19,6 +19,7 @@ import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.designsystem.component.QuietExpander
 import com.shawnkowalchuk.milo.core.designsystem.component.RowStatus
 import com.shawnkowalchuk.milo.core.designsystem.component.StatusRow
+import com.shawnkowalchuk.milo.core.designsystem.component.SwitchRow
 import com.shawnkowalchuk.milo.core.designsystem.component.Tile
 import com.shawnkowalchuk.milo.core.designsystem.component.TileButton
 import com.shawnkowalchuk.milo.core.designsystem.component.TilePadding
@@ -63,19 +64,23 @@ internal fun NothingRecordedTileContent(
     var picking by rememberSaveable { mutableStateOf(false) }
     var aboutOpen by rememberSaveable { mutableStateOf(false) }
 
-    Tile(
-        modifier = Modifier.fillMaxWidth(),
-        padding = TilePadding.EVEN,
+    val time = formatClockTime(shown.checkAt, locale, twentyFourHour)
+    SettingsFold(
+        title = stringResource(R.string.settings_nothing_recorded_title),
+        summary =
+            if (shown.enabled) {
+                stringResource(R.string.settings_nothing_recorded_time, time)
+            } else {
+                stringResource(R.string.settings_fold_off)
+            },
         gap = MiloTheme.spacing.controlPadding,
     ) {
-        TitledSwitchRow(
-            title = stringResource(R.string.settings_nothing_recorded_title),
-            line = stringResource(R.string.settings_nothing_recorded_enabled),
+        SwitchRow(
+            label = stringResource(R.string.settings_nothing_recorded_enabled),
             checked = shown.enabled,
             onCheckedChange = onEnabled,
         )
         if (shown.enabled) {
-            val time = formatClockTime(shown.checkAt, locale, twentyFourHour)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(MiloTheme.spacing.rowGap),

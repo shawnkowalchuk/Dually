@@ -20,6 +20,7 @@ import com.shawnkowalchuk.milo.core.allowance.formatCentsPerKm
 import com.shawnkowalchuk.milo.core.designsystem.component.QuietExpander
 import com.shawnkowalchuk.milo.core.designsystem.component.RowStatus
 import com.shawnkowalchuk.milo.core.designsystem.component.StatusRow
+import com.shawnkowalchuk.milo.core.designsystem.component.SwitchRow
 import com.shawnkowalchuk.milo.core.designsystem.component.TextEntry
 import com.shawnkowalchuk.milo.core.designsystem.component.Tile
 import com.shawnkowalchuk.milo.core.designsystem.component.TileButton
@@ -64,14 +65,20 @@ internal fun HomeWidgetTileContent(
     onAddToHomeScreen: () -> Unit,
 ) {
     var aboutOpen by rememberSaveable { mutableStateOf(false) }
-    Tile(
-        modifier = Modifier.fillMaxWidth(),
-        padding = TilePadding.EVEN,
-        gap = MiloTheme.spacing.rowGap,
+    val rate = formatCentsPerKm(shown.centsPerKm, LocalConfiguration.current.locales[0])
+    SettingsFold(
+        title = stringResource(R.string.settings_widget_title),
+        summary =
+            stringResource(
+                R.string.settings_widget_summary,
+                stringResource(
+                    if (shown.enabled) R.string.settings_fold_on else R.string.settings_fold_off,
+                ),
+                rate,
+            ),
     ) {
-        TitledSwitchRow(
-            title = stringResource(R.string.settings_widget_title),
-            line = stringResource(R.string.settings_widget_line),
+        SwitchRow(
+            label = stringResource(R.string.settings_widget_line),
             checked = shown.enabled,
             onCheckedChange = onEnabled,
         )

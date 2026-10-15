@@ -26,6 +26,11 @@
 
 ### 2026-10-14
 
+**`[CHANGE]` Eleven Settings tiles fold under a title and a summary (version 0.3.2)**
+Shawn: "can we please add expandable cards on the settings screen I think it is very long … once it is filled out it could probably be hidden and reduce scrolling the settings page." He chose the set-and-forget tiles (Setup, the truck and alert and the odometer stay open), closed unless something is missing, and a one-line summary on each closed tile. **Built, not yet proven on the phone;** SF-1 to SF-5. APP_ENCYCLOPEDIA, Settings, "Folding tiles".
+- **No new pattern:** the Trips screen's `ExpandableTile`, through one Settings wrapper (`SettingsFold`). The three tiles whose title was their switch keep the switch as a row inside, labelled with the line that stood under the title; the reminder's needed a new label.
+- **Decided for Shawn, not asked:** which line sums up each tile (APP_ENCYCLOPEDIA lists them); open or closed is not stored, so every visit starts closed; the backup and GPS points tiles also start open while something is under way or has just been said, so that what they say is not folded away.
+
 **`[CHANGE]` A day on the Trips screen says its Personal kilometres too (version 0.3.2)**
 Shawn: "on the trips screen on the cards we should also show person mileage on the cards each day." He chose the same line ("4 trips · 48.2 km business · 12.0 km personal", left out on a day with no Personal trip) and the phone's Trips screen only. Unit tests only; TP-1. APP_ENCYCLOPEDIA, Trip log.
 

@@ -140,24 +140,14 @@ internal fun DataTileContent(state: DataCardState, actions: DataActions) {
             told.bringIntoView()
         }
     }
-    Tile(
-        modifier = Modifier.fillMaxWidth(),
-        padding = TilePadding.EVEN,
+    SettingsFold(
+        title = stringResource(R.string.settings_data_title),
+        summary = lastExportText(state),
+        // Open while something is under way or has just been said: it is to be seen.
+        unfinished = state.working != null || state.lines.isNotEmpty(),
         gap = MiloTheme.spacing.rowGap,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(MiloTheme.spacing.textGap)) {
-            Text(
-                text = stringResource(R.string.settings_data_title),
-                style = MaterialTheme.typography.bodyLarge,
-                // Lets a screen reader jump from tile to tile.
-                modifier = Modifier.semantics { heading() },
-            )
-            Text(
-                text = stringResource(R.string.settings_data_line),
-                style = MiloTheme.textStyles.tileLabel,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+        Note(stringResource(R.string.settings_data_line))
         // While something is under way, asked about or being recorded, the buttons wait.
         ActionButtonRow(
             actions =
