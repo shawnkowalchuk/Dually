@@ -26,6 +26,9 @@
 
 ### 2026-10-14
 
+**`[CHANGE]` Bing Webmaster Tools' verification file on the website**
+Shawn sent `BingSiteAuth.xml` ("please upload to my site for bing"): Bing's file check of ownership, which must be served at `https://dually.top/BingSiteAuth.xml` unchanged. It is in `website/` as it came, beside Google's file of 2026-10-08. Nothing else changed: without `cleanUrls` the address is served directly, with no redirect, and the file holds an ownership code only, no secret.
+
 **`[CHANGE]` The two MilO releases on GitHub are taken down**
 Shawn: "please take down the old releases". `v0.1.0` and `v0.3.0` ("MilO Trip Log", with `MilO-0.1.0.apk` and `MilO-0.3.0.apk`) were turned into drafts, not deleted: nobody outside the repository's owners sees them, their files answer "not found", and a draft can be published again. Their tags stay (a tag page shows only the commit). Nothing on the website or in the README linked to them; "Download for Android" opens `releases/latest`, which is `v0.3.1`. Deleting them for good is Shawn's to do on GitHub (Releases, the draft, Delete), if he wants it.
 
