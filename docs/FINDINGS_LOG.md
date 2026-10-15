@@ -26,6 +26,11 @@
 
 ### 2026-10-14
 
+**`[CHANGE]` The one-year party is made up on a later day when its date had no trip (version 0.3.2)**
+Shawn: "When the yearly anniversary is active if there isnt a active trip on that day the next day it will pop up." Asked, he chose: the first day with a trip in the 7 days after the date, "same as the day" (every trip that day has the pop, and Home owes the party), phone only as before. **Built, not yet proven on the phone:** unit tests only; OY-15 to OY-17. APP_ENCYCLOPEDIA, The one-year party, step 1a.
+- **It goes by parties held, not by trips stored.** The trip service stores the day at a party trip's first sound (`party_held_on_epoch_day`). Going by the stored trips would have let a false start, which never has a first sound and so never had the pop, take the make-up away.
+- **Decided for Shawn, not asked:** a date in the last week of December is made up in January; an unreadable settings file leaves the date its party and may hold a second one that week; what is stored is this phone's, not in an export file.
+
 **`[CHANGE]` A sent month's GPS points can be deleted (version 0.3.2)**
 Shawn asked whether every GPS point is kept for ever ("Is this going to cause the app storage size to be to large?"), then: "I think a idea of keeping them tell they are submitted to the accountant at the end of the month. or giving the person the option to perge them after he submits his mileage. Telling them xx mb of data is saved as way points do you want to perge them". He chose a tile on the Report screen over a question that pops up (the mascot's run and Google Play's review card already follow "I sent it"), and whole months only. Phone only. **Built, not yet proven on the phone:** unit tests only; device checks GP-1 to GP-8. APP_ENCYCLOPEDIA, GPS recording and distance, "Deleting the points of sent months".
 - **What is deleted:** the fixes of every trip that started in a month whose whole-month report was sent, once the month has ended; never the trip being recorded. Nothing but an export reads a closed trip's fixes, so no screen, figure or report changes.

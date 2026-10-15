@@ -6,6 +6,7 @@ import com.shawnkowalchuk.milo.core.review.ReviewsStored
 import com.shawnkowalchuk.milo.core.schedule.DEFAULT_WORK_SCHEDULE
 import com.shawnkowalchuk.milo.core.schedule.WorkSchedule
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
+import java.time.LocalDate
 import java.time.YearMonth
 
 /** ADR-002: a trip waits 2 minutes for the truck to reconnect before it is closed. */
@@ -86,6 +87,8 @@ enum class ConfirmedStep(val key: String) {
  * @param partyOwedSinceMs when the newest trip started, on the day of MilO's one-year party,
  * that the mascot's party has not been shown for, or null if nothing is owed (since 2026-10-10;
  * kept in `PartyStorage.kt`). It counts on that day only. Not a setting.
+ * @param partyHeldOn the last day the party was held, on its date or on the day that made up
+ * for it, or null if none ever was (since 2026-10-14; kept in `PartyStorage.kt`). Not a setting.
  * @param pointsKeptMonths the sent months whose GPS points Shawn chose to keep on the Report
  * screen, so that their tile is not offered again (since 2026-10-14; kept in
  * `PointsKeptStorage.kt`). Not a setting.
@@ -168,6 +171,7 @@ data class MiloSettings(
     val whatsNewSeenVersion: String? = null,
     val greetingsShown: Int? = null,
     val partyOwedSinceMs: Long? = null,
+    val partyHeldOn: LocalDate? = null,
     val pointsKeptMonths: Set<YearMonth> = emptySet(),
     val reviews: ReviewsStored = ReviewsStored(),
     val distanceUnit: DistanceUnit = DistanceUnit.KILOMETRES,

@@ -1,5 +1,6 @@
 package com.shawnkowalchuk.milo.core.party
 
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
@@ -175,5 +176,55 @@ class PartyDayTest {
         assertTrue(isPartyDay(autumn, at(2027, 11, 7, hour = 0), EDMONTON))
         assertTrue(isPartyDay(autumn, at(2027, 11, 7, hour = 23, minute = 59), EDMONTON))
         assertFalse(isPartyDay(autumn, at(2027, 11, 8, hour = 0), EDMONTON))
+    }
+
+    // ---- A date with no trip: the days that make up for it -----------------------------------
+
+    @Test
+    fun `with no party held, each of the seven days after the date makes up for it`() {
+        val date = LocalDate.of(2027, 10, 6)
+
+        assertEquals(date, partyDateToday(firstTrip, null, at(2027, 10, 6), EDMONTON))
+        for (day in 7..13) {
+            assertEquals(date, partyDateToday(firstTrip, null, at(2027, 10, day), EDMONTON))
+        }
+        assertNull(partyDateToday(firstTrip, null, at(2027, 10, 14, hour = 0), EDMONTON))
+        assertNull(partyDateToday(firstTrip, null, at(2027, 10, 5), EDMONTON))
+    }
+
+    @Test
+    fun `a party held since the date ends the make-up, except on the day it was held`() {
+        val date = LocalDate.of(2027, 10, 6)
+        val heldOnThe9th = LocalDate.of(2027, 10, 9)
+
+        // Held on the date: no make-up.
+        assertNull(partyDateToday(firstTrip, date, at(2027, 10, 7), EDMONTON))
+        // Held on the 9th: the rest of the 9th is the party's, the 10th is not.
+        assertEquals(date, partyDateToday(firstTrip, heldOnThe9th, at(2027, 10, 9, 20), EDMONTON))
+        assertNull(partyDateToday(firstTrip, heldOnThe9th, at(2027, 10, 10), EDMONTON))
+        // Last year's party does not count against this year's.
+        assertEquals(
+            LocalDate.of(2028, 10, 6),
+            partyDateToday(firstTrip, LocalDate.of(2027, 10, 6), at(2028, 10, 8), EDMONTON),
+        )
+        // The date itself has its party whatever is stored.
+        assertEquals(date, partyDateToday(firstTrip, heldOnThe9th, at(2027, 10, 6), EDMONTON))
+    }
+
+    @Test
+    fun `a date late in December is made up early in January`() {
+        val lateDecember = at(2026, 12, 29)
+
+        assertEquals(
+            LocalDate.of(2027, 12, 29),
+            partyDateToday(lateDecember, null, at(2028, 1, 2), EDMONTON),
+        )
+        assertNull(partyDateToday(lateDecember, null, at(2028, 1, 6), EDMONTON))
+    }
+
+    @Test
+    fun `nothing is made up in the first year, or with no trip recorded`() {
+        assertNull(partyDateToday(firstTrip, null, at(2026, 10, 7), EDMONTON))
+        assertNull(partyDateToday(null, null, at(2027, 10, 7), EDMONTON))
     }
 }

@@ -1,6 +1,7 @@
 package com.shawnkowalchuk.milo.core.party
 
 import com.shawnkowalchuk.milo.core.util.localDateOf
+import java.time.LocalDate
 import java.time.ZoneId
 
 // The day of MilO's party (Shawn, 2026-10-10: "a one year use animation. After the person has
@@ -56,9 +57,57 @@ fun firstRecordedStartMs(trips: List<TripStart>): Long? = trips
  */
 fun isPartyDay(firstRecordedStartMs: Long?, nowMs: Long, zone: ZoneId): Boolean {
     if (firstRecordedStartMs == null) return false
+    val today = localDateOf(nowMs, zone)
+    return dateOfParty(localDateOf(firstRecordedStartMs, zone), today.year) == today
+}
+
+/**
+ * How many days after its date a party that had no trip on the day can still be held (Shawn,
+ * 2026-10-14: "When the yearly anniversary is active if there isnt a active trip on that day the
+ * next day it will pop up"; he chose "the next trip, within 7 days").
+ */
+const val MAKE_UP_DAYS = 7L
+
+/**
+ * The date of the party that is held today, or null on a day that holds none.
+ *
+ * - **On the date itself** ([isPartyDay]), as ever: every trip that day.
+ * - **On a make-up day:** one of the [MAKE_UP_DAYS] days after the date, when no party was held
+ *   from the date up to yesterday. The first such day with a trip holds the party, all that day,
+ *   exactly as the date would have; after it, and after the last of the days, none until the
+ *   next year. Shawn chose "same as the day" for it.
+ *
+ * Whether a party was held is what the trip service stored at a trip's first sound
+ * ([lastHeldOn]), not whether a trip was stored: a trip that never had its first sound (a false
+ * start) held no party, and leaves the make-up open.
+ *
+ * @param lastHeldOn the last day a party was held, or null if none ever was on this phone.
+ */
+fun partyDateToday(
+    firstRecordedStartMs: Long?,
+    lastHeldOn: LocalDate?,
+    nowMs: Long,
+    zone: ZoneId,
+): LocalDate? {
+    if (firstRecordedStartMs == null) return null
     val first = localDateOf(firstRecordedStartMs, zone)
     val today = localDateOf(nowMs, zone)
-    val years = today.year - first.year
-    // plusYears gives 28 February for a 29 February in a year that has none.
-    return years >= 1 && first.plusYears(years.toLong()) == today
+    if (isPartyDay(firstRecordedStartMs, nowMs, zone)) return today
+    // A date late in December is made up early in January: last year's date is looked at too.
+    return listOf(today.year, today.year - 1)
+        .mapNotNull { year -> dateOfParty(first, year) }
+        .firstOrNull { date ->
+            today > date &&
+                today <= date.plusDays(MAKE_UP_DAYS) &&
+                (lastHeldOn == null || lastHeldOn !in date..today.minusDays(1))
+        }
+}
+
+/**
+ * The party's date in [year], or null before a year has passed since [first]. plusYears gives
+ * 28 February for a 29 February in a year that has none.
+ */
+private fun dateOfParty(first: LocalDate, year: Int): LocalDate? {
+    val years = year - first.year
+    return if (years >= 1) first.plusYears(years.toLong()) else null
 }
