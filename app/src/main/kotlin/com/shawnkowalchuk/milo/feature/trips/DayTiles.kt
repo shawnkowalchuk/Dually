@@ -120,9 +120,11 @@ private fun dayTitle(isToday: Boolean, day: String): String =
     if (isToday) stringResource(R.string.trips_day_today, day) else day
 
 /**
- * "4 trips · 48.2 km business": the day's counted trips, and what its Business ones add up
- * to. While the day lists deleted or discarded trips, how many: closed, the tile would
- * otherwise hide where they are.
+ * "4 trips · 48.2 km business · 12.0 km personal": the day's counted trips, and what its
+ * Business ones add up to; then, on a day with a Personal trip, what those add up to (since
+ * 2026-10-14, Shawn: "on the trips screen on the cards we should also show person mileage on
+ * the cards each day"). While the day lists deleted or discarded trips, how many: closed, the
+ * tile would otherwise hide where they are.
  */
 @Composable
 private fun dayLine(heading: DayHeading, locale: Locale, unit: DistanceUnit): String {
@@ -133,12 +135,24 @@ private fun dayLine(heading: DayHeading, locale: Locale, unit: DistanceUnit): St
             heading.sessionCount,
             stringResource(distanceRes(unit), formatTenths(heading.businessTenths, locale)),
         )
-    if (heading.notCounted == 0) return totals
+    val personal =
+        if (heading.personal.count == 0) {
+            null
+        } else {
+            stringResource(
+                R.string.trips_day_personal,
+                stringResource(distanceRes(unit), formatTenths(heading.personal.tenths, locale)),
+            )
+        }
     val notCounted =
-        pluralStringResource(
-            R.plurals.trips_day_not_counted,
-            heading.notCounted,
-            heading.notCounted,
-        )
-    return joined(listOf(totals, notCounted))
+        if (heading.notCounted == 0) {
+            null
+        } else {
+            pluralStringResource(
+                R.plurals.trips_day_not_counted,
+                heading.notCounted,
+                heading.notCounted,
+            )
+        }
+    return joined(listOfNotNull(totals, personal, notCounted))
 }

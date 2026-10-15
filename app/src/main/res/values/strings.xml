@@ -409,6 +409,8 @@
         <item quantity="one">%1$d trip · %2$s business</item>
         <item quantity="other">%1$d trips · %2$s business</item>
     </plurals>
+    <!-- What a day's Personal trips add up to, after its Business figure (2026-10-14). The argument is the distance with its unit: "12.0 km". -->
+    <string name="trips_day_personal">%1$s personal</string>
     <string name="trips_previous_month">Previous month</string>
     <string name="trips_next_month">Next month</string>
     <string name="trips_show_left_out">Show deleted and discarded</string>

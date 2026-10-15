@@ -26,6 +26,9 @@
 
 ### 2026-10-14
 
+**`[CHANGE]` A day on the Trips screen says its Personal kilometres too (version 0.3.2)**
+Shawn: "on the trips screen on the cards we should also show person mileage on the cards each day." He chose the same line ("4 trips · 48.2 km business · 12.0 km personal", left out on a day with no Personal trip) and the phone's Trips screen only. Unit tests only; TP-1. APP_ENCYCLOPEDIA, Trip log.
+
 **`[DECISION]` Trip distances carry a hidden +2 %, and Settings adjusts them ±5 % from 0 (ADR-011, version 0.3.2)**
 Shawn: "We need to have a way to adjust the mileage in the app. A 5% +/- slider. I think we should have a baseline adjust on the app at +2% on all trips", then "i want the base line to be 0. i dont want the app to know we do a 2% adjustment." **Built, not yet proven on the phone:** unit tests only; DA-1 to DA-5. APP_ENCYCLOPEDIA, GPS recording and distance, "The distance adjustment".
 - **What he was told before choosing "Hidden +2% now":** the 2 % is the simulations' town figure, not a measurement of his truck; a flat +2 % over-counts highway driving by about 2 %; an adjustment nobody can see is an over-claim wherever the odometer shows less; his typed odometer readings could measure the real gap. He also had "Measure my truck first" and "No hidden number" to choose from.

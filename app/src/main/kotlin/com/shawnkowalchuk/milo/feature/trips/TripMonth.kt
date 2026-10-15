@@ -7,6 +7,7 @@ import com.shawnkowalchuk.milo.core.util.localDateOf
 import com.shawnkowalchuk.milo.core.util.monthOf
 import com.shawnkowalchuk.milo.data.trip.ByHandMark
 import com.shawnkowalchuk.milo.data.trip.CategoryTotals
+import com.shawnkowalchuk.milo.data.trip.Tally
 import com.shawnkowalchuk.milo.data.trip.Trip
 import com.shawnkowalchuk.milo.data.trip.TripCorrection
 import com.shawnkowalchuk.milo.data.trip.byHandMark
@@ -111,12 +112,15 @@ data class TripLine(
  * Deleted and discarded trips are not among them, listed or not.
  * @param businessTenths what the day's Business trips add up to, in tenths of the month's unit
  * ([MonthSummary.unit]): the sum of the figures its Business rows show.
+ * @param personal the day's counted Personal trips and what they add up to, the same way
+ * (since 2026-10-14).
  */
 data class TripDay(
     val date: LocalDate,
     val trips: List<TripLine>,
     val sessionCount: Int,
     val businessTenths: Long,
+    val personal: Tally = Tally(count = 0, tenths = 0),
 )
 
 /**
@@ -232,6 +236,7 @@ fun monthSummary(
                         trips = lines.sortedWith(newestFirst),
                         sessionCount = dayTotals.count,
                         businessTenths = dayTotals.business.tenths,
+                        personal = dayTotals.personal,
                     )
                 }.sortedByDescending { it.date },
         hiddenLeftOut = if (showLeftOut) 0 else leftOut.size,

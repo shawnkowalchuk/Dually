@@ -5,6 +5,11 @@
       "date": null,
       "changes": [
         {
+          "kind": "improved",
+          "title": "Personal kilometres on each day",
+          "body": "On the Trips screen, a day with a Personal trip now says what its Personal trips add up to, after its Business kilometres: \"4 trips · 48.2 km business · 12.0 km personal\"."
+        },
+        {
           "kind": "new",
           "title": "Adjust trip distances to match your odometer",
           "body": "Settings has a Distance adjustment under Shortest trip that counts. If Dually's trips come out a little shorter or longer than your truck's odometer, raise or lower them half a percent at a time, up to 5 percent either way. It applies to the trip being recorded and every trip after it; trips that have ended keep their distance."
