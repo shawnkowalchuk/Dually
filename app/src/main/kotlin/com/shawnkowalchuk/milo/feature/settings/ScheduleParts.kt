@@ -245,12 +245,18 @@ internal fun HoursRefused(answer: Int?) {
 @Composable
 internal fun OutsideHoursTile(state: SettingsUiState.Ready, actions: ScheduleActions) {
     val ignore = state.ignoreOutsideSchedule
-    Tile(
-        modifier = Modifier.fillMaxWidth(),
-        padding = TilePadding.EVEN,
+    SettingsFold(
+        title = stringResource(R.string.settings_outside_title),
+        summary =
+            stringResource(
+                if (ignore) {
+                    R.string.settings_outside_ignore
+                } else {
+                    R.string.settings_outside_personal
+                },
+            ),
         gap = MiloTheme.spacing.tileGap,
     ) {
-        TileHeading(stringResource(R.string.settings_outside_title))
         SegmentedChoice(
             segments =
                 listOf(

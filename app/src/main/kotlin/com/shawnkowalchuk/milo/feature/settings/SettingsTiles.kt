@@ -147,12 +147,23 @@ internal fun TripRulesTile(state: SettingsUiState.Ready, actions: SettingsAction
     val parked = stringResource(R.string.settings_parked_label)
     val minimum = stringResource(R.string.settings_minimum_label)
     val adjust = stringResource(R.string.settings_adjust_label)
-    Tile(
-        modifier = Modifier.fillMaxWidth(),
-        padding = TilePadding.EVEN,
+    val shortest =
+        stringResource(
+            distanceRes(state.distanceUnit),
+            formatShortDistance(state.minimumDistanceMetres.toDouble(), state.distanceUnit, locale),
+        )
+    SettingsFold(
+        title = stringResource(R.string.settings_trips_label),
+        // "Wait 2 min · shortest 0.3 km · adjust 0 %"
+        summary =
+            stringResource(
+                R.string.settings_trips_summary,
+                formatMinutes(state.gracePeriodSeconds, locale),
+                shortest,
+                formatAdjustPercent(state.distanceAdjustSteps, locale),
+            ),
         gap = MiloTheme.spacing.controlPadding,
     ) {
-        TileHeading(stringResource(R.string.settings_trips_label))
         StepperRow(
             label = grace,
             value =

@@ -26,12 +26,21 @@ import com.shawnkowalchuk.milo.core.util.DistanceUnit
  */
 @Composable
 internal fun UnitsTile(unit: DistanceUnit, onUnit: (DistanceUnit) -> Unit) {
-    Tile(
-        modifier = Modifier.fillMaxWidth(),
-        padding = TilePadding.EVEN,
+    val chosen =
+        stringResource(
+            if (unit ==
+                DistanceUnit.MILES
+            ) {
+                R.string.settings_units_miles
+            } else {
+                R.string.settings_units_kilometres
+            },
+        )
+    SettingsFold(
+        title = stringResource(R.string.settings_units_title),
+        summary = chosen,
         gap = MiloTheme.spacing.tileGap,
     ) {
-        TileHeading(stringResource(R.string.settings_units_title))
         SegmentedChoice(
             segments =
                 listOf(

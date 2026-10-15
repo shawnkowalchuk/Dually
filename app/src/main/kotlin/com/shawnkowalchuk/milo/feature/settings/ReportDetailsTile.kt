@@ -31,12 +31,20 @@ import com.shawnkowalchuk.milo.data.settings.MAX_REPORT_TEXT_LENGTH
 @Composable
 internal fun ReportDetailsTile(fields: ReportFields, actions: ReportDetailActions) {
     var aboutOpen by rememberSaveable { mutableStateOf(false) }
-    Tile(
-        modifier = Modifier.fillMaxWidth(),
-        padding = TilePadding.EVEN,
+    // The report cannot be sent without the name and the address: then the tile starts open.
+    val unfinished =
+        fields.name.isBlank() || fields.accountantEmail.isBlank() || fields.emailRefused
+    SettingsFold(
+        title = stringResource(R.string.settings_report_title),
+        summary =
+            if (unfinished) {
+                stringResource(R.string.settings_report_summary_missing)
+            } else {
+                listOf(fields.name, fields.accountantEmail).joinToString(" · ")
+            },
+        unfinished = unfinished,
         gap = MiloTheme.spacing.tileGap,
     ) {
-        TileHeading(stringResource(R.string.settings_report_title))
         TextEntry(
             label = stringResource(R.string.settings_report_name),
             initialText = fields.name,

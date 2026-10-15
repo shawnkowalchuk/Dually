@@ -31,13 +31,19 @@ import com.shawnkowalchuk.milo.data.settings.TripSound
  */
 @Composable
 internal fun SoundsTile(state: SettingsUiState.Ready, actions: SettingsActions) {
-    Tile(
-        modifier = Modifier.fillMaxWidth(),
-        padding = TilePadding.EVEN,
+    // "Chirp · Chime": the sound in use for each, or Off.
+    val off = stringResource(R.string.settings_fold_off)
+    val summary =
+        TripSound.entries.map { which ->
+            val sound = state.sound(which)
+            if (sound.enabled) sound.inUseName() else off
+        }.joinToString(" · ")
+    SettingsFold(
+        title = stringResource(R.string.settings_sounds_title),
+        summary = summary,
         // What a row asks for: each row's two targets reach 6 dp past what is drawn.
         gap = MiloTheme.spacing.rowGap,
     ) {
-        TileHeading(stringResource(R.string.settings_sounds_title))
         for (which in TripSound.entries) {
             val sound = state.sound(which)
             LinkSwitchRow(

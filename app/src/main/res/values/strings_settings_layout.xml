@@ -35,7 +35,7 @@
 
     <!-- Trips: the tile's label, as drawn, and the line that opens what its numbers do. -->
     <string name="settings_trips_label">Trips · applies from the next trip</string>
-    <string name="settings_about_trips">About these three</string>
+    <string name="settings_about_trips">About these four</string>
     <!--
         The tile under it (2026-10-07): the unit every distance is shown in. The two words are
         the two parts of the control; the sentence under it says what follows the choice.

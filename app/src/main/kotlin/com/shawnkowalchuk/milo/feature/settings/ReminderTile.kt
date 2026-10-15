@@ -12,6 +12,7 @@ import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.designsystem.component.QuietExpander
 import com.shawnkowalchuk.milo.core.designsystem.component.StepperButton
 import com.shawnkowalchuk.milo.core.designsystem.component.StepperRow
+import com.shawnkowalchuk.milo.core.designsystem.component.SwitchRow
 import com.shawnkowalchuk.milo.core.designsystem.component.Tile
 import com.shawnkowalchuk.milo.core.designsystem.component.TilePadding
 import com.shawnkowalchuk.milo.core.designsystem.component.TitledSwitchRow
@@ -66,14 +67,20 @@ private const val LAST_TEEN = 13
 @Composable
 internal fun ReminderTile(state: SettingsUiState.Ready, actions: ReminderActions) {
     var aboutOpen by rememberSaveable { mutableStateOf(false) }
-    Tile(
-        modifier = Modifier.fillMaxWidth(),
-        padding = TilePadding.EVEN,
+    val fromDay = stringResource(reminderLineRes(state.reminderDay), state.reminderDay)
+    SettingsFold(
+        title = stringResource(R.string.settings_reminder_title),
+        summary = if (state.reminderEnabled) {
+            fromDay
+        } else {
+            stringResource(
+                R.string.settings_fold_off,
+            )
+        },
         gap = MiloTheme.spacing.controlPadding,
     ) {
-        TitledSwitchRow(
-            title = stringResource(R.string.settings_reminder_title),
-            line = stringResource(reminderLineRes(state.reminderDay), state.reminderDay),
+        SwitchRow(
+            label = stringResource(R.string.settings_reminder_switch),
             checked = state.reminderEnabled,
             onCheckedChange = actions.onEnabled,
         )

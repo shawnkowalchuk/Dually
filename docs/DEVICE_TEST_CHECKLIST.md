@@ -1817,6 +1817,18 @@ Every new trip's distance is 2 % over the measured one, which no screen says, pl
 | DA-4 | During a trip, move the adjustment. | Home's running km jump by that share at once; the trip is stored with the new setting. Trips that had ended before keep their km. | not run |
 | DA-5 | Android Auto, during a trip. | The same running km as Home. | not run |
 
+## Folding tiles on Settings (2026-10-14)
+
+Shawn: "can we please add expandable cards on the settings screen". Eleven tiles fold under a title and a one-line summary.
+
+| # | Do this | Expect | Result |
+|---|---|---|---|
+| SF-1 | Open Settings with the name and the accountant's email set. | Setup, the truck and alert, and the odometer as before; every tile under them closed, each with its title, a grey line and a down arrow. Far less scrolling. | not run |
+| SF-2 | Press a closed tile's heading; press it again. | It opens with its rows as before and the arrow points up; it closes again. A screen reader says "Expanded" and "Collapsed". | not run |
+| SF-3 | Change a value in an open tile (the reminder day, a sound's switch, the units), close it. | Its grey line says the new value. | not run |
+| SF-4 | Empty the name on the report, leave Settings, come back. | "Report for the accountant" starts open and its line says the name or the email is missing. | not run |
+| SF-5 | Export all data, then turn the phone. | The backup tile stays open with "Exported: …"; an open tile stays open through the turn. | not run |
+
 ## Later work packages
 
 Nothing waiting. A work package that adds behaviour only the phone can prove adds its checks above.

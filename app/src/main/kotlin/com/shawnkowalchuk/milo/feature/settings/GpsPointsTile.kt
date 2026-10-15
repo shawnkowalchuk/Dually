@@ -47,28 +47,17 @@ private fun GpsPointsTileContent(state: GpsPointsCardState, onDelete: () -> Unit
     var asking by rememberSaveable { mutableStateOf(false) }
     val sent = state.sent
     val sentSize = Formatter.formatShortFileSize(context, sent.bytes)
-    Tile(
-        modifier = Modifier.fillMaxWidth(),
-        padding = TilePadding.EVEN,
+    SettingsFold(
+        title = stringResource(R.string.settings_points_title),
+        summary =
+            stringResource(
+                R.string.settings_points_line,
+                Formatter.formatShortFileSize(context, state.storedBytes),
+            ),
+        // Open while a delete is under way or has just been said.
+        unfinished = state.working || state.outcome != null,
         gap = MiloTheme.spacing.rowGap,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(MiloTheme.spacing.textGap)) {
-            Text(
-                text = stringResource(R.string.settings_points_title),
-                style = MaterialTheme.typography.bodyLarge,
-                // Lets a screen reader jump from tile to tile.
-                modifier = Modifier.semantics { heading() },
-            )
-            Text(
-                text =
-                    stringResource(
-                        R.string.settings_points_line,
-                        Formatter.formatShortFileSize(context, state.storedBytes),
-                    ),
-                style = MiloTheme.textStyles.tileLabel,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
         val months = sent.months.size
         if (sent.points > 0) {
             Note(pluralStringResource(R.plurals.settings_points_sent, months, sentSize, months))
