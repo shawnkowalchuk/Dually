@@ -74,6 +74,7 @@ internal class ScheduleActions(
  *
  * @param dataViewModel the tile of backup, export and import has a ViewModel of its own: see
  * [DataViewModel].
+ * @param pointsViewModel the GPS points tile, under it, has one of its own too.
  * @param checkViewModel the daily check's tile has one of its own too.
  * @param odometerViewModel and so has the odometer's.
  * @param widgetViewModel and the home-screen widget's.
@@ -95,6 +96,7 @@ internal class ScheduleActions(
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     dataViewModel: DataViewModel,
+    pointsViewModel: GpsPointsViewModel,
     checkViewModel: NothingRecordedViewModel,
     odometerViewModel: OdometerViewModel,
     widgetViewModel: HomeWidgetViewModel,
@@ -148,7 +150,10 @@ fun SettingsScreen(
         checkTile = { NothingRecordedTile(checkViewModel) },
         odometerTile = { OdometerTile(odometerViewModel) },
         widgetTile = { HomeWidgetTile(widgetViewModel) },
-        dataTile = { DataTile(dataViewModel) },
+        dataTile = {
+            DataTile(dataViewModel)
+            GpsPointsTile(pointsViewModel)
+        },
         versionTile = versionTile,
         showCoffee = showCoffee,
     )

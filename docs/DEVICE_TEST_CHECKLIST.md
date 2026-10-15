@@ -1774,6 +1774,25 @@ Shawn's requests of 2026-10-13, shown the green mascot on the orange website: "l
 | MR-4 | **The run after "I sent it".** As RS-1: on the Report screen press "Email the report", come back from the email app, and answer "I sent it". | As RS-1. **His soles flash amber with his steps** as he runs in, and four times a second each as he runs on the spot. **As he brakes and slides** both soles are lit, amber, under the two red brake lights. **No grin:** his chest is never turned to you here, and the "D" stays a letter. **Say whether the red of the brake lights and the amber of the soles are told apart at a glance,** and whether he reads well in front of the button "Email the report", which is the same orange as he is now (RS-2 asked it of green on lime). | not run |
 | MR-5 | **Nothing else changed.** While MR-1 to MR-4 play, watch for anything but his colour, his "D" and his soles. | What WW-1 to WW-3, MW-1 to MW-3, OY-1 and OY-2, and RS-1 to RS-3 expect, as they say it: the same course, the same place over the bottom bar, the same length, and the pop, the whirr and the squeal at the same moments. His feet do not slide, nothing jumps or flashes where one picture takes over from another, and the screens under him are as they were. Write down anything that is not. | not run |
 
+## Deleting the GPS points of sent months (2026-10-14)
+
+Shawn's request of 2026-10-14: "giving the person the option to perge them after he submits his mileage. Telling them xx mb of data is saved as way points do you want to perge them". A tile on the Report screen offers it for a whole month whose report was sent, once the month has ended; Settings has a GPS points tile that does it for every sent month.
+
+**What has been seen, and where.** Unit tests only: which months and trips, the share of the room, the delete, its log lines and the tile's states. **Nothing has run on Android:** not the tiles, and not the compaction of the file (`VACUUM`), which only Android's SQLite can run.
+
+**Install this build over the one on the phone,** never after an uninstall: an uninstall deletes the trips. **Export first** (Settings, Export all data, with the GPS points): this is the one copy of the routes that is deleted here. Note the size of Dually under Android's Settings, Apps, Dually, Storage, before GP-4.
+
+| # | Do this | Expect | Result |
+|---|---|---|---|
+| GP-1 | Settings, scroll to the end. | Under "Backup, export and import", a tile "GPS points": "Each trip's route, as GPS points: (size) on this phone". On a phone whose October is the only month with a sent report, "None are from a month whose report you sent, once that month has ended." and no button. | not run |
+| GP-2 | Trips, a month whose report was sent and that has ended, its pill. | The Report screen: under Business and Status, the tile "GPS points for (month)", with the number of trips, the size, and "Delete GPS points" (red) beside "Keep". | not run |
+| GP-3 | The same screen, step to this month, and choose "A date range". | No GPS points tile for this month, nor for a date range. | not run |
+| GP-4 | Back on the sent month, press **Delete GPS points**. | "Deleting the GPS points…", then with the tick "(size) of GPS points deleted. Every trip and the report are as they were." Trips: the month's trips, their km, the month's total and the Submitted line are unchanged. The Log has one REPORT line "GPS points of (month) deleted on the Report screen…" and no ERROR line. | not run |
+| GP-5 | Android's Settings, Apps, Dually, Storage. | Smaller than before GP-4, by about the size the tile gave. | not run |
+| GP-6 | On another sent month, press **Keep**. Leave the screen and come back to that month. | The tile is gone and does not come back. Its points are still counted in Settings' GPS points tile. | not run |
+| GP-7 | Settings, GPS points, **Delete points of sent months**. | A question with the size, the number of trips and "To keep a copy first, use Export." "Keep them" does nothing. "Delete" deletes them, says how much, and the tile then says none are from a sent month. | not run |
+| GP-8 | With a trip being recorded, do GP-7 for a month that holds no trip in progress. | The trip goes on recording; its fixes keep arriving (the Log's LOCATION lines), and its km on Home keep counting. | not run |
+
 ## Later work packages
 
 Nothing waiting. A work package that adds behaviour only the phone can prove adds its checks above.

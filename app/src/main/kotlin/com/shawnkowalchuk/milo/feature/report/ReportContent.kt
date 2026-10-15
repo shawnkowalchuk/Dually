@@ -38,6 +38,9 @@ import com.shawnkowalchuk.milo.core.util.formatMonthName
  * quiet ones under it, and the sentence that says what sending does. Two things the drawing
  * does not have stand in the same style: the period's tile, directly under the title, and the
  * list of sent reports at the end.
+ *
+ * @param pointsTile the tile that offers to delete a sent month's GPS points, under the Business
+ * and Status tiles. It has a state of its own, and draws nothing when it has nothing to offer.
  */
 @Composable
 internal fun ReportContent(
@@ -45,6 +48,7 @@ internal fun ReportContent(
     actions: ReportActions,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    pointsTile: @Composable () -> Unit = {},
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val spacing = MiloTheme.spacing
@@ -85,13 +89,17 @@ internal fun ReportContent(
                     )
                 }
 
-            is ReportUiState.Ready -> ReadyTiles(state, actions)
+            is ReportUiState.Ready -> ReadyTiles(state, actions, pointsTile)
         }
     }
 }
 
 @Composable
-private fun ColumnScope.ReadyTiles(state: ReportUiState.Ready, actions: ReportActions) {
+private fun ColumnScope.ReadyTiles(
+    state: ReportUiState.Ready,
+    actions: ReportActions,
+    pointsTile: @Composable () -> Unit,
+) {
     val sentTo = remember { BringIntoViewRequester() }
     // Once for each press that was refused, when its answer is on the screen: the line that
     // says what is missing can be above the button that was pressed. Not when the screen is
@@ -109,6 +117,7 @@ private fun ColumnScope.ReadyTiles(state: ReportUiState.Ready, actions: ReportAc
         first = { half -> BusinessTile(state.summary, state.unit, half) },
         second = { half -> StatusTile(state, half) },
     )
+    pointsTile()
     PdfTile(state, actions)
     SentToTile(state, actions.onOpenSettings, Modifier.bringIntoViewRequester(sentTo))
     SendButtons(state, actions)

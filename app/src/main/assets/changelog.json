@@ -1,6 +1,17 @@
 {
   "releases": [
     {
+      "version": "0.3.2",
+      "date": null,
+      "changes": [
+        {
+          "kind": "new",
+          "title": "Delete a sent month's GPS points",
+          "body": "Every trip keeps its route as GPS points, and they add up to about 80 MB a year. Once a month's report is sent and the month has ended, the Report screen offers to delete that month's points, saying how much room they take. Every trip keeps its distance, times and addresses, and the report stays as it was; only the route goes. Press Keep and Dually does not ask about that month again. Settings has a new GPS points tile that shows how much room the points take, and deletes the points of every month whose report you sent. To keep a copy first, use Export."
+        }
+      ]
+    },
+    {
       "version": "0.3.1",
       "date": "2026-10-14",
       "changes": [

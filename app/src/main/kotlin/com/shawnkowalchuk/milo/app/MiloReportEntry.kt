@@ -6,12 +6,17 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import com.shawnkowalchuk.milo.data.settings.keepPointsOf
+import com.shawnkowalchuk.milo.feature.report.MonthPointsViewModel
 import com.shawnkowalchuk.milo.feature.report.ReportReading
 import com.shawnkowalchuk.milo.feature.report.ReportRecords
 import com.shawnkowalchuk.milo.feature.report.ReportScreen
 import com.shawnkowalchuk.milo.feature.report.ReportViewModel
+import java.io.IOException
 import java.time.YearMonth
 import java.time.ZoneId
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
 
 /**
  * The Report screen as an entry of the back stack: its ViewModel is given what it needs from
@@ -58,6 +63,33 @@ internal fun ReportEntry(container: AppContainer, backStack: NavBackStack<NavKey
                             texts = container.reports.texts,
                             records = records,
                             onRecordedAsSent = { container.reports.reminder.look(REPORT_SENT) },
+                            clock = container.clock,
+                            zone = ZoneId::systemDefault,
+                        )
+                    }
+                },
+            ),
+        pointsViewModel =
+            viewModel(
+                factory = viewModelFactory {
+                    initializer {
+                        MonthPointsViewModel(
+                            cleanup = container.pointCleanup,
+                            sent = container.sentReportRepository.observeSent(),
+                            // An unreadable settings file keeps no month: the tile is offered.
+                            kept =
+                                container.settingsStore.settings
+                                    .map { it.pointsKeptMonths }
+                                    .catch { unreadable ->
+                                        if (unreadable is IOException) {
+                                            emit(
+                                                emptySet(),
+                                            )
+                                        } else {
+                                            throw unreadable
+                                        }
+                                    },
+                            keep = container.settingsStore::keepPointsOf,
                             clock = container.clock,
                             zone = ZoneId::systemDefault,
                         )

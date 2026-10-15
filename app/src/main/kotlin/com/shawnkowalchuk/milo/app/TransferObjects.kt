@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.shawnkowalchuk.milo.data.transfer.MainTransferDao
 import com.shawnkowalchuk.milo.data.transfer.PointsTransferDao
 import com.shawnkowalchuk.milo.feature.settings.DataViewModel
+import com.shawnkowalchuk.milo.feature.settings.GpsPointsViewModel
 import com.shawnkowalchuk.milo.platform.transfer.BackupAftermath
 import com.shawnkowalchuk.milo.platform.transfer.DataTransfer
 import com.shawnkowalchuk.milo.platform.transfer.TransferParts
@@ -85,6 +86,19 @@ internal fun dataViewModelFactory(container: AppContainer): ViewModelProvider.Fa
                 transfer = container.transfer.dataTransfer,
                 settings = container.settingsStore.settings,
                 tripInProgress = container.tripController.activity.map { it.trip != null },
+                clock = container.clock,
+                zone = ZoneId::systemDefault,
+            )
+        }
+    }
+
+/** How the Settings screen's GPS points tile gets its ViewModel, for the same reason. */
+internal fun gpsPointsViewModelFactory(container: AppContainer): ViewModelProvider.Factory =
+    viewModelFactory {
+        initializer {
+            GpsPointsViewModel(
+                cleanup = container.pointCleanup,
+                sent = container.sentReportRepository.observeSent(),
                 clock = container.clock,
                 zone = ZoneId::systemDefault,
             )
