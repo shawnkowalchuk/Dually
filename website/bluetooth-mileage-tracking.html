@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bluetooth Mileage Tracking on Android | Dually Trip Tracker</title>
+  <meta name="description" content="How Dually starts a mileage log by itself when your phone connects to your vehicle&#39;s Bluetooth, how a trip ends, and what it needs to work on Android.">
+  <link rel="canonical" href="https://dually.top/bluetooth-mileage-tracking">
+  <link rel="icon" href="/mark.svg" type="image/svg+xml">
+  <link rel="preload" href="/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="theme-color" content="#15120F">
+</head>
+<body>
+  <div class="page">
+    <header class="top">
+      <a class="brand" href="/"><img src="/mark.svg" alt="" width="40" height="40"><span class="wordmark">Dually</span> <span class="pill">Trip tracker</span></a>
+      <nav aria-label="Main">
+        <a href="/compare">Compare</a>
+        <a href="/changes">What's new</a>
+        <a href="/privacy">Privacy</a>
+        <a href="mailto:support@dually.top?subject=Dually%20Trip%20Tracker%20support">Support</a>
+        <a href="https://github.com/shawnkowalchuk/Dually">GitHub</a>
+        <a class="cta" href="/#install">Install</a>
+      </nav>
+    </header>
+
+    <main>
+      <article class="tile policy split">
+        <h1>Bluetooth mileage tracking: a log that starts when the truck does</h1>
+        <p class="secondary">How Dually Trip Tracker uses your vehicle's Bluetooth to record every drive without you pressing anything.</p>
+
+        <h2>The idea</h2>
+        <p>Most mileage apps either wait for you to press Start, which is easy to forget, or watch your motion all day and guess which movements were drives, which logs bus rides and a friend's car too. Dually takes a third way: it listens for one thing, your phone connecting to the Bluetooth of a vehicle you paired. That connection is the start of a trip.</p>
+
+        <h2>How it works</h2>
+        <ol>
+          <li><strong>Pair once.</strong> In Setup, press Pair truck and pick your vehicle from the phone's Bluetooth devices. You can pair several work vehicles, each with its own odometer.</li>
+          <li><strong>Get in and drive.</strong> When the phone connects to that vehicle, Android wakes Dually, even with the app closed, and Dually records the drive with GPS, a position every 2 seconds.</li>
+          <li><strong>Park.</strong> The trip ends two minutes after the vehicle disconnects, or once it has stood still for ten minutes while still connected. Both times can be changed in Settings.</li>
+          <li><strong>It's filed for you.</strong> A trip that starts in your work hours is saved as Business, the others as Personal, and its start and end become street addresses. You can change any trip on the Trips screen.</li>
+        </ol>
+        <figure class="guide-shot"><img src="/screenshots/dually-trips.jpg" loading="lazy" decoding="async" width="900" height="2000" alt="Trips: September 2026, 1192.1 km of Business, and one tile for each day"><figcaption>Every trip, filed under its day</figcaption></figure>
+
+        <h2>What it needs</h2>
+        <ul>
+          <li>Android 14 or newer, with Bluetooth on.</li>
+          <li>Location allowed all the time, so a drive is recorded with the screen off.</li>
+          <li>Nearby devices (Bluetooth) and notifications.</li>
+          <li>Battery use set to unrestricted for Dually, so the phone does not stop it to save power. Setup walks you through each of these.</li>
+        </ul>
+
+        <h2>Its limits</h2>
+        <ul>
+          <li><strong>No Bluetooth, no automatic trip.</strong> A vehicle without Bluetooth, or a phone with Bluetooth off, needs the Start trip button. Dually can also tell you when the phone seems to be in a moving vehicle and no trip is being recorded.</li>
+          <li><strong>Some phones are strict with background apps.</strong> If a phone maker's battery saver stops Dually anyway, the Log screen says what happened, and you can add a missed trip by hand.</li>
+          <li><strong>GPS is measured, not perfect.</strong> Distance comes from the GPS positions along the drive, so it can differ a little from the odometer. A short move around the yard is left out as too short, and can be counted after all.</li>
+          <li><strong>Android only.</strong> There is no iPhone version.</li>
+        </ul>
+
+        <h2>Try it</h2>
+        <p>Dually is free for Android 14 or newer, with no account, no ads and no subscription. <a href="https://github.com/shawnkowalchuk/Dually/releases/latest">Download Dually for Android</a>, see <a href="/#install">how to install it</a>, or read the other guides: <a href="/canada-mileage-logbook">a mileage logbook for the CRA</a> and <a href="/private-mileage-tracker">a private mileage tracker</a>.</p>
+      </article>
+    </main>
+
+    <footer>
+      <p>Owned and operated by 2795748 Alberta Ltd.</p>
+      <p>© 2026 Shawn Kowalchuk. All rights reserved.</p>
+      <p><a href="/">Home</a> · <a href="/privacy">Privacy</a> · <a href="mailto:support@dually.top?subject=Dually%20Trip%20Tracker%20support">Support</a> · <a href="https://github.com/shawnkowalchuk/Dually">Source on GitHub</a> · The typefaces are <a href="/fonts/Archivo-OFL.txt">Archivo</a> and <a href="/fonts/IBMPlexMono-OFL.txt">IBM Plex Mono</a>, each under the SIL Open Font License 1.1.</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -18,6 +18,18 @@
       {
         "source": "/changes",
         "destination": "/changes.html"
+      },
+      {
+        "source": "/bluetooth-mileage-tracking",
+        "destination": "/bluetooth-mileage-tracking.html"
+      },
+      {
+        "source": "/canada-mileage-logbook",
+        "destination": "/canada-mileage-logbook.html"
+      },
+      {
+        "source": "/private-mileage-tracker",
+        "destination": "/private-mileage-tracker.html"
       }
     ],
     "headers": [
