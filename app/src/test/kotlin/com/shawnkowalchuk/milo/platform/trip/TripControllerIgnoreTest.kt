@@ -61,7 +61,7 @@ class TripControllerIgnoreTest {
             assertEquals(TripCategory.PERSONAL, trip.category)
             // Everything a kept trip has, so that it can be counted after all.
             val fixes = driveNorth(fixCount = 11, metresPerFix = 100.0)
-            assertEquals(1_000.0, trip.distanceMetres, 1.0)
+            assertEquals(asStored(1_000.0), trip.distanceMetres, 1.0)
             assertEquals(fixes.last().wallClockMs, trip.endedAtMs)
             assertEquals(fixes.first().latitude, trip.startLatitude)
             assertEquals(fixes.last().latitude, trip.endLatitude)
@@ -134,12 +134,12 @@ class TripControllerIgnoreTest {
         assertTrue(service.recording)
         assertEquals(1, service.tripStartsAnnounced)
         assertEquals(11, world.points.rows.count { it.tripId == open.id })
-        assertEquals(1_000.0, controller.activity.value.trip?.distanceMetres ?: 0.0, 1.0)
+        assertEquals(asStored(1_000.0), controller.activity.value.trip?.distanceMetres ?: 0.0, 1.0)
         // Only when it ends is it put away, and then with everything that was recorded.
         val ended = end(controller)
         assertEquals(TripStatus.DISCARDED, ended.status)
         assertTrue(ended.ignoredOutsideSchedule)
-        assertEquals(1_000.0, ended.distanceMetres, 1.0)
+        assertEquals(asStored(1_000.0), ended.distanceMetres, 1.0)
     }
 
     // ---- Without settings -------------------------------------------------------------------------
@@ -154,7 +154,7 @@ class TripControllerIgnoreTest {
             val trip = end(controller, inWorld = damaged)
 
             assertEquals(TripStatus.FINISHED, trip.status)
-            assertEquals(1_000.0, trip.distanceMetres, 1.0)
+            assertEquals(asStored(1_000.0), trip.distanceMetres, 1.0)
             // Not sorted by hours that are not Shawn's. The catch-up sorts it later.
             assertNull(trip.category)
             assertFalse(trip.ignoredOutsideSchedule)

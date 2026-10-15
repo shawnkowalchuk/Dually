@@ -132,7 +132,7 @@ class TripControllerTest {
         val tripId = world.openTrips.single().id
         assertEquals(11, world.points.rows.size)
         assertTrue(world.points.rows.all { it.tripId == tripId })
-        assertEquals(1_000.0, controller.activity.value.trip?.distanceMetres ?: 0.0, 1.0)
+        assertEquals(asStored(1_000.0), controller.activity.value.trip?.distanceMetres ?: 0.0, 1.0)
     }
 
     @Test
@@ -146,7 +146,7 @@ class TripControllerTest {
         val trip = world.trips.rows.single()
         val fixes = driveNorth(fixCount = 11, metresPerFix = 100.0)
         assertEquals(TripStatus.FINISHED, trip.status)
-        assertEquals(1_000.0, trip.distanceMetres, 1.0)
+        assertEquals(asStored(1_000.0), trip.distanceMetres, 1.0)
         assertEquals(fixes.last().wallClockMs, trip.endedAtMs)
         assertEquals(fixes.first().latitude, trip.startLatitude)
         assertEquals(fixes.last().latitude, trip.endLatitude)
@@ -165,7 +165,7 @@ class TripControllerTest {
 
         val trip = world.trips.rows.single()
         assertEquals(TripStatus.DISCARDED, trip.status)
-        assertEquals(200.0, trip.distanceMetres, 1.0)
+        assertEquals(asStored(200.0), trip.distanceMetres, 1.0)
         assertTrue(world.logged(EventCategory.TRIP).last().contains("under the minimum of 300 m"))
     }
 

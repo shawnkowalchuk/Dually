@@ -66,7 +66,7 @@ class TripControllerRestartTest {
         // The same trip, with the distance worked out again from its stored fixes. No second
         // row, and no second trip-start sound.
         assertEquals(1, world.trips.rows.size)
-        assertEquals(1_000.0, controller.activity.value.trip?.distanceMetres ?: 0.0, 1.0)
+        assertEquals(asStored(1_000.0), controller.activity.value.trip?.distanceMetres ?: 0.0, 1.0)
         assertTrue(service.recording)
         assertEquals(0, service.tripStartsAnnounced)
     }
@@ -100,7 +100,7 @@ class TripControllerRestartTest {
             val trip = world.trips.rows.single()
             assertEquals(TripStatus.FINISHED, trip.status)
             assertEquals(lastFixAtMs, trip.endedAtMs)
-            assertEquals(1_000.0, trip.distanceMetres, 1.0)
+            assertEquals(asStored(1_000.0), trip.distanceMetres, 1.0)
             assertEquals(emptyList<StartRequest>(), service.startRequests)
         }
 
@@ -235,12 +235,12 @@ class TripControllerRestartTest {
         // are stored, and the screen still shows it with the distance its stored fixes give.
         assertEquals(1, world.logged(EventCategory.ERROR).size)
         assertTrue(service.recording)
-        assertEquals(400.0, controller.activity.value.trip?.distanceMetres ?: 0.0, 1.0)
+        assertEquals(asStored(400.0), controller.activity.value.trip?.distanceMetres ?: 0.0, 1.0)
 
         controller.onFix(fixAt(northMetres = 600.0, second = 30).asFix())
         runCurrent()
         assertEquals(6, world.points.rows.size)
-        assertEquals(600.0, controller.activity.value.trip?.distanceMetres ?: 0.0, 1.0)
+        assertEquals(asStored(600.0), controller.activity.value.trip?.distanceMetres ?: 0.0, 1.0)
     }
 
     // ---- Many threads at once -----------------------------------------------------------------------

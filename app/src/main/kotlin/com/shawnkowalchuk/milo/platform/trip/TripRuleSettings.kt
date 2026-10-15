@@ -2,6 +2,7 @@ package com.shawnkowalchuk.milo.platform.trip
 
 import com.shawnkowalchuk.milo.core.schedule.FilingRules
 import com.shawnkowalchuk.milo.core.trip.TripRules
+import com.shawnkowalchuk.milo.core.trip.distanceFactor as factorFor
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.settings.DEFAULT_MINIMUM_TRIP_DISTANCE_METRES
@@ -38,6 +39,14 @@ internal class TripRuleSettings(
         private set
 
     /**
+     * What a trip's measured distance is multiplied by, where it is stored and shown: the
+     * distance adjustment (`core/trip/DistanceAdjustment.kt`). The trip rules never see it.
+     */
+    @Volatile
+    var distanceFactor = factorFor(0)
+        private set
+
+    /**
      * What a closing trip is sorted by, or null while the settings cannot be read. There is no
      * default to fall back on here: a trip sorted by hours that are not Shawn's would be wrong
      * for good, while one left unsorted is sorted by the catch-up once the settings can be read.
@@ -48,8 +57,8 @@ internal class TripRuleSettings(
     private var failureLogged = false
 
     /**
-     * Reads the settings and brings [rules], [minimumTripDistanceMetres] and [filingRules] up
-     * to date.
+     * Reads the settings and brings [rules], [minimumTripDistanceMetres], [distanceFactor] and
+     * [filingRules] up to date.
      */
     suspend fun read(): MiloSettings {
         val now =
@@ -73,6 +82,7 @@ internal class TripRuleSettings(
             }
         rules = rulesFor(now)
         minimumTripDistanceMetres = now.minimumTripDistanceMetres
+        distanceFactor = factorFor(now.distanceAdjustSteps)
         return now
     }
 

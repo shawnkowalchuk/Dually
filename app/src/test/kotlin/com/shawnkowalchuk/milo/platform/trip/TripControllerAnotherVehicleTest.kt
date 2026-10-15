@@ -110,6 +110,6 @@ class TripControllerAnotherVehicleTest {
         // 600 m, over the minimum: a trip like any other.
         val trip = world.trips.rows.single()
         assertEquals(TripStatus.FINISHED, trip.status)
-        assertEquals(600.0, trip.distanceMetres, 1.0)
+        assertEquals(asStored(600.0), trip.distanceMetres, 1.0)
     }
 }

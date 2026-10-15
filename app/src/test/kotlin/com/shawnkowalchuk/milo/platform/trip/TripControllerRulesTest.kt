@@ -57,7 +57,7 @@ class TripControllerRulesTest {
         // Discarded although it is over the minimum distance: it was never a trip.
         val trip = world.trips.rows.single()
         assertEquals(TripStatus.DISCARDED, trip.status)
-        assertEquals(400.0, trip.distanceMetres, 1.0)
+        assertEquals(asStored(400.0), trip.distanceMetres, 1.0)
         assertTrue(world.logged(EventCategory.TRIP).last().contains("discarded as a false start"))
         // The service stops; the trip never waited out a grace period, and never made a sound.
         assertEquals(1, service.stops)
@@ -178,7 +178,7 @@ class TripControllerRulesTest {
             assertEquals(TripStatus.FINISHED, trip.status)
             // Closed where it last moved, with nothing of the gap in it.
             assertEquals(lastMovedAtMs, trip.endedAtMs)
-            assertEquals(1_000.0, trip.distanceMetres, 1.0)
+            assertEquals(asStored(1_000.0), trip.distanceMetres, 1.0)
             assertTrue(world.logged(EventCategory.TRIP).last().contains("ended by NO_MOVEMENT"))
             assertEquals(1, service.stops)
             // The fix that closed it belongs to no trip.

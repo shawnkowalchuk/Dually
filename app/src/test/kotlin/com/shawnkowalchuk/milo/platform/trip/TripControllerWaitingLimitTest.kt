@@ -127,7 +127,7 @@ class TripControllerWaitingLimitTest {
             assertEquals(3, carried.size)
             assertEquals(first.endLatitude, carried.first().latitude)
             assertEquals(
-                450.0,
+                asStored(450.0),
                 checkNotNull(scene.controller.activity.value.trip).distanceMetres,
                 1.0,
             )

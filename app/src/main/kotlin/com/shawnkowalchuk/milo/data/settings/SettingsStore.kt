@@ -195,6 +195,7 @@ class SettingsStore(internal val dataStore: DataStore<Preferences>) {
             gracePeriodSeconds = preferences[GRACE_PERIOD_SECONDS] ?: defaults.gracePeriodSeconds,
             minimumTripDistanceMetres =
                 preferences[MINIMUM_TRIP_DISTANCE_METRES] ?: defaults.minimumTripDistanceMetres,
+            distanceAdjustSteps = preferences.readDistanceAdjustSteps(),
             parkedLimitSeconds = preferences.readParkedLimitSeconds(),
             parkedTruck = preferences.readParkedTruck(),
             drivenOffTripId = preferences.readDrivenOffTripId(),

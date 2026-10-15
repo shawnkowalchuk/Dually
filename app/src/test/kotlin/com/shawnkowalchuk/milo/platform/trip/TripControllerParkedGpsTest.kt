@@ -134,7 +134,7 @@ class TripControllerParkedGpsTest {
         val carried = world.points.rows.drop(pointsBefore)
         assertEquals(first.endLatitude, carried.first().latitude)
         val current = checkNotNull(scene.controller.activity.value.trip)
-        assertEquals(900.0, current.distanceMetres, 1.0)
+        assertEquals(asStored(900.0), current.distanceMetres, 1.0)
         assertTrue(scene.service.recording)
     }
 

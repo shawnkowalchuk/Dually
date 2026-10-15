@@ -1796,6 +1796,20 @@ Shawn's request of 2026-10-14: "giving the person the option to perge them after
 | GP-7 | Settings, GPS points, **Delete points of sent months**. | A question with the size, the number of trips and "To keep a copy first, use Export." "Keep them" does nothing. "Delete" deletes them, says how much, and the tile then says none are from a sent month. | not run |
 | GP-8 | With a trip being recorded, do GP-7 for a month that holds no trip in progress. | The trip goes on recording; its fixes keep arriving (the Log's LOCATION lines), and its km on Home keep counting. | not run |
 
+## The distance adjustment (2026-10-14, ADR-011)
+
+Every new trip's distance is 2 % over the measured one, which no screen says, plus Settings' "Distance adjustment" (−5 % to +5 %, 0 out of the box). **Unit tests only;** nothing has run on Android.
+
+**Install this build over the one on the phone,** never after an uninstall: an uninstall deletes the trips. Offer Export first.
+
+| # | Do this | Expect | Result |
+|---|---|---|---|
+| DA-1 | Settings, the Trips tile. | Under "Shortest trip that counts", "Distance adjustment" with "0 %" between − and +. "About these settings" explains it. | not run |
+| DA-2 | Press + three times, then − once; leave Settings and come back. | "+0.5 %", "+1 %", "+1.5 %", then "+1 %", kept. At +5 % the + is greyed out, at −5 % the −. | not run |
+| DA-3 | With Settings at 0 %, drive a trip you know the odometer's figure for. | Its km on Home while driving and on Trips afterwards are about 2 % over the trip's Log line ("finished, … m"). Compare with the odometer. | not run |
+| DA-4 | During a trip, move the adjustment. | Home's running km jump by that share at once; the trip is stored with the new setting. Trips that had ended before keep their km. | not run |
+| DA-5 | Android Auto, during a trip. | The same running km as Home. | not run |
+
 ## Later work packages
 
 Nothing waiting. A work package that adds behaviour only the phone can prove adds its checks above.

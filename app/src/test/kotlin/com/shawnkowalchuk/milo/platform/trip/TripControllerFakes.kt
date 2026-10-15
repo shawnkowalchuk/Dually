@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import com.shawnkowalchuk.milo.core.trip.ParkedGps
 import com.shawnkowalchuk.milo.core.trip.TrackPoint
 import com.shawnkowalchuk.milo.core.trip.TripStatus
+import com.shawnkowalchuk.milo.core.trip.distanceFactor
 import com.shawnkowalchuk.milo.core.trip.driveNorth
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogDao
@@ -358,3 +359,9 @@ fun TestScope.drive(
     world.nowMs = fixes.last().wallClockMs
     runCurrent()
 }
+
+/**
+ * A measured distance as a trip stores and shows it: with the distance adjustment that is built
+ * in, and Settings' at 0 (`core/trip/DistanceAdjustment.kt`).
+ */
+fun asStored(measuredMetres: Double): Double = measuredMetres * distanceFactor(0)

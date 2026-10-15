@@ -129,7 +129,7 @@ class TripControllerWaitingEdgesTest {
 
             val second = world.trips.rows.last()
             assertEquals(TripStatus.FINISHED, second.status)
-            assertEquals(450.0, second.distanceMetres, 1.0)
+            assertEquals(asStored(450.0), second.distanceMetres, 1.0)
             assertEquals(lastMoved, second.endedAtMs)
         }
 
@@ -158,7 +158,7 @@ class TripControllerWaitingEdgesTest {
         assertEquals(place.latitude, carried.first().latitude, 0.0)
         // So that first stretch is counted: 799 m from the parked place, not 450 m.
         val current = checkNotNull(scene.controller.activity.value.trip)
-        assertEquals(799.0, current.distanceMetres, 1.0)
+        assertEquals(asStored(799.0), current.distanceMetres, 1.0)
     }
 
     @Test
@@ -187,7 +187,7 @@ class TripControllerWaitingEdgesTest {
         assertEquals(3, carried.size)
         assertEquals(world.trips.rows.first().endLatitude, carried.first().latitude)
         val current = checkNotNull(scene.controller.activity.value.trip)
-        assertEquals(650.0, current.distanceMetres, 1.0)
+        assertEquals(asStored(650.0), current.distanceMetres, 1.0)
     }
 
     @Test
@@ -220,7 +220,7 @@ class TripControllerWaitingEdgesTest {
         assertEquals(2, carried.size)
         assertEquals(first.endLatitude, carried.first().latitude)
         val current = checkNotNull(scene.controller.activity.value.trip)
-        assertEquals(7_500.0, current.distanceMetres, 1.0)
+        assertEquals(asStored(7_500.0), current.distanceMetres, 1.0)
         assertTrue(scene.service.recording)
         assertFalse(scene.service.watchingParked)
         assertEquals(scene.timeOf(drivesOff + 300) + PARKED_LIMIT_MS, scene.service.checkAtMs)

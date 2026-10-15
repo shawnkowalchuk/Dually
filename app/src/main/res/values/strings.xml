@@ -776,6 +776,12 @@
     <string name="settings_minimum_detail">A shorter trip is discarded, such as moving the truck around the yard. A discarded trip can still be counted on the Trips screen.</string>
     <string name="settings_minimum_less">Count shorter trips</string>
     <string name="settings_minimum_more">Count only longer trips</string>
+    <!-- Settings' distance adjustment (2026-10-14). The argument is the percentage as shown: "0", "+1.5", "-2". -->
+    <string name="settings_adjust_label">Distance adjustment</string>
+    <string name="settings_adjust_value">%1$s %%</string>
+    <string name="settings_adjust_less">Lower trip distances by half a percent</string>
+    <string name="settings_adjust_more">Raise trip distances by half a percent</string>
+    <string name="settings_adjust_detail">If Dually\'s trips come out shorter or longer than your odometer, adjust them here, half a percent at a time. It applies to the trip being recorded and every trip after it. Trips that have ended keep their distance.</string>
     <!-- Settings: the driving alert. -->
     <string name="settings_driving_title">Driving alert</string>
     <string name="settings_driving_enabled">Tell me when I drive without a trip</string>

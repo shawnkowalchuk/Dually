@@ -55,6 +55,9 @@ enum class ConfirmedStep(val key: String) {
  * given the first one (`data/trip/TripVehicleCatchUp`). Not a setting.
  * @param gracePeriodSeconds how long a trip waits after the truck disconnects.
  * @param minimumTripDistanceMetres trips shorter than this are discarded.
+ * @param distanceAdjustSteps Settings' distance adjustment, in half-percent steps from -10 to
+ * +10: what every new trip's distance is raised or lowered by (since 2026-10-14; kept in
+ * `DistanceAdjustStorage.kt`).
  * @param parkedLimitSeconds how long a trip may go without real movement before it is closed
  * where it last moved, even with the truck still connected.
  * @param parkedTruck set while MilO is waiting beside the parked truck for it to move, with no
@@ -153,6 +156,7 @@ data class MiloSettings(
     val tripVehiclesFilled: Boolean = false,
     val gracePeriodSeconds: Int = DEFAULT_GRACE_PERIOD_SECONDS,
     val minimumTripDistanceMetres: Int = DEFAULT_MINIMUM_TRIP_DISTANCE_METRES,
+    val distanceAdjustSteps: Int = 0,
     val parkedLimitSeconds: Int = DEFAULT_PARKED_LIMIT_SECONDS,
     val parkedTruck: ParkedTruck? = null,
     val drivenOffTripId: Long? = null,

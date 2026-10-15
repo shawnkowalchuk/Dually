@@ -15,6 +15,7 @@ import com.shawnkowalchuk.milo.feature.tripedit.formProblems
 import com.shawnkowalchuk.milo.platform.trip.FakeWorld
 import com.shawnkowalchuk.milo.platform.trip.PARKED_LIMIT_MS
 import com.shawnkowalchuk.milo.platform.trip.TripTrigger
+import com.shawnkowalchuk.milo.platform.trip.asStored
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -74,7 +75,7 @@ class ClockJumpDrivingTest {
         assertEquals(TripStatus.FINISHED, trip.status)
         assertEquals(scene.realTimeOf(0), trip.startedAtMs)
         assertEquals(scene.realTimeOf(600), trip.endedAtMs)
-        assertEquals(end, trip.distanceMetres, 1.0)
+        assertEquals(asStored(end), trip.distanceMetres, 1.0)
         assertEquals(TripCategory.BUSINESS, trip.category)
         assertEquals(scene.realTimeOf(1_200), world.settings.current().parkedTruck?.sinceMs)
         // The connect sound at the start, and the trip-start sound when the truck drove off.
@@ -104,7 +105,7 @@ class ClockJumpDrivingTest {
         assertEquals(TripStatus.FINISHED, trip.status)
         assertEquals(scene.realTimeOf(0), trip.startedAtMs)
         assertEquals(scene.realTimeOf(600), trip.endedAtMs)
-        assertEquals(end, trip.distanceMetres, 1.0)
+        assertEquals(asStored(end), trip.distanceMetres, 1.0)
         assertEquals(TripCategory.BUSINESS, trip.category)
         assertEquals(scene.realTimeOf(1_200), world.settings.current().parkedTruck?.sinceMs)
         assertEquals(emptyList<FormProblem>(), scene.editProblems(trip))
@@ -138,7 +139,7 @@ class ClockJumpDrivingTest {
             val trip = world.trips.rows.single()
             assertEquals(TripStatus.FINISHED, trip.status)
             assertEquals(scene.realTimeOf(0), trip.startedAtMs)
-            assertEquals(end, trip.distanceMetres, 1.0)
+            assertEquals(asStored(end), trip.distanceMetres, 1.0)
             assertTrue(checkNotNull(trip.endedAtMs) in scene.realTimeOf(600)..scene.realTimeOf(610))
         }
 
@@ -172,7 +173,7 @@ class ClockJumpDrivingTest {
         val trip = world.trips.rows.single()
         assertEquals(TripStatus.FINISHED, trip.status)
         assertEquals(scene.realTimeOf(STOPPED_AT), trip.endedAtMs)
-        assertEquals(DRIVEN_METRES, trip.distanceMetres, 1.0)
+        assertEquals(asStored(DRIVEN_METRES), trip.distanceMetres, 1.0)
         assertEquals(TripCategory.BUSINESS, trip.category)
         val line = world.logged(EventCategory.TRIP).first { it.startsWith("Trip 1: finished") }
         assertTrue(line, line.contains("then stood still for 10 min"))
@@ -248,7 +249,7 @@ class ClockJumpDrivingTest {
             val first = world.trips.rows.single()
             assertEquals(TripStatus.FINISHED, first.status)
             assertEquals(scene.realTimeOf(115), first.endedAtMs)
-            assertEquals(DRIVEN_METRES, first.distanceMetres, 1.0)
+            assertEquals(asStored(DRIVEN_METRES), first.distanceMetres, 1.0)
             assertTrue(scene.service.watchingParked)
 
             // Two hours later the next drive is a trip of its own.
@@ -279,7 +280,7 @@ class ClockJumpDrivingTest {
             assertEquals(scene.realTimeOf(0), trip.startedAtMs)
             assertTrue("the trip ends after it starts", ended > trip.startedAtMs)
             assertTrue(ended <= scene.realTimeOf(110))
-            assertEquals(end, trip.distanceMetres, 1.0)
+            assertEquals(asStored(end), trip.distanceMetres, 1.0)
             assertEquals(TripCategory.BUSINESS, trip.category)
         }
 
@@ -310,7 +311,7 @@ class ClockJumpDrivingTest {
             val trip = world.trips.rows.single()
             assertEquals(TripStatus.FINISHED, trip.status)
             assertEquals(scene.realTimeOf(720), trip.endedAtMs)
-            assertEquals(end, trip.distanceMetres, 1.0)
+            assertEquals(asStored(end), trip.distanceMetres, 1.0)
             assertFalse(scene.service.watchingParked)
             assertNull(world.settings.current().parkedTruck)
         }

@@ -845,7 +845,7 @@ Version 1 was phase 1 as first installed on the phone. Version 2 (2026-10-05) ad
 | `truckSeen` | integer 0/1 | Whether the truck was seen connected, by something that can be trusted, at any point during the trip. A manual trip the truck never joined ends by different rules. A `TRUCK` trip with 0 here was opened by the companion callback alone and is still waiting to be confirmed |
 | `graceStartedAtMs` | integer, null | When the truck was found gone. Null while something holds the trip open |
 | `graceDeadlineMs` | integer, null | When the grace period runs out. Set and cleared together with the column above |
-| `distanceMetres` | real | Written when the trip closes; 0 while open. Or the distance Shawn typed |
+| `distanceMetres` | real | Written when the trip closes; 0 while open. Since 2026-10-14 the measured distance times the distance adjustment in force then (ADR-011), not the measured distance itself. Or the distance Shawn typed |
 | `startLatitude`, `startLongitude`, `endLatitude`, `endLongitude` | real, null | Written when the trip closes; null if no usable GPS fix was recorded, and always null on a trip added by hand. Never changed by an edit: they stay where the truck was |
 | `startAddress` | text, null | Since version 2. Where the trip started, as one line such as "12 Shop Rd, Edmonton". Null until the geocoder has been asked and has found one. Written only for a `FINISHED` trip. The address lookup never replaces one that is set; Shawn can, on the edit screen (`startAddressByHand`) |
 | `endAddress` | text, null | Since version 2. Where it ended, on the same terms |

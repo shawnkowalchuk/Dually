@@ -35,7 +35,7 @@ class TripControllerParkedTest {
         assertEquals(TripStatus.FINISHED, trip.status)
         // Where and when it last moved, not ten minutes later.
         assertEquals(scene.timeOf(STOPPED_AT_SECOND), trip.endedAtMs)
-        assertEquals(DRIVEN_METRES, trip.distanceMetres, 1.0)
+        assertEquals(asStored(DRIVEN_METRES), trip.distanceMetres, 1.0)
         val stoppedAt = fixAt(northMetres = DRIVEN_METRES, second = STOPPED_AT_SECOND)
         assertEquals(stoppedAt.latitude, trip.endLatitude)
         assertEquals(stoppedAt.longitude, trip.endLongitude)
@@ -123,7 +123,7 @@ class TripControllerParkedTest {
 
         val trip = world.trips.rows.single()
         assertEquals(scene.timeOf(STOPPED_AT_SECOND), trip.endedAtMs)
-        assertEquals(DRIVEN_METRES, trip.distanceMetres, 1.0)
+        assertEquals(asStored(DRIVEN_METRES), trip.distanceMetres, 1.0)
     }
 
     @Test

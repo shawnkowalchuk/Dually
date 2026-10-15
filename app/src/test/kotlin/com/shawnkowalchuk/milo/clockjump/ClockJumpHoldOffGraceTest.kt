@@ -5,6 +5,7 @@ import com.shawnkowalchuk.milo.core.trip.TripStatus
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.platform.trip.FakeWorld
 import com.shawnkowalchuk.milo.platform.trip.TripTrigger
+import com.shawnkowalchuk.milo.platform.trip.asStored
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -135,7 +136,7 @@ class ClockJumpHoldOffGraceTest {
             val trip = world.trips.rows.single()
             assertEquals(TripStatus.FINISHED, trip.status)
             assertEquals(scene.realTimeOf(STOPPED_AT), trip.endedAtMs)
-            assertEquals(DRIVEN_METRES, trip.distanceMetres, 1.0)
+            assertEquals(asStored(DRIVEN_METRES), trip.distanceMetres, 1.0)
         }
 
     @Test
@@ -163,7 +164,7 @@ class ClockJumpHoldOffGraceTest {
         val trip = world.trips.rows.single()
         assertEquals(TripStatus.FINISHED, trip.status)
         assertTrue(checkNotNull(trip.endedAtMs) <= scene.realTimeOf(107))
-        assertEquals(DRIVEN_METRES, trip.distanceMetres, 5.0)
+        assertEquals(asStored(DRIVEN_METRES), trip.distanceMetres, 5.0)
     }
 
     @Test
