@@ -24,6 +24,11 @@
 
 ## Log
 
+### 2026-10-15
+
+**`[CHANGE]` The website's top line has a "Guides" menu**
+Shawn: "lets add a guides button the top and put all the seo in that button. please put it as a pull down menu". After Compare, on every page with the top line: the three guide pages drop down under "Guides". **No script:** the site's Content-Security-Policy allows none, so the menu is a `<details>` element styled in `styles.css` (`.menu`, `.menu-list`); it closes on a second tap on "Guides", not on a tap elsewhere, which a script would be needed for. Looked at in a browser at desktop and phone width; at 375 px the menu stands inside the screen. The footer's "Guides:" line on Home stays.
+
 ### 2026-10-14
 
 **`[CHANGE]` Setup: Battery Saver is recommended, not required; the battery row points to pairing first (version 0.3.2)**
