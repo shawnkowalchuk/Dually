@@ -5,6 +5,7 @@ import com.shawnkowalchuk.milo.core.designsystem.text.categoryWordsRes
 import com.shawnkowalchuk.milo.core.schedule.TripCategory
 import com.shawnkowalchuk.milo.data.report.MonthSubmission
 import com.shawnkowalchuk.milo.data.trip.ByHandMark
+import com.shawnkowalchuk.milo.data.trip.Tally
 import com.shawnkowalchuk.milo.data.trip.TripCorrection
 import java.time.LocalDate
 
@@ -143,6 +144,7 @@ internal fun TripCategory.markLabelRes(): Int = when (this) {
  * @param isToday the heading then starts with "Today".
  * @param sessionCount the day's counted trips, Business and Personal together.
  * @param businessTenths what its Business trips add up to, in tenths of a kilometre.
+ * @param personal its counted Personal trips and what they add up to.
  * @param notCounted how many deleted and discarded trips the day lists. They are only listed
  * on request, and a closed day would otherwise hide where they are.
  */
@@ -150,6 +152,7 @@ internal data class DayHeading(
     val isToday: Boolean,
     val sessionCount: Int,
     val businessTenths: Long,
+    val personal: Tally,
     val notCounted: Int,
 )
 
@@ -158,6 +161,7 @@ internal fun TripDay.heading(today: LocalDate): DayHeading = DayHeading(
     isToday = date == today,
     sessionCount = sessionCount,
     businessTenths = businessTenths,
+    personal = personal,
     notCounted = trips.count { it.kind != TripKind.COUNTED },
 )
 

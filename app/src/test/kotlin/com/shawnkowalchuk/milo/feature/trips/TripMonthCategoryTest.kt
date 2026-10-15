@@ -118,6 +118,19 @@ class TripMonthCategoryTest {
         assertEquals(LocalDate.of(2026, 10, 10), saturday.date)
         assertEquals(1, saturday.sessionCount)
         assertEquals(0, saturday.businessTenths)
+        // And since 2026-10-14 its Personal trips and their distance.
+        assertEquals(Tally(count = 1, tenths = 50), monday.personal)
+        assertEquals(Tally(count = 1, tenths = 400), saturday.personal)
+    }
+
+    @Test
+    fun `a day with no Personal trip has none to show`() {
+        val day = summary(listOf(trip("2026-10-05T14:00:00Z", 12_300.0, TripCategory.BUSINESS)))
+            .days
+            .single()
+
+        assertEquals(Tally(count = 0, tenths = 0), day.personal)
+        assertEquals(0, day.heading(LocalDate.of(2026, 10, 14)).personal.count)
     }
 
     @Test

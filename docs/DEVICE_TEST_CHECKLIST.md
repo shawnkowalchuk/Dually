@@ -1796,6 +1796,13 @@ Shawn's request of 2026-10-14: "giving the person the option to perge them after
 | GP-7 | Settings, GPS points, **Delete points of sent months**. | A question with the size, the number of trips and "To keep a copy first, use Export." "Keep them" does nothing. "Delete" deletes them, says how much, and the tile then says none are from a sent month. | not run |
 | GP-8 | With a trip being recorded, do GP-7 for a month that holds no trip in progress. | The trip goes on recording; its fixes keep arriving (the Log's LOCATION lines), and its km on Home keep counting. | not run |
 
+## Personal kilometres on the Trips screen's days (2026-10-14)
+
+Unit tests only.
+
+| # | Do this | Expect | Result |
+|---|---|---|---|
+| TP-1 | Trips, a day with a Business and a Personal trip, closed. | "2 trips · (Business) km business · (Personal) km personal". A day with no Personal trip has no "personal" part. The two figures add up to the day's rows. | not run |
 ## The distance adjustment (2026-10-14, ADR-011)
 
 Every new trip's distance is 2 % over the measured one, which no screen says, plus Settings' "Distance adjustment" (−5 % to +5 %, 0 out of the box). **Unit tests only;** nothing has run on Android.
