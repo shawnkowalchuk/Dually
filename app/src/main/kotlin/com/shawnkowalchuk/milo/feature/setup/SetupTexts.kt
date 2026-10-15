@@ -44,6 +44,7 @@ internal fun SetupRow.detailRes(): Int = when (detail) {
     SetupDetail.PRECISE_LOCATION_FIRST -> R.string.setup_detail_precise_location_first
     SetupDetail.BATTERY_RESTRICTED -> R.string.setup_detail_battery_restricted
     SetupDetail.BATTERY_RESTRICTED_HYPEROS -> R.string.setup_detail_battery_restricted_hyperos
+    SetupDetail.BATTERY_AFTER_PAIRING -> R.string.setup_detail_battery_after_pairing
     SetupDetail.TRUCK_NOT_PAIRED -> R.string.setup_detail_truck_not_paired
     SetupDetail.TRUCK_ASSOCIATION_MISSING -> R.string.setup_detail_truck_association_missing
     SetupDetail.TRUCK_NOT_WATCHED -> R.string.setup_detail_truck_not_watched

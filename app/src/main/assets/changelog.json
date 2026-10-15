@@ -6,6 +6,11 @@
       "changes": [
         {
           "kind": "improved",
+          "title": "Battery Saver is up to you",
+          "body": "Setup no longer asks you to keep the phone's Battery Saver off. While it is on, Home says what it can cost: Android may limit GPS and background work, so a trip may be missed or cut short. And before your truck is paired, Setup no longer sends you to Android's battery list: pairing the truck usually takes care of that by itself."
+        },
+        {
+          "kind": "improved",
           "title": "A shorter Settings screen",
           "body": "Most Settings tiles now fold away under their title and a line that says how they are set, such as \"Work schedule: 5 days, 42.5 h a week\". Press a tile to open it, and again to close it. Setup, the truck and the odometer stay open. A tile that is missing something, such as the name for the report, starts open so you can see what to fill in."
         },

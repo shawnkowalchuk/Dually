@@ -17,6 +17,7 @@ class SetupAttentionTest {
         assertEquals(
             setOf(
                 SetupItem.UNUSED_APP_PAUSE,
+                SetupItem.BATTERY_SAVER_OFF,
                 SetupItem.PHYSICAL_ACTIVITY,
                 SetupItem.XIAOMI_OTHER_PERMISSIONS,
             ),
@@ -50,7 +51,6 @@ class SetupAttentionTest {
                 SetupItem.LOCATION_SERVICES to
                     allGood.copy(preflight = preflightGood.copy(locationSwitchedOn = false)),
                 SetupItem.BATTERY_EXEMPTION to allGood.copy(ignoringBatteryOptimizations = false),
-                SetupItem.BATTERY_SAVER_OFF to allGood.copy(batterySaverOn = true),
             )
 
         for ((item, facts) in broken) {
@@ -59,6 +59,15 @@ class SetupAttentionTest {
             assertEquals("$item", SetupState.PROBLEM, rows.row(item).state)
             assertTrue("$item", needsAttention(rows))
         }
+    }
+
+    @Test
+    fun `Battery Saver on is said on the checklist and raises no warning on Home`() {
+        // A phone-wide setting is the user's to choose (2026-10-14); Home says what it costs.
+        val rows = rows(allGood.copy(batterySaverOn = true))
+
+        assertEquals(SetupState.PROBLEM, rows.row(SetupItem.BATTERY_SAVER_OFF).state)
+        assertFalse(needsAttention(rows))
     }
 
     @Test

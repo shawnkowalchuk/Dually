@@ -43,7 +43,7 @@ fun setupRows(
     add(nearbyDevicesRow(facts.preflight))
     add(locationServicesRow(facts.preflight))
     add(truckRow(pairing, truckName))
-    add(batteryExemptionRow(facts))
+    add(batteryExemptionRow(facts, pairing))
     add(unusedAppPauseRow(facts))
     add(batterySaverRow(facts))
     add(physicalActivityRow(facts, drivingAlertEnabled))
@@ -176,7 +176,7 @@ private fun truckRow(pairing: PairingState?, truckName: String?): SetupRow {
  * On a Xiaomi phone that page is HyperOS's "App info", where the setting has another name, so
  * the row says which words to look for there.
  */
-private fun batteryExemptionRow(facts: SetupFacts): SetupRow = when {
+private fun batteryExemptionRow(facts: SetupFacts, pairing: PairingState?): SetupRow = when {
     facts.preflight.backgroundRestricted ->
         SetupRow(
             SetupItem.BATTERY_EXEMPTION,
@@ -187,6 +187,16 @@ private fun batteryExemptionRow(facts: SetupFacts): SetupRow = when {
                 SetupDetail.BATTERY_RESTRICTED
             },
             SetupFix.Open(SystemScreen.APP_DETAILS),
+        )
+
+    // Pairing the truck lifts the optimisation by itself (since 2026-10-14): until a truck is
+    // paired the row points there, and sends nobody into Android's list of every app.
+    !facts.ignoringBatteryOptimizations && pairing != PairingState.ARMED ->
+        SetupRow(
+            SetupItem.BATTERY_EXEMPTION,
+            SetupState.PROBLEM,
+            SetupDetail.BATTERY_AFTER_PAIRING,
+            SetupFix.OpenPairing,
         )
 
     else ->

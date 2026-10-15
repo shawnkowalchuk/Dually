@@ -23,7 +23,13 @@ enum class SetupItem(val required: Boolean, val xiaomiOnly: Boolean = false) {
 
     /** Recommended: the pause only begins after months in which MilO is never opened. */
     UNUSED_APP_PAUSE(required = false),
-    BATTERY_SAVER_OFF(required = true),
+
+    /**
+     * Recommended since 2026-10-14 (Shawn: "is it 100% necessary? ... i dont want to drain my
+     * battery and other users"): a phone-wide setting is the user's to choose. While it is on,
+     * Home says what it costs; it no longer raises the warning that a trip may not start.
+     */
+    BATTERY_SAVER_OFF(required = false),
 
     /**
      * Recommended: only the driving alert needs it, and the alert is a safety net that notifies.
@@ -51,6 +57,13 @@ enum class SetupDetail {
 
     /** "Allow all the time" cannot be asked for until precise location is allowed. */
     PRECISE_LOCATION_FIRST,
+
+    /**
+     * Not exempt from battery optimisation yet, and no truck is paired. Pairing the truck
+     * through Android's companion pairing puts Dually on Android's battery allow-list by itself
+     * (it asks for `REQUEST_COMPANION_RUN_IN_BACKGROUND`), so the row points to pairing first.
+     */
+    BATTERY_AFTER_PAIRING,
 
     /** Android's battery setting for MilO is "Restricted", which blocks the trip service. */
     BATTERY_RESTRICTED,

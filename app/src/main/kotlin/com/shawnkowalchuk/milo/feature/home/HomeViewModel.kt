@@ -10,6 +10,8 @@ import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.trip.TripRepository
 import com.shawnkowalchuk.milo.platform.reminder.monthToRemindOf
 import com.shawnkowalchuk.milo.platform.system.SetupChecklist
+import com.shawnkowalchuk.milo.platform.system.SetupItem
+import com.shawnkowalchuk.milo.platform.system.SetupState
 import com.shawnkowalchuk.milo.platform.system.needsAttention
 import com.shawnkowalchuk.milo.platform.trip.TripActivity
 import com.shawnkowalchuk.milo.platform.trip.TripController
@@ -98,6 +100,13 @@ class HomeViewModel(
     /** False until the phone has been read: no warning is better than one that flashes. */
     private val setupNeedsAttention: Flow<Boolean> =
         checklist.rows.map { rows -> rows != null && needsAttention(rows) }
+
+    /** Whether the phone-wide Battery Saver is on, as the checklist last read it. */
+    private val batterySaverOn: Flow<Boolean> =
+        checklist.rows.map { rows ->
+            rows?.any { it.item == SetupItem.BATTERY_SAVER_OFF && it.state != SetupState.OK } ==
+                true
+        }
 
     /**
      * The settings, or null while they have not been read or cannot be. The file is never reset
@@ -195,7 +204,7 @@ class HomeViewModel(
                 sources.unit,
                 ::HomeNow,
             ),
-            combine(figures, report, nowMs, odometers, ::HomeRead),
+            combine(figures, report, nowMs, odometers, batterySaverOn, ::HomeRead),
             ::homeUi,
         ).whileWatched(
             homeUi(

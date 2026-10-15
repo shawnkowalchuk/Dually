@@ -170,6 +170,24 @@ class SetupRulesTest {
     }
 
     @Test
+    fun `before a truck is paired, the battery row points to pairing, which lifts it`() {
+        // Android's companion pairing puts Dually on its battery allow-list by itself
+        // (2026-10-14): nobody is sent into the list of every app before that has happened.
+        val optimised = allGood.copy(ignoringBatteryOptimizations = false)
+
+        for (pairing in listOf(PairingState.NO_TRUCK, PairingState.ASSOCIATION_MISSING, null)) {
+            val row = rows(optimised, pairing = pairing).row(SetupItem.BATTERY_EXEMPTION)
+
+            assertEquals("$pairing", SetupState.PROBLEM, row.state)
+            assertEquals("$pairing", SetupDetail.BATTERY_AFTER_PAIRING, row.detail)
+            assertEquals("$pairing", SetupFix.OpenPairing, row.fix)
+        }
+        // Exempt already: in order, paired or not.
+        val exempt = rows(allGood, pairing = PairingState.NO_TRUCK).row(SetupItem.BATTERY_EXEMPTION)
+        assertEquals(SetupState.OK, exempt.state)
+    }
+
+    @Test
     fun `on a Xiaomi phone a Restricted battery setting is worded for HyperOS`() {
         val restricted =
             xiaomiGood.copy(preflight = preflightGood.copy(backgroundRestricted = true))
