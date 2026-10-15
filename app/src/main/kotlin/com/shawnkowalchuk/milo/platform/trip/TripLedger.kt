@@ -282,7 +282,8 @@ internal class TripLedger(
         val keptByTripRules = closed.status == TripStatus.FINISHED
         val filing =
             fileTrip(trip.startedAtMs, closed.endedAtMs, keptByTripRules, filingRules, zoneNow)
-        val changed = trips.closeTrip(trip.id, closed, filing)
+        // Stored adjusted (`core/trip/DistanceAdjustment.kt`); kept or discarded on the measured.
+        val changed = trips.closeTrip(trip.id, closed, filing, settingsNow.distanceFactor)
         open = null
         // Where the truck stands now. If the trip rules go on to wait beside it, in this same
         // step, this is the place the wait watches and the next trip starts from.

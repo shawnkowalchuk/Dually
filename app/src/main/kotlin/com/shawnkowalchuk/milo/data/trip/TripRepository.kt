@@ -121,22 +121,29 @@ class TripRepository(private val dao: TripDao) {
      * A trip that the trip rules kept and [filing] says to ignore is stored as discarded too,
      * with everything that was measured, and marked as ignored. Nothing is lost: it is listed
      * with the discarded trips and can be counted after all.
+     *
+     * @param distanceFactor what the measured distance is multiplied by as it is stored: the
+     * distance adjustment (`core/trip/DistanceAdjustment.kt`).
      */
-    suspend fun closeTrip(tripId: Long, closed: ClosedTrip, filing: TripFiling): Boolean =
-        dao.close(
-            tripId = tripId,
-            closedStatus = if (filing.ignored) TripStatus.DISCARDED else closed.status,
-            endedAtMs = closed.endedAtMs,
-            distanceMetres = closed.distance.metres,
-            startLatitude = closed.start?.latitude,
-            startLongitude = closed.start?.longitude,
-            endLatitude = closed.end?.latitude,
-            endLongitude = closed.end?.longitude,
-            category = filing.classification?.category,
-            ranPastSchedule = filing.classification?.ranPastSchedule == true,
-            ignoredOutsideSchedule = filing.ignored,
-            open = TripStatus.OPEN,
-        ) == 1
+    suspend fun closeTrip(
+        tripId: Long,
+        closed: ClosedTrip,
+        filing: TripFiling,
+        distanceFactor: Double,
+    ): Boolean = dao.close(
+        tripId = tripId,
+        closedStatus = if (filing.ignored) TripStatus.DISCARDED else closed.status,
+        endedAtMs = closed.endedAtMs,
+        distanceMetres = closed.distance.metres * distanceFactor,
+        startLatitude = closed.start?.latitude,
+        startLongitude = closed.start?.longitude,
+        endLatitude = closed.end?.latitude,
+        endLongitude = closed.end?.longitude,
+        category = filing.classification?.category,
+        ranPastSchedule = filing.classification?.ranPastSchedule == true,
+        ignoredOutsideSchedule = filing.ignored,
+        open = TripStatus.OPEN,
+    ) == 1
 
     /**
      * Removes a trip that is still open, for good: the one exception to "a row is never

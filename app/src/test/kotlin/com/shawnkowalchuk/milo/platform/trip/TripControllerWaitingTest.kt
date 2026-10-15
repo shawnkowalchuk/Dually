@@ -81,7 +81,7 @@ class TripControllerWaitingTest {
         assertEquals(first.endLongitude, carried.first().longitude)
         // So nothing of the drive is lost: 450 m from the parked place already.
         val current = checkNotNull(scene.controller.activity.value.trip)
-        assertEquals(450.0, current.distanceMetres, 1.0)
+        assertEquals(asStored(450.0), current.distanceMetres, 1.0)
         assertEquals(first.endLatitude, current.startLatitude)
         // The service records again, at the full rate, and the wait is no longer stored.
         assertTrue(scene.service.recording)
@@ -124,7 +124,7 @@ class TripControllerWaitingTest {
 
         val (first, second) = world.trips.rows
         assertEquals(TripStatus.FINISHED, second.status)
-        assertEquals(1_950.0, second.distanceMetres, 1.0)
+        assertEquals(asStored(1_950.0), second.distanceMetres, 1.0)
         // Where the first trip ended, the second begins: no gap between the two.
         assertEquals(first.endLatitude, second.startLatitude)
         assertEquals(first.endLongitude, second.startLongitude)
@@ -261,7 +261,7 @@ class TripControllerWaitingTest {
             runCurrent()
 
             val trip = checkNotNull(scene.controller.activity.value.trip)
-            assertEquals(150.0, trip.distanceMetres, 1.0)
+            assertEquals(asStored(150.0), trip.distanceMetres, 1.0)
             assertTrue(
                 world.logged(EventCategory.TRIP).any {
                     "started by MANUAL while Dually waited beside the parked truck" in it

@@ -376,6 +376,12 @@ internal class TripWorker(
 
     private fun publish() {
         mutableActivity.value =
-            tripActivityOf(ledger.open, known, startFailure, evidence.vehicleNow)
+            tripActivityOf(
+                ledger.open,
+                known,
+                startFailure,
+                evidence.vehicleNow,
+                ruleSettings.distanceFactor,
+            )
     }
 }

@@ -86,7 +86,7 @@ class TripControllerScheduleTest {
 
         assertEquals(TripStatus.FINISHED, trip.status)
         assertEquals(TripCategory.PERSONAL, trip.category)
-        assertEquals(1_000.0, trip.distanceMetres, 1.0)
+        assertEquals(asStored(1_000.0), trip.distanceMetres, 1.0)
         assertFalse(trip.ignoredOutsideSchedule)
         assertTrue(
             lastTripLine().endsWith(
@@ -176,7 +176,7 @@ class TripControllerScheduleTest {
             val fixes = driveNorth(fixCount = 14, metresPerFix = 100.0)
             assertEquals(14, world.points.rows.size)
             assertEquals(fixes.last().wallClockMs, trip.endedAtMs)
-            assertEquals(1_300.0, trip.distanceMetres, 1.0)
+            assertEquals(asStored(1_300.0), trip.distanceMetres, 1.0)
             assertTrue(lastTripLine().contains("; saved as Business, ran past schedule: "))
         }
 

@@ -6,6 +6,11 @@
       "changes": [
         {
           "kind": "new",
+          "title": "Adjust trip distances to match your odometer",
+          "body": "Settings has a Distance adjustment under Shortest trip that counts. If Dually's trips come out a little shorter or longer than your truck's odometer, raise or lower them half a percent at a time, up to 5 percent either way. It applies to the trip being recorded and every trip after it; trips that have ended keep their distance."
+        },
+        {
+          "kind": "new",
           "title": "Delete a sent month's GPS points",
           "body": "Every trip keeps its route as GPS points, and they add up to about 80 MB a year. Once a month's report is sent and the month has ended, the Report screen offers to delete that month's points, saying how much room they take. Every trip keeps its distance, times and addresses, and the report stays as it was; only the route goes. Press Keep and Dually does not ask about that month again. Settings has a new GPS points tile that shows how much room the points take, and deletes the points of every month whose report you sent. To keep a copy first, use Export."
         },

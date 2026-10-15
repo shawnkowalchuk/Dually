@@ -132,6 +132,7 @@ sealed interface SettingsUiState {
         val minimumDistanceMetres: Int,
         val canLowerMinimum: Boolean,
         val canRaiseMinimum: Boolean,
+        val distanceAdjustSteps: Int,
         val distanceUnit: DistanceUnit,
         val sounds: Map<TripSound, SoundChoice>,
         val schedule: List<ScheduleDay>,
@@ -178,6 +179,7 @@ fun settingsUiState(
     minimumDistanceMetres = settings.minimumTripDistanceMetres,
     canLowerMinimum = MINIMUM_TRIP_DISTANCE_CHOICE.canStepDown(settings.minimumTripDistanceMetres),
     canRaiseMinimum = MINIMUM_TRIP_DISTANCE_CHOICE.canStepUp(settings.minimumTripDistanceMetres),
+    distanceAdjustSteps = settings.distanceAdjustSteps,
     distanceUnit = settings.distanceUnit,
     sounds = TripSound.entries.associateWith { settings.sound(it) },
     schedule =

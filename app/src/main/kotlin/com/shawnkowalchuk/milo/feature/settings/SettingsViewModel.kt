@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.shawnkowalchuk.milo.core.schedule.WorkSchedule
 import com.shawnkowalchuk.milo.core.schedule.withEndOn
 import com.shawnkowalchuk.milo.core.schedule.withStartOn
+import com.shawnkowalchuk.milo.core.trip.MAX_ADJUST_STEPS
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
@@ -18,6 +19,7 @@ import com.shawnkowalchuk.milo.data.settings.SteppedChoice
 import com.shawnkowalchuk.milo.data.settings.TripSound
 import com.shawnkowalchuk.milo.data.settings.isEmailAddress
 import com.shawnkowalchuk.milo.data.settings.reportTextOrNull
+import com.shawnkowalchuk.milo.data.settings.setDistanceAdjustSteps
 import com.shawnkowalchuk.milo.data.settings.setDistanceUnit
 import com.shawnkowalchuk.milo.data.settings.setParkedLimitSeconds
 import com.shawnkowalchuk.milo.data.settings.setSoundEnabled
@@ -131,6 +133,15 @@ class SettingsViewModel(
     fun onMinimumDistanceStep(longer: Boolean) = change {
         val metres = MINIMUM_TRIP_DISTANCE_CHOICE.step(it.minimumTripDistanceMetres, longer)
         settings.setMinimumTripDistanceMetres(metres)
+    }
+
+    /**
+     * Settings' distance adjustment, half a percent up or down: the trip being recorded and
+     * every later one. A trip that has ended keeps its distance.
+     */
+    fun onDistanceAdjustStep(up: Boolean) = change {
+        val steps = it.distanceAdjustSteps + if (up) 1 else -1
+        settings.setDistanceAdjustSteps(steps.coerceIn(-MAX_ADJUST_STEPS, MAX_ADJUST_STEPS))
     }
 
     /** Kilometres or miles. Every surface follows the settings, so it shows at once. */

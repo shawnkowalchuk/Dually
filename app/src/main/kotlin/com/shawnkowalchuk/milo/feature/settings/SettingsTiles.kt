@@ -29,8 +29,12 @@ import com.shawnkowalchuk.milo.core.designsystem.component.TilePadding
 import com.shawnkowalchuk.milo.core.designsystem.component.TilePair
 import com.shawnkowalchuk.milo.core.designsystem.text.distanceRes
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
+import com.shawnkowalchuk.milo.core.trip.MAX_ADJUST_STEPS
+import com.shawnkowalchuk.milo.core.trip.shownAdjustPercent
 import com.shawnkowalchuk.milo.core.util.formatMinutes
 import com.shawnkowalchuk.milo.core.util.formatShortDistance
+import java.text.NumberFormat
+import java.util.Locale
 
 // The first tiles of the Settings screen, as the design draws them: the truck beside the
 // driving alert, and the three numbers of the trip rules. With them, the three small parts
@@ -142,6 +146,7 @@ internal fun TripRulesTile(state: SettingsUiState.Ready, actions: SettingsAction
     val grace = stringResource(R.string.settings_grace_label)
     val parked = stringResource(R.string.settings_parked_label)
     val minimum = stringResource(R.string.settings_minimum_label)
+    val adjust = stringResource(R.string.settings_adjust_label)
     Tile(
         modifier = Modifier.fillMaxWidth(),
         padding = TilePadding.EVEN,
@@ -214,6 +219,26 @@ internal fun TripRulesTile(state: SettingsUiState.Ready, actions: SettingsAction
                     enabled = state.canRaiseMinimum,
                 ),
         )
+        StepperRow(
+            label = adjust,
+            value =
+                stringResource(
+                    R.string.settings_adjust_value,
+                    formatAdjustPercent(state.distanceAdjustSteps, locale),
+                ),
+            decrease =
+                StepperButton(
+                    description = stringResource(R.string.settings_adjust_less),
+                    onClick = { actions.onDistanceAdjustStep(false) },
+                    enabled = state.distanceAdjustSteps > -MAX_ADJUST_STEPS,
+                ),
+            increase =
+                StepperButton(
+                    description = stringResource(R.string.settings_adjust_more),
+                    onClick = { actions.onDistanceAdjustStep(true) },
+                    enabled = state.distanceAdjustSteps < MAX_ADJUST_STEPS,
+                ),
+        )
         QuietExpander(
             label = stringResource(R.string.settings_about_trips),
             expanded = aboutOpen,
@@ -223,6 +248,7 @@ internal fun TripRulesTile(state: SettingsUiState.Ready, actions: SettingsAction
             NamedNote(grace, stringResource(R.string.settings_grace_detail))
             NamedNote(parked, stringResource(R.string.settings_parked_detail))
             NamedNote(minimum, stringResource(R.string.settings_minimum_detail))
+            NamedNote(adjust, stringResource(R.string.settings_adjust_detail))
         }
     }
 }
@@ -254,4 +280,14 @@ internal fun NamedNote(name: String, text: String) {
         Text(text = name, style = MaterialTheme.typography.labelMedium)
         Note(text)
     }
+}
+
+/**
+ * Settings' distance adjustment as it is shown: "0", "+1.5", "-2", with a decimal only where
+ * the step has one, in the phone's language. What is built in is never part of it.
+ */
+internal fun formatAdjustPercent(steps: Int, locale: Locale): String {
+    val format = NumberFormat.getNumberInstance(locale).apply { maximumFractionDigits = 1 }
+    val number = format.format(shownAdjustPercent(steps))
+    return if (steps > 0) "+$number" else number
 }

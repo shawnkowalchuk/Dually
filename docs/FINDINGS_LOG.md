@@ -26,6 +26,12 @@
 
 ### 2026-10-14
 
+**`[DECISION]` Trip distances carry a hidden +2 %, and Settings adjusts them ±5 % from 0 (ADR-011, version 0.3.2)**
+Shawn: "We need to have a way to adjust the mileage in the app. A 5% +/- slider. I think we should have a baseline adjust on the app at +2% on all trips", then "i want the base line to be 0. i dont want the app to know we do a 2% adjustment." **Built, not yet proven on the phone:** unit tests only; DA-1 to DA-5. APP_ENCYCLOPEDIA, GPS recording and distance, "The distance adjustment".
+- **What he was told before choosing "Hidden +2% now":** the 2 % is the simulations' town figure, not a measurement of his truck; a flat +2 % over-counts highway driving by about 2 %; an adjustment nobody can see is an over-claim wherever the odometer shows less; his typed odometer readings could measure the real gap. He also had "Measure my truck first" and "No hidden number" to choose from.
+- **His other answers:** half-percent steps; no note on the PDF; both surfaces; new trips only. Asked "− / + row or a new slider", he did not choose; the row was built, as the Settings screen's stepped settings are (no new pattern), and he can still ask for a slider.
+- **The trip rules are untouched:** the minimum distance and every other rule go by the measured distance, and the trip's Log line keeps it. 37 assertions of stored or running distances in the trip controller's and clock tests now expect the adjusted figure (`asStored` in `TripControllerFakes.kt`); no rule's outcome changed.
+- **The repository is public:** the constant and ADR-011 can be read on GitHub.
 **`[CHANGE]` The one-year party is made up on a later day when its date had no trip (version 0.3.2)**
 Shawn: "When the yearly anniversary is active if there isnt a active trip on that day the next day it will pop up." Asked, he chose: the first day with a trip in the 7 days after the date, "same as the day" (every trip that day has the pop, and Home owes the party), phone only as before. **Built, not yet proven on the phone:** unit tests only; OY-15 to OY-17. APP_ENCYCLOPEDIA, The one-year party, step 1a.
 - **It goes by parties held, not by trips stored.** The trip service stores the day at a party trip's first sound (`party_held_on_epoch_day`). Going by the stored trips would have let a false start, which never has a first sound and so never had the pop, take the make-up away.

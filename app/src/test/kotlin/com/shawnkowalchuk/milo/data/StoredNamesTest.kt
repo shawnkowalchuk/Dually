@@ -137,6 +137,7 @@ class StoredNamesTest {
                 "connect_built_in_sound",
                 "custom_sound_name",
                 "custom_sound_uri",
+                "distance_adjust_half_percent_steps",
                 "distance_unit",
                 "driven_off_trip_id",
                 "driving_alert_enabled",

@@ -6,6 +6,7 @@ import com.shawnkowalchuk.milo.core.schedule.TripCategory
 import com.shawnkowalchuk.milo.core.trip.TripStatus
 import com.shawnkowalchuk.milo.platform.trip.FakeWorld
 import com.shawnkowalchuk.milo.platform.trip.TripTrigger
+import com.shawnkowalchuk.milo.platform.trip.asStored
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -67,7 +68,7 @@ class ClockJumpFirstStartTest {
         assertEquals(TripStatus.FINISHED, trip.status)
         assertEquals(scene.realTimeOf(start), trip.startedAtMs)
         assertEquals(scene.realTimeOf(start + 600), trip.endedAtMs)
-        assertEquals(end, trip.distanceMetres, 1.0)
+        assertEquals(asStored(end), trip.distanceMetres, 1.0)
         assertEquals(TripCategory.BUSINESS, trip.category)
         assertEquals(1, scene.phone.news.size)
         assertTrue(world.points.rows.all { it.wallClockMs <= scene.realTimeOf(start + 1_205) })

@@ -93,12 +93,15 @@ data class StartFailure(val problems: List<PreflightProblem>, val detail: String
  * and what the trip rules know. A trip is shown only when both agree that one is open.
  *
  * @param vehicleNow the paired vehicle last seen connected (`TripEvidence.vehicleNow`).
+ * @param distanceFactor what the running distance is multiplied by, as the stored one will be
+ * when the trip ends (`core/trip/DistanceAdjustment.kt`).
  */
 internal fun tripActivityOf(
     open: OpenTrip?,
     known: TripState?,
     startFailure: StartFailure?,
     vehicleNow: String? = null,
+    distanceFactor: Double = 1.0,
 ): TripActivity {
     val trip = known?.trip
     val truckConnected = known?.truckConnected
@@ -118,7 +121,7 @@ internal fun tripActivityOf(
                 tripId = open.id,
                 startedAtMs = open.startedAtMs,
                 startedBy = open.startedBy,
-                distanceMetres = open.progress.distance.metres,
+                distanceMetres = open.progress.distance.metres * distanceFactor,
                 waitingForTruck = trip.grace != null,
                 startLatitude = open.progress.distance.firstAccepted?.latitude,
                 startLongitude = open.progress.distance.firstAccepted?.longitude,
