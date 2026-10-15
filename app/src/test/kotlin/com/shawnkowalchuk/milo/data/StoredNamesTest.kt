@@ -168,6 +168,7 @@ class StoredNamesTest {
                 "parked_place_latitude",
                 "parked_place_longitude",
                 "parked_since_ms",
+                "party_held_on_epoch_day",
                 "party_owed_since_ms",
                 "points_kept_months",
                 "reminder_day_of_month",

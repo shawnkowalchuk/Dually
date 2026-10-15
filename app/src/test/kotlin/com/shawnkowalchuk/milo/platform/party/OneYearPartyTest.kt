@@ -20,6 +20,7 @@ import com.shawnkowalchuk.milo.platform.trip.FakeSettingsFile
 import com.shawnkowalchuk.milo.platform.trip.FakeTripDao
 import com.shawnkowalchuk.milo.platform.trip.UnreadableSettingsFile
 import java.io.IOException
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import kotlinx.coroutines.CompletableDeferred
@@ -114,7 +115,8 @@ class OneYearPartyTest {
                     at(2026, 10, 7),
                     at(2027, 1, 1),
                     at(2027, 10, 5, hour = 23, minute = 59),
-                    at(2027, 10, 7, hour = 0),
+                    // A week and a day after the date: past the days that make up for it.
+                    at(2027, 10, 14, hour = 0),
                     at(2028, 10, 5),
                 )
 
@@ -189,6 +191,53 @@ class OneYearPartyTest {
 
         assertEquals(nowMs, settings.current().partyOwedSinceMs)
         assertEquals(3, lines(EventCategory.SERVICE).size)
+    }
+
+    // ---- A date with no trip ----------------------------------------------------------------------
+
+    @Test
+    fun `with no trip on the date, the next day with one has the party, all that day`() = runTest {
+        aYearOfTrips()
+        val party = partyOn()
+        nowMs = at(2027, 10, 9, hour = 8)
+
+        assertEquals(PopAtTripStart.AT_ONCE, party.atTripStart())
+        nowMs = at(2027, 10, 9, hour = 17)
+        assertEquals(PopAtTripStart.AT_ONCE, party.atTripStart())
+
+        assertEquals(LocalDate.of(2027, 10, 9), settings.current().partyHeldOn)
+        assertEquals(nowMs, settings.current().partyOwedSinceMs)
+        val line = lines(EventCategory.SERVICE).first()
+        assertTrue(line, line.startsWith("Dually's party of 2027-10-06, held today"))
+        // The day after the make-up day has none.
+        nowMs = at(2027, 10, 10, hour = 8)
+        assertEquals(PopAtTripStart.NOT_TODAY, party.atTripStart())
+    }
+
+    @Test
+    fun `a party held on the date leaves nothing to make up`() = runTest {
+        aYearOfTrips()
+        val party = partyOn()
+
+        assertEquals(PopAtTripStart.AT_ONCE, party.atTripStart())
+        assertEquals(LocalDate.of(2027, 10, 6), settings.current().partyHeldOn)
+
+        nowMs = at(2027, 10, 7, hour = 8)
+        assertEquals(PopAtTripStart.NOT_TODAY, party.atTripStart())
+    }
+
+    @Test
+    fun `the seventh day after the date is the last that makes up for it`() = runTest {
+        aYearOfTrips()
+        val party = partyOn()
+
+        nowMs = at(2027, 10, 13, hour = 23, minute = 59)
+        assertEquals(PopAtTripStart.AT_ONCE, party.atTripStart())
+
+        partyOn(file = FakeSettingsFile()).let { fresh ->
+            nowMs = at(2027, 10, 14, hour = 0)
+            assertEquals(PopAtTripStart.NOT_TODAY, fresh.atTripStart())
+        }
     }
 
     @Test

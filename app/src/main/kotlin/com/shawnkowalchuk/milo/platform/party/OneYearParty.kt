@@ -4,7 +4,7 @@ import com.shawnkowalchuk.milo.core.party.PopAtTripStart
 import com.shawnkowalchuk.milo.core.party.PopHandover
 import com.shawnkowalchuk.milo.core.party.TripStart
 import com.shawnkowalchuk.milo.core.party.firstRecordedStartMs
-import com.shawnkowalchuk.milo.core.party.isPartyDay
+import com.shawnkowalchuk.milo.core.party.partyDateToday
 import com.shawnkowalchuk.milo.core.party.popAtTripStart
 import com.shawnkowalchuk.milo.core.util.localDateOf
 import com.shawnkowalchuk.milo.data.crash.CrashFileStore
@@ -13,6 +13,7 @@ import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.clearPartyOwed
+import com.shawnkowalchuk.milo.data.settings.setPartyHeldOn
 import com.shawnkowalchuk.milo.data.settings.setPartyOwedSinceMs
 import java.io.IOException
 import java.time.ZoneId
@@ -49,10 +50,11 @@ private const val LOOK_LIMIT_MS = 1_000L
  * - **A press on Settings' version asks for the party on demand** ([askFor]), for a look at it
  *   on any day. That stores nothing.
  *
- * **It can touch no trip.** It reads when the stored trips started, reads and writes one value
- * of its own in the settings file, and writes lines to the event log. A failure in it is caught
- * here: the trip's sounds are then the ones of every other day, and the Log says why. Left
- * alone, a failure would end the process, and the trip service runs in it.
+ * **It can touch no trip.** It reads when the stored trips started, reads and writes two values
+ * of its own in the settings file (what Home owes, and the last day a party was held), and
+ * writes lines to the event log. A failure in it is caught here: the trip's sounds are then the
+ * ones of every other day, and the Log says why. Left alone, a failure would end the process,
+ * and the trip service runs in it.
  *
  * @param tripStarts when every stored trip started (`TripRepository.findTripStarts`).
  * @param clock MilO's own clock (ADR-006): the day is today by it, not by the phone's date.
@@ -126,10 +128,22 @@ class OneYearParty(
         //  would have the pop a day early. See docs/FINDINGS_LOG.md, 2026-10-10.
         val nowMs = clock()
         val firstMs = firstRecordedStartMs(tripStarts())
-        if (!isPartyDay(firstMs, nowMs, zone())) return PopAtTripStart.NOT_TODAY
+        // A settings file that cannot be read knows of no party held: the date still has its
+        // party, as it had before a make-up day existed.
+        val lastHeldOn =
+            try {
+                settings.current().partyHeldOn
+            } catch (unreadable: IOException) {
+                null
+            }
+        val date =
+            partyDateToday(firstMs, lastHeldOn, nowMs, zone()) ?: return PopAtTripStart.NOT_TODAY
+        val today = localDateOf(nowMs, zone())
         val stored =
             try {
                 settings.setPartyOwedSinceMs(nowMs)
+                // What makes a later day of the week no make-up day: the party was held.
+                if (lastHeldOn != today) settings.setPartyHeldOn(today)
                 true
             } catch (notStored: IOException) {
                 report("Dually could not store that its mascot's party is owed", notStored)
@@ -148,7 +162,13 @@ class OneYearParty(
                     "The pop takes the place of this trip's first sound, and the mascot's party " +
                         "plays when Home is next in front today"
             }
-        val what = "Dually's party: a trip starts on the day of its first recorded trip ($since)"
+        val what =
+            if (date == today) {
+                "Dually's party: a trip starts on the day of its first recorded trip ($since)"
+            } else {
+                "Dually's party of $date, held today: no trip had its first sound on that day, " +
+                    "and this is the first day with one since (its first recorded trip: $since)"
+            }
         write(nowMs, EventCategory.SERVICE, "$what. $how", detail = null, unlogged = null)
         return pop
     }
