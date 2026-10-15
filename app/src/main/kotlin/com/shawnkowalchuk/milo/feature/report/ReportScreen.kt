@@ -43,18 +43,24 @@ internal class ReportActions(
  * records one without the email app, after a question, and a report that was recorded by
  * mistake can be removed from the list again, after a question too.
  *
+ * @param pointsViewModel the tile that offers to delete a sent month's GPS points. It is told
+ * which month the screen shows.
  * @param onBack leaves the screen. Navigation belongs to the app, not the feature.
  * @param onOpenSettings opens Settings, where the name and the accountant's address are set.
  */
 @Composable
 fun ReportScreen(
     viewModel: ReportViewModel,
+    pointsViewModel: MonthPointsViewModel,
     onBack: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsState()
     val ready = state as? ReportUiState.Ready
+    val points by pointsViewModel.state.collectAsState()
+    val monthShown = ready?.choice?.takeIf { it.kind == PeriodKind.MONTH }?.month
+    LaunchedEffect(monthShown) { pointsViewModel.onMonthShown(monthShown) }
 
     // Which day is today can change while MilO sits in the background over midnight.
     CameToFrontEffect(viewModel::onCameToFront)
@@ -136,7 +142,15 @@ fun ReportScreen(
             onOpenSettings = onOpenSettings,
             onRemoveSent = { id -> removingId = id },
         )
-    ReportContent(state = state, actions = actions, onBack = onBack, modifier = modifier)
+    ReportContent(
+        state = state,
+        actions = actions,
+        onBack = onBack,
+        modifier = modifier,
+        pointsTile = {
+            MonthPointsTile(points, pointsViewModel::onDelete, pointsViewModel::onKeep)
+        },
+    )
 
     // One question at a time, in the order the screen was given them. "Yes" to the last one
     // sends; "no" to any of them sends nothing.

@@ -205,6 +205,8 @@ fun MiloNavigation(
                                 },
                             ),
                         dataViewModel = viewModel(factory = dataViewModelFactory(container)),
+                        pointsViewModel =
+                            viewModel(factory = gpsPointsViewModelFactory(container)),
                         checkViewModel =
                             viewModel(factory = nothingRecordedViewModelFactory(container)),
                         odometerViewModel =

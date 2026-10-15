@@ -169,6 +169,7 @@ class StoredNamesTest {
                 "parked_place_longitude",
                 "parked_since_ms",
                 "party_owed_since_ms",
+                "points_kept_months",
                 "reminder_day_of_month",
                 "reminder_enabled",
                 "reminder_shown_for_month_first_day",

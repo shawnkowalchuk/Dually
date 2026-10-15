@@ -924,7 +924,7 @@ Each is one `UPDATE` that sets the status and matches on the status it starts fr
 
 ### Raw points database: `points.db` (`data/PointsDatabase`, version 1)
 
-**`raw_points`** (`data/point/RawPoint`), indexed on `tripId`. Every fix is stored, including the ones the distance calculation rejects.
+**`raw_points`** (`data/point/RawPoint`), indexed on `tripId`. Every fix is stored, including the ones the distance calculation rejects. **Since 2026-10-14 the fixes of the trips of a month whose report was sent can be deleted** (`data/point/PointCleanup`, on the Report screen or in Settings), and the file is then compacted (`VACUUM`, then `PRAGMA wal_checkpoint(TRUNCATE)`; `data/point/PointsFile`). The trip rows keep every figure; nothing reads a closed trip's fixes but an export (APP_ENCYCLOPEDIA, GPS recording and distance).
 
 | Column | Type | Meaning |
 |---|---|---|

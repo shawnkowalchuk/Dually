@@ -651,6 +651,17 @@
         <item quantity="other">Sent on %1$s · %2$d trips</item>
     </plurals>
     <string name="report_sent_revision">Revision %1$d</string>
+    <!-- The tile that offers to delete a sent month's GPS points (2026-10-14). The arguments are the month's name, its number of trips and the room their points take ("7.2 MB"). -->
+    <string name="report_points_title">GPS points for %1$s</string>
+    <plurals name="report_points_offer">
+        <item quantity="one">Your %1$s report is sent, and its %2$d trip keeps its distance, times and addresses. Its GPS points, the route it drove, take %3$s on this phone. Delete them to free the room?</item>
+        <item quantity="other">Your %1$s report is sent, and its %2$d trips keep their distance, times and addresses. Their GPS points, the route of each drive, take %3$s on this phone. Delete them to free the room?</item>
+    </plurals>
+    <string name="report_points_delete">Delete GPS points</string>
+    <string name="report_points_keep">Keep</string>
+    <string name="report_points_deleting">Deleting the GPS points…</string>
+    <string name="report_points_deleted">%1$s of GPS points deleted. Every trip and the report are as they were.</string>
+    <string name="report_points_failed">The GPS points could not be deleted. They are as they were. The Log screen says why.</string>
     <!--
         Sent reports: taking one out of the list again, and the question before it. The
         arguments are the period and the day it was recorded as sent, from formatDate(); for a
@@ -808,6 +819,27 @@
     <string name="settings_sound_no_picker">This phone has no app to pick a file with. The sound was not changed.</string>
 
     <!-- Settings: Android's backup, and the export and import of all data. -->
+    <!-- The GPS points tile (2026-10-14). The argument is the room every stored point takes ("23 MB"). -->
+    <string name="settings_points_title">GPS points</string>
+    <string name="settings_points_line">Each trip\'s route, as GPS points: %1$s on this phone</string>
+    <!-- The arguments are the room the points of sent months take and how many months they are. -->
+    <plurals name="settings_points_sent">
+        <item quantity="one">%1$s of them are from %2$d month whose report you sent. Every trip keeps its distance, times and addresses without them.</item>
+        <item quantity="other">%1$s of them are from %2$d months whose report you sent. Every trip keeps its distance, times and addresses without them.</item>
+    </plurals>
+    <string name="settings_points_none_sent">None are from a month whose report you sent, once that month has ended.</string>
+    <string name="settings_points_delete">Delete points of sent months</string>
+    <string name="settings_points_deleting">Deleting the GPS points…</string>
+    <string name="settings_points_deleted">%1$s of GPS points deleted. Every trip and every report are as they were.</string>
+    <string name="settings_points_failed">The GPS points could not be deleted. They are as they were. The Log screen says why.</string>
+    <string name="settings_points_question_title">Delete the GPS points?</string>
+    <!-- The arguments are the room the points take and how many trips hold them. -->
+    <plurals name="settings_points_question">
+        <item quantity="one">This deletes %1$s of GPS points, the route of %2$d trip in months whose report you sent.\n\nThe trip keeps its distance, times and addresses, and the reports stay as they were. Its route cannot be measured again. To keep a copy first, use Export.</item>
+        <item quantity="other">This deletes %1$s of GPS points, the routes of %2$d trips in months whose report you sent.\n\nThe trips keep their distance, times and addresses, and the reports stay as they were. Their routes cannot be measured again. To keep a copy first, use Export.</item>
+    </plurals>
+    <string name="settings_points_question_delete">Delete</string>
+    <string name="settings_points_question_keep">Keep them</string>
     <string name="settings_data_title">Backup, export and import</string>
     <string name="settings_data_backup">Android backs Dually up by itself, to your Google account and when you move to a new phone, if backup is switched on in the phone\'s own settings: the trips, the sent reports, the settings and the event log. The event log names the truck and the other paired devices, with their Bluetooth addresses, and holds addresses you typed. The GPS points are moved from phone to phone only, never to the cloud. After a restore the truck has to be paired again, and Setup gone through again.</string>
     <string name="settings_data_export_intro">An export is your own copy of everything, in one file, kept where you choose. It needs neither Google nor this phone.</string>

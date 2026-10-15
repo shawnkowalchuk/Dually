@@ -26,6 +26,15 @@
 
 ### 2026-10-14
 
+**`[CHANGE]` A sent month's GPS points can be deleted (version 0.3.2)**
+Shawn asked whether every GPS point is kept for ever ("Is this going to cause the app storage size to be to large?"), then: "I think a idea of keeping them tell they are submitted to the accountant at the end of the month. or giving the person the option to perge them after he submits his mileage. Telling them xx mb of data is saved as way points do you want to perge them". He chose a tile on the Report screen over a question that pops up (the mascot's run and Google Play's review card already follow "I sent it"), and whole months only. Phone only. **Built, not yet proven on the phone:** unit tests only; device checks GP-1 to GP-8. APP_ENCYCLOPEDIA, GPS recording and distance, "Deleting the points of sent months".
+- **What is deleted:** the fixes of every trip that started in a month whose whole-month report was sent, once the month has ended; never the trip being recorded. Nothing but an export reads a closed trip's fixes, so no screen, figure or report changes.
+- **The file is compacted afterwards** (`VACUUM`, then `PRAGMA wal_checkpoint(TRUNCATE)`). SQLite keeps a deleted row's pages in its file for the next rows, so a delete alone would not shrink what Android shows for Dually. A compaction that fails is logged and the delete still counts: the room is used again by the next trips' points.
+- **The size shown is a share,** not a measurement: the file's used pages shared out by the number of fixes. Close enough for "7.2 MB"; it ignores the index and the `-wal` file.
+- **Decided for Shawn, not asked:** the tile is the question (no second dialog on the Report screen); "Keep" is remembered for good (`points_kept_months`), and Settings can still delete a kept month's points, after a question; the log line goes under `REPORT`, because a new event category would be a value older builds cannot read; the Settings tile stands under the one for backup, export and import.
+- **Not run on Android:** `VACUUM` through Room 3's writer connection while the trip service may be writing fixes. The writer waits for the other; a long compaction delays the next fixes' writes, it loses none (GP-8).
+- **The `[DEBT]` of 2026-10-09, "Raw points grow two and a half times as fast",** is paid in part: the points of sent months need not stay. Months never sent, and an export's size before a month is sent, are as they were.
+
 **`[CHANGE]` Bing Webmaster Tools' verification file on the website**
 Shawn sent `BingSiteAuth.xml` ("please upload to my site for bing"): Bing's file check of ownership, which must be served at `https://dually.top/BingSiteAuth.xml` unchanged. It is in `website/` as it came, beside Google's file of 2026-10-08. Nothing else changed: without `cleanUrls` the address is served directly, with no redirect, and the file holds an ownership code only, no secret.
 

@@ -244,6 +244,24 @@ class FakeRawPointDao : RawPointDao {
         rows.removeAll { it.tripId == tripId }
         return before - rows.size
     }
+
+    override suspend fun countAll(): Long = rows.size.toLong()
+
+    override suspend fun countForTrips(tripIds: List<Long>): Long =
+        rows.count { it.tripId in tripIds }.toLong()
+
+    /** Set to make the next delete of several trips' points fail once. */
+    var failNextDelete: Exception? = null
+
+    override suspend fun deleteForTrips(tripIds: List<Long>): Int {
+        failNextDelete?.let { failure ->
+            failNextDelete = null
+            throw failure
+        }
+        val before = rows.size
+        rows.removeAll { it.tripId in tripIds }
+        return before - rows.size
+    }
 }
 
 class FakeEventLogDao : EventLogDao {

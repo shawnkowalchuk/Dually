@@ -10,7 +10,9 @@ import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogFiles
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.eventlog.buildEventLogFiles
+import com.shawnkowalchuk.milo.data.point.PointCleanup
 import com.shawnkowalchuk.milo.data.point.RawPointRepository
+import com.shawnkowalchuk.milo.data.point.RoomPointsFile
 import com.shawnkowalchuk.milo.data.report.SentReportRepository
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.ShownUnit
@@ -92,6 +94,12 @@ class AppContainer(context: Context, private val trustedClock: TrustedClock) {
     }
     val eventLogRepository: EventLogRepository by lazy {
         EventLogRepository(miloDatabase.eventLogDao())
+    }
+
+    /** Deletes the GPS points of sent months, from the Report screen and from Settings. */
+    val pointCleanup: PointCleanup by lazy {
+        val file = RoomPointsFile(pointsDatabase)
+        PointCleanup(tripRepository, rawPointRepository, file, eventLogRepository, clock)
     }
 
     /** Writes the event log to a text file, for the Log screen's Share. */
