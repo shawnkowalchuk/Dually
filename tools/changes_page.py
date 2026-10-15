@@ -149,7 +149,7 @@ PAGE_TEMPLATE = """<!doctype html>
   <meta name="description" content="Every version of Dually Trip Tracker, the free automatic mileage tracker for Android, and what changed in each.">
   <link rel="canonical" href="https://dually.top/changes">
   <link rel="icon" href="/mark.svg" type="image/svg+xml">
-  <link rel="preload" href="/fonts/archivo.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/styles.css">
   <meta name="theme-color" content="#15120F">
 </head>

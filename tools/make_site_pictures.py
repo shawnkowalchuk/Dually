@@ -72,7 +72,8 @@ def draw_mark(image, left, top, side, rounded):
 
 
 def archivo(size, weight, width):
-    font = ImageFont.truetype(str(FONTS / "archivo.ttf"), size)
+    # The app's whole Archivo: the website carries only its Latin letters, as WOFF2 (2026-10-14).
+    font = ImageFont.truetype(str(ROOT / "app/src/main/res/font/archivo.ttf"), size)
     # The file's axes are its weight, then its width.
     font.set_variation_by_axes([weight, width])
     return font
