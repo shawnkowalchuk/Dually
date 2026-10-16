@@ -26,6 +26,9 @@
 
 ### 2026-10-16
 
+**`[CHANGE]` Home's month card opens Trips, and Trips' month card says the dollars (version 0.3.2)**
+Shawn: "on the home page it has teh vehicles total trip card can we have it when you click it. it will go to the monthly trips screen. on that screen the top business card should have the money value that same as the front card of your reimbursment." He chose "Tap the month side opens Trips" for the card that also turns between today and the month. APP_ENCYCLOPEDIA, Trip log, Home step 9b; MT-1 and MT-2. **Decided for Shawn:** no arrow on the card (no existing part has a place for one); the Trips screen gets the rate as a flow of the settings, none while they cannot be read.
+
 **`[CHANGE]` Business or Personal chosen on Home while a trip is recorded (version 0.3.2)**
 Shawn: "when a trip is started on the home page can we have it show if it is business or personal at the top in the start trip card. and if you hit the button it will toggle ... yesterday i left work early for home". His answers: show what the hours say until pressed; his press always wins. **Built, not yet proven on the phone;** RC-1 to RC-4. APP_ENCYCLOPEDIA, Schedule and Business/Personal.
 - **The trip rules are untouched:** the choice is read only at the close, by the filing (`fileTrip`'s `chosen`), which ADR-002 already keeps apart from starting and ending a trip.

@@ -78,6 +78,7 @@ internal fun LazyListScope.monthItems(state: TripsUiState, actions: TripsActions
             zone = state.zone,
             unit = state.unit,
             onOpenReport = { actions.onReport(state.month) },
+            businessCents = state.businessCents,
         )
     }
     item(key = "personal and add") {

@@ -2,6 +2,7 @@ package com.shawnkowalchuk.milo.feature.trips
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.shawnkowalchuk.milo.core.allowance.allowanceCents
 import com.shawnkowalchuk.milo.core.schedule.TripCategory
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.localDateOf
@@ -30,6 +31,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -75,6 +77,7 @@ data class TripsUiState(
     val changedSinceSent: ChangedSinceSent? = null,
     val openDays: Set<LocalDate> = emptySet(),
     val unit: DistanceUnit,
+    val businessCents: Long? = null,
 )
 
 /**
@@ -107,6 +110,7 @@ class TripsViewModel(
     openTripStart: StateFlow<OpenTripStart?>,
     sentReports: Flow<List<SentReport>>,
     unit: StateFlow<DistanceUnit>,
+    centsPerKm: Flow<Int?> = flowOf(null),
     private val lookUpAddresses: (reason: String) -> Unit,
     private val clock: () -> Long,
     private val zone: () -> ZoneId,
@@ -132,6 +136,7 @@ class TripsViewModel(
         val zone: ZoneId,
         val trips: List<Trip>,
         val unit: DistanceUnit,
+        val centsPerKm: Int? = null,
     )
 
     private val choice = MutableStateFlow(openingChoice())
@@ -149,7 +154,8 @@ class TripsViewModel(
                 combine(
                     trips.observeTripsStartedBetween(span.fromMs, span.untilMs),
                     unit,
-                ) { read, shownIn -> MonthTrips(month, zone, read, shownIn) }
+                    centsPerKm,
+                ) { read, shownIn, rate -> MonthTrips(month, zone, read, shownIn, rate) }
             }
 
     val state: StateFlow<TripsUiState> =
@@ -185,7 +191,15 @@ class TripsViewModel(
                         categoryTotals(read.trips, sentIn).business.tenths
                     }
                 }
-            chosen.toUiState(summary, submission, changed, read.unit)
+            // Priced as Home prices the month (since 2026-10-16): Business kilometres at the rate.
+            val cents =
+                read.centsPerKm?.takeIf { summary != null }?.let { rate ->
+                    allowanceCents(
+                        categoryTotals(read.trips, DistanceUnit.KILOMETRES).business.tenths,
+                        rate,
+                    )
+                }
+            chosen.toUiState(summary, submission, changed, read.unit).copy(businessCents = cents)
         }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(KEEP_WATCHING_MS),
