@@ -40,8 +40,9 @@ import java.time.ZoneId
 
 /**
  * The Service screen (since 2026-10-16), the fourth button of the bottom bar where the Log was:
- * each vehicle's items, when each is due, and what was done. A press on an item brings up Done,
- * Edit and Delete and its history, as a trip's row brings up its buttons on Trips.
+ * each vehicle's items, when each is due, and what was done. Each item has its Done button; a
+ * press on it brings up Edit and Delete and its history, as a trip's row brings up its buttons
+ * on Trips.
  */
 @Composable
 fun ServiceScreen(viewModel: ServiceViewModel, modifier: Modifier = Modifier) {
@@ -172,15 +173,18 @@ private fun ItemTile(
             )
             Quiet(lastDoneWords(line.item, unit, locale, zone))
         }
+        // Done is always there (Shawn, 2026-10-16: "make sure that is added to the service card
+        // too"); a press on the item brings up Edit, Delete and its history.
+        ActionButtonRow(
+            actions =
+                listOf(
+                    ActionButton(stringResource(R.string.service_done), ActionKind.ACCENT, onDone),
+                ),
+        )
         if (open) {
             ActionButtonRow(
                 actions =
                     listOf(
-                        ActionButton(
-                            stringResource(R.string.service_done),
-                            ActionKind.ACCENT,
-                            onDone,
-                        ),
                         ActionButton(
                             stringResource(R.string.service_edit),
                             ActionKind.PLAIN,

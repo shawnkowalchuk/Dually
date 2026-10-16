@@ -7,7 +7,7 @@
         {
           "kind": "new",
           "title": "Service reminders",
-          "body": "When a service item comes due, or nearly, Home shows a tile for it until you press Done, and a notification tells you once, when a trip ends: never while you drive. Tap either to open Service."
+          "body": "When a service item comes due, or nearly, Home shows a card for it with a Done button: press it once the oil is changed and the count starts again from today. A notification tells you once, when a trip ends, never while you drive. On the Service screen, Done now shows on every item without pressing it first."
         },
         {
           "kind": "new",

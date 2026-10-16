@@ -60,9 +60,7 @@ internal fun IdleTiles(shown: HomeShown, actions: HomeActions, format: HomeForma
             onAction = { actions.onOpenReport(month) },
         )
     }
-    if (ui.serviceAlerts.isNotEmpty()) {
-        ServiceAlertTile(ui.serviceAlerts, format, actions.onOpenService)
-    }
+    for (alert in ui.serviceAlerts) ServiceAlertTile(alert, format, actions.onServiceDone)
     // Every finished trip of today, the newest first (since 2026-10-09; the last one alone
     // before), as the layout of a trip in progress has always listed them.
     TodayListTile(ui.figures, format, actions.onOpenTrips, recording = false, actions.todayRows)
