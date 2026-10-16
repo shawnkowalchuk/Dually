@@ -5,6 +5,11 @@
       "date": null,
       "changes": [
         {
+          "kind": "improved",
+          "title": "The rate is with the report's details",
+          "body": "The rate your Business kilometres are priced at, for reference on Home, the widget and the Android Auto screen, is now set in Settings under Report for the accountant. The Home-screen widget's tile stays open again, with its switch at the top."
+        },
+        {
           "kind": "new",
           "title": "Report options",
           "body": "The Report screen has a Report options tile with two switches, kept for every report you make. List Personal trips too puts your Personal trips in the report beside the Business ones, marked Personal and in grey, without changing any Business total, and adds a Category column to the CSV. Show the Business use percentage says what share of the period's driving was Business."
