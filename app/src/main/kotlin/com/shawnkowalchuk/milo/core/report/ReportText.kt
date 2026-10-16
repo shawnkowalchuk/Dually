@@ -91,6 +91,8 @@ data class ReportWords(
     val personalListed: String = "",
     val personalTrip: String = "",
     val businessShare: String = "",
+    val tripOdometer: String = "",
+    val tripOdometerEstimated: String = "",
 )
 
 /**
@@ -251,6 +253,7 @@ private fun ReportDay.printed(
                             words.personalTrip.takeIf { trip.personal },
                             trip.label,
                             trip.vehicle.takeIf { severalVehicles },
+                            trip.odometer?.let { tripOdometerText(it, words, format.locale) },
                         ).joinToString(DETAIL_JOINER)
                             .ifEmpty { null },
                     personal = trip.personal,
@@ -283,6 +286,15 @@ private fun OdometerFigure.printed(
     }
     return named to String.format(locale, written, figure)
 }
+
+/** "Odometer 120,345 → 120,357 km", with "est." where Dually worked a figure out. */
+private fun tripOdometerText(span: OdometerSpan, words: ReportWords, locale: Locale): String =
+    String.format(
+        locale,
+        if (span.anyEstimated) words.tripOdometerEstimated else words.tripOdometer,
+        formatOdometer(span.start.value, locale),
+        formatOdometer(span.end.value, locale),
+    )
 
 private val OdometerSpan.anyEstimated: Boolean get() = start.estimated || end.estimated
 

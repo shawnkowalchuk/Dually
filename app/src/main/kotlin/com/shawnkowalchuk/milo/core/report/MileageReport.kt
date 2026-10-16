@@ -47,6 +47,8 @@ enum class ReportMark {
  * @param personal true for a Personal trip, listed only when the report is set to list them
  * ([MileageReport.listsPersonal], since 2026-10-16). It is printed in grey and is in no
  * subtotal and no total.
+ * @param odometer the odometer of the vehicle it was in at its start and its end, when the
+ * report is set to show each trip's ([MileageReport.showsTripOdometer], since 2026-10-16).
  */
 data class ReportTrip(
     val startedAtMs: Long,
@@ -58,6 +60,7 @@ data class ReportTrip(
     val label: String? = null,
     val vehicle: String? = null,
     val personal: Boolean = false,
+    val odometer: OdometerSpan? = null,
 ) {
     /** The distance as it is printed in [unit], and as it is added up. */
     fun tenths(unit: DistanceUnit): Long = tenthsOf(distanceMetres, unit)
@@ -138,6 +141,7 @@ data class MileageReport(
     val odometers: List<VehicleOdometer> = emptyList(),
     val listsPersonal: Boolean = false,
     val showsBusinessShare: Boolean = false,
+    val showsTripOdometer: Boolean = false,
 ) {
     /** How many Business trips it lists: the count that is recorded when it is sent. */
     val tripCount: Int get() = days.sumOf { day -> day.trips.count { !it.personal } }

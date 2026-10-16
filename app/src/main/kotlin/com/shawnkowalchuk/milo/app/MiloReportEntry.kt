@@ -9,6 +9,7 @@ import androidx.navigation3.runtime.NavKey
 import com.shawnkowalchuk.milo.data.settings.keepPointsOf
 import com.shawnkowalchuk.milo.data.settings.setReportListsPersonal
 import com.shawnkowalchuk.milo.data.settings.setReportShowsBusinessShare
+import com.shawnkowalchuk.milo.data.settings.setReportShowsTripOdometer
 import com.shawnkowalchuk.milo.feature.report.MonthPointsViewModel
 import com.shawnkowalchuk.milo.feature.report.ReportOptionsViewModel
 import com.shawnkowalchuk.milo.feature.report.ReportReading
@@ -107,6 +108,7 @@ internal fun ReportEntry(container: AppContainer, backStack: NavBackStack<NavKey
                             options = container.settingsStore.settings.map { it.reportOptions },
                             setListPersonal = container.settingsStore::setReportListsPersonal,
                             setBusinessShare = container.settingsStore::setReportShowsBusinessShare,
+                            setTripOdometer = container.settingsStore::setReportShowsTripOdometer,
                         )
                     }
                 },

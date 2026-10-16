@@ -24,6 +24,7 @@ internal fun ReportOptionsTile(
     options: ReportOptions?,
     onListPersonal: (Boolean) -> Unit,
     onBusinessShare: (Boolean) -> Unit,
+    onTripOdometer: (Boolean) -> Unit = {},
 ) {
     if (options == null) return
     Tile(modifier = Modifier.fillMaxWidth()) {
@@ -41,6 +42,11 @@ internal fun ReportOptionsTile(
                 label = stringResource(R.string.report_options_share),
                 checked = options.businessShare,
                 onCheckedChange = onBusinessShare,
+            )
+            SwitchRow(
+                label = stringResource(R.string.report_options_trip_odometer),
+                checked = options.tripOdometer,
+                onCheckedChange = onTripOdometer,
             )
             Quiet(stringResource(R.string.report_options_kept))
         }

@@ -12,18 +12,26 @@ import androidx.datastore.preferences.core.edit
 
 private val REPORT_LIST_PERSONAL = booleanPreferencesKey("report_list_personal")
 private val REPORT_BUSINESS_SHARE = booleanPreferencesKey("report_business_share")
+private val REPORT_TRIP_ODOMETER = booleanPreferencesKey("report_trip_odometer")
 
 /**
  * What a report holds beyond the Business trips.
  *
  * @param listPersonal list the Personal trips too, marked and in grey, in no total.
  * @param businessShare say what share of the period's driving was Business.
+ * @param tripOdometer say the vehicle's odometer at each trip's start and end (step 2, also
+ * 2026-10-16).
  */
-data class ReportOptions(val listPersonal: Boolean = false, val businessShare: Boolean = false)
+data class ReportOptions(
+    val listPersonal: Boolean = false,
+    val businessShare: Boolean = false,
+    val tripOdometer: Boolean = false,
+)
 
 internal fun Preferences.readReportOptions(): ReportOptions = ReportOptions(
     listPersonal = this[REPORT_LIST_PERSONAL] ?: false,
     businessShare = this[REPORT_BUSINESS_SHARE] ?: false,
+    tripOdometer = this[REPORT_TRIP_ODOMETER] ?: false,
 )
 
 suspend fun SettingsStore.setReportListsPersonal(on: Boolean) {
@@ -32,4 +40,8 @@ suspend fun SettingsStore.setReportListsPersonal(on: Boolean) {
 
 suspend fun SettingsStore.setReportShowsBusinessShare(on: Boolean) {
     dataStore.edit { it[REPORT_BUSINESS_SHARE] = on }
+}
+
+suspend fun SettingsStore.setReportShowsTripOdometer(on: Boolean) {
+    dataStore.edit { it[REPORT_TRIP_ODOMETER] = on }
 }

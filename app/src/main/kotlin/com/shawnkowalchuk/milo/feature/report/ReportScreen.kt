@@ -158,6 +158,7 @@ fun ReportScreen(
                 options,
                 optionsViewModel::onListPersonal,
                 optionsViewModel::onBusinessShare,
+                optionsViewModel::onTripOdometer,
             )
         },
     )
