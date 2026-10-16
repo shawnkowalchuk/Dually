@@ -1850,6 +1850,8 @@ Unit tests only.
 | RO-3 | Export CSV. | A "Category" column after Vehicle, Business or Personal on each row. | not run |
 | RO-4 | Switch on "Show the Business use percentage", Preview PDF. | "Business use: N% …" under the heading; N is the Business km over Business and Personal km. | not run |
 | RO-5 | Leave the screen, open another month's report, and Settings and back. | Both switches as you left them. | not run |
+| RO-6 | Switch on "Show each trip's odometer", Preview PDF. | Under each trip "Odometer … → … km est."; one trip's end is the next trip's start in the same vehicle (or further, if it drove without Dually between). | not run |
+| RO-7 | Export CSV. | "Odometer start" and "Odometer end" columns after km. | not run |
 
 ## Today's trips on Home open (2026-10-16)
 

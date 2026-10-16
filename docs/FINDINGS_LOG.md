@@ -26,6 +26,10 @@
 
 ### 2026-10-16
 
+**`[CHANGE]` Report options, step 2: each trip's odometer (version 0.3.2)**
+His answer of 2026-10-14: "a small line under the trip ('Odometer 120,345 → 120,357 km est.'), not new columns; 'est.' unless it is a typed reading". A third switch on Report options; two CSV columns while it is on. Not yet proven on the phone; RO-6 and RO-7. APP_ENCYCLOPEDIA, Monthly PDF and submission, 8a.
+- **The figures are worked out, not measured:** from the vehicle's typed readings and its stored trip distances, which since ADR-011 carry the distance adjustment. Nearly every figure is "est.".
+
 **`[CHANGE]` A silent odometer check when a trip starts in another vehicle (version 0.3.2)**
 Shawn asked whether each vehicle keeps its own odometer (it does, since 2026-10-08) and then: "if we have muttiple vehicles we should be prompted if the km in the vehicle are accurate when switching vehicles". He chose "When Bluetooth connects to a different vehicle". APP_ENCYCLOPEDIA, Truck pairing, "The odometer check after a change of vehicle"; OC-1 to OC-3.
 - **It only watches** the trip controller's state, like the address lookup; the trip rules know nothing of it.

@@ -6,6 +6,11 @@
       "changes": [
         {
           "kind": "new",
+          "title": "Each trip's odometer on the report",
+          "body": "A third switch in Report options, Show each trip's odometer, adds a line under each trip on the report with the vehicle's odometer at its start and its end, worked out from your readings and marked est. where it is not a reading you typed. The CSV gets an Odometer start and an Odometer end column."
+        },
+        {
+          "kind": "new",
           "title": "An odometer check when you change vehicles",
           "body": "With several vehicles paired, when a trip starts in a different vehicle than last time, Dually posts a quiet notification with that vehicle's odometer as it has it, such as \"Ford F-150: odometer about 120,345 km?\". If someone drove it without Dually, tap it to type the reading in Settings. It makes no sound and does not pop up, as you are about to drive."
         },

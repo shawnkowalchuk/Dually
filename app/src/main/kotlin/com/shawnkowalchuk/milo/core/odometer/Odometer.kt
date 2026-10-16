@@ -247,3 +247,21 @@ fun odometerOver(
     val end = odometerAt(span.untilMs, lastDay, zone, readings, trips, unit) ?: return null
     return OdometerSpan(start, end)
 }
+
+/**
+ * One trip's odometer: at the moment it started and the moment it ended (since 2026-10-16, the
+ * report's option "Show each trip's odometer"), by [odometerAt] at both, each on its own day.
+ * The end takes in the trip itself; the start does not. Null with no reading to go by.
+ */
+fun odometerOverTrip(
+    startedAtMs: Long,
+    endedAtMs: Long,
+    zone: ZoneId,
+    readings: List<OdometerReading>,
+    trips: List<DrivenTrip>,
+    unit: DistanceUnit,
+): OdometerSpan? {
+    val start = odometerAt(startedAtMs, localDateOf(startedAtMs, zone), zone, readings, trips, unit)
+    val end = odometerAt(endedAtMs, localDateOf(endedAtMs, zone), zone, readings, trips, unit)
+    return if (start == null || end == null) null else OdometerSpan(start, end)
+}

@@ -35,6 +35,8 @@ data class CsvWords(
     val category: String = "",
     val business: String = "",
     val personal: String = "",
+    val odometerStart: String = "",
+    val odometerEnd: String = "",
 )
 
 // A spreadsheet has to read these the same way whatever language the phone is set to, so the
@@ -72,6 +74,8 @@ fun reportCsv(report: MileageReport, words: CsvWords): String {
             words.vehicle,
             words.category.takeIf { report.listsPersonal },
             words.km,
+            words.odometerStart.takeIf { report.showsTripOdometer },
+            words.odometerEnd.takeIf { report.showsTripOdometer },
             words.byHand,
         ).filterNotNull()
     val rows =
@@ -87,6 +91,10 @@ fun reportCsv(report: MileageReport, words: CsvWords): String {
                 (if (trip.personal) words.personal else words.business)
                     .takeIf { report.listsPersonal },
                 formatTenths(trip.tenths(report.unit), Locale.ROOT),
+                trip.odometer?.start?.value?.toString().orEmpty().takeIf {
+                    report.showsTripOdometer
+                },
+                trip.odometer?.end?.value?.toString().orEmpty().takeIf { report.showsTripOdometer },
                 when (trip.mark) {
                     ReportMark.ADDED -> words.added
                     ReportMark.EDITED -> words.edited

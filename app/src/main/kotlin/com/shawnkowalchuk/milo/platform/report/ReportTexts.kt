@@ -106,6 +106,21 @@ class ReportTexts(context: Context) {
                 appContext.getString(R.string.report_pdf_personal_listed, text(unitNameRes(unit))),
             personalTrip = text(R.string.report_pdf_personal_trip),
             businessShare = text(R.string.report_pdf_business_share),
+            // The two figures' places are kept for the report's own text; the unit is put in.
+            tripOdometer =
+                appContext.getString(
+                    R.string.report_pdf_trip_odometer,
+                    FIRST_PLACE,
+                    SECOND_PLACE,
+                    text(unitShortRes(unit)),
+                ),
+            tripOdometerEstimated =
+                appContext.getString(
+                    R.string.report_pdf_trip_odometer_estimated,
+                    FIRST_PLACE,
+                    SECOND_PLACE,
+                    text(unitShortRes(unit)),
+                ),
         )
 
     /**
@@ -125,6 +140,8 @@ class ReportTexts(context: Context) {
         category = text(R.string.report_csv_category),
         business = text(R.string.report_pdf_business),
         personal = text(R.string.report_pdf_personal),
+        odometerStart = text(R.string.report_csv_odometer_start),
+        odometerEnd = text(R.string.report_csv_odometer_end),
         added = text(R.string.report_csv_added),
         edited = text(R.string.report_csv_edited),
     )
@@ -167,5 +184,9 @@ class ReportTexts(context: Context) {
     private companion object {
         /** The place a format keeps for the period, handed on to the layout as it is. */
         const val PERIOD_PLACE = "%1\$s"
+
+        /** The places a trip's two odometer figures keep, handed on as they are. */
+        const val FIRST_PLACE = "%1\$s"
+        const val SECOND_PLACE = "%2\$s"
     }
 }

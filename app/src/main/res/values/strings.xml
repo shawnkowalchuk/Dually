@@ -678,6 +678,7 @@
     <string name="report_options_title">Report options</string>
     <string name="report_options_personal">List Personal trips too</string>
     <string name="report_options_share">Show the Business use percentage</string>
+    <string name="report_options_trip_odometer">Show each trip\'s odometer</string>
     <string name="report_options_kept">Kept for every report you make, the PDF and the CSV.</string>
     <string name="report_points_title">GPS points for %1$s</string>
     <plurals name="report_points_offer">
@@ -723,6 +724,9 @@
     <string name="report_pdf_personal_listed">Business and Personal trips. Personal trips are in grey and in no subtotal or total. Distances are in %1$s.</string>
     <string name="report_pdf_personal_trip">Personal</string>
     <string name="report_pdf_business_share">Business use: %1$d%% of the distance driven in this period, Business and Personal together.</string>
+    <!-- A trip's odometer on the report (2026-10-16): the start and end figures and the unit's short word. -->
+    <string name="report_pdf_trip_odometer">Odometer %1$s → %2$s %3$s</string>
+    <string name="report_pdf_trip_odometer_estimated">Odometer %1$s → %2$s %3$s est.</string>
     <!-- The arguments are the revision's number and the day the report it replaces was sent. -->
     <string name="report_pdf_revision">Revision %1$d. It replaces the report sent on %2$s.</string>
     <string name="report_pdf_column_start">Start</string>
@@ -754,6 +758,8 @@
     <string name="report_csv_date">Date</string>
     <string name="report_csv_by_hand">By hand</string>
     <string name="report_csv_category">Category</string>
+    <string name="report_csv_odometer_start">Odometer start</string>
+    <string name="report_csv_odometer_end">Odometer end</string>
     <!-- The trip's label, its purpose, and the vehicle it was in (since 2026-10-08). -->
     <string name="report_csv_label">Purpose</string>
     <string name="report_csv_vehicle">Vehicle</string>

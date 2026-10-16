@@ -2,14 +2,17 @@ package com.shawnkowalchuk.milo.feature.report
 
 import com.shawnkowalchuk.milo.core.odometer.DrivenTrip
 import com.shawnkowalchuk.milo.core.odometer.OdometerReading
+import com.shawnkowalchuk.milo.core.odometer.OdometerSpan
 import com.shawnkowalchuk.milo.core.odometer.drivenIn
 import com.shawnkowalchuk.milo.core.odometer.odometerOver
+import com.shawnkowalchuk.milo.core.odometer.odometerOverTrip
 import com.shawnkowalchuk.milo.core.odometer.ofVehicle
 import com.shawnkowalchuk.milo.core.report.MileageReport
 import com.shawnkowalchuk.milo.core.report.PersonalDriving
 import com.shawnkowalchuk.milo.core.report.ReportPeriod
 import com.shawnkowalchuk.milo.core.report.ReportRevision
 import com.shawnkowalchuk.milo.core.report.ReportSender
+import com.shawnkowalchuk.milo.core.report.ReportTrip
 import com.shawnkowalchuk.milo.core.report.VehicleOdometer
 import com.shawnkowalchuk.milo.core.report.reportDays
 import com.shawnkowalchuk.milo.core.util.localDateOf
@@ -62,7 +65,16 @@ fun mileageReport(
     val unit = settings.distanceUnit
     val options = settings.reportOptions
     val listed =
-        selection.trips + if (options.listPersonal) selection.personalTrips else emptyList()
+        (selection.trips + if (options.listPersonal) selection.personalTrips else emptyList())
+            .map { trip ->
+                // While the trip still names its vehicle by address, which is how its readings
+                // and its trips are found.
+                if (options.tripOdometer) {
+                    trip.copy(odometer = tripOdometer(trip, zone, settings, truckTrips))
+                } else {
+                    trip
+                }
+            }
     return MileageReport(
         sender = ReportSender(name, settings.reportCompany, settings.reportVehicle),
         period = period,
@@ -82,6 +94,37 @@ fun mileageReport(
         odometers = odometersOver(period, zone, settings, truckTrips),
         listsPersonal = options.listPersonal,
         showsBusinessShare = options.businessShare,
+        showsTripOdometer = options.tripOdometer,
+    )
+}
+
+/**
+ * The odometer of the vehicle [trip] was in, at its start and its end (since 2026-10-16), from
+ * that vehicle's readings and trips; with no vehicle paired, from all of them, as the period's
+ * odometer is worked out. Null without a reading, or for a trip with no end.
+ */
+private fun tripOdometer(
+    trip: ReportTrip,
+    zone: ZoneId,
+    settings: MiloSettings,
+    truckTrips: List<DrivenTrip>,
+): OdometerSpan? {
+    val ended = trip.endedAtMs ?: return null
+    val unit = settings.distanceUnit
+    val readings = settings.odometerReadings
+    val vehicles = settings.pairedVehicles()
+    if (vehicles.isEmpty()) {
+        return odometerOverTrip(trip.startedAtMs, ended, zone, readings, truckTrips, unit)
+    }
+    val address = trip.vehicle ?: vehicles.first().address
+    val first = vehicles.first().address.equals(address, ignoreCase = true)
+    return odometerOverTrip(
+        trip.startedAtMs,
+        ended,
+        zone,
+        readings.ofVehicle(address, first),
+        truckTrips.drivenIn(address, first),
+        unit,
     )
 }
 

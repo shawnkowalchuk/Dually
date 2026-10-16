@@ -27,6 +27,7 @@ class ReportOptionsViewModel(
     options: Flow<ReportOptions>,
     private val setListPersonal: suspend (Boolean) -> Unit,
     private val setBusinessShare: suspend (Boolean) -> Unit,
+    private val setTripOdometer: suspend (Boolean) -> Unit = {},
 ) : ViewModel() {
     /** Null until the settings have been read, and while they cannot be: then no tile. */
     val state: StateFlow<ReportOptions?> =
@@ -39,6 +40,8 @@ class ReportOptionsViewModel(
     fun onListPersonal(on: Boolean) = store { setListPersonal(on) }
 
     fun onBusinessShare(on: Boolean) = store { setBusinessShare(on) }
+
+    fun onTripOdometer(on: Boolean) = store { setTripOdometer(on) }
 
     /** A switch that could not be stored stays where storage has it: the tile shows that. */
     private fun store(write: suspend () -> Unit) {
