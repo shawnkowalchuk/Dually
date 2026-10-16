@@ -1,12 +1,9 @@
-package com.shawnkowalchuk.milo.feature.trips
+package com.shawnkowalchuk.milo.data.trip
 
 import com.shawnkowalchuk.milo.core.trip.TripStartCause
 import com.shawnkowalchuk.milo.core.trip.TripStatus
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
-import com.shawnkowalchuk.milo.data.trip.Trip
-import com.shawnkowalchuk.milo.data.trip.TripCorrection
-import com.shawnkowalchuk.milo.data.trip.TripRepository
 import com.shawnkowalchuk.milo.platform.trip.FakeEventLogDao
 import com.shawnkowalchuk.milo.platform.trip.FakeTripDao
 import java.io.IOException

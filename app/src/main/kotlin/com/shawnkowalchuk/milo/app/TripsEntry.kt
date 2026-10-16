@@ -6,7 +6,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
-import com.shawnkowalchuk.milo.feature.trips.TripCorrections
+import com.shawnkowalchuk.milo.data.trip.TripCorrections
 import com.shawnkowalchuk.milo.feature.trips.TripLabelViewModel
 import com.shawnkowalchuk.milo.feature.trips.TripsScreen
 import com.shawnkowalchuk.milo.feature.trips.TripsViewModel

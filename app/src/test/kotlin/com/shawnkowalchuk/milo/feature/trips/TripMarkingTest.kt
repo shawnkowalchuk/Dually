@@ -7,6 +7,7 @@ import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.trip.Trip
 import com.shawnkowalchuk.milo.data.trip.TripCorrection
+import com.shawnkowalchuk.milo.data.trip.TripCorrections
 import com.shawnkowalchuk.milo.data.trip.TripRepository
 import com.shawnkowalchuk.milo.data.trip.categoriesOffered
 import com.shawnkowalchuk.milo.platform.trip.FakeEventLogDao
