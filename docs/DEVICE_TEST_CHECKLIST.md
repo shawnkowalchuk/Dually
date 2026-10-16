@@ -1906,6 +1906,7 @@ Unit tests only.
 | SV-1 | Press the wrench in the bottom bar. | "Service", a line that nothing is there yet, and "Add an item". | not run |
 | SV-2 | Add an item, press "Oil change", Save. | 8,000 km and 6 months filled in, the odometer now; the tile says "Due in 8,000 km or on Apr 16, 2027, whichever comes first" with a tick. | not run |
 | SV-3 | Edit it: last done six months ago. | "Overdue since …" with the exclamation mark. | not run |
+| SV-2a | Add an item, type a name, press beside the dialog. | The dialog stays, with the name; Cancel closes it. | not run |
 | SV-4 | Press it, Done, type a cost and a note, Done. | Due again from today; "Done before" lists the day, odometer, cost and note. | not run |
 | SV-5 | Two vehicles paired. | A group under each vehicle's name, each with its own odometer and "Add an item". | not run |
 | SV-6 | Settings, scroll to the end, "Log"; then Back. | The Log, with Settings still marked in the bar; Back to Settings. | not run |
