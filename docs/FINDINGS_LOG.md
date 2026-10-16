@@ -26,6 +26,9 @@
 
 ### 2026-10-16
 
+**`[CHANGE]` Settings: the widget's tile stays open, and the rate moves to the report's tile (version 0.3.2)**
+Shawn: "can we make the home widget not expandable allways open. and the rate add it under the report for accountant menu". The widget's tile is the plain tile it was before 2026-10-14, its title its switch; the rate's rows (`RateRows`) stand in "Report for the accountant" under the address, with a sentence that says the report stays in kilometres, so that a rate beside the report's details is not read as printed on it. **Decided for Shawn, not asked:** that sentence; the rate's state stays the widget's ViewModel's, so nothing stored moved. The `[DEBT]` of 2026-10-09 ("the rate is no longer the widget's alone. It wants a tile of its own") is paid but for its stored name.
+
 **`[CHANGE]` Report options, step 1: Personal trips listed, and the Business use percentage (version 0.3.2)**
 Shawn, 2026-10-14: "I think we should put the option to include more stuff for the reports or customize them. personal trips/business trips in the report. vehicle mileage per trip start/finish. other suggestions." His answers that day: switches on the Report screen, remembered for every later report; Personal trips mixed into each day, marked; the share at the top. Built today as the first of three steps. **Built, not yet proven on the phone;** RO-1 to RO-5. APP_ENCYCLOPEDIA, Monthly PDF and submission, step 8a.
 - **Totals stay Business:** a listed Personal trip is in no subtotal, not in the total, and not in `MileageReport.tripCount`, which is the count recorded when a report is sent. So `changedSinceSent` and the revision numbers work as before whichever way the switch stands.

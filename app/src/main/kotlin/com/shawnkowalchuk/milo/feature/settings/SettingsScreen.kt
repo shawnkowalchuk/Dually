@@ -152,6 +152,7 @@ fun SettingsScreen(
         checkTile = { NothingRecordedTile(checkViewModel) },
         odometerTile = { OdometerTile(odometerViewModel) },
         widgetTile = { HomeWidgetTile(widgetViewModel) },
+        rateRows = { RateRows(widgetViewModel) },
         dataTile = {
             DataTile(dataViewModel)
             GpsPointsTile(pointsViewModel)
@@ -182,6 +183,8 @@ fun SettingsScreen(
  * whatever the settings file says: the version does not come from it.
  * @param showCoffee whether the Buy me a coffee tile stands above it: not in the copy from
  * Google Play ([SettingsScreen]).
+ * @param rateRows the rate the Business kilometres are priced at, in the tile of the report's
+ * details since 2026-10-16. Its state is the widget's.
  */
 @Composable
 internal fun SettingsContent(
@@ -196,6 +199,7 @@ internal fun SettingsContent(
     dataTile: @Composable () -> Unit,
     versionTile: @Composable () -> Unit,
     showCoffee: Boolean = true,
+    rateRows: @Composable () -> Unit = {},
 ) {
     val spacing = MiloTheme.spacing
     TileColumn(
@@ -238,7 +242,7 @@ internal fun SettingsContent(
                 odometerTile()
                 // Second, and not last: the Report screen sends Shawn here for his name and
                 // the accountant's address.
-                ReportDetailsTile(state.report, actions.report)
+                ReportDetailsTile(state.report, actions.report, rateRows)
                 // Under the report's own tile: it is the reminder to send that report.
                 ReminderTile(state, actions.reminder)
                 TripRulesTile(state, actions)

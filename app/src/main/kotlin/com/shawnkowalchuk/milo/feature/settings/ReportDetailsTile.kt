@@ -29,7 +29,11 @@ import com.shawnkowalchuk.milo.data.settings.MAX_REPORT_TEXT_LENGTH
  * What the four are for is put away behind the line at the end of the tile.
  */
 @Composable
-internal fun ReportDetailsTile(fields: ReportFields, actions: ReportDetailActions) {
+internal fun ReportDetailsTile(
+    fields: ReportFields,
+    actions: ReportDetailActions,
+    rate: @Composable () -> Unit = {},
+) {
     var aboutOpen by rememberSaveable { mutableStateOf(false) }
     // The report cannot be sent without the name and the address: then the tile starts open.
     val unfinished =
@@ -78,6 +82,7 @@ internal fun ReportDetailsTile(fields: ReportFields, actions: ReportDetailAction
                     .takeIf { fields.emailRefused },
             placeholder = stringResource(R.string.settings_report_email_example),
         )
+        rate()
         QuietExpander(
             label = stringResource(R.string.settings_about_report),
             expanded = aboutOpen,

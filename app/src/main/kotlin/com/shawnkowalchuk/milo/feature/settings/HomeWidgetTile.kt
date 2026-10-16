@@ -65,20 +65,16 @@ internal fun HomeWidgetTileContent(
     onAddToHomeScreen: () -> Unit,
 ) {
     var aboutOpen by rememberSaveable { mutableStateOf(false) }
-    val rate = formatCentsPerKm(shown.centsPerKm, LocalConfiguration.current.locales[0])
-    SettingsFold(
-        title = stringResource(R.string.settings_widget_title),
-        summary =
-            stringResource(
-                R.string.settings_widget_summary,
-                stringResource(
-                    if (shown.enabled) R.string.settings_fold_on else R.string.settings_fold_off,
-                ),
-                rate,
-            ),
+    // Always open since 2026-10-16 (Shawn: "can we make the home widget not expandable allways
+    // open"): its switch is the one thing on it, and a folded switch hides its own state.
+    Tile(
+        modifier = Modifier.fillMaxWidth(),
+        padding = TilePadding.EVEN,
+        gap = MiloTheme.spacing.rowGap,
     ) {
-        SwitchRow(
-            label = stringResource(R.string.settings_widget_line),
+        TitledSwitchRow(
+            title = stringResource(R.string.settings_widget_title),
+            line = stringResource(R.string.settings_widget_line),
             checked = shown.enabled,
             onCheckedChange = onEnabled,
         )
@@ -88,24 +84,6 @@ internal fun HomeWidgetTileContent(
                 status = RowStatus.PROBLEM,
             )
         }
-        // The rate prices the month on Home and on the Android Auto screen too (since
-        // 2026-10-09), so it is set here whether or not the widget is switched on.
-        // TODO(debt): the rate is no longer the widget's alone. It wants a tile of its own,
-        // and a stored name that does not say "widget" (FINDINGS_LOG, 2026-10-09).
-        RateEntry(shown.centsPerKm, onSaveRate)
-        // The rate is per kilometre whatever is shown. With miles, what it comes to per mile
-        // is said beside it, for reading only: nothing is priced at that figure.
-        if (shown.unit == DistanceUnit.MILES) {
-            val locale = LocalConfiguration.current.locales[0]
-            Note(
-                stringResource(
-                    R.string.settings_widget_rate_per_mile,
-                    formatCentsPerKm(shown.centsPerKm, locale),
-                    formatCentsPerKm(centsPerMileOf(shown.centsPerKm), locale),
-                ),
-            )
-        }
-        Note(stringResource(R.string.settings_widget_rate_also))
         if (shown.enabled) {
             if (shown.canAskToAdd) {
                 TileButton(
@@ -131,6 +109,35 @@ internal fun HomeWidgetTileContent(
             )
         }
     }
+}
+
+/**
+ * The rate's rows, which stand in the tile "Report for the accountant" since 2026-10-16 (Shawn:
+ * "the rate add it under the report for accountant menu"): Home's month tile, the widget and the
+ * Android Auto screen price the Business kilometres at it, for reference; the report stays in
+ * kilometres, as the note under it says. Its state is still the widget's ViewModel's, which
+ * stores it. Nothing is drawn until the settings are read.
+ */
+@Composable
+internal fun RateRows(viewModel: HomeWidgetViewModel) {
+    val state by viewModel.state.collectAsState()
+    val shown = state ?: return
+    // TODO(debt): the rate's stored name still says "widget" (`home_widget_cents_per_km`);
+    //  renaming it would lose it (FINDINGS_LOG, 2026-10-09).
+    RateEntry(shown.centsPerKm, viewModel::onSaveRate)
+    // The rate is per kilometre whatever is shown. With miles, what it comes to per mile is said
+    // beside it, for reading only: nothing is priced at that figure.
+    if (shown.unit == DistanceUnit.MILES) {
+        val locale = LocalConfiguration.current.locales[0]
+        Note(
+            stringResource(
+                R.string.settings_widget_rate_per_mile,
+                formatCentsPerKm(shown.centsPerKm, locale),
+                formatCentsPerKm(centsPerMileOf(shown.centsPerKm), locale),
+            ),
+        )
+    }
+    Note(stringResource(R.string.settings_widget_rate_also))
 }
 
 /**

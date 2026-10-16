@@ -765,12 +765,9 @@
     <string name="settings_fold_close">hide this setting</string>
     <!-- What a folded tile's line says of a setting that is switched off. -->
     <string name="settings_fold_off">Off</string>
-    <string name="settings_fold_on">On</string>
     <!-- The trip settings' folded line: the wait in minutes ("2"), the shortest trip ("0.3 km") and the distance adjustment ("0", "+1.5"). -->
     <string name="settings_trips_summary">Wait %1$s min · shortest %2$s · adjust %3$s %%</string>
     <string name="settings_report_summary_missing">Your name or the accountant\'s email is missing</string>
-    <!-- The widget's folded line: on or off, and the rate per km ("$0.70"). -->
-    <string name="settings_widget_summary">%1$s · %2$s per km</string>
     <string name="settings_reminder_switch">Remind me to send the report</string>
     <string name="settings_title">Settings</string>
     <string name="settings_reading">Reading the settings…</string>
