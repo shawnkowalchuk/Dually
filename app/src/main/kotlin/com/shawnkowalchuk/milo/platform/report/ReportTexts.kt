@@ -107,6 +107,9 @@ class ReportTexts(context: Context) {
             personalTrip = text(R.string.report_pdf_personal_trip),
             businessShare = text(R.string.report_pdf_business_share),
             // The two figures' places are kept for the report's own text; the unit is put in.
+            yearSummaryTitle = text(R.string.report_pdf_year_title),
+            yearSummaryTotal = text(R.string.report_pdf_year_total),
+            notYet = text(R.string.report_pdf_not_yet),
             tripOdometer =
                 appContext.getString(
                     R.string.report_pdf_trip_odometer,

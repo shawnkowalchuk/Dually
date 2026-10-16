@@ -93,6 +93,9 @@ data class ReportWords(
     val businessShare: String = "",
     val tripOdometer: String = "",
     val tripOdometerEstimated: String = "",
+    val yearSummaryTitle: String = "",
+    val yearSummaryTotal: String = "",
+    val notYet: String = "",
 )
 
 /**
@@ -167,6 +170,7 @@ data class PrintedReport(
     val tripCount: String,
     val legend: String?,
     val footer: String,
+    val yearSummary: PrintedYearSummary? = null,
 )
 
 /** Turns [report] into the words and figures that are printed. */
@@ -223,6 +227,20 @@ fun printedReport(report: MileageReport, words: ReportWords, format: ReportForma
         tripCount = words.tripCount,
         legend = words.legend.takeIf { report.markedCount > 0 },
         footer = String.format(locale, words.footer, sender.name, period),
+        yearSummary =
+            report.months?.let { months ->
+                report.period.wholeYear?.let { year ->
+                    printedYearSummary(
+                        months,
+                        year,
+                        words.yearSummaryTitle,
+                        words,
+                        locale,
+                        words.notYet,
+                        words.yearSummaryTotal,
+                    )
+                }
+            },
     )
 }
 

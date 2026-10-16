@@ -26,6 +26,11 @@
 
 ### 2026-10-16
 
+**`[CHANGE]` Report options, step 3: a year-end summary (version 0.3.2)**
+His answer of 2026-10-14: "a third Period choice 'A whole year' ... the report opens with a one-page summary (each month's Business and Personal km, odometer at the start and end of the year), then lists the trips. Marks no month submitted." RO-8 to RO-10; APP_ENCYCLOPEDIA, Monthly PDF and submission, 8a.
+- **`[DECISION]` A year is a date range,** 1 January to 31 December, not a third kind of stored report: the list of sent reports, the export file, the hand-over and the rules for "submitted" are unchanged, and a year's report marks no month, as a range's never does. The summary goes by the period alone (`wholeYear`), so a date range of exactly one calendar year has it too.
+- **Decided for Shawn, not asked:** the three choices are shortened to "Month · Date range · Year" so that three fit side by side; the trips start on a new page after the summary; the drawing helpers of the PDF were opened from `private` to `internal` so that the summary's block could live in a file of its own (`ReportBlocks.kt` is past the size limit).
+
 **`[CHANGE]` Report options, step 2: each trip's odometer (version 0.3.2)**
 His answer of 2026-10-14: "a small line under the trip ('Odometer 120,345 → 120,357 km est.'), not new columns; 'est.' unless it is a typed reading". A third switch on Report options; two CSV columns while it is on. Not yet proven on the phone; RO-6 and RO-7. APP_ENCYCLOPEDIA, Monthly PDF and submission, 8a.
 - **The figures are worked out, not measured:** from the vehicle's typed readings and its stored trip distances, which since ADR-011 carry the distance adjustment. Nearly every figure is "est.".

@@ -8,6 +8,7 @@ import com.shawnkowalchuk.milo.core.odometer.odometerOver
 import com.shawnkowalchuk.milo.core.odometer.odometerOverTrip
 import com.shawnkowalchuk.milo.core.odometer.ofVehicle
 import com.shawnkowalchuk.milo.core.report.MileageReport
+import com.shawnkowalchuk.milo.core.report.MonthTotal
 import com.shawnkowalchuk.milo.core.report.PersonalDriving
 import com.shawnkowalchuk.milo.core.report.ReportPeriod
 import com.shawnkowalchuk.milo.core.report.ReportRevision
@@ -15,7 +16,10 @@ import com.shawnkowalchuk.milo.core.report.ReportSender
 import com.shawnkowalchuk.milo.core.report.ReportTrip
 import com.shawnkowalchuk.milo.core.report.VehicleOdometer
 import com.shawnkowalchuk.milo.core.report.reportDays
+import com.shawnkowalchuk.milo.core.report.wholeYear
+import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.localDateOf
+import com.shawnkowalchuk.milo.core.util.sumOfTenths
 import com.shawnkowalchuk.milo.data.report.ReportSelection
 import com.shawnkowalchuk.milo.data.report.SentReport
 import com.shawnkowalchuk.milo.data.report.nextRevision
@@ -29,6 +33,8 @@ import com.shawnkowalchuk.milo.data.settings.missingForSending
 import com.shawnkowalchuk.milo.data.settings.pairedVehicles
 import com.shawnkowalchuk.milo.data.settings.vehicleNamed
 import java.time.LocalDate
+import java.time.Month
+import java.time.YearMonth
 import java.time.ZoneId
 
 // The report a press on the Report screen would make, and what each kind of press needs of the
@@ -95,7 +101,38 @@ fun mileageReport(
         listsPersonal = options.listPersonal,
         showsBusinessShare = options.businessShare,
         showsTripOdometer = options.tripOdometer,
+        months = period.wholeYear?.let { year -> yearMonths(year, selection, zone, unit, today) },
     )
+}
+
+/**
+ * The twelve months of [year] for the year-end summary: each month's Business and Personal
+ * trips of [selection] by their start, added up as the report adds them up. A month after the
+ * one [today] is in has none.
+ */
+private fun yearMonths(
+    year: Int,
+    selection: ReportSelection,
+    zone: ZoneId,
+    unit: DistanceUnit,
+    today: LocalDate,
+): List<MonthTotal> {
+    fun byMonth(trips: List<ReportTrip>) =
+        trips.groupBy { YearMonth.from(localDateOf(it.startedAtMs, zone)) }
+    val business = byMonth(selection.trips)
+    val personal = byMonth(selection.personalTrips)
+    return Month.entries.map { month ->
+        val yearMonth = YearMonth.of(year, month)
+        if (yearMonth > YearMonth.from(today)) {
+            MonthTotal(yearMonth, null, null)
+        } else {
+            MonthTotal(
+                yearMonth,
+                sumOfTenths(business[yearMonth].orEmpty().map { it.distanceMetres }, unit),
+                sumOfTenths(personal[yearMonth].orEmpty().map { it.distanceMetres }, unit),
+            )
+        }
+    }
 }
 
 /**
