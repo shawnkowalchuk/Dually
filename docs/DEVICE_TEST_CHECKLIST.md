@@ -1851,6 +1851,14 @@ Unit tests only.
 | RO-4 | Switch on "Show the Business use percentage", Preview PDF. | "Business use: N% …" under the heading; N is the Business km over Business and Personal km. | not run |
 | RO-5 | Leave the screen, open another month's report, and Settings and back. | Both switches as you left them. | not run |
 
+## Today's trips on Home open (2026-10-16)
+
+| # | Do this | Expect | Result |
+|---|---|---|---|
+| HT-1 | Home, press a row of today's trips. | Its buttons come up under it: "Personal" or "Business", and "Edit". Press the row again: they go. | not run |
+| HT-2 | Press "Personal" on a Business trip. | The row says Personal, its km turn grey, Today's Business figure drops by it; the Log has the line "marked as Personal by hand". | not run |
+| HT-3 | Press "Edit"; save or go Back. | The edit screen for that trip; Back leads to Home. "Trips" in the tile's corner opens Trips; a press elsewhere on the tile does not. | not run |
+
 ## Later work packages
 
 Nothing waiting. A work package that adds behaviour only the phone can prove adds its checks above.
