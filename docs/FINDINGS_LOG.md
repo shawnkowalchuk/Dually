@@ -26,6 +26,11 @@
 
 ### 2026-10-16
 
+**`[CHANGE]` Home: today's trips open with Personal/Business and Edit (version 0.3.2)**
+Shawn: "on the home screen we have the daily trips at the bottom please have them expand same as teh trips screen to edit them", and of yesterday's drive home: "i would like to be able to more easily click that trip from business to personal". He chose "the same buttons as on the Trips screen". **Built, not yet proven on the phone;** HT-1 to HT-3. APP_ENCYCLOPEDIA, Trip log, Home step 9a.
+- **`[CHANGE]` `TripCorrections` moved from `feature/trips/` to `data/trip/`,** in a commit of its own with no change of behaviour: Home marks a trip as Trips does, and features never import from each other.
+- **Decided for Shawn, not asked:** the tile as a whole no longer opens Trips (a row is pressed now); "Trips" in its corner does. Delete and Label stay on Trips.
+
 **`[CHANGE]` Settings: the widget's tile stays open, and the rate moves to the report's tile (version 0.3.2)**
 Shawn: "can we make the home widget not expandable allways open. and the rate add it under the report for accountant menu". The widget's tile is the plain tile it was before 2026-10-14, its title its switch; the rate's rows (`RateRows`) stand in "Report for the accountant" under the address, with a sentence that says the report stays in kilometres, so that a rate beside the report's details is not read as printed on it. **Decided for Shawn, not asked:** that sentence; the rate's state stays the widget's ViewModel's, so nothing stored moved. The `[DEBT]` of 2026-10-09 ("the rate is no longer the widget's alone. It wants a tile of its own") is paid but for its stored name.
 

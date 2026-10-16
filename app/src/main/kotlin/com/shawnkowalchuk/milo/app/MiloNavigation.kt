@@ -20,6 +20,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.shawnkowalchuk.milo.data.trip.TripCorrections
 import com.shawnkowalchuk.milo.feature.eventlog.EventLogScreen
 import com.shawnkowalchuk.milo.feature.eventlog.EventLogViewModel
 import com.shawnkowalchuk.milo.feature.home.HomeScreen
@@ -96,6 +97,12 @@ fun MiloNavigation(
                                             sources = homeSources(container),
                                             clock = container.clock,
                                             zone = ZoneId::systemDefault,
+                                            corrections =
+                                                TripCorrections(
+                                                    trips = container.tripRepository,
+                                                    eventLog = container.eventLogRepository,
+                                                    clock = container.clock,
+                                                ),
                                         )
                                     }
                                 },
@@ -107,6 +114,7 @@ fun MiloNavigation(
                         onOpenReport = { month ->
                             backStack.openOnTop(ReportKey(month.year, month.monthValue))
                         },
+                        onEditTrip = { tripId -> backStack.openOnTop(TripEditKey(tripId)) },
                     )
                 }
                 entry<TripsKey> {

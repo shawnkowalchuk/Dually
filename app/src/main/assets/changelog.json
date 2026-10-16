@@ -6,6 +6,11 @@
       "changes": [
         {
           "kind": "improved",
+          "title": "Change today's trips from Home",
+          "body": "Press one of today's trips on Home to bring up the same buttons it has on the Trips screen: Personal or Business, to switch what it is saved as, and Edit. Trips in the corner of that tile still opens the Trips screen."
+        },
+        {
+          "kind": "improved",
           "title": "The rate is with the report's details",
           "body": "The rate your Business kilometres are priced at, for reference on Home, the widget and the Android Auto screen, is now set in Settings under Report for the accountant. The Home-screen widget's tile stays open again, with its switch at the top."
         },

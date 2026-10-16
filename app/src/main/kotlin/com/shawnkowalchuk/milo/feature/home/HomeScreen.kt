@@ -57,6 +57,7 @@ internal class HomeActions(
     val onOpenReport: (YearMonth) -> Unit,
     val onStart: () -> Unit,
     val onEnd: () -> Unit,
+    val todayRows: TodayRowActions = TodayRowActions(onMark = { _, _ -> }, onEdit = {}),
 )
 
 /**
@@ -99,6 +100,7 @@ fun HomeScreen(
     onOpenPairing: () -> Unit,
     onOpenTrips: () -> Unit,
     onOpenReport: (YearMonth) -> Unit,
+    onEditTrip: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // A press of Start is told to what is shown as well as to the trip controller, so that the
@@ -123,6 +125,7 @@ fun HomeScreen(
                     viewModel.onStartPressed()
                 },
                 onEnd = viewModel::onEndPressed,
+                todayRows = TodayRowActions(onMark = viewModel::onMark, onEdit = onEditTrip),
             ),
         modifier = modifier,
     )

@@ -64,7 +64,7 @@ internal fun RecordingTiles(
         },
     )
     ui.odometers?.let { OdometerTile(it, format) }
-    TodayListTile(ui.figures, format, actions.onOpenTrips, recording = true)
+    TodayListTile(ui.figures, format, actions.onOpenTrips, recording = true, actions.todayRows)
 }
 
 /**

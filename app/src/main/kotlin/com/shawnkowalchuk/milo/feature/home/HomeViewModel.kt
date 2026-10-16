@@ -2,11 +2,13 @@ package com.shawnkowalchuk.milo.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.shawnkowalchuk.milo.core.schedule.TripCategory
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.localDateOf
 import com.shawnkowalchuk.milo.core.util.monthSpan
 import com.shawnkowalchuk.milo.data.report.SentReport
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
+import com.shawnkowalchuk.milo.data.trip.TripCorrections
 import com.shawnkowalchuk.milo.data.trip.TripRepository
 import com.shawnkowalchuk.milo.platform.reminder.monthToRemindOf
 import com.shawnkowalchuk.milo.platform.system.SetupChecklist
@@ -36,6 +38,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 /** How long the state stays current after the screen stopped watching it (a rotation). */
 private const val KEEP_WATCHING_MS = 5_000L
@@ -83,6 +86,7 @@ class HomeViewModel(
     private val sources: HomeSources,
     private val clock: () -> Long,
     private val zone: () -> ZoneId,
+    private val corrections: TripCorrections? = null,
 ) : ViewModel() {
     /** The moment the screen last came to the front, and the day that was. */
     private data class Moment(val nowMs: Long, val zone: ZoneId) {
@@ -249,5 +253,14 @@ class HomeViewModel(
             emit(now)
             delay(msUntilNextMinute(now - startedAtMs))
         }
+    }
+
+    /**
+     * Marks one of today's trips Business or Personal by hand, from its row (since 2026-10-16),
+     * as the Trips screen does: the row and the figures follow storage.
+     */
+    fun onMark(tripId: Long, category: TripCategory) {
+        val by = corrections ?: return
+        viewModelScope.launch { by.mark(tripId, category) }
     }
 }
