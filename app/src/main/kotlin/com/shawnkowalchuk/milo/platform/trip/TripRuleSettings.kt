@@ -7,6 +7,7 @@ import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.settings.DEFAULT_MINIMUM_TRIP_DISTANCE_METRES
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
+import com.shawnkowalchuk.milo.data.settings.RunningTripCategory
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import java.io.IOException
 
@@ -46,6 +47,11 @@ internal class TripRuleSettings(
     var distanceFactor = factorFor(0)
         private set
 
+    /** What Shawn chose on Home for the trip being recorded, as last read, or null. */
+    @Volatile
+    var runningTripCategory: RunningTripCategory? = null
+        private set
+
     /**
      * What a closing trip is sorted by, or null while the settings cannot be read. There is no
      * default to fall back on here: a trip sorted by hours that are not Shawn's would be wrong
@@ -83,6 +89,7 @@ internal class TripRuleSettings(
         rules = rulesFor(now)
         minimumTripDistanceMetres = now.minimumTripDistanceMetres
         distanceFactor = factorFor(now.distanceAdjustSteps)
+        runningTripCategory = now.runningTripCategory
         return now
     }
 

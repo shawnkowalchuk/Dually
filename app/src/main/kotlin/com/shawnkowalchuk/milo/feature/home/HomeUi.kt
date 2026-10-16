@@ -1,7 +1,9 @@
 package com.shawnkowalchuk.milo.feature.home
 
+import com.shawnkowalchuk.milo.core.schedule.WorkSchedule
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
+import com.shawnkowalchuk.milo.data.settings.RunningTripCategory
 import com.shawnkowalchuk.milo.platform.bluetooth.sameAddress
 import com.shawnkowalchuk.milo.platform.bluetooth.trucks
 import com.shawnkowalchuk.milo.platform.trip.TripActivity
@@ -39,6 +41,8 @@ internal data class HomeUi(
     val odometers: List<HomeOdometer>? = null,
     val centsPerKm: Int? = null,
     val batterySaverOn: Boolean = false,
+    val runningChoice: RunningTripCategory? = null,
+    val schedule: WorkSchedule? = null,
 )
 
 /**
@@ -101,5 +105,7 @@ internal fun homeUi(now: HomeNow, read: HomeRead): HomeUi = HomeUi(
     unit = now.unit,
     odometers = read.odometers,
     batterySaverOn = read.batterySaverOn,
+    runningChoice = now.stored?.runningTripCategory,
+    schedule = now.stored?.schedule,
     centsPerKm = now.stored?.homeWidgetCentsPerKm,
 )

@@ -87,6 +87,8 @@ class HomeViewModel(
     private val clock: () -> Long,
     private val zone: () -> ZoneId,
     private val corrections: TripCorrections? = null,
+    private val chooseRunningCategory: suspend (tripId: Long, category: TripCategory) -> Unit =
+        { _, _ -> },
 ) : ViewModel() {
     /** The moment the screen last came to the front, and the day that was. */
     private data class Moment(val nowMs: Long, val zone: ZoneId) {
@@ -252,6 +254,21 @@ class HomeViewModel(
             val now = clock()
             emit(now)
             delay(msUntilNextMinute(now - startedAtMs))
+        }
+    }
+
+    /**
+     * Business or Personal for the trip being recorded, pressed on its card (since 2026-10-16):
+     * stored, and the trip is saved as it when it ends. A file that cannot be written leaves the
+     * card as it was, which is what storage says.
+     */
+    fun onRunningCategory(tripId: Long, category: TripCategory) {
+        viewModelScope.launch {
+            try {
+                chooseRunningCategory(tripId, category)
+            } catch (notStored: IOException) {
+                return@launch
+            }
         }
     }
 

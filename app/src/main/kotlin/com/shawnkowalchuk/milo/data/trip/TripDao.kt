@@ -126,7 +126,8 @@ interface TripDao {
             "endLatitude = :endLatitude, endLongitude = :endLongitude, " +
             "graceStartedAtMs = NULL, graceDeadlineMs = NULL, " +
             "category = :category, ranPastSchedule = :ranPastSchedule, " +
-            "ignoredOutsideSchedule = :ignoredOutsideSchedule " +
+            "ignoredOutsideSchedule = :ignoredOutsideSchedule, " +
+            "categorySetByHand = :categorySetByHand " +
             "WHERE id = :tripId AND status = :open",
     )
     suspend fun close(
@@ -142,6 +143,7 @@ interface TripDao {
         ranPastSchedule: Boolean,
         ignoredOutsideSchedule: Boolean,
         open: TripStatus,
+        categorySetByHand: Boolean = false,
     ): Int
 
     /**

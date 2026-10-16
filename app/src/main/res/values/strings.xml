@@ -104,6 +104,8 @@
     <string name="home_setup_warning_text">Something Dually needs is not set, or no truck is paired. A trip may not start by itself.</string>
     <string name="home_setup_warning_action">Open Setup</string>
     <!-- Home's note while the phone-wide Battery Saver is on (2026-10-14): a recommendation, not a Setup problem. -->
+    <!-- The trip being recorded, Business or Personal, on its card (2026-10-16). The argument is the word. -->
+    <string name="home_recording_category_spoken">This trip: %1$s</string>
     <string name="home_battery_saver_title">Battery Saver is on</string>
     <string name="home_battery_saver_text">While it is on, Android can limit GPS and background work, so a trip may be missed or cut short.</string>
     <string name="setup_detail_battery_after_pairing">Pair your truck first: that usually takes care of this.</string>

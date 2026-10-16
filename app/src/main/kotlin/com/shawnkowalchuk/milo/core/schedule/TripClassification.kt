@@ -73,8 +73,14 @@ data class FilingRules(val schedule: WorkSchedule, val ignoreOutsideSchedule: Bo
  * out Personal while trips outside the schedule are set to be ignored. Its fixes, its distance
  * and its times are stored as for any trip, so it can be found among the discarded trips and
  * counted after all.
+ * @param byHand true when Shawn chose the category while the trip was recorded (since
+ * 2026-10-16): it is then stored as set by hand, so that nothing sorts it again.
  */
-data class TripFiling(val classification: TripClassification?, val ignored: Boolean)
+data class TripFiling(
+    val classification: TripClassification?,
+    val ignored: Boolean,
+    val byHand: Boolean = false,
+)
 
 /**
  * Decides how a trip that has just ended is put away. This is the only place the "ignore"
@@ -85,6 +91,10 @@ data class TripFiling(val classification: TripClassification?, val ignored: Bool
  * that was never confirmed). Such a trip is sorted too, so that it has its category if it is
  * counted after all, but it is never marked as ignored: it is discarded for another reason.
  * @param rules null if the settings could not be read.
+ * @param chosen the category Shawn chose on Home while the trip was recorded, or null (since
+ * 2026-10-16, his choice "Your tap always wins"). It is what the trip is saved as, set by hand,
+ * whatever the hours say, and it is never ignored: he decided about this trip himself. A
+ * Business trip he chose runs past the schedule only if the hours make it Business too.
  */
 fun fileTrip(
     startedAtMs: Long,
@@ -92,9 +102,30 @@ fun fileTrip(
     kept: Boolean,
     rules: FilingRules?,
     zone: ZoneId,
+    chosen: TripCategory? = null,
 ): TripFiling {
+    if (chosen != null) {
+        val byHours = rules?.let { classifyTrip(startedAtMs, endedAtMs, it.schedule, zone) }
+        val ranPast =
+            chosen == TripCategory.BUSINESS &&
+                byHours?.category == TripCategory.BUSINESS &&
+                byHours.ranPastSchedule
+        return TripFiling(TripClassification(chosen, ranPast), ignored = false, byHand = true)
+    }
     if (rules == null) return TripFiling(classification = null, ignored = false)
     val classification = classifyTrip(startedAtMs, endedAtMs, rules.schedule, zone)
     val personal = classification.category == TripCategory.PERSONAL
     return TripFiling(classification, ignored = kept && personal && rules.ignoreOutsideSchedule)
 }
+
+/**
+ * What Home says the trip being recorded is (since 2026-10-16): what Shawn chose for it, or
+ * else what the hours would make of it now, by its start. Null with neither (no schedule read).
+ */
+fun categoryWhileRecorded(
+    startedAtMs: Long,
+    chosen: TripCategory?,
+    schedule: WorkSchedule?,
+    zone: ZoneId,
+): TripCategory? =
+    chosen ?: schedule?.let { classifyTrip(startedAtMs, endedAtMs = null, it, zone).category }
