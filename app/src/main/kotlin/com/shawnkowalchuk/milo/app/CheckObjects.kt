@@ -9,6 +9,8 @@ import com.shawnkowalchuk.milo.platform.nothingrecorded.AlarmManagerNothingRecor
 import com.shawnkowalchuk.milo.platform.nothingrecorded.NothingRecordedAlarm
 import com.shawnkowalchuk.milo.platform.nothingrecorded.NothingRecordedCheck
 import com.shawnkowalchuk.milo.platform.nothingrecorded.NothingRecordedNotification
+import com.shawnkowalchuk.milo.platform.odometer.OdometerCheck
+import com.shawnkowalchuk.milo.platform.odometer.OdometerCheckNotification
 import java.time.ZoneId
 import kotlinx.coroutines.flow.first
 
@@ -24,6 +26,26 @@ import kotlinx.coroutines.flow.first
  * @param container where the storage this object reads is made.
  */
 class CheckObjects(private val appContext: Context, private val container: AppContainer) {
+    /**
+     * The odometer check when a trip starts in another vehicle than the last (since
+     * 2026-10-16). Started with the process; it only watches the trips.
+     */
+    val odometer: OdometerCheck by lazy {
+        // Made on first use, on a background thread, as the daily check's is.
+        val notification by lazy {
+            OdometerCheckNotification(appContext, opens = MainActivity::class.java)
+        }
+        OdometerCheck(
+            settings = container.settingsStore,
+            trips = container.tripRepository,
+            notify = { vehicle, figure, unit -> notification.show(vehicle, figure, unit) },
+            eventLog = container.eventLogRepository,
+            clock = container.clock,
+            zone = ZoneId::systemDefault,
+            locale = { appContext.resources.configuration.locales[0] },
+        )
+    }
+
     /**
      * Asks, once a day and whenever MilO runs anyway, whether a trip has been recorded today,
      * and posts a notification if a work day has none. It is handed the settings, two reads of
