@@ -60,6 +60,9 @@ fun mileageReport(
 ): MileageReport {
     val sentBefore = sentFor(period, sent)
     val unit = settings.distanceUnit
+    val options = settings.reportOptions
+    val listed =
+        selection.trips + if (options.listPersonal) selection.personalTrips else emptyList()
     return MileageReport(
         sender = ReportSender(name, settings.reportCompany, settings.reportVehicle),
         period = period,
@@ -72,11 +75,13 @@ fun mileageReport(
         unit = unit,
         days =
             reportDays(
-                selection.trips.map { it.copy(vehicle = it.vehicle?.let(settings::vehicleNamed)) },
+                listed.map { it.copy(vehicle = it.vehicle?.let(settings::vehicleNamed)) },
                 zone,
             ),
         personal = PersonalDriving(selection.personalLeftOut, selection.personalTenths(unit)),
         odometers = odometersOver(period, zone, settings, truckTrips),
+        listsPersonal = options.listPersonal,
+        showsBusinessShare = options.businessShare,
     )
 }
 

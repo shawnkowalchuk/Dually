@@ -24,6 +24,15 @@
 
 ## Log
 
+### 2026-10-16
+
+**`[CHANGE]` Report options, step 1: Personal trips listed, and the Business use percentage (version 0.3.2)**
+Shawn, 2026-10-14: "I think we should put the option to include more stuff for the reports or customize them. personal trips/business trips in the report. vehicle mileage per trip start/finish. other suggestions." His answers that day: switches on the Report screen, remembered for every later report; Personal trips mixed into each day, marked; the share at the top. Built today as the first of three steps. **Built, not yet proven on the phone;** RO-1 to RO-5. APP_ENCYCLOPEDIA, Monthly PDF and submission, step 8a.
+- **Totals stay Business:** a listed Personal trip is in no subtotal, not in the total, and not in `MileageReport.tripCount`, which is the count recorded when a report is sent. So `changedSinceSent` and the revision numbers work as before whichever way the switch stands.
+- **The share is worked out from the two printed totals,** not from metres: the figure on the report can be checked against its own top tiles.
+- **The CSV's column is there only while Personal trips are listed,** so a spreadsheet built on the old columns is not shifted by a switch it never pressed.
+- **Decided for Shawn, not asked:** both switches off out of the box (a report is as it was until he chooses); the share as a note under the heading rather than a third top tile; the wording of the notes.
+
 ### 2026-10-15
 
 **`[CHANGE]` The website's top line has a "Guides" menu**

@@ -88,6 +88,9 @@ data class ReportWords(
     val odometerOfVehicle: String,
     val footer: String,
     val page: String,
+    val personalListed: String = "",
+    val personalTrip: String = "",
+    val businessShare: String = "",
 )
 
 /**
@@ -112,6 +115,7 @@ data class PrintedRow(
     val km: String,
     val marked: Boolean,
     val detail: String? = null,
+    val personal: Boolean = false,
 )
 
 /**
@@ -197,7 +201,10 @@ fun printedReport(report: MileageReport, words: ReportWords, format: ReportForma
             },
         notes =
             listOfNotNull(
-                words.businessOnly,
+                if (report.listsPersonal) words.personalListed else words.businessOnly,
+                report.businessSharePercent
+                    ?.takeIf { report.showsBusinessShare }
+                    ?.let { String.format(locale, words.businessShare, it) },
                 report.revision?.let {
                     val replaced = longDate.format(it.replacesSentOn)
                     String.format(locale, words.revisionNote, it.number, replaced)
@@ -240,9 +247,13 @@ private fun ReportDay.printed(
                     km = formatTenths(trip.tenths(unit), format.locale),
                     marked = trip.mark != null,
                     detail =
-                        listOfNotNull(trip.label, trip.vehicle.takeIf { severalVehicles })
-                            .joinToString(DETAIL_JOINER)
+                        listOfNotNull(
+                            words.personalTrip.takeIf { trip.personal },
+                            trip.label,
+                            trip.vehicle.takeIf { severalVehicles },
+                        ).joinToString(DETAIL_JOINER)
                             .ifEmpty { null },
+                    personal = trip.personal,
                 )
             },
         subtotalKm = formatTenths(tenths(unit), format.locale),

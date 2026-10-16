@@ -45,6 +45,7 @@ internal class ReportActions(
  *
  * @param pointsViewModel the tile that offers to delete a sent month's GPS points. It is told
  * which month the screen shows.
+ * @param optionsViewModel the "Report options" tile's switches.
  * @param onBack leaves the screen. Navigation belongs to the app, not the feature.
  * @param onOpenSettings opens Settings, where the name and the accountant's address are set.
  */
@@ -52,6 +53,7 @@ internal class ReportActions(
 fun ReportScreen(
     viewModel: ReportViewModel,
     pointsViewModel: MonthPointsViewModel,
+    optionsViewModel: ReportOptionsViewModel,
     onBack: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
@@ -59,6 +61,7 @@ fun ReportScreen(
     val state by viewModel.state.collectAsState()
     val ready = state as? ReportUiState.Ready
     val points by pointsViewModel.state.collectAsState()
+    val options by optionsViewModel.state.collectAsState()
     val monthShown = ready?.choice?.takeIf { it.kind == PeriodKind.MONTH }?.month
     LaunchedEffect(monthShown) { pointsViewModel.onMonthShown(monthShown) }
 
@@ -149,6 +152,13 @@ fun ReportScreen(
         modifier = modifier,
         pointsTile = {
             MonthPointsTile(points, pointsViewModel::onDelete, pointsViewModel::onKeep)
+        },
+        optionsTile = {
+            ReportOptionsTile(
+                options,
+                optionsViewModel::onListPersonal,
+                optionsViewModel::onBusinessShare,
+            )
         },
     )
 

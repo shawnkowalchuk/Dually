@@ -71,6 +71,13 @@ class ReportSelectionTest {
         assertEquals(2, selection.personalLeftOut)
         assertEquals(1, selection.unsortedLeftOut)
         assertFalse(selection.tripInProgress)
+        // As the report would list them, if it is set to (since 2026-10-16): the counted ones,
+        // oldest first, marked Personal; never the deleted one.
+        assertEquals(
+            listOf(at("2026-10-05T18:00"), at("2026-10-06T19:00")),
+            selection.personalTrips.map { it.startedAtMs },
+        )
+        assertTrue(selection.personalTrips.all { it.personal })
     }
 
     @Test

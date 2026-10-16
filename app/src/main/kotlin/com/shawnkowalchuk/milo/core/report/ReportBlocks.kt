@@ -406,7 +406,9 @@ internal fun rowBlock(row: PrintedRow, columns: Columns, measure: TextMeasure): 
     text(row.end, columns.endX, figure)
     column(from, columns.fromX, style, ReportInk.DARK)
     column(to, columns.toX, style, ReportInk.DARK)
-    text(row.km, columns.kmRight, figure, rightAligned = true)
+    // A listed Personal trip's figure is grey: it is in no subtotal, unlike the dark ones.
+    val kmInk = if (row.personal) ReportInk.QUIET else ReportInk.DARK
+    text(row.km, columns.kmRight, figure, rightAligned = true, ink = kmInk)
     if (row.marked) text(REPORT_MARK, columns.markX, style)
     down(maxOf(from.size, to.size) * style.leading)
     if (detail.isNotEmpty()) {

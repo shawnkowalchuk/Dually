@@ -17,6 +17,8 @@ import java.util.Locale
  * "mi", so the column says which of the two its figures are.
  * @param label and [vehicle] the titles of the trip's label, its purpose, and of the vehicle it
  * was in (since 2026-10-08).
+ * @param category the title of the column that says Business or Personal ([business],
+ * [personal]), there only when the report lists Personal trips (since 2026-10-16).
  */
 data class CsvWords(
     val date: String,
@@ -30,6 +32,9 @@ data class CsvWords(
     val byHand: String,
     val added: String,
     val edited: String,
+    val category: String = "",
+    val business: String = "",
+    val personal: String = "",
 )
 
 // A spreadsheet has to read these the same way whatever language the phone is set to, so the
@@ -65,9 +70,10 @@ fun reportCsv(report: MileageReport, words: CsvWords): String {
             words.to,
             words.label,
             words.vehicle,
+            words.category.takeIf { report.listsPersonal },
             words.km,
             words.byHand,
-        )
+        ).filterNotNull()
     val rows =
         report.days.flatMap { it.trips }.map { trip ->
             listOf(
@@ -78,13 +84,15 @@ fun reportCsv(report: MileageReport, words: CsvWords): String {
                 trip.to.orEmpty(),
                 trip.label.orEmpty(),
                 trip.vehicle.orEmpty(),
+                (if (trip.personal) words.personal else words.business)
+                    .takeIf { report.listsPersonal },
                 formatTenths(trip.tenths(report.unit), Locale.ROOT),
                 when (trip.mark) {
                     ReportMark.ADDED -> words.added
                     ReportMark.EDITED -> words.edited
                     null -> ""
                 },
-            )
+            ).filterNotNull()
         }
     return (listOf(header) + rows).joinToString(separator = "") { row ->
         row.joinToString(separator = ",", postfix = LINE_END, transform = ::csvCell)

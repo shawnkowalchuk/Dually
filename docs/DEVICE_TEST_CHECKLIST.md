@@ -1839,6 +1839,18 @@ Unit tests only.
 | BS-2 | Switch Battery Saver off, come back to Dually. | The tile is gone. | not run |
 | BS-3 | (A phone with no truck paired, Dually not exempt.) Open Setup. | "Battery use: unrestricted" says "Pair your truck first: that usually takes care of this.", and its button opens pairing. After pairing, the row has its tick without any battery setting being touched (not on a Xiaomi, whose own Battery saver is a separate row). | not run |
 
+## Report options (2026-10-16)
+
+Unit tests only.
+
+| # | Do this | Expect | Result |
+|---|---|---|---|
+| RO-1 | Report screen, a month with Business and Personal trips. | "Report options" above the PDF's tile, both switches off. Preview PDF: as before. | not run |
+| RO-2 | Switch on "List Personal trips too", Preview PDF. | Personal trips in each day in time order, "Personal" on their grey line and grey km; the subtotals, the total and the trip count are those of the Business trips alone. The note under the heading names both kinds. The line "Personal trips are left off" is gone from the screen. | not run |
+| RO-3 | Export CSV. | A "Category" column after Vehicle, Business or Personal on each row. | not run |
+| RO-4 | Switch on "Show the Business use percentage", Preview PDF. | "Business use: N% …" under the heading; N is the Business km over Business and Personal km. | not run |
+| RO-5 | Leave the screen, open another month's report, and Settings and back. | Both switches as you left them. | not run |
+
 ## Later work packages
 
 Nothing waiting. A work package that adds behaviour only the phone can prove adds its checks above.

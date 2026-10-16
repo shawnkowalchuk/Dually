@@ -7,7 +7,10 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import com.shawnkowalchuk.milo.data.settings.keepPointsOf
+import com.shawnkowalchuk.milo.data.settings.setReportListsPersonal
+import com.shawnkowalchuk.milo.data.settings.setReportShowsBusinessShare
 import com.shawnkowalchuk.milo.feature.report.MonthPointsViewModel
+import com.shawnkowalchuk.milo.feature.report.ReportOptionsViewModel
 import com.shawnkowalchuk.milo.feature.report.ReportReading
 import com.shawnkowalchuk.milo.feature.report.ReportRecords
 import com.shawnkowalchuk.milo.feature.report.ReportScreen
@@ -92,6 +95,18 @@ internal fun ReportEntry(container: AppContainer, backStack: NavBackStack<NavKey
                             keep = container.settingsStore::keepPointsOf,
                             clock = container.clock,
                             zone = ZoneId::systemDefault,
+                        )
+                    }
+                },
+            ),
+        optionsViewModel =
+            viewModel(
+                factory = viewModelFactory {
+                    initializer {
+                        ReportOptionsViewModel(
+                            options = container.settingsStore.settings.map { it.reportOptions },
+                            setListPersonal = container.settingsStore::setReportListsPersonal,
+                            setBusinessShare = container.settingsStore::setReportShowsBusinessShare,
                         )
                     }
                 },
