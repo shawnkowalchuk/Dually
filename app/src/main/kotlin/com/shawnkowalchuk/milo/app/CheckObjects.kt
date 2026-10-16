@@ -11,6 +11,8 @@ import com.shawnkowalchuk.milo.platform.nothingrecorded.NothingRecordedCheck
 import com.shawnkowalchuk.milo.platform.nothingrecorded.NothingRecordedNotification
 import com.shawnkowalchuk.milo.platform.odometer.OdometerCheck
 import com.shawnkowalchuk.milo.platform.odometer.OdometerCheckNotification
+import com.shawnkowalchuk.milo.platform.service.ServiceNotification
+import com.shawnkowalchuk.milo.platform.service.ServiceReminder
 import java.time.ZoneId
 import kotlinx.coroutines.flow.first
 
@@ -43,6 +45,24 @@ class CheckObjects(private val appContext: Context, private val container: AppCo
             clock = container.clock,
             zone = ZoneId::systemDefault,
             locale = { appContext.resources.configuration.locales[0] },
+        )
+    }
+
+    /**
+     * The service reminder (since 2026-10-16): a look when a trip has ended. Started with the
+     * process; it only watches the trips.
+     */
+    val service: ServiceReminder by lazy {
+        val notification by lazy {
+            ServiceNotification(appContext, opens = MainActivity::class.java)
+        }
+        ServiceReminder(
+            settings = container.settingsStore,
+            trips = container.tripRepository,
+            notify = { alerts, unit -> notification.show(alerts, unit) },
+            eventLog = container.eventLogRepository,
+            clock = container.clock,
+            zone = ZoneId::systemDefault,
         )
     }
 

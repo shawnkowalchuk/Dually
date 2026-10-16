@@ -62,6 +62,12 @@ class MiloApplication : Application() {
             container.tripController.activity,
             container.applicationScope,
         )
+        // The service reminder (since 2026-10-16) looks each time a trip ends. It too can
+        // touch no trip.
+        container.checks.service.start(
+            container.tripController.activity,
+            container.applicationScope,
+        )
 
         // Reading files and the database must not hold up the main thread, least of all when
         // the process was started by a trip trigger with seconds to begin recording.

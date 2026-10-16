@@ -7,11 +7,12 @@ import com.shawnkowalchuk.milo.core.service.ServiceDue
 import com.shawnkowalchuk.milo.core.service.ServiceItem
 import com.shawnkowalchuk.milo.core.service.ServiceRecord
 import com.shawnkowalchuk.milo.core.service.serviceDue
+import com.shawnkowalchuk.milo.core.service.vehicleOf
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.settings.pairedVehicles
 import com.shawnkowalchuk.milo.data.trip.Trip
-import com.shawnkowalchuk.milo.data.trip.vehicleOdometers
+import com.shawnkowalchuk.milo.data.trip.serviceOdometersKm
 import java.io.IOException
 import java.time.ZoneId
 import kotlinx.coroutines.flow.Flow
@@ -101,44 +102,32 @@ internal fun serviceState(
     nowMs: Long,
     zone: ZoneId,
 ): ServiceUiState {
-    val inKm = settings.copy(distanceUnit = DistanceUnit.KILOMETRES)
-    val odometers = vehicleOdometers(inKm, finished, nowMs, zone)
+    val odometerKmOf = serviceOdometersKm(settings, finished, nowMs, zone)
     val paired = settings.pairedVehicles()
+    val addresses = paired.map { it.address }
     val book = settings.serviceBook
-    fun lines(items: List<ServiceItem>, odometerKm: Long?) =
-        items.sortedBy { it.name.lowercase() }.map {
-            ServiceLine(it, serviceDue(it, odometerKm, nowMs, zone), book.historyOf(it.id))
-        }
+    fun lines(items: List<ServiceItem>) = items.sortedBy { it.name.lowercase() }.map {
+        ServiceLine(it, serviceDue(it, odometerKmOf(it), nowMs, zone), book.historyOf(it.id))
+    }
+
+    // The odometer of a group is the one its items go by: an item of its vehicle shows it.
+    fun odometerKm(address: String?) =
+        odometerKmOf(ServiceItem(0, address, "", null, null, 0, null))
     if (paired.size <= 1) {
-        val odometerKm = odometers.firstOrNull()?.figure?.value
+        val address = paired.firstOrNull()?.address
         return ServiceUiState(
-            listOf(
-                ServiceVehicle(
-                    null,
-                    paired.firstOrNull()?.address,
-                    odometerKm,
-                    lines(book.items, odometerKm),
-                ),
-            ),
+            listOf(ServiceVehicle(null, address, odometerKm(address), lines(book.items))),
             settings.distanceUnit,
         )
     }
-    val known = paired.map { it.address.uppercase() }.toSet()
     return ServiceUiState(
-        paired.mapIndexed { index, vehicle ->
-            val odometerKm = odometers.firstOrNull {
-                it.vehicle?.address == vehicle.address
-            }?.figure?.value
-            val items =
-                book.items.filter {
-                    it.vehicle.equals(vehicle.address, ignoreCase = true) ||
-                        (index == 0 && (it.vehicle == null || it.vehicle.uppercase() !in known))
-                }
+        paired.map { vehicle ->
+            val items = book.items.filter { vehicleOf(it, addresses) == vehicle.address }
             ServiceVehicle(
                 vehicle.name ?: vehicle.address,
                 vehicle.address,
-                odometerKm,
-                lines(items, odometerKm),
+                odometerKm(vehicle.address),
+                lines(items),
             )
         },
         settings.distanceUnit,
