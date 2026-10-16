@@ -20,6 +20,7 @@ import com.shawnkowalchuk.milo.core.designsystem.component.SteppedTitle
 import com.shawnkowalchuk.milo.core.designsystem.component.StepperButton
 import com.shawnkowalchuk.milo.core.designsystem.component.SwitchRow
 import com.shawnkowalchuk.milo.core.designsystem.component.Tile
+import com.shawnkowalchuk.milo.core.designsystem.component.TileButton
 import com.shawnkowalchuk.milo.core.designsystem.component.TilePair
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
 import com.shawnkowalchuk.milo.core.util.formatMonthAndYear
@@ -86,6 +87,14 @@ internal fun LazyListScope.monthItems(state: TripsUiState, actions: TripsActions
         TilePair(
             first = { half -> PersonalTile(summary?.totals, locale, state.unit, half) },
             second = { half -> AddTripTile(actions.onAdd, half) },
+        )
+    }
+    // The year's months as a graph (since 2026-10-16).
+    item(key = "graph") {
+        TileButton(
+            text = stringResource(R.string.graph_open),
+            onClick = actions.onGraph,
+            modifier = Modifier.fillMaxWidth(),
         )
     }
     state.changedSinceSent?.let { changed ->

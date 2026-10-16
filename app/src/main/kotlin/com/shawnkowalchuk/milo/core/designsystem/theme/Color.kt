@@ -121,6 +121,27 @@ private val AndroidAutoTagFill = Color(0xFF33294A)
 private val AndroidAutoTagText = Color(0xFFDCCBFF)
 
 /**
+ * The colours of a chart's lines (since 2026-10-16, the Trips screen's graph): one hue for each
+ * series, in this fixed order, never cycled. Business keeps the brand's orange, a step darker so
+ * that it sits in the lightness band a line needs on a dark tile; Personal is blue, the far side
+ * of the wheel, because the grey that writes a Personal figure in a list reads as no colour at
+ * all as a line. Checked with the data-visualisation validator against the tile's colour
+ * (#221D18): lightness band, chroma, colour-blind separation (ΔE 21.7 deutan), normal-vision
+ * separation and 3:1 contrast all pass. The grid is the quiet fill of a control.
+ *
+ * @param series the series' colours in their order: Business, then Personal.
+ */
+@Immutable
+data class ChartColors(val series: List<Color>, val grid: Color, val guide: Color)
+
+val MiloChartColors: ChartColors =
+    ChartColors(
+        series = listOf(Color(0xFFE8692E), Color(0xFF4C9ED0)),
+        grid = ControlFill,
+        guide = Ring,
+    )
+
+/**
  * Material's colour roles, given the design's colours, so that a stock Material component lands
  * on the design without being told a colour: a `Button` is the accent with dark words, a
  * `TextButton` is accent words, a `HorizontalDivider` is the design's divider line, a dialog is

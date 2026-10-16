@@ -1877,6 +1877,15 @@ Unit tests only.
 | MT-1 | Home with no trip: press the month's tile. | Trips on this month. Its orange card says "N trips · $…", the same dollars as Home's month tile. | not run |
 | MT-2 | During a trip: press today's card (it turns to the month), press it again. | Trips opens; back on Home the card shows today again. | not run |
 
+## The graph of the year (2026-10-16)
+
+| # | Do this | Expect | Result |
+|---|---|---|---|
+| GR-1 | Trips, "Graph of the year". | 2026, the current month picked; an orange Business line and a blue Personal line, each named; the scale on round figures. | not run |
+| GR-2 | Compare the list under the chart with Trips' tiles for two months. | The same Business and Personal figures. | not run |
+| GR-3 | Press a month's point; press it again. | The guide line and the month's figures in words; then gone. | not run |
+| GR-4 | Step to the previous year; Back. | 2025, whole year; Back to Trips. | not run |
+
 ## Later work packages
 
 Nothing waiting. A work package that adds behaviour only the phone can prove adds its checks above.

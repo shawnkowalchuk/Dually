@@ -8,6 +8,8 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.trip.TripCorrections
+import com.shawnkowalchuk.milo.feature.tripgraph.TripGraphScreen
+import com.shawnkowalchuk.milo.feature.tripgraph.TripGraphViewModel
 import com.shawnkowalchuk.milo.feature.trips.TripLabelViewModel
 import com.shawnkowalchuk.milo.feature.trips.TripsScreen
 import com.shawnkowalchuk.milo.feature.trips.TripsViewModel
@@ -79,5 +81,27 @@ internal fun TripsEntry(
         onEditTrip = { tripId -> backStack.openOnTop(TripEditKey(tripId)) },
         onAddTrip = { backStack.openOnTop(TripEditKey(tripId = null)) },
         onOpenReport = { month -> backStack.openOnTop(ReportKey(month.year, month.monthValue)) },
+        onOpenGraph = { backStack.openOnTop(TripGraphKey) },
+    )
+}
+
+/** The Trips screen's graph, opened on top of Trips: Back leads back to it (since 2026-10-16). */
+@Composable
+internal fun TripGraphEntry(container: AppContainer, backStack: NavBackStack<NavKey>) {
+    TripGraphScreen(
+        viewModel =
+            viewModel(
+                factory = viewModelFactory {
+                    initializer {
+                        TripGraphViewModel(
+                            trips = container.tripRepository,
+                            unit = container.shownUnit.unit,
+                            clock = container.clock,
+                            zone = ZoneId::systemDefault,
+                        )
+                    }
+                },
+            ),
+        onBack = { backStack.closeIfOnTop(TripGraphKey) },
     )
 }

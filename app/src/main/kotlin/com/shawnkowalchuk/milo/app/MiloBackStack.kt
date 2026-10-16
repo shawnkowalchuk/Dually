@@ -48,6 +48,10 @@ data object PairingKey : NavKey
 @Serializable
 data class TripEditKey(val tripId: Long?) : NavKey
 
+/** The Trips screen's graph of a year's months (since 2026-10-16), opened on top of Trips. */
+@Serializable
+data object TripGraphKey : NavKey
+
 /**
  * The Report screen, where the report for the accountant is made and sent. Not in the bottom
  * bar: it is opened from Trips, and from Home's tile for a report that has not been sent.

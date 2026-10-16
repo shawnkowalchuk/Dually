@@ -428,6 +428,15 @@
     <!-- Trips: the way to the edit screen, empty, for a trip MilO did not record. -->
     <!-- Under the month's Business figure on Trips (2026-10-16): the number of trips and their dollars at the rate ("$289"). -->
     <string name="trips_month_count_dollars">%1$s · %2$s</string>
+    <!-- The Trips screen's graph (2026-10-16). graph_spoken's argument is the year; graph_month_line's the month's name and its two distances with their unit. -->
+    <string name="graph_title">Graph</string>
+    <string name="graph_open">Graph of the year</string>
+    <string name="graph_previous_year">Previous year</string>
+    <string name="graph_next_year">Next year</string>
+    <string name="graph_business">Business</string>
+    <string name="graph_personal">Personal</string>
+    <string name="graph_spoken">Graph of %1$s: Business and Personal distance for each month. Each month\'s figures are listed under it.</string>
+    <string name="graph_month_line">%1$s: Business %2$s · Personal %3$s</string>
     <string name="trips_action_add">Add missed trip</string>
     <!-- Trips: spoken by the screen reader for what a tap on a finished trip does. -->
     <string name="trips_row_press">show or hide what can be done with this trip</string>
