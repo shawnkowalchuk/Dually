@@ -593,10 +593,13 @@
     <string name="report_reading">Reading the trips…</string>
     <string name="report_settings_unreadable">Dually cannot read its settings, so it does not know your name or where the report goes. No report can be made. The Log screen says why.</string>
     <string name="report_period_title">Period</string>
-    <string name="report_period_month">A whole month</string>
+    <string name="report_period_month">Month</string>
     <string name="report_period_month_detail">The month is marked as submitted once you have sent its report.</string>
-    <string name="report_period_range">A date range</string>
+    <string name="report_period_range">Date range</string>
     <string name="report_period_range_detail">Any days you choose. Such a report is kept in the list of sent reports, and never marks a month as submitted.</string>
+    <!-- A whole year (2026-10-16): 1 January to 31 December, whose report opens with its months. -->
+    <string name="report_period_year">Year</string>
+    <string name="report_period_year_detail">1 January to 31 December. The report opens with a page of the year\'s months, Business and Personal, then lists the trips. Like a date range, it never marks a month as submitted.</string>
     <!--
         How the two dates of a range are joined, on the screen, on the PDF and in the email's
         subject: October 5, 2026 to October 18, 2026.
@@ -724,6 +727,10 @@
     <string name="report_pdf_personal_listed">Business and Personal trips. Personal trips are in grey and in no subtotal or total. Distances are in %1$s.</string>
     <string name="report_pdf_personal_trip">Personal</string>
     <string name="report_pdf_business_share">Business use: %1$d%% of the distance driven in this period, Business and Personal together.</string>
+    <!-- The year-end summary's page (2026-10-16). The title's argument is the year. -->
+    <string name="report_pdf_year_title">%1$s, month by month</string>
+    <string name="report_pdf_year_total">The year</string>
+    <string name="report_pdf_not_yet">–</string>
     <!-- A trip's odometer on the report (2026-10-16): the start and end figures and the unit's short word. -->
     <string name="report_pdf_trip_odometer">Odometer %1$s → %2$s %3$s</string>
     <string name="report_pdf_trip_odometer_estimated">Odometer %1$s → %2$s %3$s est.</string>

@@ -126,6 +126,8 @@ data class PersonalDriving(val tripCount: Int, val tenths: Long)
  * vehicle without a reading has none, and the list is empty while no reading has been typed.
  * @param listsPersonal whether [days] list the Personal trips too, marked and in grey (a switch
  * on the Report screen since 2026-10-16). They are never in a subtotal or the total.
+ * @param months for a report of a whole calendar year ([ReportPeriod.wholeYear]), its twelve
+ * months, which its first page sums up (since 2026-10-16); null for any other period.
  * @param showsBusinessShare whether the report says what share of the period's driving was
  * Business ([businessSharePercent]), the same switch's neighbour.
  */
@@ -142,6 +144,7 @@ data class MileageReport(
     val listsPersonal: Boolean = false,
     val showsBusinessShare: Boolean = false,
     val showsTripOdometer: Boolean = false,
+    val months: List<MonthTotal>? = null,
 ) {
     /** How many Business trips it lists: the count that is recorded when it is sent. */
     val tripCount: Int get() = days.sumOf { day -> day.trips.count { !it.personal } }

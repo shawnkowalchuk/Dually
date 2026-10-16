@@ -54,8 +54,8 @@ private const val SECTION_GAP = 10f
 
 // Rules are drawn with a thickness of their own. A hairline (thickness 0) is one device pixel
 // wide whatever the scale, and can print almost invisibly.
-private const val THIN_RULE = 0.5f
-private const val RULE = 0.75f
+internal const val THIN_RULE = 0.5f
+internal const val RULE = 0.75f
 
 /** How long the two lines at the end of the report are, and the room between them. */
 private const val SIGNATURE_LINE = 250f
@@ -72,7 +72,7 @@ private const val SIGNATURE_WORDS_GAP = 2f
 internal class Block(val height: Float, val items: List<PageItem>)
 
 /** Builds a [Block] from the top down. */
-private class BlockBuilder {
+internal class BlockBuilder {
     private val items = mutableListOf<PageItem>()
 
     /** How far down the block the builder has come. */
@@ -149,7 +149,7 @@ private class BlockBuilder {
     fun build(): Block = Block(y, items.toList())
 }
 
-private fun block(build: BlockBuilder.() -> Unit): Block = BlockBuilder().apply(build).build()
+internal fun block(build: BlockBuilder.() -> Unit): Block = BlockBuilder().apply(build).build()
 
 /**
  * The app's mark with its top left corner at [left], [top]: a square of the accent, [size]

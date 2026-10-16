@@ -2,13 +2,17 @@ package com.shawnkowalchuk.milo.feature.report
 
 import com.shawnkowalchuk.milo.core.report.ReportPeriod
 import java.time.LocalDate
+import java.time.Month
 import java.time.YearMonth
 
 // Which period the Report screen is set to, and what each press makes of it. Pure values and
 // functions, so they are tested without a phone.
 
-/** The two kinds of period a report can cover. */
-enum class PeriodKind { MONTH, RANGE }
+/**
+ * The kinds of period a report can cover. A whole year (since 2026-10-16) is the date range from
+ * 1 January to 31 December of [ReportChoice.month]'s year, whose report opens with its months.
+ */
+enum class PeriodKind { MONTH, RANGE, YEAR }
 
 /**
  * What Shawn has chosen on the Report screen.
@@ -29,7 +33,14 @@ data class ReportChoice(
     val period: ReportPeriod
         get() = when (kind) {
             PeriodKind.MONTH -> ReportPeriod.Month(month)
+
             PeriodKind.RANGE -> ReportPeriod.Range(rangeFirst, rangeLast)
+
+            PeriodKind.YEAR ->
+                ReportPeriod.Range(
+                    LocalDate.of(month.year, Month.JANUARY, 1),
+                    LocalDate.of(month.year, Month.DECEMBER, 31),
+                )
         }
 }
 
@@ -55,11 +66,19 @@ fun openingChoice(month: YearMonth, today: LocalDate): ReportChoice {
  * The range follows to the new month's days, so that "A date range" always starts from the
  * month in view.
  */
-fun ReportChoice.steppedMonth(months: Long, today: LocalDate): ReportChoice =
-    openingChoice(month.plusMonths(months), today).copy(kind = kind)
+fun ReportChoice.steppedMonth(months: Long, today: LocalDate): ReportChoice {
+    // A whole year steps a year at a time.
+    val by = if (kind == PeriodKind.YEAR) months * MONTHS_IN_A_YEAR else months
+    return openingChoice(month.plusMonths(by), today).copy(kind = kind)
+}
 
-/** Whether there is a later month to step to. */
-fun ReportChoice.canStepForward(today: LocalDate): Boolean = month < YearMonth.from(today)
+/** Whether there is a later month, or for a whole year a later year, to step to. */
+fun ReportChoice.canStepForward(today: LocalDate): Boolean = when (kind) {
+    PeriodKind.YEAR -> month.year < today.year
+    else -> month < YearMonth.from(today)
+}
+
+private const val MONTHS_IN_A_YEAR = 12L
 
 /**
  * The choice with [day] as the first day of the range. A first day that is later than the last

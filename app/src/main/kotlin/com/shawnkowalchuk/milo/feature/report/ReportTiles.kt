@@ -90,16 +90,26 @@ internal fun PeriodTile(state: ReportUiState.Ready, actions: ReportActions) {
                         selected = choice.kind == PeriodKind.RANGE,
                         onSelect = { actions.onKind(PeriodKind.RANGE) },
                     ),
+                    Segment(
+                        label = stringResource(R.string.report_period_year),
+                        selected = choice.kind == PeriodKind.YEAR,
+                        onSelect = { actions.onKind(PeriodKind.YEAR) },
+                    ),
                 ),
         )
         when (choice.kind) {
-            PeriodKind.MONTH ->
+            PeriodKind.MONTH, PeriodKind.YEAR ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = formatMonthAndYear(choice.month, locale),
+                        text =
+                            if (choice.kind == PeriodKind.YEAR) {
+                                choice.month.year.toString()
+                            } else {
+                                formatMonthAndYear(choice.month, locale)
+                            },
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.titleSmall,
                     )
@@ -145,6 +155,7 @@ internal fun PeriodTile(state: ReportUiState.Ready, actions: ReportActions) {
                 when (choice.kind) {
                     PeriodKind.MONTH -> R.string.report_period_month_detail
                     PeriodKind.RANGE -> R.string.report_period_range_detail
+                    PeriodKind.YEAR -> R.string.report_period_year_detail
                 },
             ),
         )

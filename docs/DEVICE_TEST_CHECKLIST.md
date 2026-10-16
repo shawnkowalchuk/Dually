@@ -1852,6 +1852,9 @@ Unit tests only.
 | RO-5 | Leave the screen, open another month's report, and Settings and back. | Both switches as you left them. | not run |
 | RO-6 | Switch on "Show each trip's odometer", Preview PDF. | Under each trip "Odometer … → … km est."; one trip's end is the next trip's start in the same vehicle (or further, if it drove without Dually between). | not run |
 | RO-7 | Export CSV. | "Odometer start" and "Odometer end" columns after km. | not run |
+| RO-8 | Report screen: the Period tile. | "Month · Date range · Year" side by side, each readable. | not run |
+| RO-9 | "Year", step back and forth. | 2026, 2025 …; never past this year. | not run |
+| RO-10 | Preview PDF for 2026. | Page 1: the top tiles, then "2026, month by month" with twelve months (November and December "–") and "The year"; the trips from page 2. | not run |
 
 ## Today's trips on Home open (2026-10-16)
 

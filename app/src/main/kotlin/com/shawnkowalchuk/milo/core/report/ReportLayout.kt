@@ -76,6 +76,12 @@ fun layoutReport(report: PrintedReport, measure: TextMeasure, locale: Locale): L
     val columns = columnsFor(report, measure)
     val pages = Pages()
     pages.place(headingBlock(report, measure))
+    // A whole year opens with its months (since 2026-10-16), and its trips start a new page.
+    report.yearSummary?.let { summary ->
+        pages.place(dayHeadingBlock(summary.title))
+        pages.place(yearSummaryBlock(summary))
+        if (report.days.isNotEmpty()) pages.newPage()
+    }
     report.emptyNote?.let { pages.place(emptyBlock(it)) }
     for (day in report.days) pages.placeDay(day, report.words, columns, measure)
 
