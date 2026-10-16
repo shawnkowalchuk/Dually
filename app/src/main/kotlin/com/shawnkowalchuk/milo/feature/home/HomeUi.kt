@@ -1,6 +1,7 @@
 package com.shawnkowalchuk.milo.feature.home
 
 import com.shawnkowalchuk.milo.core.schedule.WorkSchedule
+import com.shawnkowalchuk.milo.core.service.ServiceAlert
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.settings.RunningTripCategory
@@ -28,6 +29,8 @@ import java.time.YearMonth
  * settings and the trips are being read, or the settings cannot be.
  * @param centsPerKm the rate the month's Business dollars are priced at, the one set in
  * Settings for the widget, or null while the settings have not been read or cannot be.
+ * @param serviceAlerts the service items that are soon or due (since 2026-10-16), for Home's
+ * tile; none while they are being read.
  */
 internal data class HomeUi(
     val date: LocalDate,
@@ -43,6 +46,7 @@ internal data class HomeUi(
     val batterySaverOn: Boolean = false,
     val runningChoice: RunningTripCategory? = null,
     val schedule: WorkSchedule? = null,
+    val serviceAlerts: List<ServiceAlert> = emptyList(),
 )
 
 /**
@@ -72,6 +76,7 @@ internal data class HomeRead(
     val nowMs: Long,
     val odometers: List<HomeOdometer>? = null,
     val batterySaverOn: Boolean = false,
+    val serviceAlerts: List<ServiceAlert> = emptyList(),
 )
 
 /**
@@ -108,4 +113,5 @@ internal fun homeUi(now: HomeNow, read: HomeRead): HomeUi = HomeUi(
     runningChoice = now.stored?.runningTripCategory,
     schedule = now.stored?.schedule,
     centsPerKm = now.stored?.homeWidgetCentsPerKm,
+    serviceAlerts = read.serviceAlerts,
 )

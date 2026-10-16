@@ -108,6 +108,14 @@
     <string name="home_recording_category_spoken">This trip: %1$s</string>
     <!-- The odometer check when a trip starts in another vehicle (2026-10-16). The title's arguments: the vehicle's name, its odometer as Dually has it ("120,345") and the unit's short word. -->
     <string name="notification_channel_odometer_check">Odometer check</string>
+    <string name="notification_channel_service">Service reminders</string>
+    <!-- The arguments are the item's name and when it is due: "Oil change: due in 400 km". -->
+    <string name="notification_service_line">%1$s: %2$s</string>
+    <plurals name="notification_service_title_many">
+        <item quantity="one">%1$d service item needs you</item>
+        <item quantity="other">%1$d service items need you</item>
+    </plurals>
+    <string name="notification_service_text">Tap to see it in Service, and press Done once it is done.</string>
     <string name="notification_odometer_check_title">%1$s: odometer about %2$s %3$s?</string>
     <string name="notification_odometer_check_text">A trip started in another vehicle than last time. If someone drove it without Dually, its odometer may be further on: tap to type the reading in Settings.</string>
     <string name="home_battery_saver_title">Battery Saver is on</string>
@@ -378,6 +386,8 @@
     <!-- Event log. The entries themselves are stored in English and shown as stored. -->
     <!-- The Service screen (since 2026-10-16): each vehicle's upkeep, when it is due, and what was done. -->
     <string name="service_title">Service</string>
+    <!-- The button of Home's tile for service that is soon or due. -->
+    <string name="home_service_action">Open Service</string>
     <string name="service_reading">Reading your service items…</string>
     <string name="service_none">Nothing to look after yet. Add an oil change, a tire rotation or anything else, and Dually shows when each is due.</string>
     <string name="service_add">Add an item</string>

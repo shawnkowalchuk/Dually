@@ -60,6 +60,7 @@ internal class HomeActions(
     val onEnd: () -> Unit,
     val todayRows: TodayRowActions = TodayRowActions(onMark = { _, _ -> }, onEdit = {}),
     val onRunningCategory: (tripId: Long, category: TripCategory) -> Unit = { _, _ -> },
+    val onOpenService: () -> Unit = {},
 )
 
 /**
@@ -104,6 +105,7 @@ fun HomeScreen(
     onOpenReport: (YearMonth) -> Unit,
     onEditTrip: (Long) -> Unit,
     modifier: Modifier = Modifier,
+    onOpenService: () -> Unit = {},
 ) {
     // A press of Start is told to what is shown as well as to the trip controller, so that the
     // screen changes to the trip at once even in the middle of the truck's arrival.
@@ -129,6 +131,7 @@ fun HomeScreen(
                 onEnd = viewModel::onEndPressed,
                 todayRows = TodayRowActions(onMark = viewModel::onMark, onEdit = onEditTrip),
                 onRunningCategory = viewModel::onRunningCategory,
+                onOpenService = onOpenService,
             ),
         modifier = modifier,
     )

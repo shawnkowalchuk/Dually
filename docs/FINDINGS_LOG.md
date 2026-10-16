@@ -26,6 +26,13 @@
 
 ### 2026-10-16
 
+**`[CHANGE]` Service reminders: a notification at a trip's end and a tile on Home (version 0.3.2)**
+The second half of Shawn's "Service" (his choice: "Notification + Home tile"), and his message of the same afternoon: "home screen should show alerts when a service is needed". APP_ENCYCLOPEDIA, Service, 6 to 8; SV-7 to SV-10. Ran on an emulator end to end; not yet on the phone.
+- **`[DECISION]` The notification comes only when a trip ends,** never during one and never by an alarm: no new alarm, no wake-up, nothing while driving. An item due by time alone waits for the next trip's end, and Home's tile shows it at once in the meantime.
+- **Each due point is told once** (`remindedFor`: item to the moment it was last done), until Done or a changed last-done day. Home's tile, by contrast, stays until Done.
+- **Moved:** the due line from `feature/service` to `core/designsystem/text/ServiceDueText.kt`, with the string getter handed in, so the notification and Home write the same words without importing the feature; the rule for which vehicle's odometer an item goes by to `vehicleOf` and `serviceOdometersKm`, now used by the screen too. `MiloApp`'s `settingsAsked` became `screenAsked` (Settings or Service), so the new tap added no lines to a file past its size limit.
+- **Decided for Shawn, not asked:** the tile is hidden while a trip is recorded; the channel makes a sound (default importance), as the driver is parked; one notification for all the items told at once.
+
 **`[FIX]` The Service dialogs no longer close on a press beside them (version 0.3.2)**
 Shawn, on the phone: "when i click off the model when entering a service the screen disapears", and what he had typed went with it. Both dialogs now close only by Cancel, Back or their own button (`dismissOnClickOutside = false`). The other dialogs of the app are unchanged: they hold a choice, not typing.
 

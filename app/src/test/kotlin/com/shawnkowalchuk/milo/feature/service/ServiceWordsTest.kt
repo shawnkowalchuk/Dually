@@ -1,5 +1,7 @@
 package com.shawnkowalchuk.milo.feature.service
 
+import com.shawnkowalchuk.milo.core.designsystem.text.kmToShown
+import com.shawnkowalchuk.milo.core.designsystem.text.shownToKm
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import java.util.Locale
 import org.junit.Assert.assertEquals

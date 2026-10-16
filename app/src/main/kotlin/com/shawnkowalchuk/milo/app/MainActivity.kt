@@ -12,6 +12,7 @@ import com.shawnkowalchuk.milo.core.designsystem.theme.MiloSystemBarStyle
 import com.shawnkowalchuk.milo.platform.nothingrecorded.homeAskedFor
 import com.shawnkowalchuk.milo.platform.odometer.settingsAskedFor
 import com.shawnkowalchuk.milo.platform.reminder.reportMonthToOpen
+import com.shawnkowalchuk.milo.platform.service.serviceAskedFor
 import com.shawnkowalchuk.milo.platform.trip.TripTrigger
 import java.time.YearMonth
 
@@ -37,8 +38,11 @@ class MainActivity : ComponentActivity() {
      */
     private var homeAsked by mutableStateOf(false)
 
-    /** True from a tap on the odometer check until the screens have shown Settings. */
-    private var settingsAsked by mutableStateOf(false)
+    /**
+     * A screen of the bottom bar a notification asked for, until the screens have shown it:
+     * Settings from the odometer check, Service from the service reminder (since 2026-10-16).
+     */
+    private var screenAsked by mutableStateOf<TopLevelDestination?>(null)
 
     /**
      * True from a fresh start of the activity until the greeting, the mascot's wave or his
@@ -62,7 +66,7 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) {
             reportToOpen = reportMonthToOpen(intent)
             homeAsked = homeAskedFor(intent)
-            settingsAsked = settingsAskedFor(intent)
+            screenAsked = screenAskedFor(intent)
             greetingAsked = true
         }
 
@@ -76,8 +80,8 @@ class MainActivity : ComponentActivity() {
                 onHomeShown = { homeAsked = false },
                 greetingAsked = greetingAsked,
                 onGreetingDone = { greetingAsked = false },
-                settingsAsked = settingsAsked,
-                onSettingsShown = { settingsAsked = false },
+                screenAsked = screenAsked,
+                onScreenShown = { screenAsked = null },
             )
         }
     }
@@ -87,7 +91,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         reportMonthToOpen(intent)?.let { reportToOpen = it }
         if (homeAskedFor(intent)) homeAsked = true
-        if (settingsAskedFor(intent)) settingsAsked = true
+        screenAskedFor(intent)?.let { screenAsked = it }
     }
 
     /**
@@ -129,4 +133,11 @@ class MainActivity : ComponentActivity() {
         /** What the event log calls the driving alert's look at its permission. */
         const val IN_FRONT = "Dually in front"
     }
+}
+
+/** The screen of the bottom bar a tapped notification asks for, or null. */
+private fun screenAskedFor(intent: Intent?): TopLevelDestination? = when {
+    settingsAskedFor(intent) -> TopLevelDestination.SETTINGS
+    serviceAskedFor(intent) -> TopLevelDestination.SERVICE
+    else -> null
 }

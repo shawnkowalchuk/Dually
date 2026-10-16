@@ -28,6 +28,8 @@ import com.shawnkowalchuk.milo.core.designsystem.component.DateDialog
 import com.shawnkowalchuk.milo.core.designsystem.component.RowButton
 import com.shawnkowalchuk.milo.core.designsystem.component.TextEntry
 import com.shawnkowalchuk.milo.core.designsystem.component.ValueButton
+import com.shawnkowalchuk.milo.core.designsystem.text.kmToShown
+import com.shawnkowalchuk.milo.core.designsystem.text.shownToKm
 import com.shawnkowalchuk.milo.core.designsystem.text.unitNameRes
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
 import com.shawnkowalchuk.milo.core.odometer.parseOdometer

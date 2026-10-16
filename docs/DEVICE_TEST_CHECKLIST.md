@@ -1910,6 +1910,10 @@ Unit tests only.
 | SV-4 | Press it, Done, type a cost and a note, Done. | Due again from today; "Done before" lists the day, odometer, cost and note. | not run |
 | SV-5 | Two vehicles paired. | A group under each vehicle's name, each with its own odometer and "Add an item". | not run |
 | SV-6 | Settings, scroll to the end, "Log"; then Back. | The Log, with Settings still marked in the bar; Back to Settings. | not run |
+| SV-7 | An item overdue (SV-3); open Home. | A tile "(name)" with "Overdue since …" and "Open Service", under the report's; the button opens Service. | not run |
+| SV-8 | Start a trip. | The service tile is gone while the trip is recorded. | not run |
+| SV-9 | End the trip. | A notification "(name): Overdue since …"; a tap opens Service. The Log has a TRIP line "told of service". | not run |
+| SV-10 | Another trip, without pressing Done. | No second notification; Home's tile is still there. Press Done: the tile goes. | not run |
 
 ## Later work packages
 

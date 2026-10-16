@@ -118,6 +118,7 @@ fun MiloNavigation(
                             backStack.openOnTop(ReportKey(month.year, month.monthValue))
                         },
                         onEditTrip = { tripId -> backStack.openOnTop(TripEditKey(tripId)) },
+                        onOpenService = { backStack.showTopLevel(ServiceKey, HomeKey) },
                     )
                 }
                 entry<TripsKey> {

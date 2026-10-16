@@ -3,6 +3,7 @@ package com.shawnkowalchuk.milo.feature.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shawnkowalchuk.milo.core.schedule.TripCategory
+import com.shawnkowalchuk.milo.core.service.ServiceAlert
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.localDateOf
 import com.shawnkowalchuk.milo.core.util.monthSpan
@@ -10,6 +11,7 @@ import com.shawnkowalchuk.milo.data.report.SentReport
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.trip.TripCorrections
 import com.shawnkowalchuk.milo.data.trip.TripRepository
+import com.shawnkowalchuk.milo.data.trip.serviceAlertsOf
 import com.shawnkowalchuk.milo.platform.reminder.monthToRemindOf
 import com.shawnkowalchuk.milo.platform.system.SetupChecklist
 import com.shawnkowalchuk.milo.platform.system.SetupItem
@@ -162,6 +164,15 @@ class HomeViewModel(
             settings?.let { homeOdometers(it, finished, clock(), zone(), soFar) }
         }.whileWatched(null)
 
+    /**
+     * The service items that are soon or due (since 2026-10-16), for Home's tile until Done,
+     * worked out as the Service screen and its reminder work them out.
+     */
+    private val serviceAlerts: StateFlow<List<ServiceAlert>> =
+        combine(stored, trips.observeFinishedTrips(), day) { settings, finished, now ->
+            settings?.let { serviceAlertsOf(it, finished, now.nowMs, now.zone) }.orEmpty()
+        }.whileWatched(emptyList())
+
     /** The month whose report is waiting to be sent, or null: see [reportWaiting]. */
     @OptIn(ExperimentalCoroutinesApi::class)
     private val report: StateFlow<YearMonth?> =
@@ -210,7 +221,15 @@ class HomeViewModel(
                 sources.unit,
                 ::HomeNow,
             ),
-            combine(figures, report, nowMs, odometers, batterySaverOn, ::HomeRead),
+            combine(
+                figures,
+                report,
+                nowMs,
+                combine(odometers, serviceAlerts, ::Pair),
+                batterySaverOn,
+            ) { figures, report, nowMs, (odometers, alerts), batterySaverOn ->
+                HomeRead(figures, report, nowMs, odometers, batterySaverOn, alerts)
+            },
             ::homeUi,
         ).whileWatched(
             homeUi(
