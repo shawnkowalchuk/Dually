@@ -1870,6 +1870,13 @@ Unit tests only.
 | RC-3 | End the trip. | Trips shows it as what the pill last said; the Log's close line says it was sorted as that. Changing the work hours afterwards does not change it. | not run |
 | RC-4 | With "Ignore them" chosen for trips outside the hours, start one outside them, press the pill to Personal, end it. | It is kept as a Personal trip, not discarded. | not run |
 
+## The month card opens Trips, which says the dollars (2026-10-16)
+
+| # | Do this | Expect | Result |
+|---|---|---|---|
+| MT-1 | Home with no trip: press the month's tile. | Trips on this month. Its orange card says "N trips · $…", the same dollars as Home's month tile. | not run |
+| MT-2 | During a trip: press today's card (it turns to the month), press it again. | Trips opens; back on Home the card shows today again. | not run |
+
 ## Later work packages
 
 Nothing waiting. A work package that adds behaviour only the phone can prove adds its checks above.

@@ -6,11 +6,15 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.trip.TripCorrections
 import com.shawnkowalchuk.milo.feature.trips.TripLabelViewModel
 import com.shawnkowalchuk.milo.feature.trips.TripsScreen
 import com.shawnkowalchuk.milo.feature.trips.TripsViewModel
+import java.io.IOException
 import java.time.ZoneId
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
 
 /**
  * The Trips screen with its two view models: the month's trips, and since 2026-10-08 the
@@ -44,6 +48,12 @@ internal fun TripsEntry(
                             tripActivity = container.tripController.activity,
                             openTripStart = container.tripAddresses.openTripStart,
                             unit = container.shownUnit.unit,
+                            // The rate Home and the widget price the month at; none while the
+                            // settings cannot be read.
+                            centsPerKm =
+                                container.settingsStore.settings
+                                    .map<MiloSettings, Int?> { it.homeWidgetCentsPerKm }
+                                    .catch { if (it is IOException) emit(null) else throw it },
                             sentReports = container.sentReportRepository.observeSent(),
                             lookUpAddresses = container.tripAddresses::catchUp,
                             clock = container.clock,

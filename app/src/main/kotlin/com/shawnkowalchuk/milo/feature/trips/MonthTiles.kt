@@ -17,6 +17,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import com.shawnkowalchuk.milo.R
+import com.shawnkowalchuk.milo.core.allowance.formatWholeDollars
 import com.shawnkowalchuk.milo.core.designsystem.component.FigureSize
 import com.shawnkowalchuk.milo.core.designsystem.component.FigureText
 import com.shawnkowalchuk.milo.core.designsystem.component.MiloIcons
@@ -61,6 +62,9 @@ import java.util.Locale
  * @param summary null while the month's trips are being read: the figure is then a dash.
  * @param submission that the month's report was sent, and when; null while it was not.
  * @param unit the unit chosen in Settings, which the figure is written in.
+ * @param businessCents the Business kilometres at the rate set in Settings, or null while there
+ * is no rate to go by (since 2026-10-16, Shawn: "the top business card should have the money
+ * value that same as the front card"). For reference only, like Home's.
  */
 @Composable
 internal fun MonthTile(
@@ -70,6 +74,7 @@ internal fun MonthTile(
     zone: ZoneId,
     unit: DistanceUnit,
     onOpenReport: () -> Unit,
+    businessCents: Long? = null,
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val spacing = MiloTheme.spacing
@@ -111,8 +116,22 @@ internal fun MonthTile(
                     size = FigureSize.TOTAL,
                     spoken = figure?.let { stringResource(distanceSpokenRes(unit), it) },
                 )
+                // "21 trips · $289": the dollars as Home's month card prices them (2026-10-16).
+                val count = business?.let { trips(it.count) }
                 Text(
-                    text = business?.let { trips(it.count) } ?: reading,
+                    text =
+                        when {
+                            count == null -> reading
+
+                            businessCents == null -> count
+
+                            else ->
+                                stringResource(
+                                    R.string.trips_month_count_dollars,
+                                    count,
+                                    formatWholeDollars(businessCents, locale),
+                                )
+                        },
                     style = MiloTheme.textStyles.accentNote,
                 )
             }

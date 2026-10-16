@@ -5,6 +5,11 @@
       "date": null,
       "changes": [
         {
+          "kind": "improved",
+          "title": "From the month on Home to the month on Trips",
+          "body": "Press the month's card on Home to open that month on the Trips screen. While a trip is recorded, the card shows today first; press it to see the month, and again to open Trips. The Trips screen's month card now shows the dollars beside the number of Business trips, the same as on Home."
+        },
+        {
           "kind": "new",
           "title": "Business or Personal while you drive",
           "body": "While a trip is being recorded, Home's trip card says Business or Personal beside Recording: what your work hours make of it. Press it to switch, for example when you leave work early for home. The trip is saved as what you chose when it ends, and Dually never changes your choice afterwards."

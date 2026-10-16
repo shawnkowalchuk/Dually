@@ -38,7 +38,14 @@ internal fun IdleTiles(shown: HomeShown, actions: HomeActions, format: HomeForma
             TodayTile(ui.figures, FigureSize.LARGE, format, half)
         },
         second = { half ->
-            MonthTile(YearMonth.from(ui.date), ui.figures?.month, ui.centsPerKm, format, half)
+            MonthTile(
+                YearMonth.from(ui.date),
+                ui.figures?.month,
+                ui.centsPerKm,
+                format,
+                half,
+                actions.onOpenTrips,
+            )
         },
     )
     HomeTruckTile(shown.truckTile, ui.truck, actions.onOpenPairing)
@@ -70,8 +77,15 @@ private fun MonthTile(
     centsPerKm: Int?,
     format: HomeFormat,
     modifier: Modifier,
+    onOpenTrips: () -> Unit,
 ) {
-    Tile(modifier = modifier, padding = TilePadding.EVEN) {
+    // A press opens the month on Trips (since 2026-10-16, Shawn: "can we have it when you click
+    // it. it will go to the monthly trips screen").
+    Tile(
+        modifier = modifier,
+        padding = TilePadding.EVEN,
+        press = TilePress(stringResource(R.string.home_open_trips), onOpenTrips),
+    ) {
         MonthLines(month, figures, centsPerKm, format, bar = true)
     }
 }

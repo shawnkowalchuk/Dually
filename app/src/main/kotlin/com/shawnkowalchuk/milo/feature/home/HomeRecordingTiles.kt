@@ -63,6 +63,12 @@ internal fun RecordingTiles(
                 side = cardSide(monthChosenIn, trip.tripId),
                 format = format,
                 onTurn = { monthChosenIn = afterPress(monthChosenIn, trip.tripId) },
+                // The month's side opens Trips (2026-10-16); the card is turned back to today,
+                // so that it is today's side again on the way back.
+                onOpenTrips = {
+                    monthChosenIn = null
+                    actions.onOpenTrips()
+                },
                 modifier = half,
             )
         },
@@ -246,16 +252,17 @@ private fun TodayOrMonthTile(
     side: CardSide,
     format: HomeFormat,
     onTurn: () -> Unit,
+    onOpenTrips: () -> Unit,
     modifier: Modifier,
 ) {
     val press =
         when (side) {
-            CardSide.TODAY -> R.string.home_card_show_month
-            CardSide.MONTH -> R.string.home_card_show_today
+            CardSide.TODAY -> TilePress(stringResource(R.string.home_card_show_month), onTurn)
+            CardSide.MONTH -> TilePress(stringResource(R.string.home_open_trips), onOpenTrips)
         }
     FlipTile(
         secondUp = side == CardSide.MONTH,
-        press = TilePress(stringResource(press), onTurn),
+        press = press,
         modifier = modifier,
         first = { TodayLines(ui.figures, FigureSize.MEDIUM, format) },
         second = {
