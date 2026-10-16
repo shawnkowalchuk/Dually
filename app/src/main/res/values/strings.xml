@@ -63,7 +63,7 @@
     <string name="nav_home">Home</string>
     <string name="nav_trips">Trips</string>
     <string name="nav_settings">Settings</string>
-    <string name="nav_log">Log</string>
+    <string name="nav_service">Service</string>
 
     <!-- Shared: what a truck is called when the phone knows no name for it. -->
     <string name="truck_without_a_name">The truck</string>
@@ -376,6 +376,56 @@
     <string name="pairing_remove_keep">Keep</string>
 
     <!-- Event log. The entries themselves are stored in English and shown as stored. -->
+    <!-- The Service screen (since 2026-10-16): each vehicle's upkeep, when it is due, and what was done. -->
+    <string name="service_title">Service</string>
+    <string name="service_reading">Reading your service items…</string>
+    <string name="service_none">Nothing to look after yet. Add an oil change, a tire rotation or anything else, and Dually shows when each is due.</string>
+    <string name="service_add">Add an item</string>
+    <string name="service_done">Done</string>
+    <string name="service_edit">Edit</string>
+    <string name="service_delete">Delete</string>
+    <string name="service_delete_title">Delete this item?</string>
+    <string name="service_delete_text">The item and its history are removed. This cannot be undone.</string>
+    <string name="service_history">Done before</string>
+    <!-- The argument is a distance with its unit: "400 km". -->
+    <string name="service_due_in">Due in %1$s</string>
+    <!-- The arguments are a distance with its unit and a date. -->
+    <string name="service_due_in_or_on">Due in %1$s or on %2$s, whichever comes first</string>
+    <string name="service_due_on">Due on %1$s</string>
+    <string name="service_overdue_by">Overdue by %1$s</string>
+    <string name="service_overdue_since">Overdue since %1$s</string>
+    <!-- The argument is the interval with its unit: "8,000 km". -->
+    <string name="service_due_no_reading">Every %1$s. Type the odometer in Settings so Dually can count it.</string>
+    <string name="service_last_done">Last done %1$s</string>
+    <!-- The arguments are a date and an odometer figure with its unit. -->
+    <string name="service_last_done_at">Last done %1$s at %2$s</string>
+    <string name="service_item_new">New item</string>
+    <string name="service_item_edit">Edit item</string>
+    <string name="service_item_name">Name</string>
+    <string name="service_item_either">Fill in one or both. It is due at whichever comes first.</string>
+    <!-- The argument is the unit's whole word: "kilometres". -->
+    <string name="service_item_every_distance">Every how many %1$s</string>
+    <string name="service_item_every_months">Every how many months</string>
+    <string name="service_item_last_done">Last done</string>
+    <string name="service_item_last_odometer">Odometer when last done, in %1$s</string>
+    <string name="service_save">Save</string>
+    <string name="service_preset_oil">Oil change</string>
+    <string name="service_preset_tires">Tire rotation</string>
+    <string name="service_preset_inspection">Inspection</string>
+    <string name="service_preset_brakes">Brakes</string>
+    <string name="service_preset_air_filter">Air filter</string>
+    <!-- The argument is the item's name: "Oil change". -->
+    <string name="service_done_title">%1$s done</string>
+    <string name="service_done_text">Recorded for today. The next one is counted from here.</string>
+    <string name="service_done_odometer">Odometer now, in %1$s</string>
+    <string name="service_done_cost">Cost (optional)</string>
+    <string name="service_done_note">Note (optional)</string>
+    <string name="service_odometer_wrong">That is not an odometer reading. Type the number on the dashboard.</string>
+    <string name="service_cost_wrong">Type the cost in dollars, such as 59.99.</string>
+    <!-- The Log's tile on Settings, since the Log left the bottom bar on 2026-10-16. -->
+    <string name="settings_log_label">Log</string>
+    <string name="settings_log_hint">What Dually did and when: every trip, connection and error. Support may ask for it.</string>
+    <string name="settings_log_open">Open the Log</string>
     <string name="log_title">Log</string>
     <string name="log_reading">Reading the log…</string>
     <string name="log_empty">The event log is empty.</string>

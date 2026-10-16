@@ -23,8 +23,16 @@ data object TripsKey : NavKey
 @Serializable
 data object SettingsKey : NavKey
 
+/**
+ * The Log screen. A button of the bottom bar until 2026-10-16, when Service took its place: it is
+ * opened from its row on Settings.
+ */
 @Serializable
 data object LogKey : NavKey
+
+/** The Service screen (since 2026-10-16), a screen of the bottom bar where the Log was. */
+@Serializable
+data object ServiceKey : NavKey
 
 /**
  * The Setup checklist. Not in the bottom bar since 2026-10-07, when Settings took its place:
@@ -84,7 +92,7 @@ enum class TopLevelDestination(val key: NavKey, val labelRes: Int, val icon: Ima
     HOME(HomeKey, R.string.nav_home, MiloIcons.Home),
     TRIPS(TripsKey, R.string.nav_trips, MiloIcons.Trips),
     SETTINGS(SettingsKey, R.string.nav_settings, MiloIcons.Settings),
-    LOG(LogKey, R.string.nav_log, MiloIcons.Log),
+    SERVICE(ServiceKey, R.string.nav_service, MiloIcons.Service),
 }
 
 /**

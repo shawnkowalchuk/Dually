@@ -22,8 +22,6 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.shawnkowalchuk.milo.data.settings.setRunningTripCategory
 import com.shawnkowalchuk.milo.data.trip.TripCorrections
-import com.shawnkowalchuk.milo.feature.eventlog.EventLogScreen
-import com.shawnkowalchuk.milo.feature.eventlog.EventLogViewModel
 import com.shawnkowalchuk.milo.feature.home.HomeScreen
 import com.shawnkowalchuk.milo.feature.home.HomeSources
 import com.shawnkowalchuk.milo.feature.home.HomeViewModel
@@ -243,28 +241,13 @@ fun MiloNavigation(
                         },
                         versionTile = { VersionTileEntry(container, backStack) },
                         showCoffee = !fromGooglePlay,
+                        onOpenLog = { backStack.openOnTop(LogKey) },
                     )
                 }
                 entry<SoundListKey> { key -> SoundListEntry(container, backStack, key) }
                 entry<WhatsNewKey> { WhatsNewEntry(container, backStack) }
-                entry<LogKey> {
-                    EventLogScreen(
-                        viewModel =
-                            viewModel(
-                                factory = viewModelFactory {
-                                    initializer {
-                                        EventLogViewModel(
-                                            eventLog = container.eventLogRepository,
-                                            files = container.eventLogFiles,
-                                            shareRequest = container.reports.handOff::toShareText,
-                                            clock = container.clock,
-                                            zone = ZoneId::systemDefault,
-                                        )
-                                    }
-                                },
-                            ),
-                    )
-                }
+                entry<LogKey> { LogEntry(container, backStack) }
+                entry<ServiceKey> { ServiceEntry(container) }
             },
     )
 }

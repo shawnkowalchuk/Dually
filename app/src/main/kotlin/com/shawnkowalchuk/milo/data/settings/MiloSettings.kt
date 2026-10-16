@@ -5,6 +5,7 @@ import com.shawnkowalchuk.milo.core.odometer.OdometerReading
 import com.shawnkowalchuk.milo.core.review.ReviewsStored
 import com.shawnkowalchuk.milo.core.schedule.DEFAULT_WORK_SCHEDULE
 import com.shawnkowalchuk.milo.core.schedule.WorkSchedule
+import com.shawnkowalchuk.milo.core.service.ServiceBook
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import java.time.LocalDate
 import java.time.YearMonth
@@ -92,6 +93,8 @@ enum class ConfirmedStep(val key: String) {
  * kept in `PartyStorage.kt`). It counts on that day only. Not a setting.
  * @param partyHeldOn the last day the party was held, on its date or on the day that made up
  * for it, or null if none ever was (since 2026-10-14; kept in `PartyStorage.kt`). Not a setting.
+ * @param serviceBook the service book: what is looked after, how often, and what was done
+ * (since 2026-10-16; kept in `ServiceStorage.kt`).
  * @param lastTripVehicle the address of the vehicle the last trip started in, or null (since
  * 2026-10-16; kept in `LastVehicleStorage.kt`): the odometer check goes by it. Not a setting.
  * @param runningTripCategory what Shawn chose on Home for the trip being recorded, or null
@@ -186,6 +189,7 @@ data class MiloSettings(
     val reportOptions: ReportOptions = ReportOptions(),
     val runningTripCategory: RunningTripCategory? = null,
     val lastTripVehicle: String? = null,
+    val serviceBook: ServiceBook = ServiceBook(),
     val reviews: ReviewsStored = ReviewsStored(),
     val distanceUnit: DistanceUnit = DistanceUnit.KILOMETRES,
     val schedule: WorkSchedule = DEFAULT_WORK_SCHEDULE,

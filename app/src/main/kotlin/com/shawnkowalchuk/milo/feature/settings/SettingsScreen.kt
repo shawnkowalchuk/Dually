@@ -107,6 +107,7 @@ fun SettingsScreen(
     setupTile: @Composable () -> Unit,
     versionTile: @Composable () -> Unit,
     showCoffee: Boolean,
+    onOpenLog: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsState()
@@ -159,6 +160,7 @@ fun SettingsScreen(
         },
         versionTile = versionTile,
         showCoffee = showCoffee,
+        onOpenLog = onOpenLog,
     )
 }
 
@@ -185,6 +187,7 @@ fun SettingsScreen(
  * Google Play ([SettingsScreen]).
  * @param rateRows the rate the Business kilometres are priced at, in the tile of the report's
  * details since 2026-10-16. Its state is the widget's.
+ * @param onOpenLog opens the Log, from its tile under Support (since 2026-10-16), or null for none.
  */
 @Composable
 internal fun SettingsContent(
@@ -200,6 +203,7 @@ internal fun SettingsContent(
     versionTile: @Composable () -> Unit,
     showCoffee: Boolean = true,
     rateRows: @Composable () -> Unit = {},
+    onOpenLog: (() -> Unit)? = null,
 ) {
     val spacing = MiloTheme.spacing
     TileColumn(
@@ -261,8 +265,9 @@ internal fun SettingsContent(
         // everything, so it is not among the settings that are changed in passing.
         if (state != SettingsUiState.Reading) dataTile()
         // Beside the version: none of them is a setting. Support first: it is the one a
-        // person with a problem is looking for.
+        // person with a problem is looking for, and the Log is what it asks for.
         SupportTile()
+        onOpenLog?.let { LogLinkTile(it) }
         if (showCoffee) CoffeeTile()
         versionTile()
     }

@@ -49,6 +49,7 @@ internal class EventLogActions(
     val onShowOlder: () -> Unit,
     val onFilter: (LogGroup?) -> Unit,
     val onShare: () -> Unit,
+    val onBack: () -> Unit = {},
 )
 
 /**
@@ -61,9 +62,15 @@ internal class EventLogActions(
  * The chips narrow the list to one kind of line. And the whole log can be shared as a text
  * file, with the square button beside the title, through Android's share sheet, so that it can
  * be sent to whoever is helping without plugging the phone into a computer.
+ *
+ * @param onBack leads back to Settings, where the Log is opened from since 2026-10-16.
  */
 @Composable
-fun EventLogScreen(viewModel: EventLogViewModel, modifier: Modifier = Modifier) {
+fun EventLogScreen(
+    viewModel: EventLogViewModel,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val state by viewModel.state.collectAsState()
     val share by viewModel.share.collectAsState()
     val shareTitle = stringResource(R.string.log_share_title)
@@ -95,6 +102,7 @@ fun EventLogScreen(viewModel: EventLogViewModel, modifier: Modifier = Modifier) 
                 onShowOlder = viewModel::onShowOlder,
                 onFilter = viewModel::onFilter,
                 onShare = { viewModel.onShare(shareTitle) },
+                onBack = onBack,
             ),
         modifier = modifier,
     )
@@ -131,7 +139,7 @@ private fun EventLogContent(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = spacing.gutter, vertical = spacing.small),
     ) {
-        item { AppHeader(title = stringResource(R.string.log_title)) }
+        item { AppHeader(title = stringResource(R.string.log_title), onBack = actions.onBack) }
         item {
             // The one thing done with the log as a whole, at the end of a line of its own under
             // the top line, as Trips has its two steps there.
