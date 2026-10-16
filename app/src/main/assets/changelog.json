@@ -6,6 +6,11 @@
       "changes": [
         {
           "kind": "new",
+          "title": "An odometer check when you change vehicles",
+          "body": "With several vehicles paired, when a trip starts in a different vehicle than last time, Dually posts a quiet notification with that vehicle's odometer as it has it, such as \"Ford F-150: odometer about 120,345 km?\". If someone drove it without Dually, tap it to type the reading in Settings. It makes no sound and does not pop up, as you are about to drive."
+        },
+        {
+          "kind": "new",
           "title": "A graph of the year",
           "body": "The Trips screen has a Graph of the year button. It shows each month of the year as a point, with your Business kilometres on one line and your Personal kilometres on another. Step back to earlier years, press a month to see its figures, and read every month's figures in the list under the graph."
         },

@@ -56,6 +56,13 @@ class MiloApplication : Application() {
         // screen first writes a distance. It only reads the settings file.
         container.shownUnit.start()
 
+        // The odometer check after a change of vehicle (since 2026-10-16) watches the trips
+        // that start. It can touch no trip.
+        container.checks.odometer.start(
+            container.tripController.activity,
+            container.applicationScope,
+        )
+
         // Reading files and the database must not hold up the main thread, least of all when
         // the process was started by a trip trigger with seconds to begin recording.
         container.applicationScope.launch(Dispatchers.IO) {

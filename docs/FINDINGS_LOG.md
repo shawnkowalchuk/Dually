@@ -26,6 +26,11 @@
 
 ### 2026-10-16
 
+**`[CHANGE]` A silent odometer check when a trip starts in another vehicle (version 0.3.2)**
+Shawn asked whether each vehicle keeps its own odometer (it does, since 2026-10-08) and then: "if we have muttiple vehicles we should be prompted if the km in the vehicle are accurate when switching vehicles". He chose "When Bluetooth connects to a different vehicle". APP_ENCYCLOPEDIA, Truck pairing, "The odometer check after a change of vehicle"; OC-1 to OC-3.
+- **It only watches** the trip controller's state, like the address lookup; the trip rules know nothing of it.
+- **Decided for Shawn, not asked:** the notification is silent (low importance), because it arrives as he is about to drive; a tap opens Settings, where the odometer is adjusted; a vehicle without a reading is not asked about. Notification id 6, channel `odometer_check`, tap request 3.
+
 **`[CHANGE]` A graph of the year on Trips, and the first chart in the design system (version 0.3.2)**
 Shawn: "on the trips screen lets add a graph page that we can choose to show or comapre different months. show on the graph the buseinss and personal mileage on seperate lines." He chose months side by side, opened by a button. APP_ENCYCLOPEDIA, The graph of the year; GR-1 to GR-4.
 - **`[DECISION]` New in the design system: `LineChart` and two chart colours.** No library: drawn on a Compose canvas. The colours were checked with the data-visualisation validator (lightness band, chroma, colour-blind and normal separation, contrast) on the tile's colour; Personal is blue on the chart only, because the grey Personal is written in fails as a line. Identity is never colour alone: a legend and each line's name at its end.

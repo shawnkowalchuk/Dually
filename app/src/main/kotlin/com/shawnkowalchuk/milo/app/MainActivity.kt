@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloSystemBarStyle
 import com.shawnkowalchuk.milo.platform.nothingrecorded.homeAskedFor
+import com.shawnkowalchuk.milo.platform.odometer.settingsAskedFor
 import com.shawnkowalchuk.milo.platform.reminder.reportMonthToOpen
 import com.shawnkowalchuk.milo.platform.trip.TripTrigger
 import java.time.YearMonth
@@ -36,6 +37,9 @@ class MainActivity : ComponentActivity() {
      */
     private var homeAsked by mutableStateOf(false)
 
+    /** True from a tap on the odometer check until the screens have shown Settings. */
+    private var settingsAsked by mutableStateOf(false)
+
     /**
      * True from a fresh start of the activity until the greeting, the mascot's wave or his
      * moonwalk over Home, has been shown or dropped. Which of the two happens, and which
@@ -58,6 +62,7 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) {
             reportToOpen = reportMonthToOpen(intent)
             homeAsked = homeAskedFor(intent)
+            settingsAsked = settingsAskedFor(intent)
             greetingAsked = true
         }
 
@@ -71,6 +76,8 @@ class MainActivity : ComponentActivity() {
                 onHomeShown = { homeAsked = false },
                 greetingAsked = greetingAsked,
                 onGreetingDone = { greetingAsked = false },
+                settingsAsked = settingsAsked,
+                onSettingsShown = { settingsAsked = false },
             )
         }
     }
@@ -80,6 +87,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         reportMonthToOpen(intent)?.let { reportToOpen = it }
         if (homeAskedFor(intent)) homeAsked = true
+        if (settingsAskedFor(intent)) settingsAsked = true
     }
 
     /**

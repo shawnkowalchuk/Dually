@@ -219,6 +219,7 @@ class SettingsStore(internal val dataStore: DataStore<Preferences>) {
             pointsKeptMonths = preferences.readPointsKeptMonths(),
             reportOptions = preferences.readReportOptions(),
             runningTripCategory = preferences.readRunningTripCategory(),
+            lastTripVehicle = preferences.readLastTripVehicle(),
             reviews = preferences.readReviews(),
             distanceUnit = preferences.readDistanceUnit(),
             schedule = preferences.readSchedule(),

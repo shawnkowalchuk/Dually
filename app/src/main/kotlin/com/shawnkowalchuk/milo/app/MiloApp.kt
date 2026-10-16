@@ -68,6 +68,8 @@ fun MiloApp(
     onHomeShown: () -> Unit,
     greetingAsked: Boolean,
     onGreetingDone: () -> Unit,
+    settingsAsked: Boolean = false,
+    onSettingsShown: () -> Unit = {},
 ) {
     MiloTheme {
         // MilO's clock, for the few components that show a day by themselves (the header's
@@ -111,6 +113,17 @@ fun MiloApp(
                     leave(TopLevelDestination.HOME) {
                         backStack.showTopLevel(HomeKey, HomeKey)
                         onHomeShown()
+                    }
+                }
+            }
+
+            // A tap on the odometer check (since 2026-10-16) leads to Settings, where the
+            // vehicle's odometer is adjusted, by the same gate.
+            LaunchedEffect(settingsAsked, unsavedWork.unsaved) {
+                if (settingsAsked) {
+                    leave(TopLevelDestination.SETTINGS) {
+                        backStack.showTopLevel(SettingsKey, HomeKey)
+                        onSettingsShown()
                     }
                 }
             }

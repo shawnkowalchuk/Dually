@@ -155,6 +155,7 @@ class StoredNamesTest {
                 "last_export_at_ms",
                 "last_export_with_points",
                 "last_process_exit_imported_at_ms",
+                "last_trip_vehicle",
                 "minimum_trip_distance_metres",
                 "more_vehicles",
                 "nothing_recorded_enabled",

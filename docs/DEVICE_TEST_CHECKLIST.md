@@ -1886,6 +1886,14 @@ Unit tests only.
 | GR-3 | Press a month's point; press it again. | The guide line and the month's figures in words; then gone. | not run |
 | GR-4 | Step to the previous year; Back. | 2025, whole year; Back to Trips. | not run |
 
+## The odometer check after a change of vehicle (2026-10-16)
+
+| # | Do this | Expect | Result |
+|---|---|---|---|
+| OC-1 | Two vehicles paired, each with a reading. Drive the first, then connect to the second. | A silent notification "(second): odometer about … km?"; no sound, no pop-up. The Log has the line. | not run |
+| OC-2 | Tap it. | Settings, with the odometer tiles. | not run |
+| OC-3 | Another trip in the same vehicle. | No notification. | not run |
+
 ## Later work packages
 
 Nothing waiting. A work package that adds behaviour only the phone can prove adds its checks above.
