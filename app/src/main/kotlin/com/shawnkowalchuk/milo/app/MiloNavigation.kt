@@ -131,6 +131,7 @@ fun MiloNavigation(
                     )
                 }
                 entry<ReportKey> { key -> ReportEntry(container, backStack, key) }
+                entry<TripGraphKey> { TripGraphEntry(container, backStack) }
                 entry<TripEditKey> { key ->
                     TripEditScreen(
                         viewModel =

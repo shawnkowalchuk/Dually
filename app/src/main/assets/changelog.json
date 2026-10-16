@@ -5,6 +5,11 @@
       "date": null,
       "changes": [
         {
+          "kind": "new",
+          "title": "A graph of the year",
+          "body": "The Trips screen has a Graph of the year button. It shows each month of the year as a point, with your Business kilometres on one line and your Personal kilometres on another. Step back to earlier years, press a month to see its figures, and read every month's figures in the list under the graph."
+        },
+        {
           "kind": "improved",
           "title": "From the month on Home to the month on Trips",
           "body": "Press the month's card on Home to open that month on the Trips screen. While a trip is recorded, the card shows today first; press it to see the month, and again to open Trips. The Trips screen's month card now shows the dollars beside the number of Business trips, the same as on Home."

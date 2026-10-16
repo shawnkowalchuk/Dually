@@ -1620,6 +1620,26 @@ Shows what was recorded and lets Shawn correct it.
 
 ---
 
+## The graph of the year
+
+**Status:** Built, not yet proven on the phone; ran on an emulator (Android 16) on 2026-10-16 with no trips, at 411 dp. Device checks GR-1 to GR-4 · **Platforms:** Android (phone) · **Last updated:** 2026-10-16
+
+**What it does**
+Shows a year's months side by side as two lines, Business and Personal kilometres. Shawn, 2026-10-16: "on the trips screen lets add a graph page that we can choose to show or comapre different months. show on the graph the buseinss and personal mileage on seperate lines." He chose months side by side, opened by a button on Trips.
+
+**How it works**
+1. **The way in:** "Graph of the year", a wide quiet button on Trips under "Personal" and "Add missed trip". The screen opens on top of Trips (`TripGraphKey`); Back leads back.
+2. **The year:** the large title with two steps, as Trips steps a month; never past the current year. It opens on the current year with the current month picked.
+3. **The figures** (`yearFigures` in `feature/tripgraph/MonthFigure.kt`, pure): each month's counted trips by what they are saved as (`categoryTotals`), a trip in the month it started in, in the phone's zone, in tenths of the unit chosen: the figures Trips shows for each month. Months after the current one have none, and the lines stop there.
+4. **The chart** (`LineChart` in `core/designsystem/component/`, new on 2026-10-16): a legend (a swatch and the name of each line); the lines 2 dp in `MiloChartColors` (Business orange `#E8692E`, Personal blue `#4C9ED0`, checked with the data-visualisation validator against the tile, all six checks passing; the list's grey for Personal reads as no colour as a line); each line's name after its last point as well, pushed apart and upward where two meet; points 8 dp across with a ring of the tile's colour; a quiet grid of five lines on whole, round figures from zero (`chartStep`: the smallest of 1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10 times a power of ten, whole and at least 1, whose four steps reach the highest point; an empty year counts 0 to 4); one scale only; the months' initials under it.
+5. **A press** picks the nearest month that has begun: a guide line stands over it, its points grow, and under the chart its figures are said in words ("October: Business 412.3 km · Personal 88.0 km"). A second press on it puts it down.
+6. **Under the chart, every month that has begun** with its two figures: the chart's table, and what a screen reader reads; the chart itself is read as one sentence.
+
+**Where the code lives**
+`feature/tripgraph/` (`MonthFigure.kt`, `TripGraphViewModel.kt`, `TripGraphScreen.kt`); `core/designsystem/component/LineChart.kt`; `core/designsystem/theme/Color.kt` (`ChartColors`, `MiloChartColors`); `app/TripsEntry.kt` (`TripGraphEntry`), `app/MiloBackStack.kt`, `app/MiloNavigation.kt`; `feature/trips/TripsTop.kt` (the button). Tests: `feature/tripgraph/MonthFigureTest`.
+
+---
+
 ## Trip labels
 
 **Status:** Built, not yet proven on the phone, and **never run anywhere**: built and unit tested in CI only. Its checks are LB-1 to LB-8 · **Surfaces:** Phone (the Android Auto screen is not touched), and the report · **Last updated:** 2026-10-08

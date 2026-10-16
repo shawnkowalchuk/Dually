@@ -26,6 +26,11 @@
 
 ### 2026-10-16
 
+**`[CHANGE]` A graph of the year on Trips, and the first chart in the design system (version 0.3.2)**
+Shawn: "on the trips screen lets add a graph page that we can choose to show or comapre different months. show on the graph the buseinss and personal mileage on seperate lines." He chose months side by side, opened by a button. APP_ENCYCLOPEDIA, The graph of the year; GR-1 to GR-4.
+- **`[DECISION]` New in the design system: `LineChart` and two chart colours.** No library: drawn on a Compose canvas. The colours were checked with the data-visualisation validator (lightness band, chroma, colour-blind and normal separation, contrast) on the tile's colour; Personal is blue on the chart only, because the grey Personal is written in fails as a line. Identity is never colour alone: a legend and each line's name at its end.
+- **Seen on an emulator** with no trips: the first build's scale read "1, 1, 0, 0, 0" (fractions rounded away) and the two names covered each other and then the months' initials; the scale now steps on whole round figures and the names move apart and up. Not yet seen with real lines.
+
 **`[CHANGE]` Home's month card opens Trips, and Trips' month card says the dollars (version 0.3.2)**
 Shawn: "on the home page it has teh vehicles total trip card can we have it when you click it. it will go to the monthly trips screen. on that screen the top business card should have the money value that same as the front card of your reimbursment." He chose "Tap the month side opens Trips" for the card that also turns between today and the month. APP_ENCYCLOPEDIA, Trip log, Home step 9b; MT-1 and MT-2. **Decided for Shawn:** no arrow on the card (no existing part has a place for one); the Trips screen gets the rate as a flow of the settings, none while they cannot be read.
 

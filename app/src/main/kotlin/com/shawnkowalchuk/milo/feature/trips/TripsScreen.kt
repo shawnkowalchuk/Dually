@@ -45,6 +45,7 @@ internal class TripsActions(
     val onAdd: () -> Unit,
     val onReport: (YearMonth) -> Unit,
     val onLabel: (Long) -> Unit,
+    val onGraph: () -> Unit = {},
 )
 
 /**
@@ -89,6 +90,7 @@ fun TripsScreen(
     onAddTrip: () -> Unit,
     onOpenReport: (YearMonth) -> Unit,
     modifier: Modifier = Modifier,
+    onOpenGraph: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val labelState by labels.state.collectAsState()
@@ -120,6 +122,7 @@ fun TripsScreen(
                 onAdd = onAddTrip,
                 onReport = onOpenReport,
                 onLabel = labels::onLabel,
+                onGraph = onOpenGraph,
             ),
         modifier = modifier,
     )
