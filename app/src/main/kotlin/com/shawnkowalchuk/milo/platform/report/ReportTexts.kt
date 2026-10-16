@@ -102,6 +102,10 @@ class ReportTexts(context: Context) {
             odometerOfVehicle = text(R.string.report_pdf_odometer_of_vehicle),
             footer = text(R.string.report_pdf_footer),
             page = text(R.string.report_pdf_page),
+            personalListed =
+                appContext.getString(R.string.report_pdf_personal_listed, text(unitNameRes(unit))),
+            personalTrip = text(R.string.report_pdf_personal_trip),
+            businessShare = text(R.string.report_pdf_business_share),
         )
 
     /**
@@ -118,6 +122,9 @@ class ReportTexts(context: Context) {
         vehicle = text(R.string.report_csv_vehicle),
         km = text(unitShortRes(unit)),
         byHand = text(R.string.report_csv_by_hand),
+        category = text(R.string.report_csv_category),
+        business = text(R.string.report_pdf_business),
+        personal = text(R.string.report_pdf_personal),
         added = text(R.string.report_csv_added),
         edited = text(R.string.report_csv_edited),
     )

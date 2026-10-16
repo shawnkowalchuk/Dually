@@ -658,6 +658,11 @@
     </plurals>
     <string name="report_sent_revision">Revision %1$d</string>
     <!-- The tile that offers to delete a sent month's GPS points (2026-10-14). The arguments are the month's name, its number of trips and the room their points take ("7.2 MB"). -->
+    <!-- The Report screen's options (2026-10-16). -->
+    <string name="report_options_title">Report options</string>
+    <string name="report_options_personal">List Personal trips too</string>
+    <string name="report_options_share">Show the Business use percentage</string>
+    <string name="report_options_kept">Kept for every report you make, the PDF and the CSV.</string>
     <string name="report_points_title">GPS points for %1$s</string>
     <plurals name="report_points_offer">
         <item quantity="one">Your %1$s report is sent, and its %2$d trip keeps its distance, times and addresses. Its GPS points, the route it drove, take %3$s on this phone. Delete them to free the room?</item>
@@ -698,6 +703,10 @@
     </plurals>
     <!-- The argument is the unit's whole word, kilometres or miles. -->
     <string name="report_pdf_business_only">Business trips only. Distances are in %1$s.</string>
+    <!-- The report's options (2026-10-16). The argument of the first is the unit's name; of the third, the share in whole percent. -->
+    <string name="report_pdf_personal_listed">Business and Personal trips. Personal trips are in grey and in no subtotal or total. Distances are in %1$s.</string>
+    <string name="report_pdf_personal_trip">Personal</string>
+    <string name="report_pdf_business_share">Business use: %1$d%% of the distance driven in this period, Business and Personal together.</string>
     <!-- The arguments are the revision's number and the day the report it replaces was sent. -->
     <string name="report_pdf_revision">Revision %1$d. It replaces the report sent on %2$s.</string>
     <string name="report_pdf_column_start">Start</string>
@@ -728,6 +737,7 @@
     <!-- The CSV file: the two column titles the PDF does not have, and its last column. -->
     <string name="report_csv_date">Date</string>
     <string name="report_csv_by_hand">By hand</string>
+    <string name="report_csv_category">Category</string>
     <!-- The trip's label, its purpose, and the vehicle it was in (since 2026-10-08). -->
     <string name="report_csv_label">Purpose</string>
     <string name="report_csv_vehicle">Vehicle</string>

@@ -92,6 +92,8 @@ enum class ConfirmedStep(val key: String) {
  * kept in `PartyStorage.kt`). It counts on that day only. Not a setting.
  * @param partyHeldOn the last day the party was held, on its date or on the day that made up
  * for it, or null if none ever was (since 2026-10-14; kept in `PartyStorage.kt`). Not a setting.
+ * @param reportOptions what the report holds beyond the Business trips, as set on the Report
+ * screen (since 2026-10-16; kept in `ReportOptionsStorage.kt`).
  * @param pointsKeptMonths the sent months whose GPS points Shawn chose to keep on the Report
  * screen, so that their tile is not offered again (since 2026-10-14; kept in
  * `PointsKeptStorage.kt`). Not a setting.
@@ -177,6 +179,7 @@ data class MiloSettings(
     val partyOwedSinceMs: Long? = null,
     val partyHeldOn: LocalDate? = null,
     val pointsKeptMonths: Set<YearMonth> = emptySet(),
+    val reportOptions: ReportOptions = ReportOptions(),
     val reviews: ReviewsStored = ReviewsStored(),
     val distanceUnit: DistanceUnit = DistanceUnit.KILOMETRES,
     val schedule: WorkSchedule = DEFAULT_WORK_SCHEDULE,

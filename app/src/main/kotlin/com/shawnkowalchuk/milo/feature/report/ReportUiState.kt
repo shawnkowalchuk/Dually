@@ -212,7 +212,13 @@ fun reportUiState(
     canStepForward = choice.canStepForward(today),
     submission = monthSubmission(choice.month, sent),
     status = reportStatus(choice.period, today, zone, selection?.trips?.size, settings, sent),
-    summary = selection?.let { summaryOf(it, settings.distanceUnit) },
+    summary =
+        selection?.let { chosen ->
+            summaryOf(chosen, settings.distanceUnit).let {
+                // Listed on the report, Personal trips are not "left off" it (since 2026-10-16).
+                if (settings.reportOptions.listPersonal) it.copy(personalLeftOut = 0) else it
+            }
+        },
     missing = settings.missingForSending(),
     accountantEmail = settings.accountantEmail,
     sender = SenderDetails(settings.reportName, settings.reportCompany, settings.reportVehicle),

@@ -41,6 +41,8 @@ import com.shawnkowalchuk.milo.core.util.formatMonthName
  *
  * @param pointsTile the tile that offers to delete a sent month's GPS points, under the Business
  * and Status tiles. It has a state of its own, and draws nothing when it has nothing to offer.
+ * @param optionsTile the "Report options" tile, above the PDF's: its switches have a state of
+ * their own (since 2026-10-16).
  */
 @Composable
 internal fun ReportContent(
@@ -49,6 +51,7 @@ internal fun ReportContent(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     pointsTile: @Composable () -> Unit = {},
+    optionsTile: @Composable () -> Unit = {},
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val spacing = MiloTheme.spacing
@@ -89,7 +92,7 @@ internal fun ReportContent(
                     )
                 }
 
-            is ReportUiState.Ready -> ReadyTiles(state, actions, pointsTile)
+            is ReportUiState.Ready -> ReadyTiles(state, actions, pointsTile, optionsTile)
         }
     }
 }
@@ -99,6 +102,7 @@ private fun ColumnScope.ReadyTiles(
     state: ReportUiState.Ready,
     actions: ReportActions,
     pointsTile: @Composable () -> Unit,
+    optionsTile: @Composable () -> Unit,
 ) {
     val sentTo = remember { BringIntoViewRequester() }
     // Once for each press that was refused, when its answer is on the screen: the line that
@@ -118,6 +122,7 @@ private fun ColumnScope.ReadyTiles(
         second = { half -> StatusTile(state, half) },
     )
     pointsTile()
+    optionsTile()
     PdfTile(state, actions)
     SentToTile(state, actions.onOpenSettings, Modifier.bringIntoViewRequester(sentTo))
     SendButtons(state, actions)

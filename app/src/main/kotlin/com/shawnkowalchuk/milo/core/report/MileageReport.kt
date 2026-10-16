@@ -7,6 +7,7 @@ import com.shawnkowalchuk.milo.core.util.sumOfTenths
 import com.shawnkowalchuk.milo.core.util.tenthsOf
 import java.time.LocalDate
 import java.time.ZoneId
+import kotlin.math.roundToInt
 
 // The report for the accountant as plain values: who it is from, what it covers, and its trips
 // grouped by day with what they add up to. Pure Kotlin. The PDF and the CSV are both made from
@@ -43,6 +44,9 @@ enum class ReportMark {
  * 2026-10-08). Printed under its addresses.
  * @param vehicle the name of the vehicle it was in, or null. Printed beside the label when the
  * report's trips were in more than one vehicle ([MileageReport.severalVehicles]).
+ * @param personal true for a Personal trip, listed only when the report is set to list them
+ * ([MileageReport.listsPersonal], since 2026-10-16). It is printed in grey and is in no
+ * subtotal and no total.
  */
 data class ReportTrip(
     val startedAtMs: Long,
@@ -53,6 +57,7 @@ data class ReportTrip(
     val mark: ReportMark? = null,
     val label: String? = null,
     val vehicle: String? = null,
+    val personal: Boolean = false,
 ) {
     /** The distance as it is printed in [unit], and as it is added up. */
     fun tenths(unit: DistanceUnit): Long = tenthsOf(distanceMetres, unit)
@@ -60,8 +65,12 @@ data class ReportTrip(
 
 /** The trips that started on one calendar day, in the order they started. */
 data class ReportDay(val date: LocalDate, val trips: List<ReportTrip>) {
-    /** The day's subtotal in [unit]: the sum of the figures printed for its trips. */
-    fun tenths(unit: DistanceUnit): Long = sumOfTenths(trips.map { it.distanceMetres }, unit)
+    /**
+     * The day's subtotal in [unit]: the sum of the figures printed for its Business trips. A
+     * Personal trip that is listed is in no subtotal.
+     */
+    fun tenths(unit: DistanceUnit): Long =
+        sumOfTenths(trips.filterNot { it.personal }.map { it.distanceMetres }, unit)
 }
 
 /**
@@ -112,6 +121,10 @@ data class PersonalDriving(val tripCount: Int, val tenths: Long)
  * @param odometers each vehicle's odometer at the start and the end of the period (Shawn's
  * decision of 2026-10-07; one for each vehicle since 2026-10-08), the first vehicle first. A
  * vehicle without a reading has none, and the list is empty while no reading has been typed.
+ * @param listsPersonal whether [days] list the Personal trips too, marked and in grey (a switch
+ * on the Report screen since 2026-10-16). They are never in a subtotal or the total.
+ * @param showsBusinessShare whether the report says what share of the period's driving was
+ * Business ([businessSharePercent]), the same switch's neighbour.
  */
 data class MileageReport(
     val sender: ReportSender,
@@ -123,8 +136,22 @@ data class MileageReport(
     val days: List<ReportDay>,
     val personal: PersonalDriving,
     val odometers: List<VehicleOdometer> = emptyList(),
+    val listsPersonal: Boolean = false,
+    val showsBusinessShare: Boolean = false,
 ) {
-    val tripCount: Int get() = days.sumOf { it.trips.size }
+    /** How many Business trips it lists: the count that is recorded when it is sent. */
+    val tripCount: Int get() = days.sumOf { day -> day.trips.count { !it.personal } }
+
+    /**
+     * The Business share of the period's driving, in whole percent: the Business total over the
+     * Business and Personal totals together, as the report prints them. Null when the period has
+     * no driving at all.
+     */
+    val businessSharePercent: Int?
+        get() {
+            val all = totalTenths + personal.tenths
+            return if (all <= 0) null else (totalTenths * PERCENT / all.toDouble()).roundToInt()
+        }
 
     /** Whether its trips were in more than one vehicle: each trip then names its own. */
     val severalVehicles: Boolean
@@ -148,3 +175,5 @@ fun reportDays(trips: List<ReportTrip>, zone: ZoneId): List<ReportDay> = trips
     .groupBy { localDateOf(it.startedAtMs, zone) }
     .map { (date, ofDay) -> ReportDay(date, ofDay) }
     .sortedBy { it.date }
+
+private const val PERCENT = 100

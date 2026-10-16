@@ -31,7 +31,9 @@ import java.time.ZoneId
  * is not on the report until it has ended.
  * @param personalMetres the distance of each of the [personalLeftOut] trips, in metres. The PDF
  * shows what they add up to at its top, beside the Business total ([personalTenths]); it lists
- * none of those trips.
+ * none of those trips, unless it is set to list them: then they are [personalTrips].
+ * @param personalTrips the period's counted Personal trips as the report would list them,
+ * oldest first, marked Personal (since 2026-10-16).
  */
 data class ReportSelection(
     val trips: List<ReportTrip>,
@@ -40,6 +42,7 @@ data class ReportSelection(
     val withoutAddress: Int,
     val tripInProgress: Boolean,
     val personalMetres: List<Double>,
+    val personalTrips: List<ReportTrip> = emptyList(),
 ) {
     /**
      * What the Personal trips add up to in tenths of [unit], added up as the report adds up
@@ -72,7 +75,10 @@ fun selectForReport(trips: List<Trip>, period: ReportPeriod, zone: ZoneId): Repo
         counted
             .filter { it.category == TripCategory.BUSINESS }
             .sortedWith(compareBy<Trip> { it.startedAtMs }.thenBy { it.id })
-    val personal = counted.filter { it.category == TripCategory.PERSONAL }
+    val personal =
+        counted
+            .filter { it.category == TripCategory.PERSONAL }
+            .sortedWith(compareBy<Trip> { it.startedAtMs }.thenBy { it.id })
     return ReportSelection(
         trips = listed.map { it.onReport() },
         personalLeftOut = personal.size,
@@ -80,6 +86,7 @@ fun selectForReport(trips: List<Trip>, period: ReportPeriod, zone: ZoneId): Repo
         withoutAddress = listed.count { it.startAddress == null || it.endAddress == null },
         tripInProgress = inPeriod.any { it.status == TripStatus.OPEN },
         personalMetres = personal.map { it.distanceMetres },
+        personalTrips = personal.map { it.onReport().copy(personal = true) },
     )
 }
 
