@@ -46,6 +46,11 @@ private const val LOG_PATH =
     "M14,3H6a2,2 0 0 0 -2,2v14a2,2 0 0 0 2,2h12a2,2 0 0 0 2,-2V9z" +
         "M14,3v6h6M8,13h8M8,17h5"
 
+// A wrench: the Service screen, a button of the bottom bar (since 2026-10-16).
+private const val SERVICE_PATH =
+    "M14.7,6.3a1,1 0 0 0 0,1.4l1.6,1.6a1,1 0 0 0 1.4,0l3.77,-3.77a6,6 0 0 1 -7.94,7.94" +
+        "l-6.91,6.91a2.12,2.12 0 0 1 -3,-3l6.91,-6.91a6,6 0 0 1 7.94,-7.94l-3.76,3.76z"
+
 private const val BACK_PATH = "M15,18l-6,-6l6,-6"
 
 // Three sliders: the Settings screen, a button of the bottom bar. Each line is broken by its knob.
@@ -94,6 +99,7 @@ object MiloIcons {
     val Home: ImageVector by lazy { lineIcon(name = "Home", pathData = HOME_PATH) }
     val Trips: ImageVector by lazy { lineIcon(name = "Trips", pathData = TRIPS_PATH) }
     val Log: ImageVector by lazy { lineIcon(name = "Log", pathData = LOG_PATH) }
+    val Service: ImageVector by lazy { lineIcon(name = "Service", pathData = SERVICE_PATH) }
     val Back: ImageVector by lazy {
         lineIcon(name = "Back", pathData = BACK_PATH, lineWidth = BOLD_LINE_WIDTH)
     }

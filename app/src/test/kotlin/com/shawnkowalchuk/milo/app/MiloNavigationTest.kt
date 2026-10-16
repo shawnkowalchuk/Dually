@@ -153,9 +153,9 @@ class MiloNavigationTest {
 
         // What the press does to the back stack. While something typed is not saved the app
         // asks first, and only then does this (UnsavedWorkTest).
-        backStack.showTopLevel(LogKey, home = HomeKey)
+        backStack.showTopLevel(ServiceKey, home = HomeKey)
 
-        assertEquals(listOf<Any>(HomeKey, LogKey), backStack)
+        assertEquals(listOf<Any>(HomeKey, ServiceKey), backStack)
     }
 
     @Test
@@ -163,7 +163,9 @@ class MiloNavigationTest {
         assertEquals(TopLevelDestination.HOME, topLevelOf(listOf(HomeKey)))
         assertEquals(TopLevelDestination.TRIPS, topLevelOf(listOf(HomeKey, TripsKey)))
         assertEquals(TopLevelDestination.SETTINGS, topLevelOf(listOf(HomeKey, SettingsKey)))
-        assertEquals(TopLevelDestination.LOG, topLevelOf(listOf(HomeKey, LogKey)))
+        assertEquals(TopLevelDestination.SERVICE, topLevelOf(listOf(HomeKey, ServiceKey)))
+        // The Log is opened from Settings, which stays marked under it.
+        assertEquals(TopLevelDestination.SETTINGS, topLevelOf(listOf(HomeKey, SettingsKey, LogKey)))
         // Setup and the pairing screen are opened from Settings, which stays marked under them.
         assertEquals(
             TopLevelDestination.SETTINGS,

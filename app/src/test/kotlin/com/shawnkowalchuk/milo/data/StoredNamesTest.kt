@@ -195,6 +195,7 @@ class StoredNamesTest {
                 "schedule_\${day.inKeys()}_end_minute",
                 "schedule_\${day.inKeys()}_start_minute",
                 "schedule_\${day.inKeys()}_tracked",
+                "service_book",
                 "sound_enabled",
                 "trip_vehicles_filled",
                 "truck_address",

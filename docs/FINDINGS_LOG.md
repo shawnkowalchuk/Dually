@@ -26,6 +26,12 @@
 
 ### 2026-10-16
 
+**`[CHANGE]` Service: the screen, and the Log moves to Settings (version 0.3.2)**
+Shawn: "can we stick the log menu under settings. and instead have a button ... to track and set reminders for service, oil change, maintenance". His answers: called Service; distance or time, whichever first; reminders and a history; a notification and a Home tile; phone only. This is the first of two changes; the reminders follow. APP_ENCYCLOPEDIA, Service; SV-1 to SV-6.
+- **`[DECISION]` The book is one JSON text in the settings file,** not a Room table: a few items and records a year, no query, and no database migration or export-format change in the week of a Play review.
+- **`[DEBT]` The service book is not in the export file.** Android's backup carries it with the settings file; an export and import to a new phone loses it. Add it to the export format when the format next changes.
+- **Decided for Shawn, not asked:** the ready-made names and their intervals; "soon" is 500 km, a tenth of the interval, or 14 days; the wrench takes the Log's place, fourth in the bar; the Log's tile stands under Support, which is what asks for it; the ready-made names are choice buttons, because the design's chips are the colour of a dialog and could not be seen on it (seen on the emulator).
+
 **`[CHANGE]` Report options, step 3: a year-end summary (version 0.3.2)**
 His answer of 2026-10-14: "a third Period choice 'A whole year' ... the report opens with a one-page summary (each month's Business and Personal km, odometer at the start and end of the year), then lists the trips. Marks no month submitted." RO-8 to RO-10; APP_ENCYCLOPEDIA, Monthly PDF and submission, 8a.
 - **`[DECISION]` A year is a date range,** 1 January to 31 December, not a third kind of stored report: the list of sent reports, the export file, the hand-over and the rules for "submitted" are unchanged, and a year's report marks no month, as a range's never does. The summary goes by the period alone (`wholeYear`), so a date range of exactly one calendar year has it too.

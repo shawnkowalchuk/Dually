@@ -40,7 +40,7 @@ class UnsavedWorkTest {
 
     @Test
     fun `Keep editing closes the question and asks again at the next way out`() {
-        val kept = checkNotNull(holding.asked(TopLevelDestination.LOG)).kept()
+        val kept = checkNotNull(holding.asked(TopLevelDestination.SERVICE)).kept()
 
         assertEquals(holding, kept)
         assertFalse(kept.asking)
@@ -90,15 +90,15 @@ class UnsavedWorkTest {
 
     @Test
     fun `a button of the bottom bar leads to its screen, with the edit screen closed`() {
-        val toLog = editing.toMutableList()
+        val toService = editing.toMutableList()
         val toHome = editing.toMutableList()
         val toTrips = editing.toMutableList()
 
-        toLog.leaveTop(TopLevelDestination.LOG)
+        toService.leaveTop(TopLevelDestination.SERVICE)
         toHome.leaveTop(TopLevelDestination.HOME)
         toTrips.leaveTop(TopLevelDestination.TRIPS)
 
-        assertEquals(listOf<NavKey>(HomeKey, LogKey), toLog)
+        assertEquals(listOf<NavKey>(HomeKey, ServiceKey), toService)
         assertEquals(listOf<NavKey>(HomeKey), toHome)
         assertEquals(listOf<NavKey>(HomeKey, TripsKey), toTrips)
     }
