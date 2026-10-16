@@ -26,6 +26,13 @@
 
 ### 2026-10-16
 
+**`[CHANGE]` Business or Personal chosen on Home while a trip is recorded (version 0.3.2)**
+Shawn: "when a trip is started on the home page can we have it show if it is business or personal at the top in the start trip card. and if you hit the button it will toggle ... yesterday i left work early for home". His answers: show what the hours say until pressed; his press always wins. **Built, not yet proven on the phone;** RC-1 to RC-4. APP_ENCYCLOPEDIA, Schedule and Business/Personal.
+- **The trip rules are untouched:** the choice is read only at the close, by the filing (`fileTrip`'s `chosen`), which ADR-002 already keeps apart from starting and ending a trip.
+- **Stored in the settings file with the trip's id, not on the trip's row:** no database version for a value that lives minutes. Taken out at every close.
+- **A choice is set by hand in the same update as the close** (the close query now writes `categorySetByHand`), so the catch-up and any later re-sorting leave it alone, as they leave a trip marked on Trips.
+- **Decided for Shawn, not asked:** a chosen trip is never discarded by "Ignore them" (he decided about it himself); a chosen Business trip is "past the schedule" only when the hours make it Business too.
+
 **`[CHANGE]` Home: today's trips open with Personal/Business and Edit (version 0.3.2)**
 Shawn: "on the home screen we have the daily trips at the bottom please have them expand same as teh trips screen to edit them", and of yesterday's drive home: "i would like to be able to more easily click that trip from business to personal". He chose "the same buttons as on the Trips screen". **Built, not yet proven on the phone;** HT-1 to HT-3. APP_ENCYCLOPEDIA, Trip log, Home step 9a.
 - **`[CHANGE]` `TripCorrections` moved from `feature/trips/` to `data/trip/`,** in a commit of its own with no change of behaviour: Home marks a trip as Trips does, and features never import from each other.

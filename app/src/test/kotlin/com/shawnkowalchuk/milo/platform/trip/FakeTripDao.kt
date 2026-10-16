@@ -91,6 +91,7 @@ class FakeTripDao : TripDao {
         ranPastSchedule: Boolean,
         ignoredOutsideSchedule: Boolean,
         open: TripStatus,
+        categorySetByHand: Boolean,
     ): Int {
         holdCloseUntil?.await()
         return change(tripId, open) {
@@ -107,6 +108,7 @@ class FakeTripDao : TripDao {
                 category = category,
                 ranPastSchedule = ranPastSchedule,
                 ignoredOutsideSchedule = ignoredOutsideSchedule,
+                categorySetByHand = categorySetByHand,
             )
         }
     }

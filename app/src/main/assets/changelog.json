@@ -5,6 +5,11 @@
       "date": null,
       "changes": [
         {
+          "kind": "new",
+          "title": "Business or Personal while you drive",
+          "body": "While a trip is being recorded, Home's trip card says Business or Personal beside Recording: what your work hours make of it. Press it to switch, for example when you leave work early for home. The trip is saved as what you chose when it ends, and Dually never changes your choice afterwards."
+        },
+        {
           "kind": "improved",
           "title": "Change today's trips from Home",
           "body": "Press one of today's trips on Home to bring up the same buttons it has on the Trips screen: Personal or Business, to switch what it is saved as, and Edit. Trips in the corner of that tile still opens the Trips screen."

@@ -190,6 +190,7 @@ class StoredNamesTest {
                 "report_vehicle",
                 "review_last_attempt_at_ms",
                 "review_last_launch_at_ms",
+                "running_trip_category",
                 "schedule_\${day.inKeys()}_end_minute",
                 "schedule_\${day.inKeys()}_start_minute",
                 "schedule_\${day.inKeys()}_tracked",

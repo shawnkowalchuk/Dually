@@ -20,6 +20,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.shawnkowalchuk.milo.data.settings.setRunningTripCategory
 import com.shawnkowalchuk.milo.data.trip.TripCorrections
 import com.shawnkowalchuk.milo.feature.eventlog.EventLogScreen
 import com.shawnkowalchuk.milo.feature.eventlog.EventLogViewModel
@@ -97,6 +98,10 @@ fun MiloNavigation(
                                             sources = homeSources(container),
                                             clock = container.clock,
                                             zone = ZoneId::systemDefault,
+                                            chooseRunningCategory = { id, category ->
+                                                container.settingsStore
+                                                    .setRunningTripCategory(id, category)
+                                            },
                                             corrections =
                                                 TripCorrections(
                                                     trips = container.tripRepository,

@@ -143,6 +143,7 @@ class TripRepository(private val dao: TripDao) {
         ranPastSchedule = filing.classification?.ranPastSchedule == true,
         ignoredOutsideSchedule = filing.ignored,
         open = TripStatus.OPEN,
+        categorySetByHand = filing.byHand,
     ) == 1
 
     /**

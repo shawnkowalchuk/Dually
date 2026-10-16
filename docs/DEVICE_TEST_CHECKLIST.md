@@ -1859,6 +1859,17 @@ Unit tests only.
 | HT-2 | Press "Personal" on a Business trip. | The row says Personal, its km turn grey, Today's Business figure drops by it; the Log has the line "marked as Personal by hand". | not run |
 | HT-3 | Press "Edit"; save or go Back. | The edit screen for that trip; Back leads to Home. "Trips" in the tile's corner opens Trips; a press elsewhere on the tile does not. | not run |
 
+## Business or Personal on the running trip (2026-10-16)
+
+Unit tests only.
+
+| # | Do this | Expect | Result |
+|---|---|---|---|
+| RC-1 | Start a trip in work hours; look at Home. | Beside "Recording": "Business". Outside the hours: "Personal". | not run |
+| RC-2 | Press the pill. | It says the other one at once. | not run |
+| RC-3 | End the trip. | Trips shows it as what the pill last said; the Log's close line says it was sorted as that. Changing the work hours afterwards does not change it. | not run |
+| RC-4 | With "Ignore them" chosen for trips outside the hours, start one outside them, press the pill to Personal, end it. | It is kept as a Personal trip, not discarded. | not run |
+
 ## Later work packages
 
 Nothing waiting. A work package that adds behaviour only the phone can prove adds its checks above.

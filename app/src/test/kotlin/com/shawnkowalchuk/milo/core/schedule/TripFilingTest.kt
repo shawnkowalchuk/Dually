@@ -74,4 +74,81 @@ class TripFilingTest {
         assertNull(filing.classification)
         assertFalse(filing.ignored)
     }
+
+    // ---- A category chosen on Home while the trip was recorded (2026-10-16) ----------------------
+
+    @Test
+    fun `a chosen category wins over the hours, is set by hand, and is never ignored`() {
+        val saturday = local("2026-10-10T10:00")
+        val monday = local("2026-10-05T10:00")
+
+        assertEquals(
+            TripFiling(business, ignored = false, byHand = true),
+            fileTrip(
+                saturday,
+                saturday + 20 * MINUTE_MS,
+                true,
+                ignore,
+                edmonton,
+                TripCategory.BUSINESS,
+            ),
+        )
+        assertEquals(
+            TripFiling(personal, ignored = false, byHand = true),
+            fileTrip(
+                monday,
+                monday + 20 * MINUTE_MS,
+                true,
+                saveAsPersonal,
+                edmonton,
+                TripCategory.PERSONAL,
+            ),
+        )
+    }
+
+    @Test
+    fun `a chosen Business trip ran past the schedule only if the hours make it Business too`() {
+        // Monday 16:20 to 16:50: Business by the hours, and past their end at 16:30.
+        val lateMonday = local("2026-10-05T16:20")
+        val endsLate = lateMonday + 30 * MINUTE_MS
+        assertEquals(
+            ranPast,
+            fileTrip(lateMonday, endsLate, true, saveAsPersonal, edmonton, TripCategory.BUSINESS)
+                .classification,
+        )
+        // Saturday: Personal by the hours, so never "past" them.
+        val saturday = local("2026-10-10T16:20")
+        assertEquals(
+            business,
+            fileTrip(
+                saturday,
+                saturday + 30 * MINUTE_MS,
+                true,
+                saveAsPersonal,
+                edmonton,
+                TripCategory.BUSINESS,
+            )
+                .classification,
+        )
+    }
+
+    @Test
+    fun `while recorded, Home shows the choice, or else what the hours make of the start`() {
+        val monday = local("2026-10-05T10:00")
+        val saturday = local("2026-10-10T10:00")
+
+        assertEquals(
+            TripCategory.BUSINESS,
+            categoryWhileRecorded(monday, null, DEFAULT_WORK_SCHEDULE, edmonton),
+        )
+        assertEquals(
+            TripCategory.PERSONAL,
+            categoryWhileRecorded(saturday, null, DEFAULT_WORK_SCHEDULE, edmonton),
+        )
+        assertEquals(
+            TripCategory.PERSONAL,
+            categoryWhileRecorded(monday, TripCategory.PERSONAL, DEFAULT_WORK_SCHEDULE, edmonton),
+        )
+        assertEquals(null, categoryWhileRecorded(monday, null, null, edmonton))
+    }
 }

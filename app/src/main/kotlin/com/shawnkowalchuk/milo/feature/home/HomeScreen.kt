@@ -34,6 +34,7 @@ import com.shawnkowalchuk.milo.core.designsystem.component.StatusRow
 import com.shawnkowalchuk.milo.core.designsystem.component.TileColumn
 import com.shawnkowalchuk.milo.core.designsystem.component.rememberTwentyFourHourClock
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
+import com.shawnkowalchuk.milo.core.schedule.TripCategory
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.platform.system.PreflightProblem
 import com.shawnkowalchuk.milo.platform.trip.StartFailure
@@ -58,6 +59,7 @@ internal class HomeActions(
     val onStart: () -> Unit,
     val onEnd: () -> Unit,
     val todayRows: TodayRowActions = TodayRowActions(onMark = { _, _ -> }, onEdit = {}),
+    val onRunningCategory: (tripId: Long, category: TripCategory) -> Unit = { _, _ -> },
 )
 
 /**
@@ -126,6 +128,7 @@ fun HomeScreen(
                 },
                 onEnd = viewModel::onEndPressed,
                 todayRows = TodayRowActions(onMark = viewModel::onMark, onEdit = onEditTrip),
+                onRunningCategory = viewModel::onRunningCategory,
             ),
         modifier = modifier,
     )

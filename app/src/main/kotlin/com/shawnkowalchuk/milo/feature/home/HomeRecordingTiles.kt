@@ -22,6 +22,7 @@ import com.shawnkowalchuk.milo.core.designsystem.component.FlipTile
 import com.shawnkowalchuk.milo.core.designsystem.component.HeroIconButton
 import com.shawnkowalchuk.milo.core.designsystem.component.MiloIcons
 import com.shawnkowalchuk.milo.core.designsystem.component.Pill
+import com.shawnkowalchuk.milo.core.designsystem.component.PillButton
 import com.shawnkowalchuk.milo.core.designsystem.component.Tile
 import com.shawnkowalchuk.milo.core.designsystem.component.TileKind
 import com.shawnkowalchuk.milo.core.designsystem.component.TileLabel
@@ -29,9 +30,12 @@ import com.shawnkowalchuk.milo.core.designsystem.component.TilePadding
 import com.shawnkowalchuk.milo.core.designsystem.component.TilePair
 import com.shawnkowalchuk.milo.core.designsystem.component.TilePress
 import com.shawnkowalchuk.milo.core.designsystem.component.TruckLinkLook
+import com.shawnkowalchuk.milo.core.designsystem.text.categoryWordsRes
 import com.shawnkowalchuk.milo.core.designsystem.text.distanceSpokenRes
 import com.shawnkowalchuk.milo.core.designsystem.text.unitShortRes
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
+import com.shawnkowalchuk.milo.core.schedule.TripCategory
+import com.shawnkowalchuk.milo.core.schedule.categoryWhileRecorded
 import com.shawnkowalchuk.milo.core.util.formatDistance
 import com.shawnkowalchuk.milo.core.util.formatTimeOfDay
 import com.shawnkowalchuk.milo.platform.trip.CurrentTrip
@@ -50,7 +54,7 @@ internal fun RecordingTiles(
 ) {
     // Which side of today's card is up (`HomeCardSide.kt`). Kept through a turn of the phone.
     var monthChosenIn by rememberSaveable { mutableStateOf<Long?>(null) }
-    RecordingTile(ui, trip, format, actions.onEnd)
+    RecordingTile(ui, trip, format, actions.onEnd, actions.onRunningCategory)
     TilePair(
         first = { half -> SmallTruckTile(ui.truck.state, half) },
         second = { half ->
@@ -77,12 +81,22 @@ internal fun RecordingTiles(
  * While the trip waits for the truck to reconnect, the sentence that says so stands under the
  * two rows, so that the button does not move when it appears.
  *
- * It does not say Business or Personal: a trip is sorted by the work hours when it closes, and
- * until then MilO has not decided. Where it started is no longer written here; the Trips
- * screen's tile for the trip in progress says it.
+ * Since 2026-10-16 it says Business or Personal beside "Recording" (Shawn: "can we have it show
+ * if it is business or personal at the top in the start trip card. and if you hit the button it
+ * will toggle"): what he chose, or else what the work hours make of its start; a press switches
+ * it, and the trip is saved as his choice when it ends. Where it started is no longer written
+ * here; the Trips screen's tile for the trip in progress says it.
+ *
+ * @param onCategory a press on Business or Personal: the trip and the other category.
  */
 @Composable
-private fun RecordingTile(ui: HomeUi, trip: CurrentTrip, format: HomeFormat, onEnd: () -> Unit) {
+private fun RecordingTile(
+    ui: HomeUi,
+    trip: CurrentTrip,
+    format: HomeFormat,
+    onEnd: () -> Unit,
+    onCategory: (tripId: Long, category: TripCategory) -> Unit,
+) {
     val spacing = MiloTheme.spacing
     Tile(
         modifier = Modifier.fillMaxWidth(),
@@ -90,7 +104,11 @@ private fun RecordingTile(ui: HomeUi, trip: CurrentTrip, format: HomeFormat, onE
         padding = TilePadding.ROOMY,
         gap = spacing.tileGap,
     ) {
+        val chosen = ui.runningChoice?.takeIf { it.tripId == trip.tripId }?.category
+        val category = categoryWhileRecorded(trip.startedAtMs, chosen, ui.schedule, format.zone)
         PillAndTimes(
+            category = category,
+            onCategory = { other -> onCategory(trip.tripId, other) },
             since =
                 stringResource(
                     R.string.home_recording_since,
@@ -136,11 +154,19 @@ private fun RecordingTile(ui: HomeUi, trip: CurrentTrip, format: HomeFormat, onE
  * the pill, from the start of the line, rather than being cut off or squeezed.
  */
 @Composable
-private fun PillAndTimes(since: String, running: String) {
+private fun PillAndTimes(
+    category: TripCategory?,
+    onCategory: (TripCategory) -> Unit,
+    since: String,
+    running: String,
+) {
     val gap = MiloTheme.spacing.small
     Layout(
         content = {
-            Pill(text = stringResource(R.string.home_recording), lit = true)
+            Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
+                Pill(text = stringResource(R.string.home_recording), lit = true)
+                category?.let { CategoryPill(it, onCategory) }
+            }
             Text(text = since, style = MiloTheme.textStyles.accentNote)
             Text(text = running, style = MaterialTheme.typography.labelMedium)
         },
@@ -167,6 +193,33 @@ private fun PillAndTimes(since: String, running: String) {
             }
         }
     }
+}
+
+/**
+ * Business or Personal, as a pill that is a button: a press makes it the other one. A screen
+ * reader is told what the press does.
+ */
+@Composable
+private fun CategoryPill(category: TripCategory, onCategory: (TripCategory) -> Unit) {
+    val other =
+        if (category == TripCategory.BUSINESS) TripCategory.PERSONAL else TripCategory.BUSINESS
+    PillButton(
+        text = stringResource(categoryWordsRes(category, ranPastSchedule = false)),
+        spokenName =
+            stringResource(
+                R.string.home_recording_category_spoken,
+                stringResource(categoryWordsRes(category, ranPastSchedule = false)),
+            ),
+        pressLabel =
+            stringResource(
+                if (other == TripCategory.BUSINESS) {
+                    R.string.trips_action_mark_business
+                } else {
+                    R.string.trips_action_mark_personal
+                },
+            ),
+        onClick = { onCategory(other) },
+    )
 }
 
 /** The truck's connection in one word, beside today's figure. */

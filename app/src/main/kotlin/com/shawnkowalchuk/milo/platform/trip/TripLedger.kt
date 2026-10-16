@@ -23,7 +23,9 @@ import com.shawnkowalchuk.milo.data.point.RawPointRepository
 import com.shawnkowalchuk.milo.data.settings.ParkedTruck
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.setDrivenOffTripId
+import com.shawnkowalchuk.milo.data.settings.setRunningTripCategory
 import com.shawnkowalchuk.milo.data.trip.TripRepository
+import java.io.IOException
 import java.time.ZoneId
 
 /**
@@ -280,10 +282,21 @@ internal class TripLedger(
             return removeForGood(trip, closed, zoneNow)
         }
         val keptByTripRules = closed.status == TripStatus.FINISHED
+        // What Shawn chose on Home while it was recorded, if it was this trip (2026-10-16).
+        val chosen = settingsNow.runningTripCategory?.takeIf { it.tripId == trip.id }?.category
         val filing =
-            fileTrip(trip.startedAtMs, closed.endedAtMs, keptByTripRules, filingRules, zoneNow)
+            fileTrip(
+                trip.startedAtMs,
+                closed.endedAtMs,
+                keptByTripRules,
+                filingRules,
+                zoneNow,
+                chosen,
+            )
         // Stored adjusted (`core/trip/DistanceAdjustment.kt`); kept or discarded on the measured.
         val changed = trips.closeTrip(trip.id, closed, filing, settingsNow.distanceFactor)
+        // A choice is for one trip: taken out once a trip closes, this one's or a stale one.
+        if (settingsNow.runningTripCategory != null) forgetRunningTripCategory()
         open = null
         // Where the truck stands now. If the trip rules go on to wait beside it, in this same
         // step, this is the place the wait watches and the next trip starts from.
@@ -348,5 +361,19 @@ internal class TripLedger(
 
     private companion object {
         const val MILLIS_PER_SECOND = 1000L
+    }
+
+    /**
+     * Takes Home's choice for the trip being recorded out of the settings file. A file that
+     * cannot be written leaves it there, where a later trip's id never matches it: the trip has
+     * been filed all the same.
+     */
+    private suspend fun forgetRunningTripCategory() {
+        try {
+            settings.setRunningTripCategory(tripId = 0, category = null)
+        } catch (notStored: IOException) {
+            // Nothing to undo: see above.
+            return
+        }
     }
 }
