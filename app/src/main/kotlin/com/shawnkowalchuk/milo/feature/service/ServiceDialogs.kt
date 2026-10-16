@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.window.DialogProperties
 import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.designsystem.component.ChoiceButton
 import com.shawnkowalchuk.milo.core.designsystem.component.DateDialog
@@ -43,6 +44,12 @@ private const val MAX_INTERVAL_LENGTH = 6
 private const val MAX_ODOMETER_LENGTH = 9
 private const val MAX_NOTE_LENGTH = 120
 private const val MAX_COST_LENGTH = 12
+
+/**
+ * Both dialogs stay open when a press lands beside them (Shawn, 2026-10-16: "when i click off the
+ * model when entering a service the screen disapears"). Back still closes them, as Cancel does.
+ */
+private val KeepOpen = DialogProperties(dismissOnClickOutside = false)
 
 /** The longest interval in months: ten years. */
 private const val MAX_MONTHS = 120
@@ -114,6 +121,8 @@ internal fun ItemDialog(
             (lastOdometer.isBlank() || odometerTyped != null)
     AlertDialog(
         onDismissRequest = onDismiss,
+        // A press beside it does not close it and lose what was typed; Cancel and Back do.
+        properties = KeepOpen,
         title = {
             Text(
                 text = stringResource(
@@ -298,6 +307,8 @@ internal fun DoneDialog(
     val costWrong = cost.isNotBlank() && costTyped == null
     AlertDialog(
         onDismissRequest = onDismiss,
+        // A press beside it does not close it and lose what was typed; Cancel and Back do.
+        properties = KeepOpen,
         title = {
             Text(
                 text = stringResource(R.string.service_done_title, name),

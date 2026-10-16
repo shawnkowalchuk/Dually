@@ -26,6 +26,9 @@
 
 ### 2026-10-16
 
+**`[FIX]` The Service dialogs no longer close on a press beside them (version 0.3.2)**
+Shawn, on the phone: "when i click off the model when entering a service the screen disapears", and what he had typed went with it. Both dialogs now close only by Cancel, Back or their own button (`dismissOnClickOutside = false`). The other dialogs of the app are unchanged: they hold a choice, not typing.
+
 **`[CHANGE]` Service: the screen, and the Log moves to Settings (version 0.3.2)**
 Shawn: "can we stick the log menu under settings. and instead have a button ... to track and set reminders for service, oil change, maintenance". His answers: called Service; distance or time, whichever first; reminders and a history; a notification and a Home tile; phone only. This is the first of two changes; the reminders follow. APP_ENCYCLOPEDIA, Service; SV-1 to SV-6.
 - **`[DECISION]` The book is one JSON text in the settings file,** not a Room table: a few items and records a year, no query, and no database migration or export-format change in the week of a Play review.
