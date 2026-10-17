@@ -26,6 +26,9 @@
 
 ### 2026-10-16
 
+**`[CHANGE]` Website: the home page lists the features of 0.3.2**
+The service log and its reminders, the graph of the year, the year-end report and the report's choices, Business or Personal on the running trip, and the odometer check when switching vehicles, in the two lists "By itself" and "With you". Held as a draft until 0.3.2 can be downloaded: Shawn chose to release after the Google Play review ("wait for the play review"), and a page should not promise what cannot be had yet.
+
 **`[CHANGE]` Done on Home's service tile, and always in view on the Service screen (version 0.3.2)**
 Shawn: "on the oil card it should have a button to change oil that will reset the mileage", then "make sure that is added to the service card too". Home's tile, one per item now, has **Done** in place of "Open Service": asked first, then recorded for now at the item's odometer, with no cost or note. On the Service screen Done no longer waits for a press on the item. Ran on an emulator; SV-11, SV-12.
 - **Decided for Shawn, not asked:** a question before Home's Done, because one press would otherwise reset the interval for good; one tile per item, so each has its own button; "Open Service" is gone from the tile (the wrench is beside it in the bar).
