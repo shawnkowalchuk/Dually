@@ -13,10 +13,10 @@
 agp = "9.4.1"
 # Kotlin, the Compose compiler plugin and the serialization plugin share this one version
 # because the compiler plugins are released with, and only work with, the matching compiler.
-kotlin = "2.4.20"
+kotlin = "2.4.21"
 # KSP runs Room's code generator. Since KSP 2.3 its version is no longer tied to the Kotlin version.
 ksp = "2.3.12"
-spotless = "8.10.3"
+spotless = "8.10.4"
 ktlint = "1.8.0"
 
 # Libraries.
