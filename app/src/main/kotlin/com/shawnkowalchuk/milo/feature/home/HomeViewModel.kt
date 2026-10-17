@@ -58,12 +58,14 @@ private const val CAME_TO_FRONT = "the Home screen came to the front"
  * worked out and written in it, and follows a change at once.
  * @param lookUpAddresses asks for the addresses that finished trips still lack, with the reason
  * in words for the event log. A plain function, like the ones for navigation.
+ * @param serviceDone records a service item done now, from its tile (since 2026-10-16).
  */
 class HomeSources(
     val settings: Flow<MiloSettings>,
     val sentReports: Flow<List<SentReport>>,
     val unit: StateFlow<DistanceUnit>,
     val lookUpAddresses: (reason: String) -> Unit,
+    val serviceDone: suspend (itemId: Long) -> Unit = {},
 )
 
 /**
@@ -285,6 +287,20 @@ class HomeViewModel(
         viewModelScope.launch {
             try {
                 chooseRunningCategory(tripId, category)
+            } catch (notStored: IOException) {
+                return@launch
+            }
+        }
+    }
+
+    /**
+     * "Done" on a service item's tile (since 2026-10-16): recorded now, at the odometer as Dually
+     * has it, and the tile follows storage. A file that cannot be written leaves it as it was.
+     */
+    fun onServiceDone(itemId: Long) {
+        viewModelScope.launch {
+            try {
+                sources.serviceDone(itemId)
             } catch (notStored: IOException) {
                 return@launch
             }

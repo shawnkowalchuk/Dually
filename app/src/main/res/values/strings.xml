@@ -386,8 +386,11 @@
     <!-- Event log. The entries themselves are stored in English and shown as stored. -->
     <!-- The Service screen (since 2026-10-16): each vehicle's upkeep, when it is due, and what was done. -->
     <string name="service_title">Service</string>
-    <!-- The button of Home's tile for service that is soon or due. -->
-    <string name="home_service_action">Open Service</string>
+    <!-- The button of Home's tile for a service item that is soon or due, and its question. -->
+    <string name="home_service_done">Done</string>
+    <!-- The argument is the item's name: "Oil change". -->
+    <string name="home_service_done_title">%1$s done?</string>
+    <string name="home_service_done_text">It is recorded for today, at the odometer as Dually has it, and the next one is counted from here. To add a cost or a note, press Done on the Service screen instead.</string>
     <string name="service_reading">Reading your service items…</string>
     <string name="service_none">Nothing to look after yet. Add an oil change, a tire rotation or anything else, and Dually shows when each is due.</string>
     <string name="service_add">Add an item</string>

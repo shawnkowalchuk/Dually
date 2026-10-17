@@ -1913,6 +1913,8 @@ Unit tests only.
 | SV-7 | An item overdue (SV-3); open Home. | A tile "(name)" with "Overdue since …" and "Open Service", under the report's; the button opens Service. | not run |
 | SV-8 | Start a trip. | The service tile is gone while the trip is recorded. | not run |
 | SV-9 | End the trip. | A notification "(name): Overdue since …"; a tap opens Service. The Log has a TRIP line "told of service". | not run |
+| SV-11 | Home's tile for the overdue item: Done, then Done in the question. | The tile goes; on Service the item is due again from today, and its history has today's line. Cancel leaves everything as it was. | not run |
+| SV-12 | Service screen. | Every item shows Done without being pressed first; a press brings up Edit and Delete. | not run |
 | SV-10 | Another trip, without pressing Done. | No second notification; Home's tile is still there. Press Done: the tile goes. | not run |
 
 ## Later work packages

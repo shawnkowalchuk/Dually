@@ -22,6 +22,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.shawnkowalchuk.milo.data.settings.setRunningTripCategory
 import com.shawnkowalchuk.milo.data.trip.TripCorrections
+import com.shawnkowalchuk.milo.data.trip.markServiceDone
 import com.shawnkowalchuk.milo.feature.home.HomeScreen
 import com.shawnkowalchuk.milo.feature.home.HomeSources
 import com.shawnkowalchuk.milo.feature.home.HomeViewModel
@@ -118,7 +119,6 @@ fun MiloNavigation(
                             backStack.openOnTop(ReportKey(month.year, month.monthValue))
                         },
                         onEditTrip = { tripId -> backStack.openOnTop(TripEditKey(tripId)) },
-                        onOpenService = { backStack.showTopLevel(ServiceKey, HomeKey) },
                     )
                 }
                 entry<TripsKey> {
@@ -269,4 +269,13 @@ private fun homeSources(container: AppContainer) = HomeSources(
     sentReports = container.sentReportRepository.observeSent(),
     unit = container.shownUnit.unit,
     lookUpAddresses = container.tripAddresses::catchUp,
+    serviceDone = { id ->
+        markServiceDone(
+            container.settingsStore,
+            container.tripRepository,
+            id,
+            container.clock(),
+            ZoneId.systemDefault(),
+        )
+    },
 )
