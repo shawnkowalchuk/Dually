@@ -5,6 +5,11 @@
       "date": null,
       "changes": [
         {
+          "kind": "fixed",
+          "title": "Trips start even when the phone thinks the truck never left",
+          "body": "Some phones keep showing the truck's Bluetooth as connected after it has gone. Dually then waits beside the truck, and now two more things tell it you are driving: Android Auto connecting, and the phone leaving the spot where the truck was parked. The trip starts from the parked spot. Walking away does nothing."
+        },
+        {
           "kind": "new",
           "title": "Service reminders",
           "body": "When a service item comes due, or nearly, Home shows a card for it with a Done button: press it once the oil is changed and the count starts again from today. A notification tells you once, when a trip ends, never while you drive. On the Service screen, Done now shows on every item without pressing it first."
