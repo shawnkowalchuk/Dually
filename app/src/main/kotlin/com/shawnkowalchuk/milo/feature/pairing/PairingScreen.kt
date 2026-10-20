@@ -25,6 +25,7 @@ import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.designsystem.component.AppHeader
 import com.shawnkowalchuk.milo.core.designsystem.component.CameToFrontEffect
 import com.shawnkowalchuk.milo.core.designsystem.component.ConfirmDialog
+import com.shawnkowalchuk.milo.core.designsystem.component.PinnedHeaderColumn
 import com.shawnkowalchuk.milo.core.designsystem.component.Tile
 import com.shawnkowalchuk.milo.core.designsystem.component.TileColumn
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
@@ -122,25 +123,20 @@ internal fun PairingContent(
     modifier: Modifier = Modifier,
 ) {
     val spacing = MiloTheme.spacing
-    TileColumn(
-        modifier =
-            modifier
-                .fillMaxSize()
-                // Large font settings or a small window must scroll rather than cut content off.
-                .verticalScroll(rememberScrollState())
-                .padding(vertical = spacing.small),
+    PinnedHeaderColumn(
+        header = {
+            AppHeader(
+                title = stringResource(R.string.pairing_title),
+                onBack = onBack,
+            )
+        },
+        modifier = modifier.fillMaxSize(),
     ) {
-        AppHeader(
-            title = stringResource(R.string.pairing_title),
-            onBack = onBack,
-            // As on Home: with the gap between two tiles, the design's 16 under the top line.
-            modifier = Modifier.padding(bottom = spacing.extraSmall),
-        )
         if (state == null) {
             Tile(modifier = Modifier.fillMaxWidth()) {
                 Note(stringResource(R.string.pairing_reading))
             }
-            return@TileColumn
+            return@PinnedHeaderColumn
         }
         // In from the edge like a label above a tile.
         Note(

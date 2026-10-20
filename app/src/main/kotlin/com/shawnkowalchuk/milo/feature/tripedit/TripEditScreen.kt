@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.designsystem.component.AppHeader
+import com.shawnkowalchuk.milo.core.designsystem.component.PinnedHeaderColumn
 import com.shawnkowalchuk.milo.core.designsystem.component.PrimaryButton
 import com.shawnkowalchuk.milo.core.designsystem.component.RowStatus
 import com.shawnkowalchuk.milo.core.designsystem.component.StatusRow
@@ -125,21 +126,18 @@ internal fun TripEditContent(
 ) {
     val spacing = MiloTheme.spacing
     val adding = (state as? TripEditUiState.Ready)?.adding == true
-    TileColumn(
-        modifier =
-            modifier
-                .fillMaxSize()
-                // Large font settings or a small window must scroll rather than cut content off.
-                .verticalScroll(rememberScrollState())
-                .padding(vertical = spacing.small),
+    PinnedHeaderColumn(
+        header = {
+            AppHeader(
+                title =
+                    stringResource(
+                        if (adding) R.string.trip_add_title else R.string.trip_edit_title,
+                    ),
+                onBack = onBack,
+            )
+        },
+        modifier = modifier.fillMaxSize(),
     ) {
-        AppHeader(
-            title =
-                stringResource(if (adding) R.string.trip_add_title else R.string.trip_edit_title),
-            onBack = onBack,
-            // As on Home: with the gap between two tiles, the design's 16 under the top line.
-            modifier = Modifier.padding(bottom = spacing.extraSmall),
-        )
         when (state) {
             TripEditUiState.Reading ->
                 Tile(modifier = Modifier.fillMaxWidth()) {

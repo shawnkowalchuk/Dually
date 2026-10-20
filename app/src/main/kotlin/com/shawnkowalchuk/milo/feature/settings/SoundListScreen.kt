@@ -18,6 +18,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.designsystem.component.AppHeader
+import com.shawnkowalchuk.milo.core.designsystem.component.PinnedHeaderColumn
 import com.shawnkowalchuk.milo.core.designsystem.component.RowStatus
 import com.shawnkowalchuk.milo.core.designsystem.component.StatusRow
 import com.shawnkowalchuk.milo.core.designsystem.component.Tile
@@ -120,20 +121,15 @@ internal fun SoundListContent(
     val spacing = MiloTheme.spacing
     // In from the edge like a label above a tile.
     val onThePage = Modifier.padding(horizontal = spacing.extraSmall)
-    TileColumn(
-        modifier =
-            modifier
-                .fillMaxSize()
-                // Twelve rows and his own: the lists are longer than most screens.
-                .verticalScroll(rememberScrollState())
-                .padding(vertical = spacing.small),
+    PinnedHeaderColumn(
+        header = {
+            AppHeader(
+                title = stringResource(which.title),
+                onBack = onBack,
+            )
+        },
+        modifier = modifier.fillMaxSize(),
     ) {
-        AppHeader(
-            title = stringResource(which.title),
-            onBack = onBack,
-            // As on Home: with the gap between two tiles, the design's 16 under the top line.
-            modifier = Modifier.padding(bottom = spacing.extraSmall),
-        )
         when (state) {
             SoundListUiState.Reading -> NoteTile { Note(stringResource(R.string.settings_reading)) }
 

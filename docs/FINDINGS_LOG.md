@@ -26,6 +26,11 @@
 
 ### 2026-10-19
 
+**`[CHANGE]` The top line stays put on every screen (version 0.3.2)**
+Shawn: "the top header should be pinned on all screens". One component for it, `PinnedHeaderColumn` (with `PinnedHeader` for the two lazy lists), used by all 13 screens with a top line; it took the place of `PinnedButtonColumn`, whose pinned main button it keeps as an option, so there are not two such frames. APP_ENCYCLOPEDIA, Design system; PH-1 to PH-3.
+- **Decided for Shawn, not asked:** the spacing stays as it was; the tiles scroll under the header and are cut off at it, with nothing drawn behind it.
+- **Not seen drawn:** the emulator in use belonged to another session (running another app; one tap and a scroll reached it before that was noticed), and a second one cannot start beside it. Seen in the tests only so far.
+
 **`[FINDING]` The phone's Bluetooth reported the truck connected for three days after it had gone**
 Shawn: "Today morning and after work my app was connected to my truck, but the trips didn't automatically start." Read from the phone over adb (Dually's Log through the screen, `dumpsys`): Dually had waited beside a "connected and parked" truck since Saturday 12:17; every reading since Friday said the hands-free profile listed the truck, at midnight and all day at work; Android's own A2DP history had no change since Friday 12:38, with media "playing" for three days. Turning the phone's Bluetooth off and on cleared it: the phone then tried and failed to reach "Baby Mav", and Dually ended the wait. **A fault of the phone's Bluetooth (POCO X5 Pro, HyperOS), not of Dually or the truck.** Dually's waiting rules did what they say; their only way out of GPS-off, the motion sensor, reported Sunday's two drives and neither of Monday's. Shawn thinks the app he used before had trouble for the same reason. Nothing in 0.3.2 touched trip starting.
 - The "connected" sound he heard as the truck started was not Dually's (its Log records every sound: none that morning): the truck's own, or Android Auto's.
