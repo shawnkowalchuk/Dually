@@ -24,6 +24,22 @@
 
 ## Log
 
+### 2026-10-19
+
+**`[FINDING]` The phone's Bluetooth reported the truck connected for three days after it had gone**
+Shawn: "Today morning and after work my app was connected to my truck, but the trips didn't automatically start." Read from the phone over adb (Dually's Log through the screen, `dumpsys`): Dually had waited beside a "connected and parked" truck since Saturday 12:17; every reading since Friday said the hands-free profile listed the truck, at midnight and all day at work; Android's own A2DP history had no change since Friday 12:38, with media "playing" for three days. Turning the phone's Bluetooth off and on cleared it: the phone then tried and failed to reach "Baby Mav", and Dually ended the wait. **A fault of the phone's Bluetooth (POCO X5 Pro, HyperOS), not of Dually or the truck.** Dually's waiting rules did what they say; their only way out of GPS-off, the motion sensor, reported Sunday's two drives and neither of Monday's. Shawn thinks the app he used before had trouble for the same reason. Nothing in 0.3.2 touched trip starting.
+- The "connected" sound he heard as the truck started was not Dually's (its Log records every sound: none that morning): the truck's own, or Android Auto's.
+- **`[FINDING]` adb was held by a second server** (`adb -L tcp:5038`, running since 2026-10-05); `adb -P 5038` reaches the phone when the default server lists nothing.
+
+**`[CHANGE]` Two safety nets beside the parked truck: Android Auto, and a geofence (version 0.3.2)**
+His answer: "yes go ahead with both safety nets". Android Auto connecting, and the phone leaving a geofence of 150 m around the parked place, now turn GPS on for ten minutes as the motion sensor's report does; the fixes decide, at 15 km/h. APP_ENCYCLOPEDIA, Truck pairing and trip detection, rule 15; SN-1 to SN-3. Unit tests; not yet run on the phone.
+- **`[DECISION]` Signs, not starts.** Neither can tell the truck from another vehicle, so neither opens a trip; they only give the existing rule its fixes. Walking away costs ten minutes of GPS. **Known limit, told to Shawn:** while the phone's Bluetooth is stuck, a ride over 15 km/h in another vehicle is recorded as a truck trip.
+- **Decided for Shawn, not asked:** 150 m (Google's advised minimum); the geofence lives with the trip service's watch and expires with the wait's 72 hours.
+- **Reviewed** by a second pass: no way found for either sign to open a trip or change the trip rules' state. Taken from it: the geofence reports a phone already outside at once (`INITIAL_TRIGGER_EXIT`), or one put up again after a restart mid-drive would never fire. **`[DEBT]`** a geofence that fails to go up is logged and not retried until the next wait. Android Auto's sign also counts a report taken for a stuck value, on purpose: ten minutes of GPS.
+
+**`[FINDING]` The signing keystore was in the Mac's Trash**
+A build stopped: `~/keys/milo.jks` was missing. The whole `keys` folder (and a second copy of `milo.jks`) was in `~/.Trash`, the same key by its SHA-256, with no other copy found on the Mac. Emptying the Trash would have made every later update impossible to install over the app on his phone. Asked Shawn to put it back and keep a second copy.
+
 ### 2026-10-16
 
 **`[CHANGE]` Done on Home's service tile, and always in view on the Service screen (version 0.3.2)**

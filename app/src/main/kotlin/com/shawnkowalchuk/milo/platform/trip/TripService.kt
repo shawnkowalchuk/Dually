@@ -69,6 +69,13 @@ class TripService :
     private lateinit var androidAuto: AndroidAutoWatcher
     private lateinit var sound: TripSoundPlayer
 
+    /** The geofence around the parked truck (since 2026-10-19), while MilO waits beside it. */
+    private val fence by lazy {
+        ParkedFence(this) { message, detail ->
+            controller.note(EventCategory.LOCATION, message, detail)
+        }
+    }
+
     /** Hears the truck disconnect during a trip, even if the manifest receiver does not. */
     private val truckReceiver = TruckBluetoothReceiver()
 
@@ -179,13 +186,14 @@ class TripService :
         }
     }
 
-    override fun watchParked(checkAtMs: Long?, gps: ParkedGps) {
+    override fun watchParked(checkAtMs: Long?, gps: ParkedGps, fence: FencePlace?) {
         mainExecutor.execute {
             if (destroyed) return@execute
             turnTo(Work.WATCHING_PARKED)
             checkTimer.set(checkAtMs)
             parkedGps = gps
             parkedGpsInLine()
+            this.fence.watch(fence)
         }
     }
 
@@ -214,6 +222,7 @@ class TripService :
         // For the whole session. Starting a watch that is running does nothing.
         androidAuto.start()
         if (next == Work.RECORDING) {
+            fence.clear()
             parkedGpsTimer.set(null)
             parkedGpsOff = false
             // At once, not when the trip's figures next change: the notification must not go
@@ -243,6 +252,7 @@ class TripService :
         work = Work.NONE
         location.stop()
         androidAuto.stop()
+        fence.clear()
         truckReceiver.unregisterFrom(this)
         session?.cancel()
         checkTimer.set(null)

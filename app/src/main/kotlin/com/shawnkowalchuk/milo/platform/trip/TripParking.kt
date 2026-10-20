@@ -114,6 +114,10 @@ internal class TripParking(
         return TripProgress.of(first)
     }
 
+    /** Where the truck is parked, while MilO watches it and knows where: for the geofence. */
+    val place: FencePlace?
+        get() = watch?.place?.let { FencePlace(it.latitude, it.longitude) }
+
     /** Forgets the watch. Storage is not touched. */
     fun forget() {
         watch = null

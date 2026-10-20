@@ -176,16 +176,30 @@ internal const val PARKED_GPS_OFF =
 private const val MILLIS_PER_SECOND = 1000L
 
 /**
- * The line for a report of getting into a vehicle that turns GPS on beside the parked truck.
+ * The line for a sign of driving that turns GPS on beside the parked truck.
  *
- * @param ageMs how long before now the phone noticed it.
+ * @param ageMs how long before now the sign came.
  * @param forMs how long from now GPS is read.
  */
-internal fun gpsForDrivingText(ageMs: Long, forMs: Long): String {
+internal fun gpsForDrivingText(
+    ageMs: Long,
+    forMs: Long,
+    sign: DrivingSign = DrivingSign.VEHICLE_ENTERED,
+): String {
     val minutes = (forMs + MILLIS_PER_MINUTE - 1) / MILLIS_PER_MINUTE
-    return "The phone reports getting into a vehicle ${ageMs / MILLIS_PER_SECOND} s ago: the " +
-        "parked truck's position is read every 5 s for the next $minutes min, and a trip " +
-        "starts if it drives off"
+    val seconds = ageMs / MILLIS_PER_SECOND
+    val what =
+        when (sign) {
+            DrivingSign.VEHICLE_ENTERED -> "The phone reports getting into a vehicle $seconds s ago"
+
+            DrivingSign.ANDROID_AUTO -> "Android Auto connected $seconds s ago"
+
+            DrivingSign.LEFT_PARKED_PLACE ->
+                "The phone left the parked truck's place $seconds s ago (Android's geofence, " +
+                    "${PARKED_FENCE_RADIUS_METRES.toInt()} m)"
+        }
+    return "$what: the parked truck's position is read every 5 s for the next $minutes min, " +
+        "and a trip starts if it drives off"
 }
 
 /** The line for the end of a wait beside the parked truck, with the reason. */

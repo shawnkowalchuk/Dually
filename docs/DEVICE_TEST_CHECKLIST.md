@@ -1917,6 +1917,14 @@ Unit tests only.
 | SV-12 | Service screen. | Every item shows Done without being pressed first; a press brings up Edit and Delete. | not run |
 | SV-10 | Another trip, without pressing Done. | No second notification; Home's tile is still there. Press Done: the tile goes. | not run |
 
+## Safety nets beside the parked truck (2026-10-19)
+
+| # | Do this | Expect | Result |
+|---|---|---|---|
+| SN-1 | Leave the truck parked and connected for over an hour (Home: "Truck connected and parked"); then open Settings, Log. | A LOCATION line "Geofence of 150 m put around the parked truck" when the wait began. | not run |
+| SN-2 | Drive off without opening Dually, with the phone's Bluetooth still showing the truck connected. | Within a few minutes a trip is recorded, starting at the parked place; the Log has "The phone left the parked truck's place …" or "Android Auto connected …", then the trip. | not run |
+| SN-3 | Walk 300 m away from the parked, connected truck and back. | No trip. At most a LOCATION line for the geofence and ten minutes of GPS. | not run |
+
 ## Later work packages
 
 Nothing waiting. A work package that adds behaviour only the phone can prove adds its checks above.

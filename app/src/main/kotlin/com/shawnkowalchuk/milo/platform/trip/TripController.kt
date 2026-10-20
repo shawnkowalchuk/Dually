@@ -144,6 +144,15 @@ class TripController(
         inbox.trySend(TripWork.VehicleEntered(atMs))
     }
 
+    /**
+     * The phone has left the place the truck is parked at (since 2026-10-19), as Android's
+     * geofence around it reports (`ParkedFence`). Like a report of getting into a vehicle it
+     * turns GPS on beside the parked truck, and the fixes decide; it starts no trip by itself.
+     */
+    fun onLeftParkedPlace(atMs: Long) {
+        inbox.trySend(TripWork.LeftParkedPlace(atMs))
+    }
+
     /** Android Auto connected or disconnected, as the service's watcher saw it. */
     fun onAndroidAuto(connected: Boolean, source: String) {
         inbox.trySend(TripWork.AndroidAuto(connected, source, clock()))
@@ -222,6 +231,8 @@ internal sealed interface TripWork {
     data class Fix(val fix: RawPoint) : TripWork
 
     data class VehicleEntered(val atMs: Long) : TripWork
+
+    data class LeftParkedPlace(val atMs: Long) : TripWork
 
     data class StartFailed(val request: StartRequest?, val failure: StartFailure, val atMs: Long) :
         TripWork

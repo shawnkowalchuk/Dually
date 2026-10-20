@@ -71,9 +71,10 @@ internal class TripWorker(
     private val evidence = TripEvidence(truck)
 
     /**
-     * When the phone last reported getting into a vehicle, or null if it has not since this
-     * process started. Kept whatever MilO is doing: a report that starts the process arrives
-     * before the stored wait has been picked up, and must still turn GPS on for it.
+     * When the last sign of driving came ([DrivingSign]: the phone reported getting into a
+     * vehicle, Android Auto connected, or the phone left the parked place), or null if none has
+     * since this process started. Kept whatever MilO is doing: a report that starts the process
+     * arrives before the stored wait has been picked up, and must still turn GPS on for it.
      */
     private var vehicleEnteredAtMs: Long? = null
 
@@ -104,7 +105,8 @@ internal class TripWorker(
             is TripWork.Trigger -> onTrigger(work.request)
             is TripWork.AndroidAuto -> onAndroidAuto(work)
             is TripWork.Fix -> onFix(work.fix)
-            is TripWork.VehicleEntered -> onVehicleEntered(work.atMs)
+            is TripWork.VehicleEntered -> onDrivingSign(work.atMs, DrivingSign.VEHICLE_ENTERED)
+            is TripWork.LeftParkedPlace -> onDrivingSign(work.atMs, DrivingSign.LEFT_PARKED_PLACE)
             is TripWork.StartFailed -> onStartFailed(work)
             is TripWork.ServiceStopped -> onServiceStopped(work)
             is TripWork.Note -> eventLog.add(work.atMs, work.category, work.message, work.detail)
@@ -112,7 +114,7 @@ internal class TripWorker(
         }
         noticeDrivingOff()
         noticeVehicle()
-        service.sync(known, rules, parkedGpsNow() ?: ParkedGps())
+        service.sync(known, rules, parkedGpsNow() ?: ParkedGps(), ledger.parkedPlace)
     }
 
     /**
@@ -176,7 +178,7 @@ internal class TripWorker(
     private suspend fun readStorageAgain() {
         try {
             onTrigger(StartRequest(TripTrigger.RECONCILE, AFTER_FAILURE, clock()))
-            service.sync(known, rules, parkedGpsNow() ?: ParkedGps())
+            service.sync(known, rules, parkedGpsNow() ?: ParkedGps(), ledger.parkedPlace)
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (again: Exception) {
@@ -246,6 +248,12 @@ internal class TripWorker(
         val distrusted = if (stuck) " (taken for a stuck value)" else ""
         val restart = StartRequest(TripTrigger.RECONCILE, work.source, work.atMs)
         advance(work.source + distrusted, event, restart, EventCategory.ANDROID_AUTO)
+        // Beside the parked truck, Android Auto connecting is a sign of driving (since
+        // 2026-10-19): on 2026-10-19 it connected 40 s before a drive the wait did not see,
+        // because the phone's Bluetooth had gone on reporting the truck connected for days.
+        // Also a report taken for a stuck value: ten minutes of GPS is all it costs, and the
+        // stuck reading of that day was the phone's Bluetooth, which Android Auto's may be too.
+        if (work.connected) onDrivingSign(work.atMs, DrivingSign.ANDROID_AUTO)
     }
 
     private suspend fun onFix(fix: RawPoint) {
@@ -278,17 +286,18 @@ internal class TripWorker(
     }
 
     /**
-     * The phone reported getting into a vehicle. Beside the parked truck GPS is read every 5
-     * seconds for a while ([GPS_AFTER_VEHICLE_REPORT_MS]): the next [service] sync passes the
-     * new times on. The driving alert writes a line for every report; this one is written only
-     * for a report that changes how GPS is read beside the parked truck.
+     * A sign of driving ([DrivingSign]). Beside the parked truck GPS is read every 5 seconds
+     * for a while ([GPS_AFTER_VEHICLE_REPORT_MS]): the next [service] sync passes the new times
+     * on. A line is written only for a sign that changes how GPS is read beside the parked
+     * truck: the driving alert writes its own for every report of a vehicle, and Android Auto
+     * has its own lines.
      */
-    private suspend fun onVehicleEntered(atMs: Long) {
+    private suspend fun onDrivingSign(atMs: Long, sign: DrivingSign) {
         vehicleEnteredAtMs = max(atMs, vehicleEnteredAtMs ?: atMs)
         val fastUntilMs = parkedGpsNow()?.fastUntilMs ?: return
         val nowMs = clock()
         if (fastUntilMs <= nowMs) return
-        val line = gpsForDrivingText(ageMs = nowMs - atMs, forMs = fastUntilMs - nowMs)
+        val line = gpsForDrivingText(nowMs - atMs, fastUntilMs - nowMs, sign)
         eventLog.add(nowMs, EventCategory.LOCATION, line)
     }
 
