@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,6 +37,7 @@ import com.shawnkowalchuk.milo.core.designsystem.component.ConfirmDialog
 import com.shawnkowalchuk.milo.core.designsystem.component.GroupLabel
 import com.shawnkowalchuk.milo.core.designsystem.component.LocalMiloClock
 import com.shawnkowalchuk.milo.core.designsystem.component.MiloIcons
+import com.shawnkowalchuk.milo.core.designsystem.component.PinnedHeader
 import com.shawnkowalchuk.milo.core.designsystem.component.SquareIconButton
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
 import com.shawnkowalchuk.milo.core.util.localDateOf
@@ -134,50 +136,59 @@ private fun EventLogContent(
     val timeWidth = rememberLogTimeWidth()
     val spacing = MiloTheme.spacing
 
-    // A lazy list: only the rows on screen are laid out, however many have been read.
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = spacing.gutter, vertical = spacing.small),
-    ) {
-        item { AppHeader(title = stringResource(R.string.log_title), onBack = actions.onBack) }
-        item {
-            // The one thing done with the log as a whole, at the end of a line of its own under
-            // the top line, as Trips has its two steps there.
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                SquareIconButton(
-                    icon = MiloIcons.Share,
-                    description = stringResource(R.string.log_share),
-                    onClick = { askingToShare = true },
-                    // The button waits while the file is being written.
-                    enabled = !share.working,
+    Column(modifier = modifier.fillMaxSize()) {
+        // The top line stays while the lines scroll (since 2026-10-19).
+        PinnedHeader {
+            AppHeader(title = stringResource(R.string.log_title), onBack = actions.onBack)
+        }
+        // A lazy list: only the rows on screen are laid out, however many have been read.
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(
+                start = spacing.gutter,
+                end = spacing.gutter,
+                bottom = spacing.small,
+            ),
+        ) {
+            item {
+                // The one thing done with the log as a whole, at the end of a line of its own under
+                // the top line, as Trips has its two steps there.
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                    SquareIconButton(
+                        icon = MiloIcons.Share,
+                        description = stringResource(R.string.log_share),
+                        onClick = { askingToShare = true },
+                        // The button waits while the file is being written.
+                        enabled = !share.working,
+                    )
+                }
+            }
+            if (share.working || share.problem != null) {
+                item { ShareState(share, Modifier.padding(top = spacing.rowGap)) }
+            }
+            item {
+                GroupFilter(
+                    filter = state?.filter,
+                    onFilter = actions.onFilter,
+                    modifier = Modifier.padding(vertical = spacing.rowGap),
                 )
             }
-        }
-        if (share.working || share.problem != null) {
-            item { ShareState(share, Modifier.padding(top = spacing.rowGap)) }
-        }
-        item {
-            GroupFilter(
-                filter = state?.filter,
-                onFilter = actions.onFilter,
-                modifier = Modifier.padding(vertical = spacing.rowGap),
+            when {
+                state == null -> item { NoteTile(stringResource(R.string.log_reading)) }
+                entries.isEmpty() -> item { NoteTile(stringResource(state.filter.emptyWordsRes())) }
+            }
+            logDays(
+                days = days,
+                zone = zone,
+                timeWidth = timeWidth,
+                openEntryId = openEntryId,
+                onToggle = { id -> openEntryId = if (openEntryId == id) null else id },
             )
-        }
-        when {
-            state == null -> item { NoteTile(stringResource(R.string.log_reading)) }
-            entries.isEmpty() -> item { NoteTile(stringResource(state.filter.emptyWordsRes())) }
-        }
-        logDays(
-            days = days,
-            zone = zone,
-            timeWidth = timeWidth,
-            openEntryId = openEntryId,
-            onToggle = { id -> openEntryId = if (openEntryId == id) null else id },
-        )
-        if (state?.hasOlder == true) {
-            item {
-                TextButton(onClick = actions.onShowOlder, modifier = Modifier.fillMaxWidth()) {
-                    Text(text = stringResource(R.string.log_show_older))
+            if (state?.hasOlder == true) {
+                item {
+                    TextButton(onClick = actions.onShowOlder, modifier = Modifier.fillMaxWidth()) {
+                        Text(text = stringResource(R.string.log_show_older))
+                    }
                 }
             }
         }

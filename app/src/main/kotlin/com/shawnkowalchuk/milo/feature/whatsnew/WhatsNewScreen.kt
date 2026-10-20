@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.designsystem.component.AppHeader
 import com.shawnkowalchuk.milo.core.designsystem.component.GroupLabel
+import com.shawnkowalchuk.milo.core.designsystem.component.PinnedHeaderColumn
 import com.shawnkowalchuk.milo.core.designsystem.component.RowStatus
 import com.shawnkowalchuk.milo.core.designsystem.component.StatusRow
 import com.shawnkowalchuk.milo.core.designsystem.component.Tag
@@ -73,19 +74,15 @@ private fun WhatsNewContent(
     modifier: Modifier,
 ) {
     val spacing = MiloTheme.spacing
-    TileColumn(
-        modifier =
-            modifier
-                .fillMaxSize()
-                // The list grows with every version: it scrolls.
-                .verticalScroll(rememberScrollState())
-                .padding(vertical = spacing.small),
+    PinnedHeaderColumn(
+        header = {
+            AppHeader(
+                title = stringResource(R.string.whats_new_title),
+                onBack = onBack,
+            )
+        },
+        modifier = modifier.fillMaxSize(),
     ) {
-        AppHeader(
-            title = stringResource(R.string.whats_new_title),
-            onBack = onBack,
-            modifier = Modifier.padding(bottom = spacing.extraSmall),
-        )
         when (state) {
             WhatsNewUiState.Reading ->
                 NoteTile {

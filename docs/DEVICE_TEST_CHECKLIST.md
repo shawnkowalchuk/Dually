@@ -1925,6 +1925,14 @@ Unit tests only.
 | SN-2 | Drive off without opening Dually, with the phone's Bluetooth still showing the truck connected. | Within a few minutes a trip is recorded, starting at the parked place; the Log has "The phone left the parked truck's place …" or "Android Auto connected …", then the trip. | not run |
 | SN-3 | Walk 300 m away from the parked, connected truck and back. | No trip. At most a LOCATION line for the geofence and ten minutes of GPS. | not run |
 
+## The pinned top line (2026-10-19)
+
+| # | Do this | Expect | Result |
+|---|---|---|---|
+| PH-1 | Scroll Home, Trips, Settings and Service to the bottom. | The top line (the D mark, "Dually", the date, the title) stays; the tiles go under it. | not run |
+| PH-2 | Open a trip's Edit, the Report, the Log and What's new; scroll. | Same; the back arrow stays in reach. | not run |
+| PH-3 | Setup during the first start. | The top line stays at the top and "Done, go to Settings" at the bottom. | not run |
+
 ## Later work packages
 
 Nothing waiting. A work package that adds behaviour only the phone can prove adds its checks above.

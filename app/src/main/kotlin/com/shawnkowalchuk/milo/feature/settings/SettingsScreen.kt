@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.designsystem.component.AppHeader
+import com.shawnkowalchuk.milo.core.designsystem.component.PinnedHeaderColumn
 import com.shawnkowalchuk.milo.core.designsystem.component.RowStatus
 import com.shawnkowalchuk.milo.core.designsystem.component.StatusRow
 import com.shawnkowalchuk.milo.core.designsystem.component.Tile
@@ -206,20 +207,15 @@ internal fun SettingsContent(
     onOpenLog: (() -> Unit)? = null,
 ) {
     val spacing = MiloTheme.spacing
-    TileColumn(
-        modifier =
-            modifier
-                .fillMaxSize()
-                // Large font settings or a small window must scroll rather than cut content off.
-                .verticalScroll(rememberScrollState())
-                .padding(vertical = spacing.small),
+    PinnedHeaderColumn(
+        header = {
+            AppHeader(
+                title = stringResource(R.string.settings_title),
+                onBack = onBack,
+            )
+        },
+        modifier = modifier.fillMaxSize(),
     ) {
-        AppHeader(
-            title = stringResource(R.string.settings_title),
-            onBack = onBack,
-            // As on Home: with the gap between two tiles, the design's 16 under the top line.
-            modifier = Modifier.padding(bottom = spacing.extraSmall),
-        )
         setupTile()
         when (state) {
             SettingsUiState.Reading -> NoteTile { Note(stringResource(R.string.settings_reading)) }
