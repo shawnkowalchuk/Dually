@@ -13,10 +13,10 @@
 agp = "9.4.1"
 # Kotlin, the Compose compiler plugin and the serialization plugin share this one version
 # because the compiler plugins are released with, and only work with, the matching compiler.
-kotlin = "2.4.20"
+kotlin = "2.4.21"
 # KSP runs Room's code generator. Since KSP 2.3 its version is no longer tied to the Kotlin version.
 ksp = "2.3.12"
-spotless = "8.10.3"
+spotless = "8.10.4"
 ktlint = "1.8.0"
 
 # Libraries.
@@ -54,7 +54,7 @@ playServicesLocation = "21.4.0"
 room = "3.0.3"
 # The runtime of kotlinx.serialization. Navigation 3 saves its back stack through it, so every
 # screen key is @Serializable. Pinned here because Navigation 3 alone would bring a much older one.
-serializationJson = "1.11.0"
+serializationJson = "1.12.0"
 # The SQLite build Room 3 runs on. It is compiled into the app, so the database engine is the
 # same on every Android version and does not change under the stored trips after a system update.
 sqlite = "2.7.1"
