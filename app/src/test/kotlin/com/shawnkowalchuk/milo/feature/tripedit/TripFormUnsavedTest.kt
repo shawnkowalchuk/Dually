@@ -22,10 +22,10 @@ import org.junit.Test
  * at 14:32 in Edmonton.
  */
 class TripFormUnsavedTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
 
     private fun local(dateTime: String): Long =
-        LocalDateTime.parse(dateTime).atZone(edmonton).toInstant().toEpochMilli()
+        LocalDateTime.parse(dateTime).atZone(denver).toInstant().toEpochMilli()
 
     private val openedAtMs = local("2026-10-06T14:32:40")
 
@@ -43,8 +43,8 @@ class TripFormUnsavedTest {
             category = TripCategory.BUSINESS,
         )
 
-    private val opened = formFor(stored, edmonton, DistanceUnit.KILOMETRES)
-    private val blank = blankForm(openedAtMs, edmonton, DistanceUnit.KILOMETRES)
+    private val opened = formFor(stored, denver, DistanceUnit.KILOMETRES)
+    private val blank = blankForm(openedAtMs, denver, DistanceUnit.KILOMETRES)
 
     private fun unsaved(form: TripForm): Boolean = form.holdsUnsavedWork(opened, stored)
 
@@ -124,7 +124,7 @@ class TripFormUnsavedTest {
                 EditSession(
                     stored,
                     DEFAULT_WORK_SCHEDULE,
-                    edmonton,
+                    denver,
                     openedAtMs,
                     DistanceUnit.KILOMETRES,
                 ),
@@ -146,7 +146,7 @@ class TripFormUnsavedTest {
     @Test
     fun `a form that has been stored holds nothing unsaved, and says where the trip is now`() {
         val moved = opened.copy(date = LocalDate.of(2026, 9, 29))
-        val savedStartMs = moved.startedAtMs(stored, edmonton)
+        val savedStartMs = moved.startedAtMs(stored, denver)
 
         val state = shown(moved, closing = true, savedStartMs = savedStartMs)
 
@@ -160,9 +160,9 @@ class TripFormUnsavedTest {
     @Test
     fun `the session's opening form is the stored trip's, or the empty one on that day`() {
         val kilometres = DistanceUnit.KILOMETRES
-        val editing = EditSession(stored, DEFAULT_WORK_SCHEDULE, edmonton, openedAtMs, kilometres)
+        val editing = EditSession(stored, DEFAULT_WORK_SCHEDULE, denver, openedAtMs, kilometres)
         val adding =
-            EditSession(stored = null, DEFAULT_WORK_SCHEDULE, edmonton, openedAtMs, kilometres)
+            EditSession(stored = null, DEFAULT_WORK_SCHEDULE, denver, openedAtMs, kilometres)
 
         assertEquals(opened, editing.openedForm())
         assertEquals(

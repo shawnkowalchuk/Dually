@@ -20,10 +20,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-private val EDMONTON: ZoneId = ZoneId.of("America/Edmonton")
+private val DENVER: ZoneId = ZoneId.of("America/Denver")
 
 private fun at(year: Int, day: Int): Long =
-    LocalDateTime.of(year, 10, day, 7, 42).atZone(EDMONTON).toInstant().toEpochMilli()
+    LocalDateTime.of(year, 10, day, 7, 42).atZone(DENVER).toInstant().toEpochMilli()
 
 private const val OWN = "file:/data/trip_sound/own_trip_start_sound_1"
 
@@ -181,7 +181,7 @@ class ChosenBuiltInSoundsTest {
             eventLog = EventLogRepository(log),
             crashFileStore = CrashFileStore(folder.root),
             clock = { at(2027, 5) },
-            zone = { EDMONTON },
+            zone = { DENVER },
         )
     }
 

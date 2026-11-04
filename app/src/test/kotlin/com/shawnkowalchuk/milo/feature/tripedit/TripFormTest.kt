@@ -24,10 +24,10 @@ import org.junit.Test
  * stored times, metres and addresses. Times are Edmonton wall-clock times.
  */
 class TripFormTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
 
     private fun local(dateTime: String): Long =
-        LocalDateTime.parse(dateTime).atZone(edmonton).toInstant().toEpochMilli()
+        LocalDateTime.parse(dateTime).atZone(denver).toInstant().toEpochMilli()
 
     /** A recorded trip: exact to the second, with a distance that is no round figure. */
     private val stored =
@@ -44,7 +44,7 @@ class TripFormTest {
             category = TripCategory.BUSINESS,
         )
 
-    private val opened = formFor(stored, edmonton, DistanceUnit.KILOMETRES)
+    private val opened = formFor(stored, denver, DistanceUnit.KILOMETRES)
 
     // ---- What the form starts with --------------------------------------------------------------
 
@@ -53,7 +53,7 @@ class TripFormTest {
         val form =
             blankForm(
                 nowMs = local("2026-10-06T14:32:10"),
-                zone = edmonton,
+                zone = denver,
                 unit = DistanceUnit.KILOMETRES,
             )
 
@@ -62,8 +62,8 @@ class TripFormTest {
             TripForm(date = LocalDate.of(2026, 10, 6), unit = DistanceUnit.KILOMETRES),
             form,
         )
-        assertNull(form.startedAtMs(stored = null, edmonton))
-        assertNull(form.toTypedTrip(edmonton))
+        assertNull(form.startedAtMs(stored = null, denver))
+        assertNull(form.toTypedTrip(denver))
     }
 
     @Test
@@ -73,7 +73,7 @@ class TripFormTest {
 
         assertEquals(
             LocalDate.of(2026, 10, 5),
-            blankForm(lateEvening, edmonton, DistanceUnit.KILOMETRES).date,
+            blankForm(lateEvening, denver, DistanceUnit.KILOMETRES).date,
         )
         assertEquals(
             LocalDate.of(2026, 10, 6),
@@ -98,20 +98,20 @@ class TripFormTest {
     fun `a stored trip that ran past midnight keeps ending on the next day`() {
         val overnight = stored.copy(endedAtMs = local("2026-10-06T00:10:30"))
 
-        val form = formFor(overnight, edmonton, DistanceUnit.KILOMETRES)
+        val form = formFor(overnight, denver, DistanceUnit.KILOMETRES)
 
         assertEquals(1L, form.endDayOffset)
         assertEquals(LocalTime.of(0, 10), form.end)
         // A new end time is on that next day too, and a new date moves both ends.
         assertEquals(
             local("2026-10-06T00:25:00"),
-            form.copy(end = LocalTime.of(0, 25)).endedAtMs(overnight, edmonton),
+            form.copy(end = LocalTime.of(0, 25)).endedAtMs(overnight, denver),
         )
         assertEquals(
             local("2026-10-03T00:25:00"),
             form
                 .copy(date = LocalDate.of(2026, 10, 2), end = LocalTime.of(0, 25))
-                .endedAtMs(overnight, edmonton),
+                .endedAtMs(overnight, denver),
         )
     }
 
@@ -119,13 +119,13 @@ class TripFormTest {
 
     @Test
     fun `a form that was opened and not touched asks for nothing`() {
-        assertEquals(TripEdit(), opened.toEdit(stored, edmonton))
+        assertEquals(TripEdit(), opened.toEdit(stored, denver))
     }
 
     @Test
     fun `an untouched time stays exact to the millisecond`() {
-        assertEquals(stored.startedAtMs, opened.startedAtMs(stored, edmonton))
-        assertEquals(stored.endedAtMs, opened.endedAtMs(stored, edmonton))
+        assertEquals(stored.startedAtMs, opened.startedAtMs(stored, denver))
+        assertEquals(stored.endedAtMs, opened.endedAtMs(stored, denver))
     }
 
     @Test
@@ -133,18 +133,18 @@ class TripFormTest {
         val changed = opened.copy(start = LocalTime.of(8, 20))
         val putBack = changed.copy(start = LocalTime.of(8, 14))
 
-        assertEquals(local("2026-10-05T08:20:00"), changed.startedAtMs(stored, edmonton))
+        assertEquals(local("2026-10-05T08:20:00"), changed.startedAtMs(stored, denver))
         // Not 08:14:00: the 27.531 seconds are still there.
-        assertEquals(stored.startedAtMs, putBack.startedAtMs(stored, edmonton))
-        assertEquals(TripEdit(), putBack.toEdit(stored, edmonton))
+        assertEquals(stored.startedAtMs, putBack.startedAtMs(stored, denver))
+        assertEquals(TripEdit(), putBack.toEdit(stored, denver))
     }
 
     @Test
     fun `the same minute on another day is another time`() {
         val moved = opened.copy(date = LocalDate.of(2026, 10, 2))
 
-        assertEquals(local("2026-10-02T08:14:00"), moved.startedAtMs(stored, edmonton))
-        assertEquals(local("2026-10-02T08:39:00"), moved.endedAtMs(stored, edmonton))
+        assertEquals(local("2026-10-02T08:14:00"), moved.startedAtMs(stored, denver))
+        assertEquals(local("2026-10-02T08:39:00"), moved.endedAtMs(stored, denver))
     }
 
     @Test
@@ -152,17 +152,17 @@ class TripFormTest {
         val retyped = opened.copy(kilometres = "12.3", from = " 12 Shop Rd, Edmonton ", to = "")
 
         // "12.3" is what the form showed for 12 344.7 m: not a change of 44.7 m.
-        assertEquals(TripEdit(), retyped.toEdit(stored, edmonton))
-        assertEquals(TripEdit(), opened.copy(kilometres = "12,30").toEdit(stored, edmonton))
+        assertEquals(TripEdit(), retyped.toEdit(stored, denver))
+        assertEquals(TripEdit(), opened.copy(kilometres = "12,30").toEdit(stored, denver))
     }
 
     // ---- The same in miles (2026-10-07) ----------------------------------------------------------
 
-    private val openedInMiles = formFor(stored, edmonton, DistanceUnit.MILES)
+    private val openedInMiles = formFor(stored, denver, DistanceUnit.MILES)
 
     @Test
     fun `a trip opened in miles and saved untouched keeps its stored metres, to the last one`() {
-        assertEquals(TripEdit(), openedInMiles.toEdit(stored, edmonton))
+        assertEquals(TripEdit(), openedInMiles.toEdit(stored, denver))
         assertEquals(TypedDistance.Metres(12_344.7), openedInMiles.distance(stored))
         assertEquals(DistanceUnit.MILES, openedInMiles.unit)
     }
@@ -175,18 +175,18 @@ class TripFormTest {
         for (metres in awkward) {
             val trip = stored.copy(distanceMetres = metres)
             for (unit in DistanceUnit.entries) {
-                val form = formFor(trip, edmonton, unit)
+                val form = formFor(trip, denver, unit)
                 // The figure the field shows, with a dot and with a comma.
                 val shown = formatDistance(metres, unit, Locale.ROOT)
                 val what = "$metres m in $unit, shown as $shown"
 
-                assertEquals(what, TripEdit(), form.toEdit(trip, edmonton))
+                assertEquals(what, TripEdit(), form.toEdit(trip, denver))
                 assertEquals(what, TypedDistance.Metres(metres), form.distance(trip))
-                assertEquals(what, TripEdit(), form.copy(kilometres = shown).toEdit(trip, edmonton))
+                assertEquals(what, TripEdit(), form.copy(kilometres = shown).toEdit(trip, denver))
                 assertEquals(
                     what,
                     TripEdit(),
-                    form.copy(kilometres = shown.replace('.', ',')).toEdit(trip, edmonton),
+                    form.copy(kilometres = shown.replace('.', ',')).toEdit(trip, denver),
                 )
                 assertFalse(what, form.copy(kilometres = shown).holdsUnsavedWork(form, trip))
             }
@@ -196,16 +196,16 @@ class TripFormTest {
     @Test
     fun `in miles the form shows miles, and another figure typed is stored in metres`() {
         // 12 344.7 m is shown as 7.7 mi.
-        assertEquals(TripEdit(), openedInMiles.copy(kilometres = "7.7").toEdit(stored, edmonton))
+        assertEquals(TripEdit(), openedInMiles.copy(kilometres = "7.7").toEdit(stored, denver))
         // 8 mi is 12 874.752 m: a mile is 1 609.344 m.
         assertEquals(
             TripEdit(distanceMetres = 12_874.752),
-            openedInMiles.copy(kilometres = "8").toEdit(stored, edmonton),
+            openedInMiles.copy(kilometres = "8").toEdit(stored, denver),
         )
         // Typed more exactly than the form shows, it is a change, as it is in kilometres.
         assertEquals(
             TripEdit(distanceMetres = 12_343.66848),
-            openedInMiles.copy(kilometres = "7.67").toEdit(stored, edmonton),
+            openedInMiles.copy(kilometres = "7.67").toEdit(stored, denver),
         )
     }
 
@@ -220,20 +220,20 @@ class TripFormTest {
         // The figure the 12.3 km of the kilometre form would be is not what "12.3" means here.
         assertEquals(
             TripEdit(distanceMetres = 19_794.9312),
-            openedInMiles.copy(kilometres = "12.3").toEdit(stored, edmonton),
+            openedInMiles.copy(kilometres = "12.3").toEdit(stored, denver),
         )
     }
 
     @Test
     fun `a missed trip typed in miles is stored in metres`() {
         val form =
-            blankForm(local("2026-10-06T14:32:10"), edmonton, DistanceUnit.MILES).copy(
+            blankForm(local("2026-10-06T14:32:10"), denver, DistanceUnit.MILES).copy(
                 start = LocalTime.of(9, 0),
                 end = LocalTime.of(9, 40),
                 kilometres = "12.3",
             )
 
-        assertEquals(19_794.9312, form.toTypedTrip(edmonton)?.distanceMetres)
+        assertEquals(19_794.9312, form.toTypedTrip(denver)?.distanceMetres)
     }
 
     // ---- What a change asks for -----------------------------------------------------------------
@@ -255,7 +255,7 @@ class TripFormTest {
                 endAddress = TypedAddress("48 Main St, Leduc"),
                 category = TripCategory.PERSONAL,
             ),
-            form.toEdit(stored, edmonton),
+            form.toEdit(stored, denver),
         )
     }
 
@@ -263,7 +263,7 @@ class TripFormTest {
     fun `a distance typed more exactly than the form shows is a change`() {
         assertEquals(
             TripEdit(distanceMetres = 12_340.0),
-            opened.copy(kilometres = "12.34").toEdit(stored, edmonton),
+            opened.copy(kilometres = "12.34").toEdit(stored, denver),
         )
     }
 
@@ -271,7 +271,7 @@ class TripFormTest {
     fun `an address that is emptied is asked for as no address`() {
         assertEquals(
             TripEdit(startAddress = TypedAddress(null)),
-            opened.copy(from = "   ").toEdit(stored, edmonton),
+            opened.copy(from = "   ").toEdit(stored, denver),
         )
     }
 
@@ -360,7 +360,7 @@ class TripFormTest {
                 endAddress = null,
                 category = null,
             ),
-            form.toTypedTrip(edmonton),
+            form.toTypedTrip(denver),
         )
     }
 
@@ -375,10 +375,10 @@ class TripFormTest {
                 unit = DistanceUnit.KILOMETRES,
             )
 
-        assertNull(form.copy(start = null).toTypedTrip(edmonton))
-        assertNull(form.copy(end = null).toTypedTrip(edmonton))
-        assertNull(form.copy(kilometres = null).toTypedTrip(edmonton))
-        assertNull(form.copy(kilometres = "far").toTypedTrip(edmonton))
+        assertNull(form.copy(start = null).toTypedTrip(denver))
+        assertNull(form.copy(end = null).toTypedTrip(denver))
+        assertNull(form.copy(kilometres = null).toTypedTrip(denver))
+        assertNull(form.copy(kilometres = "far").toTypedTrip(denver))
     }
 
     // ---- The clocks change ----------------------------------------------------------------------
@@ -394,7 +394,7 @@ class TripFormTest {
                 unit = DistanceUnit.KILOMETRES,
             )
 
-        assertEquals(local("2026-03-08T03:30:00"), form.startedAtMs(stored = null, edmonton))
+        assertEquals(local("2026-03-08T03:30:00"), form.startedAtMs(stored = null, denver))
     }
 
     @Test
@@ -403,10 +403,10 @@ class TripFormTest {
         val second = local("2026-11-01T01:30:00") + 3_600_000
         val trip = stored.copy(startedAtMs = second, endedAtMs = second + 1_200_000)
 
-        val form = formFor(trip, edmonton, DistanceUnit.KILOMETRES)
+        val form = formFor(trip, denver, DistanceUnit.KILOMETRES)
 
         assertEquals(LocalTime.of(1, 30), form.start)
-        assertEquals(second, form.startedAtMs(trip, edmonton))
-        assertEquals(TripEdit(), form.toEdit(trip, edmonton))
+        assertEquals(second, form.startedAtMs(trip, denver))
+        assertEquals(TripEdit(), form.toEdit(trip, denver))
     }
 }

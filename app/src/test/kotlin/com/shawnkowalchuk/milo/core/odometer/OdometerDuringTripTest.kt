@@ -19,7 +19,7 @@ import org.junit.Test
  * moment is added, and what it had driven before is not.
  */
 class OdometerDuringTripTest {
-    private val zone: ZoneId = ZoneId.of("America/Edmonton")
+    private val zone: ZoneId = ZoneId.of("America/Denver")
     private val km = DistanceUnit.KILOMETRES
     private val mi = DistanceUnit.MILES
 

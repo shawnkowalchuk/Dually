@@ -18,7 +18,7 @@ import org.junit.Test
  */
 class ReportOdometerTest {
     private val reading =
-        OdometerReading(edmonton("2026-10-01T07:00"), 120_000, DistanceUnit.KILOMETRES)
+        OdometerReading(denver("2026-10-01T07:00"), 120_000, DistanceUnit.KILOMETRES)
 
     private fun figure(km: Long, estimated: Boolean) = OdometerFigure(
         km,

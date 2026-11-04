@@ -39,7 +39,7 @@ private const val MINUTE_MS = 60_000L
  * another total.
  */
 class TripMonthReportTotalsTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
     private val october = YearMonth.of(2026, 10)
     private var nextId = 1L
 
@@ -49,7 +49,7 @@ class TripMonthReportTotalsTest {
         category: TripCategory? = TripCategory.BUSINESS,
         status: TripStatus = TripStatus.FINISHED,
     ): Trip {
-        val startedAtMs = LocalDateTime.parse(start).atZone(edmonton).toInstant().toEpochMilli()
+        val startedAtMs = LocalDateTime.parse(start).atZone(denver).toInstant().toEpochMilli()
         return Trip(
             id = nextId++,
             startedAtMs = startedAtMs,
@@ -78,7 +78,7 @@ class TripMonthReportTotalsTest {
 
     private fun summary(trips: List<Trip> = month) = monthSummary(
         trips = trips,
-        zone = edmonton,
+        zone = denver,
         showLeftOut = false,
         liveTripId = null,
         liveDistanceMetres = null,
@@ -87,7 +87,7 @@ class TripMonthReportTotalsTest {
     )
 
     private fun reportOf(trips: List<Trip> = month) =
-        selectForReport(trips, ReportPeriod.Month(october), edmonton)
+        selectForReport(trips, ReportPeriod.Month(october), denver)
 
     @Test
     fun `the month card's Business figure is the report's number of trips and total`() {
@@ -112,7 +112,7 @@ class TripMonthReportTotalsTest {
     @Test
     fun `each day's heading has the subtotal the report prints for that day`() {
         val days = summary().days.associate { it.date to it.businessTenths }
-        val reportDays = reportDays(reportOf().trips, edmonton)
+        val reportDays = reportDays(reportOf().trips, denver)
 
         assertEquals(3, reportDays.size)
         for (day in reportDays) {
@@ -144,7 +144,7 @@ class TripMonthReportTotalsTest {
     @Test
     fun `Today on Home and on the Android Auto screen add up by the same rule`() {
         val firstDay = summary().days.last().date
-        val firstDayEnds = firstDay.plusDays(1).atStartOfDay(edmonton).toInstant().toEpochMilli()
+        val firstDayEnds = firstDay.plusDays(1).atStartOfDay(denver).toInstant().toEpochMilli()
         val oneDay = month.filter { it.startedAtMs < firstDayEnds }
         val today = todayTrips(oneDay)
         val report = reportOf(oneDay)
@@ -165,7 +165,7 @@ class TripMonthReportTotalsTest {
 
     private fun summaryIn(unit: DistanceUnit, trips: List<Trip> = month) = monthSummary(
         trips = trips,
-        zone = edmonton,
+        zone = denver,
         showLeftOut = false,
         liveTripId = null,
         liveDistanceMetres = null,
@@ -186,7 +186,7 @@ class TripMonthReportTotalsTest {
         assertEquals(4_305L, inMiles.totals.business.tenths)
         // Each day's heading is that report's subtotal, and the days add up to the month.
         val days = inMiles.days.associate { it.date to it.businessTenths }
-        for (day in reportDays(onReport.trips, edmonton)) {
+        for (day in reportDays(onReport.trips, denver)) {
             assertEquals(day.tenths(miles), days[day.date])
         }
         assertEquals(inMiles.totals.business.tenths, days.values.sum())

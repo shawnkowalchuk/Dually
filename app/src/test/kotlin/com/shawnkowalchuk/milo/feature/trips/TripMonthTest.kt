@@ -25,7 +25,7 @@ private const val MINUTE_MS = 60_000L
  * may be shown. Where a month begins and ends is tested in `core/util/TimeSpanTest`.
  */
 class TripMonthTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
     private var nextId = 1L
 
     /** A trip that started at [startUtc] and, unless it is open, ended [minutes] later. */
@@ -57,7 +57,7 @@ class TripMonthTest {
         liveStart: OpenTripStart? = null,
     ): MonthSummary = monthSummary(
         trips,
-        edmonton,
+        denver,
         showLeftOut,
         liveTripId,
         liveDistanceMetres,
