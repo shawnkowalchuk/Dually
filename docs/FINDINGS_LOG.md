@@ -24,6 +24,15 @@
 
 ## Log
 
+### 2026-11-03
+
+**`[CHANGE]` The work-hours question: a Business trip that runs past the hours is asked about (version 0.3.2)**
+Shawn: "when im driving and for example it goes from personal hours to work hours and vise versa to get a notifcation ... for example im leaving work early by 5 minutes that trip should be flagged and i should get some prompt if i want to change to personal". His answers: both a heads-up and the question at the end; Business trips past the hours only; buttons on the notification; phone and Android Auto. APP_ENCYCLOPEDIA, Schedule and Business/Personal, 12; WH-1 to WH-4.
+- **`[DECISION]` The answers go through what exists:** during the drive the running trip's choice (Home's button), after it a marking by hand (Trips). No new way to file a trip.
+- **`[DECISION]` The heads-up is silent;** the question at the end has a sound, as the driver is parked by then.
+- **Moved:** the end of a day's hours as a point in time out of `classifyTrip` into `workHoursEndMs`, which both use.
+- **Not proven:** the car's screen showing the notification (`CarAppExtender`) has been seen nowhere; Android Auto may show it only in its notification list.
+
 ### 2026-10-19
 
 **`[CHANGE]` The top line stays put on every screen (version 0.3.2)**

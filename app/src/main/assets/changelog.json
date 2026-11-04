@@ -5,6 +5,11 @@
       "date": null,
       "changes": [
         {
+          "kind": "new",
+          "title": "Asked when a work trip runs past your hours",
+          "body": "When a trip saved as Business is still going as your work hours end, a quiet notification asks whether to mark it Personal, with Mark Personal and Keep Business buttons. If you don't answer, it asks again when the trip ends. It shows on Android Auto too."
+        },
+        {
           "kind": "improved",
           "title": "The top line stays put",
           "body": "On every screen, the top line with the app's name, the date, the title and the back arrow now stays at the top while you scroll."

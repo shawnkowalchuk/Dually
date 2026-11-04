@@ -41,19 +41,42 @@ fun classifyTrip(
     schedule: WorkSchedule,
     zone: ZoneId,
 ): TripClassification {
-    val start = Instant.ofEpochMilli(startedAtMs).atZone(zone)
-    val hours = schedule.on(start.dayOfWeek)
-    val timeOfDay = start.toLocalTime()
-    val insideHours = hours.tracked && timeOfDay >= hours.start && timeOfDay < hours.end
-    if (!insideHours) return TripClassification(TripCategory.PERSONAL, ranPastSchedule = false)
-    // If the clocks jump over the end time itself, java.time moves it on by the length of the
-    // jump; if the end time happens twice, it takes the first.
-    val hoursEndMs = start.toLocalDate().atTime(hours.end).atZone(zone).toInstant().toEpochMilli()
+    val hoursEndMs =
+        workHoursEndMs(startedAtMs, schedule, zone)
+            ?: return TripClassification(TripCategory.PERSONAL, ranPastSchedule = false)
     return TripClassification(
         category = TripCategory.BUSINESS,
         ranPastSchedule = endedAtMs != null && endedAtMs > hoursEndMs,
     )
 }
+
+/**
+ * When the work hours end for a trip that started at [startedAtMs], as a point in time, if the
+ * hours make that trip Business ([classifyTrip]); null for a trip they make Personal. Past this
+ * moment a Business trip has run past the schedule.
+ */
+fun workHoursEndMs(startedAtMs: Long, schedule: WorkSchedule, zone: ZoneId): Long? {
+    val start = Instant.ofEpochMilli(startedAtMs).atZone(zone)
+    val hours = schedule.on(start.dayOfWeek)
+    val timeOfDay = start.toLocalTime()
+    val insideHours = hours.tracked && timeOfDay >= hours.start && timeOfDay < hours.end
+    if (!insideHours) return null
+    // If the clocks jump over the end time itself, java.time moves it on by the length of the
+    // jump; if the end time happens twice, it takes the first.
+    return start.toLocalDate().atTime(hours.end).atZone(zone).toInstant().toEpochMilli()
+}
+
+/**
+ * Whether a finished trip is asked about with the work-hours notification (since 2026-11-03;
+ * Shawn: "im leaving work early by 5 minutes that trip should be flagged and i should get some
+ * prompt if i want to change to personal"): saved as Business by the hours, run past them, and
+ * not chosen by hand, on Home, on Trips or from the notification during the drive.
+ */
+fun asksAboutPastHours(
+    category: TripCategory?,
+    ranPastSchedule: Boolean,
+    setByHand: Boolean,
+): Boolean = category == TripCategory.BUSINESS && ranPastSchedule && !setByHand
 
 /**
  * The two settings a trip is put away by when it is finalised.

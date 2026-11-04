@@ -68,6 +68,11 @@ class MiloApplication : Application() {
             container.tripController.activity,
             container.applicationScope,
         )
+        // The work-hours question (since 2026-11-03) watches each trip. It files none.
+        container.checks.pastHours.start(
+            container.tripController.activity,
+            container.applicationScope,
+        )
 
         // Reading files and the database must not hold up the main thread, least of all when
         // the process was started by a trip trigger with seconds to begin recording.
