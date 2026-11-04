@@ -23,7 +23,7 @@ private const val MINUTE_MS = 60_000L
  * `TripMonthTest` and `TripMonthLeftOutTest`.
  */
 class TripMonthCategoryTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
     private var nextId = 1L
 
     /** A closed trip that started at [startUtc] and ended twenty minutes later. */
@@ -53,7 +53,7 @@ class TripMonthCategoryTest {
     private fun summary(trips: List<Trip>, showLeftOut: Boolean = false): MonthSummary =
         monthSummary(
             trips = trips,
-            zone = edmonton,
+            zone = denver,
             showLeftOut = showLeftOut,
             liveTripId = null,
             liveDistanceMetres = null,

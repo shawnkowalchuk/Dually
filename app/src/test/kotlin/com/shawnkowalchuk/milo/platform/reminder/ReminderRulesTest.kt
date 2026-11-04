@@ -14,18 +14,18 @@ import org.junit.Test
  * zone, which decides what "today" and "last month" are.
  */
 class ReminderRulesTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
     private val utc = ZoneId.of("UTC")
 
     /** A local date and time in Edmonton, as stored time. */
-    private fun at(text: String, zone: ZoneId = edmonton): Long =
+    private fun at(text: String, zone: ZoneId = denver): Long =
         LocalDateTime.parse(text).atZone(zone).toInstant().toEpochMilli()
 
     /** Tuesday 6 October 2026, mid-morning: the 1st has come, September has trips, not sent. */
     private val due =
         ReminderMoment(
             nowMs = at("2026-10-06T10:00"),
-            zone = edmonton,
+            zone = denver,
             enabled = true,
             reminderDay = 1,
             submitted = false,
@@ -202,8 +202,8 @@ class ReminderRulesTest {
         assertEquals(ReminderStep.SHOW, newYear.step)
         assertEquals(YearMonth.of(2026, 12), newYear.month)
         assertEquals(LocalDate.of(2027, 1, 1), newYear.startsOn)
-        assertEquals(YearMonth.of(2026, 12), monthToRemindOf(at("2027-01-31T23:59"), edmonton))
-        assertEquals(YearMonth.of(2026, 11), monthToRemindOf(at("2026-12-31T23:59"), edmonton))
+        assertEquals(YearMonth.of(2026, 12), monthToRemindOf(at("2027-01-31T23:59"), denver))
+        assertEquals(YearMonth.of(2026, 11), monthToRemindOf(at("2026-12-31T23:59"), denver))
     }
 
     // ---- The time zone ----------------------------------------------------------------------------
@@ -213,7 +213,7 @@ class ReminderRulesTest {
         // 05:30 UTC on 1 November is 23:30 on 31 October in Edmonton.
         val moment = at("2026-11-01T05:30", utc)
 
-        val inEdmonton = judgeReminder(due.copy(nowMs = moment, zone = edmonton))
+        val inEdmonton = judgeReminder(due.copy(nowMs = moment, zone = denver))
         val inUtc = judgeReminder(due.copy(nowMs = moment, zone = utc))
 
         assertEquals(LocalDate.of(2026, 10, 31), inEdmonton.today)
@@ -241,19 +241,19 @@ class ReminderRulesTest {
 
     @Test
     fun `the daily look is asked for at nine, today if that is still to come, else tomorrow`() {
-        assertEquals(at("2026-10-06T09:00"), nextDailyLookMs(at("2026-10-06T06:15"), edmonton))
-        assertEquals(at("2026-10-07T09:00"), nextDailyLookMs(at("2026-10-06T09:00"), edmonton))
-        assertEquals(at("2026-10-07T09:00"), nextDailyLookMs(at("2026-10-06T21:40"), edmonton))
+        assertEquals(at("2026-10-06T09:00"), nextDailyLookMs(at("2026-10-06T06:15"), denver))
+        assertEquals(at("2026-10-07T09:00"), nextDailyLookMs(at("2026-10-06T09:00"), denver))
+        assertEquals(at("2026-10-07T09:00"), nextDailyLookMs(at("2026-10-06T21:40"), denver))
         // Across a month's and a year's end.
-        assertEquals(at("2027-01-01T09:00"), nextDailyLookMs(at("2026-12-31T09:00"), edmonton))
+        assertEquals(at("2027-01-01T09:00"), nextDailyLookMs(at("2026-12-31T09:00"), denver))
     }
 
     @Test
     fun `the daily look stays at nine when the clocks change`() {
         // The clocks go back on Sunday 1 November 2026: that day has 25 hours.
-        val backTo = nextDailyLookMs(at("2026-10-31T09:00"), edmonton)
+        val backTo = nextDailyLookMs(at("2026-10-31T09:00"), denver)
         // They go forward on Sunday 14 March 2027: that day has 23.
-        val forwardTo = nextDailyLookMs(at("2027-03-13T09:00"), edmonton)
+        val forwardTo = nextDailyLookMs(at("2027-03-13T09:00"), denver)
 
         assertEquals(at("2026-11-01T09:00"), backTo)
         assertEquals(25 * 3_600_000L, backTo - at("2026-10-31T09:00"))

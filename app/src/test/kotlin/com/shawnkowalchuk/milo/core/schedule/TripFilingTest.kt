@@ -12,17 +12,17 @@ private const val MINUTE_MS = 60_000L
 /**
  * How a trip that has just ended is put away: sorted by the schedule, and, with "Ignore them"
  * chosen, marked as ignored if it turned out Personal. The sorting itself is in
- * `TripClassificationTest`. Times are Edmonton wall-clock times; 5 October 2026 is a Monday and
+ * `TripClassificationTest`. Times are Denver wall-clock times; 5 October 2026 is a Monday and
  * 10 October a Saturday.
  */
 class TripFilingTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
     private val business = TripClassification(TripCategory.BUSINESS, ranPastSchedule = false)
     private val ranPast = TripClassification(TripCategory.BUSINESS, ranPastSchedule = true)
     private val personal = TripClassification(TripCategory.PERSONAL, ranPastSchedule = false)
 
     private fun local(dateTime: String): Long =
-        LocalDateTime.parse(dateTime).atZone(edmonton).toInstant().toEpochMilli()
+        LocalDateTime.parse(dateTime).atZone(denver).toInstant().toEpochMilli()
 
     // ---- Putting a finished trip away -----------------------------------------------------------
 
@@ -30,7 +30,7 @@ class TripFilingTest {
     private val ignore = FilingRules(DEFAULT_WORK_SCHEDULE, ignoreOutsideSchedule = true)
 
     private fun file(start: Long, kept: Boolean, rules: FilingRules?): TripFiling =
-        fileTrip(start, start + 20 * MINUTE_MS, kept, rules, edmonton)
+        fileTrip(start, start + 20 * MINUTE_MS, kept, rules, denver)
 
     @Test
     fun `by default a trip outside the schedule is kept, as Personal`() {
@@ -55,7 +55,7 @@ class TripFilingTest {
         )
         // Not even one that ran far past the schedule.
         val start = local("2026-10-05T16:00")
-        val long = fileTrip(start, local("2026-10-05T22:00"), kept = true, ignore, edmonton)
+        val long = fileTrip(start, local("2026-10-05T22:00"), kept = true, ignore, denver)
         assertEquals(TripFiling(ranPast, ignored = false), long)
     }
 
@@ -89,7 +89,7 @@ class TripFilingTest {
                 saturday + 20 * MINUTE_MS,
                 true,
                 ignore,
-                edmonton,
+                denver,
                 TripCategory.BUSINESS,
             ),
         )
@@ -100,7 +100,7 @@ class TripFilingTest {
                 monday + 20 * MINUTE_MS,
                 true,
                 saveAsPersonal,
-                edmonton,
+                denver,
                 TripCategory.PERSONAL,
             ),
         )
@@ -113,7 +113,7 @@ class TripFilingTest {
         val endsLate = lateMonday + 30 * MINUTE_MS
         assertEquals(
             ranPast,
-            fileTrip(lateMonday, endsLate, true, saveAsPersonal, edmonton, TripCategory.BUSINESS)
+            fileTrip(lateMonday, endsLate, true, saveAsPersonal, denver, TripCategory.BUSINESS)
                 .classification,
         )
         // Saturday: Personal by the hours, so never "past" them.
@@ -125,7 +125,7 @@ class TripFilingTest {
                 saturday + 30 * MINUTE_MS,
                 true,
                 saveAsPersonal,
-                edmonton,
+                denver,
                 TripCategory.BUSINESS,
             )
                 .classification,
@@ -139,16 +139,16 @@ class TripFilingTest {
 
         assertEquals(
             TripCategory.BUSINESS,
-            categoryWhileRecorded(monday, null, DEFAULT_WORK_SCHEDULE, edmonton),
+            categoryWhileRecorded(monday, null, DEFAULT_WORK_SCHEDULE, denver),
         )
         assertEquals(
             TripCategory.PERSONAL,
-            categoryWhileRecorded(saturday, null, DEFAULT_WORK_SCHEDULE, edmonton),
+            categoryWhileRecorded(saturday, null, DEFAULT_WORK_SCHEDULE, denver),
         )
         assertEquals(
             TripCategory.PERSONAL,
-            categoryWhileRecorded(monday, TripCategory.PERSONAL, DEFAULT_WORK_SCHEDULE, edmonton),
+            categoryWhileRecorded(monday, TripCategory.PERSONAL, DEFAULT_WORK_SCHEDULE, denver),
         )
-        assertEquals(null, categoryWhileRecorded(monday, null, null, edmonton))
+        assertEquals(null, categoryWhileRecorded(monday, null, null, denver))
     }
 }

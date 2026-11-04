@@ -24,7 +24,7 @@ class ReportSelectionPeriodTest {
                 storedTrip("2026-11-01T00:00"),
             )
 
-        val selection = selectForReport(trips, october, EDMONTON)
+        val selection = selectForReport(trips, october, DENVER)
 
         assertEquals(listOf(at("2026-10-01T00:00"), at("2026-10-31T23:59:59")), starts(selection))
     }
@@ -36,7 +36,7 @@ class ReportSelectionPeriodTest {
         // It started in September and ran into October: September's.
         val acrossTheStart = storedTrip("2026-09-30T23:50", metres = 30_000.0)
 
-        val selection = selectForReport(listOf(acrossTheEnd, acrossTheStart), october, EDMONTON)
+        val selection = selectForReport(listOf(acrossTheEnd, acrossTheStart), october, DENVER)
 
         assertEquals(listOf(acrossTheEnd.startedAtMs), starts(selection))
         assertEquals(30_000.0, selection.trips.single().distanceMetres, 0.0)
@@ -54,7 +54,7 @@ class ReportSelectionPeriodTest {
                 storedTrip("2026-10-19T00:00"),
             )
 
-        val selection = selectForReport(trips, range, EDMONTON)
+        val selection = selectForReport(trips, range, DENVER)
 
         assertEquals(
             listOf(at("2026-10-05T00:00"), at("2026-10-12T12:00"), at("2026-10-18T23:59:59")),
@@ -72,7 +72,7 @@ class ReportSelectionPeriodTest {
                 storedTrip("2026-10-06T08:00"),
             )
 
-        val selection = selectForReport(trips, ReportPeriod.Range(day, day), EDMONTON)
+        val selection = selectForReport(trips, ReportPeriod.Range(day, day), DENVER)
 
         assertEquals(listOf(at("2026-10-05T08:00")), starts(selection))
     }
@@ -86,7 +86,7 @@ class ReportSelectionPeriodTest {
         val lateInOctober = storedTrip("2026-10-31T22:30")
         val trips = listOf(lateInSeptember, lateInOctober)
 
-        val inEdmonton = selectForReport(trips, october, EDMONTON)
+        val inEdmonton = selectForReport(trips, october, DENVER)
         val inUtc = selectForReport(trips, october, ZoneId.of("UTC"))
         val inToronto = selectForReport(trips, october, ZoneId.of("America/Toronto"))
 
@@ -109,7 +109,7 @@ class ReportSelectionPeriodTest {
             }
         val sunday = LocalDate.of(2026, 11, 1)
 
-        val selection = selectForReport(trips, ReportPeriod.Range(sunday, sunday), EDMONTON)
+        val selection = selectForReport(trips, ReportPeriod.Range(sunday, sunday), DENVER)
 
         assertEquals(listOf(first, second, lastOfTheDay), starts(selection))
         // A day's worth of milliseconds counted from midnight would have ended an hour early.
@@ -129,13 +129,13 @@ class ReportSelectionPeriodTest {
             selectForReport(
                 listOf(lastOfTheDay, nextDay),
                 ReportPeriod.Range(sunday, sunday),
-                EDMONTON,
+                DENVER,
             )
         val march =
             selectForReport(
                 listOf(lastOfTheDay, nextDay),
                 ReportPeriod.Month(YearMonth.of(2026, 3)),
-                EDMONTON,
+                DENVER,
             )
 
         assertEquals(listOf(lastOfTheDay.startedAtMs), starts(day))
@@ -149,7 +149,7 @@ class ReportSelectionPeriodTest {
         val lastHour = storedTrip("2026-11-30T23:30")
         val december = storedTrip("2026-12-01T00:00")
 
-        val selection = selectForReport(listOf(lastHour, december), november, EDMONTON)
+        val selection = selectForReport(listOf(lastHour, december), november, DENVER)
 
         assertEquals(listOf(lastHour.startedAtMs), starts(selection))
     }

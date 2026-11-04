@@ -18,9 +18,9 @@ import org.junit.Test
  * 14:00 in Edmonton.
  */
 class TripEditProblemPlacesTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
     private val nowMs =
-        LocalDateTime.parse("2026-10-05T14:00:00").atZone(edmonton).toInstant().toEpochMilli()
+        LocalDateTime.parse("2026-10-05T14:00:00").atZone(denver).toInstant().toEpochMilli()
 
     private val filledIn =
         TripForm(
@@ -37,7 +37,7 @@ class TripEditProblemPlacesTest {
             EditSession(
                 stored = null,
                 DEFAULT_WORK_SCHEDULE,
-                edmonton,
+                denver,
                 nowMs,
                 DistanceUnit.KILOMETRES,
             ),

@@ -15,10 +15,10 @@ import org.junit.Test
  * because the log is the only place the value in between survives.
  */
 class TripEditLogTextTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
 
     private fun local(dateTime: String): Long =
-        LocalDateTime.parse(dateTime).atZone(edmonton).toInstant().toEpochMilli()
+        LocalDateTime.parse(dateTime).atZone(denver).toInstant().toEpochMilli()
 
     private val recorded =
         Trip(
@@ -35,7 +35,7 @@ class TripEditLogTextTest {
         )
 
     private fun edited(edit: TripEdit, from: Trip = recorded): Trip =
-        editedTrip(from, edit, DEFAULT_WORK_SCHEDULE, edmonton)
+        editedTrip(from, edit, DEFAULT_WORK_SCHEDULE, denver)
 
     // ---- Before and after -----------------------------------------------------------------------
 
@@ -61,7 +61,7 @@ class TripEditLogTextTest {
                 "to none → \"Site 7\"",
                 "Business → Personal (sorted again by the schedule)",
             ),
-            changesInWords(recorded, after, edmonton),
+            changesInWords(recorded, after, denver),
         )
     }
 
@@ -71,9 +71,9 @@ class TripEditLogTextTest {
 
         assertEquals(
             listOf("distance 12345 m → 13000 m"),
-            changesInWords(recorded, after, edmonton),
+            changesInWords(recorded, after, denver),
         )
-        assertEquals(emptyList<String>(), changesInWords(recorded, recorded, edmonton))
+        assertEquals(emptyList<String>(), changesInWords(recorded, recorded, denver))
     }
 
     @Test
@@ -82,7 +82,7 @@ class TripEditLogTextTest {
 
         assertEquals(
             listOf("from \"12 Shop Rd, Edmonton\" → none"),
-            changesInWords(recorded, after, edmonton),
+            changesInWords(recorded, after, denver),
         )
     }
 
@@ -94,15 +94,15 @@ class TripEditLogTextTest {
 
         assertEquals(
             listOf("Business → Personal (set by hand)"),
-            changesInWords(recorded, marked, edmonton),
+            changesInWords(recorded, marked, denver),
         )
         assertEquals(
             listOf("end 2026-10-05 08:39:02 → 2026-10-05 16:45:00", "now ran past schedule"),
-            changesInWords(recorded, late, edmonton),
+            changesInWords(recorded, late, denver),
         )
         assertEquals(
             "no longer ran past schedule",
-            changesInWords(late, backInTime, edmonton).last(),
+            changesInWords(late, backInTime, denver).last(),
         )
     }
 
@@ -114,9 +114,9 @@ class TripEditLogTextTest {
 
         assertEquals(
             "Trip 12: changed by hand on the edit screen: distance 12345 m → 13000 m (times in " +
-                "America/Edmonton). It is now marked as edited, and \"Restore recorded values\" " +
+                "America/Denver). It is now marked as edited, and \"Restore recorded values\" " +
                 "puts back what Dually recorded",
-            editText(12, ByHandOutcome.Done(recorded, after), edmonton),
+            editText(12, ByHandOutcome.Done(recorded, after), denver),
         )
     }
 
@@ -125,7 +125,7 @@ class TripEditLogTextTest {
         val first = edited(TripEdit(distanceMetres = 13_000.0))
         val second = edited(TripEdit(distanceMetres = 14_000.0), from = first)
 
-        val line = editText(12, ByHandOutcome.Done(first, second), edmonton)
+        val line = editText(12, ByHandOutcome.Done(first, second), denver)
 
         assertTrue(line, line.contains("distance 13000 m → 14000 m"))
         assertTrue(line, line.endsWith("It was marked as edited already"))
@@ -137,9 +137,9 @@ class TripEditLogTextTest {
 
         assertEquals(
             "Trip 12: changed by hand on the edit screen: Business → Personal (set by hand) " +
-                "(times in America/Edmonton). Its times, addresses and distance are as " +
+                "(times in America/Denver). Its times, addresses and distance are as " +
                 "recorded, so it is not marked as edited",
-            editText(12, ByHandOutcome.Done(recorded, after), edmonton),
+            editText(12, ByHandOutcome.Done(recorded, after), denver),
         )
     }
 
@@ -147,23 +147,23 @@ class TripEditLogTextTest {
     fun `a save that changed nothing and a refused one each have a line`() {
         assertEquals(
             "Trip 12: saved on the edit screen with nothing changed. Nothing was written",
-            editText(12, ByHandOutcome.Unchanged(recorded), edmonton),
+            editText(12, ByHandOutcome.Unchanged(recorded), denver),
         )
         assertEquals(
             "Trip 12: edit refused: it is deleted, not finished. Nothing changed",
             editText(
                 12,
                 ByHandOutcome.Refused(recorded.copy(status = TripStatus.DELETED)),
-                edmonton,
+                denver,
             ),
         )
         assertEquals(
             "Trip 12: edit refused: it is still being recorded. Nothing changed",
-            editText(12, ByHandOutcome.Refused(recorded.copy(status = TripStatus.OPEN)), edmonton),
+            editText(12, ByHandOutcome.Refused(recorded.copy(status = TripStatus.OPEN)), denver),
         )
         assertEquals(
             "Trip 12: edit refused: there is no such trip. Nothing changed",
-            editText(12, ByHandOutcome.Refused(found = null), edmonton),
+            editText(12, ByHandOutcome.Refused(found = null), denver),
         )
     }
 
@@ -173,13 +173,13 @@ class TripEditLogTextTest {
             edited(
                 TripEdit(distanceMetres = 13_000.0, startAddress = TypedAddress("Home")),
             )
-        val restored = checkNotNull(restoredTrip(typed, DEFAULT_WORK_SCHEDULE, edmonton))
+        val restored = checkNotNull(restoredTrip(typed, DEFAULT_WORK_SCHEDULE, denver))
 
         assertEquals(
             "Trip 12: recorded values restored on the edit screen: distance 13000 m → 12345 m; " +
-                "from \"Home\" → none (times in America/Edmonton). It is no longer marked as " +
+                "from \"Home\" → none (times in America/Denver). It is no longer marked as " +
                 "edited. An address typed by hand was removed and is looked up again.",
-            restoreText(12, ByHandOutcome.Done(typed, restored), edmonton),
+            restoreText(12, ByHandOutcome.Done(typed, restored), denver),
         )
     }
 
@@ -188,7 +188,7 @@ class TripEditLogTextTest {
         assertEquals(
             "Trip 12: restore recorded values refused: it has no recorded values to put back. " +
                 "Nothing changed",
-            restoreText(12, ByHandOutcome.Refused(recorded), edmonton),
+            restoreText(12, ByHandOutcome.Refused(recorded), denver),
         )
         assertEquals(
             "Trip 12: restore recorded values refused: it is deleted, not finished. " +
@@ -196,7 +196,7 @@ class TripEditLogTextTest {
             restoreText(
                 12,
                 ByHandOutcome.Refused(recorded.copy(status = TripStatus.DELETED)),
-                edmonton,
+                denver,
             ),
         )
     }
@@ -214,15 +214,15 @@ class TripEditLogTextTest {
                     category = null,
                 ),
                 DEFAULT_WORK_SCHEDULE,
-                edmonton,
+                denver,
             ).copy(id = 31)
 
         assertEquals(
             "Trip 31: added by hand on the edit screen: 2026-10-05 09:00:00 to " +
-                "2026-10-05 09:40:00 (America/Edmonton), 23400 m, from \"Shop\" to none, " +
+                "2026-10-05 09:40:00 (America/Denver), 23400 m, from \"Shop\" to none, " +
                 "Business (sorted by the work schedule). It has no GPS points, is marked as " +
                 "added by hand and is counted like any finished trip",
-            addedText(added, edmonton),
+            addedText(added, denver),
         )
     }
 }

@@ -42,7 +42,7 @@ import org.junit.Test
 // library; there is no stable equivalent.
 @OptIn(ExperimentalCoroutinesApi::class)
 class MonthPointsViewModelTest {
-    private val zone = ZoneId.of("America/Edmonton")
+    private val zone = ZoneId.of("America/Denver")
     private val september = YearMonth.of(2026, 9)
     private val october = YearMonth.of(2026, 10)
 

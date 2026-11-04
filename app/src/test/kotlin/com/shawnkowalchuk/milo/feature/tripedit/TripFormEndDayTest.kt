@@ -21,10 +21,10 @@ private const val HOUR_MS = 60 * MINUTE_MS
  * happens twice when the clocks go back. Times are Edmonton wall-clock times.
  */
 class TripFormEndDayTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
 
     private fun local(dateTime: String): Long =
-        LocalDateTime.parse(dateTime).atZone(edmonton).toInstant().toEpochMilli()
+        LocalDateTime.parse(dateTime).atZone(denver).toInstant().toEpochMilli()
 
     private fun trip(startedAtMs: Long, endedAtMs: Long) = Trip(
         id = 12,
@@ -40,21 +40,21 @@ class TripFormEndDayTest {
     private val overnight = trip(local("2026-10-05T17:00:12"), local("2026-10-06T00:30:41"))
 
     private fun problems(form: TripForm, stored: Trip?, now: String): List<FormProblem> =
-        formProblems(form, stored, FormCheck(local(now), recordingSinceMs = null), edmonton)
+        formProblems(form, stored, FormCheck(local(now), recordingSinceMs = null), denver)
 
     // ---- Past midnight --------------------------------------------------------------------------
 
     @Test
     fun `a trip that ran past midnight can be brought back onto the day it started`() {
-        val opened = formFor(overnight, edmonton, DistanceUnit.KILOMETRES)
+        val opened = formFor(overnight, denver, DistanceUnit.KILOMETRES)
         val sameDay = opened.copy(end = LocalTime.of(17, 40)).endingNextDay(false)
 
         // Left as it opened, 17:40 would be on the 6th: a trip of more than a day.
         assertEquals(
             local("2026-10-06T17:40:00"),
-            opened.copy(end = LocalTime.of(17, 40)).endedAtMs(overnight, edmonton),
+            opened.copy(end = LocalTime.of(17, 40)).endedAtMs(overnight, denver),
         )
-        assertEquals(local("2026-10-05T17:40:00"), sameDay.endedAtMs(overnight, edmonton))
+        assertEquals(local("2026-10-05T17:40:00"), sameDay.endedAtMs(overnight, denver))
         assertNull(sameDay.laterEndDate)
         // It can be saved the next morning, when 17:40 on the 6th has not come yet.
         assertEquals(
@@ -65,13 +65,13 @@ class TripFormEndDayTest {
 
     @Test
     fun `the end day switched off and on again is the stored end, to the millisecond`() {
-        val opened = formFor(overnight, edmonton, DistanceUnit.KILOMETRES)
+        val opened = formFor(overnight, denver, DistanceUnit.KILOMETRES)
 
         val putBack = opened.endingNextDay(false).endingNextDay(true)
 
         assertEquals(opened, putBack)
-        assertEquals(overnight.endedAtMs, putBack.endedAtMs(overnight, edmonton))
-        assertEquals(TripEdit(), putBack.toEdit(overnight, edmonton))
+        assertEquals(overnight.endedAtMs, putBack.endedAtMs(overnight, denver))
+        assertEquals(TripEdit(), putBack.toEdit(overnight, denver))
     }
 
     @Test
@@ -96,11 +96,11 @@ class TripFormEndDayTest {
             emptyList<FormProblem>(),
             problems(nextDay, stored = null, now = "2026-10-06T08:00:00"),
         )
-        assertEquals(local("2026-10-06T00:15:00"), nextDay.endedAtMs(stored = null, edmonton))
+        assertEquals(local("2026-10-06T00:15:00"), nextDay.endedAtMs(stored = null, denver))
         assertEquals(LocalDate.of(2026, 10, 6), nextDay.laterEndDate)
         assertEquals(
             local("2026-10-06T00:15:00"),
-            nextDay.toTypedTrip(edmonton)?.endedAtMs,
+            nextDay.toTypedTrip(denver)?.endedAtMs,
         )
     }
 
@@ -125,12 +125,12 @@ class TripFormEndDayTest {
     fun `a new date moves the end day with it`() {
         val moved = formFor(
             overnight,
-            edmonton,
+            denver,
             DistanceUnit.KILOMETRES,
         ).copy(date = LocalDate.of(2026, 10, 1))
 
         assertEquals(LocalDate.of(2026, 10, 2), moved.laterEndDate)
-        assertEquals(local("2026-10-02T00:30:00"), moved.endedAtMs(overnight, edmonton))
+        assertEquals(local("2026-10-02T00:30:00"), moved.endedAtMs(overnight, denver))
     }
 
     @Test
@@ -138,10 +138,10 @@ class TripFormEndDayTest {
         // Never seen, and not something the switch can make: it says "the next day" or not.
         val twoNights = trip(local("2026-10-03T22:00:00"), local("2026-10-05T01:00:00"))
 
-        val opened = formFor(twoNights, edmonton, DistanceUnit.KILOMETRES)
+        val opened = formFor(twoNights, denver, DistanceUnit.KILOMETRES)
 
         assertEquals(LocalDate.of(2026, 10, 5), opened.laterEndDate)
-        assertEquals(TripEdit(), opened.toEdit(twoNights, edmonton))
+        assertEquals(TripEdit(), opened.toEdit(twoNights, denver))
         assertEquals(LocalDate.of(2026, 10, 4), opened.endingNextDay(true).laterEndDate)
     }
 
@@ -159,15 +159,15 @@ class TripFormEndDayTest {
 
         val later = formFor(
             stored,
-            edmonton,
+            denver,
             DistanceUnit.KILOMETRES,
         ).copy(end = LocalTime.of(1, 40))
 
         // Ten minutes later than it was, not fifty minutes earlier.
-        assertEquals(secondHalfPastOne + 10 * MINUTE_MS, later.endedAtMs(stored, edmonton))
+        assertEquals(secondHalfPastOne + 10 * MINUTE_MS, later.endedAtMs(stored, denver))
         assertEquals(
             110 * MINUTE_MS,
-            checkNotNull(later.endedAtMs(stored, edmonton)) - stored.startedAtMs,
+            checkNotNull(later.endedAtMs(stored, denver)) - stored.startedAtMs,
         )
     }
 
@@ -177,11 +177,11 @@ class TripFormEndDayTest {
 
         val later = formFor(
             stored,
-            edmonton,
+            denver,
             DistanceUnit.KILOMETRES,
         ).copy(end = LocalTime.of(1, 40))
 
-        assertEquals(firstHalfPastOne + 10 * MINUTE_MS, later.endedAtMs(stored, edmonton))
+        assertEquals(firstHalfPastOne + 10 * MINUTE_MS, later.endedAtMs(stored, denver))
     }
 
     @Test
@@ -194,17 +194,17 @@ class TripFormEndDayTest {
             secondHalfPastOne,
             formFor(
                 after,
-                edmonton,
+                denver,
                 DistanceUnit.KILOMETRES,
-            ).copy(end = LocalTime.of(1, 30)).endedAtMs(after, edmonton),
+            ).copy(end = LocalTime.of(1, 30)).endedAtMs(after, denver),
         )
         assertEquals(
             firstHalfPastOne,
             formFor(
                 before,
-                edmonton,
+                denver,
                 DistanceUnit.KILOMETRES,
-            ).copy(end = LocalTime.of(1, 30)).endedAtMs(before, edmonton),
+            ).copy(end = LocalTime.of(1, 30)).endedAtMs(before, denver),
         )
     }
 
@@ -218,8 +218,8 @@ class TripFormEndDayTest {
                 unit = DistanceUnit.KILOMETRES,
             )
 
-        assertEquals(firstHalfPastOne, form.startedAtMs(stored = null, edmonton))
-        assertEquals(firstHalfPastOne + 20 * MINUTE_MS, form.endedAtMs(stored = null, edmonton))
+        assertEquals(firstHalfPastOne, form.startedAtMs(stored = null, denver))
+        assertEquals(firstHalfPastOne + 20 * MINUTE_MS, form.endedAtMs(stored = null, denver))
     }
 
     @Test
@@ -229,10 +229,10 @@ class TripFormEndDayTest {
 
         val moved = formFor(
             stored,
-            edmonton,
+            denver,
             DistanceUnit.KILOMETRES,
         ).copy(date = LocalDate.of(2026, 10, 5))
 
-        assertEquals(local("2026-10-05T08:30:00"), moved.endedAtMs(stored, edmonton))
+        assertEquals(local("2026-10-05T08:30:00"), moved.endedAtMs(stored, denver))
     }
 }

@@ -34,7 +34,7 @@ class DateDialogTest {
     @Test
     fun `the phone's time zone does not move the day to its neighbour`() {
         val day = LocalDate.of(2026, 10, 5)
-        val phones = listOf("America/Edmonton", "Pacific/Auckland", "Pacific/Honolulu")
+        val phones = listOf("America/Denver", "Pacific/Auckland", "Pacific/Honolulu")
         val before = TimeZone.getDefault()
         try {
             for (zone in phones) {

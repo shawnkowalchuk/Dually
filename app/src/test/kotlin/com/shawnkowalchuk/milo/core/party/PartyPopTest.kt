@@ -7,10 +7,10 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-private val EDMONTON: ZoneId = ZoneId.of("America/Edmonton")
+private val DENVER: ZoneId = ZoneId.of("America/Denver")
 
 private fun onTheDay(hour: Int, minute: Int = 0, day: Int = 6): Long =
-    LocalDateTime.of(2027, 10, day, hour, minute).atZone(EDMONTON).toInstant().toEpochMilli()
+    LocalDateTime.of(2027, 10, day, hour, minute).atZone(DENVER).toInstant().toEpochMilli()
 
 /** Who plays the party's pop at a trip's start, and what Home still owes afterwards. */
 class PartyPopTest {
@@ -80,28 +80,28 @@ class PartyPopTest {
 
     @Test
     fun `nothing stored, nothing owed`() {
-        assertFalse(partyOwedNow(owedSinceMs = null, nowMs = onTheDay(9), zone = EDMONTON))
+        assertFalse(partyOwedNow(owedSinceMs = null, nowMs = onTheDay(9), zone = DENVER))
     }
 
     @Test
     fun `a party is owed from the trip's start for the rest of that day`() {
         val tripStarted = onTheDay(7, 42)
 
-        assertTrue(partyOwedNow(tripStarted, tripStarted, EDMONTON))
-        assertTrue(partyOwedNow(tripStarted, onTheDay(7, 43), EDMONTON))
-        assertTrue(partyOwedNow(tripStarted, onTheDay(23, 59), EDMONTON))
+        assertTrue(partyOwedNow(tripStarted, tripStarted, DENVER))
+        assertTrue(partyOwedNow(tripStarted, onTheDay(7, 43), DENVER))
+        assertTrue(partyOwedNow(tripStarted, onTheDay(23, 59), DENVER))
     }
 
     @Test
     fun `after midnight nothing left over is owed`() {
         val tripStarted = onTheDay(22, 15)
 
-        assertTrue(partyOwedNow(tripStarted, onTheDay(0, 0, day = 7) - 1, EDMONTON))
-        assertFalse(partyOwedNow(tripStarted, onTheDay(0, 0, day = 7), EDMONTON))
-        assertFalse(partyOwedNow(tripStarted, onTheDay(8, 0, day = 7), EDMONTON))
+        assertTrue(partyOwedNow(tripStarted, onTheDay(0, 0, day = 7) - 1, DENVER))
+        assertFalse(partyOwedNow(tripStarted, onTheDay(0, 0, day = 7), DENVER))
+        assertFalse(partyOwedNow(tripStarted, onTheDay(8, 0, day = 7), DENVER))
         // Nor a year later, should it still be in the settings then.
-        val nextYear = LocalDateTime.of(2028, 10, 6, 8, 0).atZone(EDMONTON).toInstant()
-        assertFalse(partyOwedNow(tripStarted, nextYear.toEpochMilli(), EDMONTON))
+        val nextYear = LocalDateTime.of(2028, 10, 6, 8, 0).atZone(DENVER).toInstant()
+        assertFalse(partyOwedNow(tripStarted, nextYear.toEpochMilli(), DENVER))
     }
 
     @Test
@@ -109,9 +109,9 @@ class PartyPopTest {
         // Stored under a date that was a day ahead, or brought along by a backup.
         val tomorrow = onTheDay(7, 42, day = 7)
 
-        assertFalse(partyOwedNow(tomorrow, onTheDay(7, 43), EDMONTON))
+        assertFalse(partyOwedNow(tomorrow, onTheDay(7, 43), DENVER))
         // Later the same day it would still be ahead by seconds: not believed either.
-        assertFalse(partyOwedNow(onTheDay(7, 45), onTheDay(7, 44), EDMONTON))
+        assertFalse(partyOwedNow(onTheDay(7, 45), onTheDay(7, 44), DENVER))
     }
 
     @Test
@@ -120,7 +120,7 @@ class PartyPopTest {
         val tripStarted = onTheDay(21, 30)
         val anHourLater = onTheDay(22, 30)
 
-        assertTrue(partyOwedNow(tripStarted, anHourLater, EDMONTON))
+        assertTrue(partyOwedNow(tripStarted, anHourLater, DENVER))
         assertFalse(partyOwedNow(tripStarted, anHourLater, ZoneId.of("America/Toronto")))
     }
 }

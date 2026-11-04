@@ -46,7 +46,7 @@ class TripAddressesByHandTest {
     @get:Rule
     val folder = TemporaryFolder()
 
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
     private val trips = FakeTripDao()
     private val repository = TripRepository(trips)
     private val log = FakeEventLogDao()
@@ -100,7 +100,7 @@ class TripAddressesByHandTest {
     private fun row(id: Long): Trip = trips.rows.single { it.id == id }
 
     private suspend fun edit(tripId: Long, edit: TripEdit) {
-        repository.editByHand(tripId, edit, DEFAULT_WORK_SCHEDULE, edmonton)
+        repository.editByHand(tripId, edit, DEFAULT_WORK_SCHEDULE, denver)
     }
 
     private fun logged(): List<String> =
@@ -169,7 +169,7 @@ class TripAddressesByHandTest {
                 endAddress = null,
                 category = null,
             )
-        val added = repository.addByHand(typed, DEFAULT_WORK_SCHEDULE, edmonton)
+        val added = repository.addByHand(typed, DEFAULT_WORK_SCHEDULE, denver)
 
         lookUp()
 
@@ -219,7 +219,7 @@ class TripAddressesByHandTest {
         trips.rows[0] = trip.copy(addressAttempts = MAX_ADDRESS_ATTEMPTS)
         edit(trip.id, TripEdit(startAddress = TypedAddress("Home"), distanceMetres = 9_000.0))
 
-        repository.restoreRecorded(trip.id, DEFAULT_WORK_SCHEDULE, edmonton)
+        repository.restoreRecorded(trip.id, DEFAULT_WORK_SCHEDULE, denver)
         lookUp()
 
         assertEquals("12 Shop Rd, Edmonton", row(trip.id).startAddress)

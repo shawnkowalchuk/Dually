@@ -27,7 +27,7 @@ import org.junit.Test
 
 /** What the Report screen shows, and the report it would make, from what is stored. */
 class ReportUiStateTest {
-    private val zone = ZoneId.of("America/Edmonton")
+    private val zone = ZoneId.of("America/Denver")
     private val today = LocalDate.of(2026, 10, 6)
     private val october = ReportPeriod.Month(YearMonth.of(2026, 10))
     private val range = ReportPeriod.Range(LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 3))

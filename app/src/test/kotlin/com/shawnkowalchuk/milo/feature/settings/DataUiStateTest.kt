@@ -19,7 +19,7 @@ import org.junit.Test
 
 /** What the card for backup, export and import shows, and when its buttons can be pressed. */
 class DataUiStateTest {
-    private val zone = ZoneId.of("America/Edmonton")
+    private val zone = ZoneId.of("America/Denver")
     private val offer = ImportOffer(1, 8, 3, 4, true, 2, 1, safetyCopyAtMs = null)
 
     private fun card(

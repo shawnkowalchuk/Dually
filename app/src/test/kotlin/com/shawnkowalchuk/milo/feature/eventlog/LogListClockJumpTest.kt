@@ -29,7 +29,7 @@ import org.junit.Test
  * way, so the order below is the order the screen and the file get.
  */
 class LogListClockJumpTest {
-    private val zone = ZoneId.of("America/Edmonton")
+    private val zone = ZoneId.of("America/Denver")
     private val wednesday = LocalDate.of(2026, 10, 7)
     private val thursday = LocalDate.of(2026, 10, 8)
     private val table = FakeEventLogDao()

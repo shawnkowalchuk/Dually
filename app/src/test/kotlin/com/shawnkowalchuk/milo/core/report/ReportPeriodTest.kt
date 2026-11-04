@@ -28,7 +28,7 @@ class ReportPeriodTest {
 
     @Test
     fun `a month's span is the Trips screen's own span of that month`() {
-        val span = ReportPeriod.Month(OCTOBER).span(EDMONTON)
+        val span = ReportPeriod.Month(OCTOBER).span(DENVER)
 
         // Summer time: local midnight is 06:00 UTC.
         assertEquals(utc("2026-10-01T06:00:00Z"), span.fromMs)
@@ -38,17 +38,17 @@ class ReportPeriodTest {
     @Test
     fun `a range includes its last day to the last millisecond, and nothing of the next`() {
         val range = ReportPeriod.Range(LocalDate.of(2026, 10, 5), LocalDate.of(2026, 10, 18))
-        val span = range.span(EDMONTON)
+        val span = range.span(DENVER)
 
-        assertEquals(edmonton("2026-10-05T00:00"), span.fromMs)
-        assertEquals(edmonton("2026-10-19T00:00"), span.untilMs)
+        assertEquals(denver("2026-10-05T00:00"), span.fromMs)
+        assertEquals(denver("2026-10-19T00:00"), span.untilMs)
         assertEquals(14 * DAY_MS, span.untilMs - span.fromMs)
     }
 
     @Test
     fun `a range of one day is that whole day`() {
         val day = LocalDate.of(2026, 10, 5)
-        val span = ReportPeriod.Range(day, day).span(EDMONTON)
+        val span = ReportPeriod.Range(day, day).span(DENVER)
 
         assertEquals(DAY_MS, span.untilMs - span.fromMs)
     }
@@ -59,8 +59,8 @@ class ReportPeriodTest {
         val autumn = ReportPeriod.Range(LocalDate.of(2026, 10, 31), LocalDate.of(2026, 11, 1))
         val spring = ReportPeriod.Range(LocalDate.of(2026, 3, 8), LocalDate.of(2026, 3, 8))
 
-        val autumnSpan = autumn.span(EDMONTON)
-        val springSpan = spring.span(EDMONTON)
+        val autumnSpan = autumn.span(DENVER)
+        val springSpan = spring.span(DENVER)
         assertEquals(2 * DAY_MS + HOUR_MS, autumnSpan.untilMs - autumnSpan.fromMs)
         assertEquals(DAY_MS - HOUR_MS, springSpan.untilMs - springSpan.fromMs)
         // It ends at local midnight in winter time, an hour later in UTC than in summer.
@@ -81,7 +81,7 @@ class ReportPeriodTest {
 
         // The same span of time, and two different periods: only the first marks a month as
         // submitted.
-        assertEquals(month.span(EDMONTON), sameDays.span(EDMONTON))
+        assertEquals(month.span(DENVER), sameDays.span(DENVER))
         assertNotEquals(month, sameDays)
     }
 

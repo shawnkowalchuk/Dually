@@ -17,9 +17,9 @@ class TimeFormatTest {
     @Test
     fun `a stored time is shown as the time of day in the given zone`() {
         // Edmonton is six hours behind UTC in October.
-        val edmonton = ZoneId.of("America/Edmonton")
+        val denver = ZoneId.of("America/Denver")
 
-        assertEquals("06:00", formatTimeOfDay(NOON_UTC_MS, edmonton, Locale.UK, true))
+        assertEquals("06:00", formatTimeOfDay(NOON_UTC_MS, denver, Locale.UK, true))
         assertEquals("12:00", formatTimeOfDay(NOON_UTC_MS, ZoneId.of("UTC"), Locale.UK, true))
     }
 
@@ -62,22 +62,22 @@ class TimeFormatTest {
 
     @Test
     fun `the event log's time is exact to the second, in local time, in one fixed form`() {
-        val edmonton = ZoneId.of("America/Edmonton")
+        val denver = ZoneId.of("America/Denver")
         val threeSecondsPast = NOON_UTC_MS + 3_000
 
-        assertEquals("2026-10-03 06:00:03", formatLogTime(threeSecondsPast, edmonton))
+        assertEquals("2026-10-03 06:00:03", formatLogTime(threeSecondsPast, denver))
         assertEquals("2026-10-03 12:00:03", formatLogTime(threeSecondsPast, ZoneId.of("UTC")))
     }
 
     @Test
     fun `the event log shows the hour that is repeated when the clocks go back`() {
-        val edmonton = ZoneId.of("America/Edmonton")
+        val denver = ZoneId.of("America/Denver")
         // 1 November 2026: 01:30 happens twice in Edmonton, an hour apart.
         val firstTime = Instant.parse("2026-11-01T07:30:00Z").toEpochMilli()
         val secondTime = Instant.parse("2026-11-01T08:30:00Z").toEpochMilli()
 
-        assertEquals("2026-11-01 01:30:00", formatLogTime(firstTime, edmonton))
-        assertEquals("2026-11-01 01:30:00", formatLogTime(secondTime, edmonton))
+        assertEquals("2026-11-01 01:30:00", formatLogTime(firstTime, denver))
+        assertEquals("2026-11-01 01:30:00", formatLogTime(secondTime, denver))
     }
 
     @Test
@@ -191,7 +191,7 @@ class TimeFormatTest {
         // 23:30 on 2 October in Edmonton is already 3 October in UTC.
         val lateEvening = NOON_UTC_MS - 6 * 60 * 60 * 1000 - 30 * 60 * 1000
 
-        val inEdmonton = formatDate(lateEvening, ZoneId.of("America/Edmonton"), Locale.UK)
+        val inEdmonton = formatDate(lateEvening, ZoneId.of("America/Denver"), Locale.UK)
         val inUtc = formatDate(lateEvening, ZoneId.of("UTC"), Locale.UK)
 
         assertEquals("2 Oct 2026", inEdmonton)

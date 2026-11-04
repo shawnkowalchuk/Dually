@@ -17,11 +17,11 @@ import org.junit.Test
  * 5 October 2026 in Edmonton, and checked at 14:00 that day unless a test says otherwise.
  */
 class TripFormProblemsTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
     private val monday = LocalDate.of(2026, 10, 5)
 
     private fun local(dateTime: String): Long =
-        LocalDateTime.parse(dateTime).atZone(edmonton).toInstant().toEpochMilli()
+        LocalDateTime.parse(dateTime).atZone(denver).toInstant().toEpochMilli()
 
     private val twoInTheAfternoon = FormCheck(local("2026-10-05T14:00:00"), recordingSinceMs = null)
 
@@ -39,7 +39,7 @@ class TripFormProblemsTest {
         form: TripForm,
         check: FormCheck = twoInTheAfternoon,
         stored: Trip? = null,
-    ): List<FormProblem> = formProblems(form, stored, check, edmonton)
+    ): List<FormProblem> = formProblems(form, stored, check, denver)
 
     @Test
     fun `a form that is filled in properly has no problem`() {
@@ -288,7 +288,7 @@ class TripFormProblemsTest {
 
         assertEquals(
             emptyList<FormProblem>(),
-            problems(formFor(stored, edmonton, DistanceUnit.KILOMETRES), stored = stored),
+            problems(formFor(stored, denver, DistanceUnit.KILOMETRES), stored = stored),
         )
     }
 
@@ -307,7 +307,7 @@ class TripFormProblemsTest {
         // The distance is untouched, and the end is moved to five minutes after the start.
         val form = formFor(
             stored,
-            edmonton,
+            denver,
             DistanceUnit.KILOMETRES,
         ).copy(end = LocalTime.of(8, 19))
 
@@ -329,7 +329,7 @@ class TripFormProblemsTest {
 
         assertEquals(
             listOf(FormProblem.END_NOT_AFTER_START),
-            problems(formFor(stored, edmonton, DistanceUnit.KILOMETRES), stored = stored),
+            problems(formFor(stored, denver, DistanceUnit.KILOMETRES), stored = stored),
         )
     }
 

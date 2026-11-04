@@ -12,13 +12,13 @@ import org.junit.Test
  * after the end, where both times share it.
  */
 class TimeSpanFormatTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
 
     private fun at(dateTime: String): Long =
-        LocalDateTime.parse(dateTime).atZone(edmonton).toInstant().toEpochMilli()
+        LocalDateTime.parse(dateTime).atZone(denver).toInstant().toEpochMilli()
 
     private fun span(from: String, to: String, locale: Locale, twentyFourHour: Boolean = false) =
-        formatTimeSpan(at(from), at(to), edmonton, locale, twentyFourHour)
+        formatTimeSpan(at(from), at(to), denver, locale, twentyFourHour)
 
     @Test
     fun `two times in the same half of the day name it once, after the end`() {
@@ -34,9 +34,9 @@ class TimeSpanFormatTest {
         val startMs = at("2026-10-06T07:42")
         val endMs = at("2026-10-06T08:06")
 
-        val (_, end) = formatTimeSpan(startMs, endMs, edmonton, Locale.US, false)
+        val (_, end) = formatTimeSpan(startMs, endMs, denver, Locale.US, false)
 
-        assertEquals(formatTimeOfDay(endMs, edmonton, Locale.US, false), end)
+        assertEquals(formatTimeOfDay(endMs, denver, Locale.US, false), end)
     }
 
     @Test
@@ -45,7 +45,7 @@ class TimeSpanFormatTest {
 
         val (start, end) = span("2026-10-06T11:50", "2026-10-06T12:10", Locale.US)
 
-        assertEquals(formatTimeOfDay(startMs, edmonton, Locale.US, false), start)
+        assertEquals(formatTimeOfDay(startMs, denver, Locale.US, false), start)
         assertTrue(start, start.endsWith("AM"))
         assertTrue(end, end.endsWith("PM"))
     }
@@ -83,11 +83,11 @@ class TimeSpanFormatTest {
         val startMs = at("2026-10-06T17:30")
         val endMs = at("2026-10-06T17:41")
 
-        val (start, end) = formatTimeSpan(startMs, endMs, edmonton, Locale.CANADA, false)
+        val (start, end) = formatTimeSpan(startMs, endMs, denver, Locale.CANADA, false)
 
         // "5:30 p.m." in full; the short start is that without what follows its last digit.
         assertEquals("5:30", start)
-        assertEquals(formatTimeOfDay(endMs, edmonton, Locale.CANADA, false), end)
+        assertEquals(formatTimeOfDay(endMs, denver, Locale.CANADA, false), end)
         assertTrue(end, end.length > "5:41".length)
     }
 }

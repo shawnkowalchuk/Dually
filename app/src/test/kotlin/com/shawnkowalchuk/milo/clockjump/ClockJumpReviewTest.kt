@@ -21,10 +21,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-private val EDMONTON: ZoneId = ZoneId.of("America/Edmonton")
+private val DENVER: ZoneId = ZoneId.of("America/Denver")
 
 private fun at(day: Int, hour: Int, minute: Int = 0): Long =
-    LocalDateTime.of(2026, 10, day, hour, minute).atZone(EDMONTON).toInstant().toEpochMilli()
+    LocalDateTime.of(2026, 10, day, hour, minute).atZone(DENVER).toInstant().toEpochMilli()
 
 private const val HOUR_MS = 3_600_000L
 private const val DAY_MS = 24 * HOUR_MS
@@ -53,7 +53,7 @@ class ClockJumpReviewTest {
         eventLog = EventLogRepository(log),
         crashFileStore = CrashFileStore(folder.root),
         clock = { phone.clock.now() },
-        zone = { EDMONTON },
+        zone = { DENVER },
     )
 
     @Test

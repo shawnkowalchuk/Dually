@@ -21,7 +21,7 @@ import kotlinx.coroutines.runBlocking
 // What the tests of the export file share: one trip of every kind MilO can hold, the sent
 // reports and settings that go with them, and the short ways to write and read a file.
 
-internal val EDMONTON: ZoneId = ZoneId.of("America/Edmonton")
+internal val DENVER: ZoneId = ZoneId.of("America/Denver")
 
 /** 2026-10-06 14:02:11 in Edmonton. */
 internal const val EXPORTED_AT_MS = 1_791_316_931_000L
@@ -215,7 +215,7 @@ internal fun sourceOf(
     pointCount: Long? = points?.size?.toLong(),
 ): ExportSource = ExportSource(
     exportedAtMs = EXPORTED_AT_MS,
-    zone = EDMONTON,
+    zone = DENVER,
     appVersion = "0.1.0",
     databaseVersion = 5,
     settings = settings,

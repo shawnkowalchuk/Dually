@@ -248,7 +248,7 @@ class CarScreenContentTest {
 
     // ---- The Business row -----------------------------------------------------------------------
 
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
     private val october6 = LocalDate.of(2026, 10, 6)
     private var nextId = 1L
 
@@ -258,7 +258,7 @@ class CarScreenContentTest {
         metres: Double,
         category: TripCategory = TripCategory.BUSINESS,
     ): Trip {
-        val startedAtMs = LocalDateTime.parse(start).atZone(edmonton).toInstant().toEpochMilli()
+        val startedAtMs = LocalDateTime.parse(start).atZone(denver).toInstant().toEpochMilli()
         return Trip(
             id = nextId++,
             startedAtMs = startedAtMs,
@@ -285,7 +285,7 @@ class CarScreenContentTest {
         unit: DistanceUnit = DistanceUnit.KILOMETRES,
         centsPerKm: Int? = 70,
     ) = businessFigures(
-        BusinessInput(october6, edmonton, monthTrips, centsPerKm),
+        BusinessInput(october6, denver, monthTrips, centsPerKm),
         Locale.CANADA,
         unit,
     )

@@ -21,7 +21,7 @@ import org.junit.Test
  * business kilometres of this month and this year priced at the rate set in Settings.
  */
 class HomeWidgetContentTest {
-    private val zone: ZoneId = ZoneId.of("America/Edmonton")
+    private val zone: ZoneId = ZoneId.of("America/Denver")
     private var nextId = 1L
 
     private fun at(month: Int, day: Int, year: Int = 2026): Long =

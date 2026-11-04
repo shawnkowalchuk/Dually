@@ -36,10 +36,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-private val EDMONTON: ZoneId = ZoneId.of("America/Edmonton")
+private val DENVER: ZoneId = ZoneId.of("America/Denver")
 
 private fun at(year: Int, month: Int, day: Int, hour: Int = 12, minute: Int = 0): Long =
-    LocalDateTime.of(year, month, day, hour, minute).atZone(EDMONTON).toInstant().toEpochMilli()
+    LocalDateTime.of(year, month, day, hour, minute).atZone(DENVER).toInstant().toEpochMilli()
 
 /**
  * What the trip service is told at a trip's first sound, on the stored trips, a settings file
@@ -68,7 +68,7 @@ class OneYearPartyTest {
         eventLog = EventLogRepository(eventLog),
         crashFileStore = CrashFileStore(folder.root),
         clock = { nowMs },
-        zone = { EDMONTON },
+        zone = { DENVER },
     )
 
     private fun stored(
