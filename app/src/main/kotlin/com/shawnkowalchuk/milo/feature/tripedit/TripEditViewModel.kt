@@ -182,6 +182,13 @@ class TripEditViewModel(
         if (restored) Stored.Done(stored.recordedStartedAtMs) else Stored.Failed
     }
 
+    /** Delete, after its question: the screen leaves for Trips, at the trip's month. */
+    fun onDelete() = store { now ->
+        // The button is only shown for a stored trip.
+        val stored = now.session.stored ?: return@store Stored.Failed
+        if (editing.delete(stored.id)) Stored.Done(stored.startedAtMs) else Stored.Failed
+    }
+
     /** What became of a press that stores. */
     private sealed interface Stored {
         /** @param startedAtMs when the trip starts as it is stored now. */
