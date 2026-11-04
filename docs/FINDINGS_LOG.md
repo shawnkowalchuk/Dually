@@ -26,6 +26,9 @@
 
 ### 2026-11-03
 
+**`[CHANGE]` Website: a Product Hunt review badge**
+Shawn pasted Product Hunt's embed for "Dually Trip Tracker" and asked for it on the website. Its image is served by `api.producthunt.com`; loaded from there it would break the privacy page's "loads nothing from other sites". So the badge (a 2 KB SVG with no script and no outside reference) is saved as `website/product-hunt-review.svg` and served from dually.top; his link to Product Hunt's review page is kept as he gave it, opening in a new tab. In "A personal project", under Buy me a coffee. A badge that Product Hunt changes later stays as saved.
+
 **`[CHANGE]` Delete the trip being recorded from Home, and any trip from its edit screen (version 0.3.2)**
 Shawn: "i was driving in a work vehcle and my phone started tracking that trip we need a way to delete the trip from the started trip screen. maybe a trash icon that gives a prompt to delete trip ... also there is not option to delete a trip in the edit screen". His answer: after the delete, "Stop until the vehicle disconnects". A bin beside End on Home's recording card, asked first; it ends the trip as End does (the hold-off) and, once the controller has caught up, deletes it as Trips does (`TripCorrections`, log "deleted with the bin on Home, while it was recorded"). The edit screen has Delete trip, asked first, then back to Trips. A deleted trip can be restored on Trips. Tests: `TripControllerDeleteRunningTest`, `TripDeletingTest`. Not yet on the phone: DT-1 to DT-3.
 - **Added to the design system:** `MiloIcons.Trash`.
