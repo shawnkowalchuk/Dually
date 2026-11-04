@@ -15,6 +15,7 @@ class MiloIconsTest {
             MiloIcons.Trips,
             MiloIcons.Log,
             MiloIcons.Service,
+            MiloIcons.Trash,
             MiloIcons.Back,
             MiloIcons.Settings,
             MiloIcons.Share,
