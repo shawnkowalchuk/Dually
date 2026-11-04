@@ -109,6 +109,15 @@
     <!-- The odometer check when a trip starts in another vehicle (2026-10-16). The title's arguments: the vehicle's name, its odometer as Dually has it ("120,345") and the unit's short word. -->
     <string name="notification_channel_odometer_check">Odometer check</string>
     <string name="notification_channel_service">Service reminders</string>
+    <string name="notification_channel_work_hours">Work hours</string>
+    <!-- The argument is the time the work hours ended: "4:30 PM". -->
+    <string name="notification_work_hours_ended">Work hours ended at %1$s</string>
+    <string name="notification_work_hours_during">This trip is saved as Business. Heading home? Mark it Personal.</string>
+    <!-- The arguments are the trip's start and end times: "4:25 PM", "5:06 PM". -->
+    <string name="notification_work_hours_trip">Trip %1$s to %2$s ran past work hours</string>
+    <string name="notification_work_hours_after">It was saved as Business. Was it a drive home? Mark it Personal.</string>
+    <string name="notification_work_hours_mark_personal">Mark Personal</string>
+    <string name="notification_work_hours_keep_business">Keep Business</string>
     <!-- The arguments are the item's name and when it is due: "Oil change: due in 400 km". -->
     <string name="notification_service_line">%1$s: %2$s</string>
     <plurals name="notification_service_title_many">
@@ -534,6 +543,11 @@
     <string name="trips_delete_trip">%1$s · %2$s</string>
     <string name="trips_delete_text">%1$s\n\nIt leaves the list and the month\'s total. It is not destroyed: switch on \"%2$s\" to see it again and restore it.</string>
     <string name="trips_delete_confirm">Delete</string>
+    <!-- The bin on the trip being recorded on Home (since 2026-11-03), and its question. -->
+    <string name="home_delete_trip">Delete this trip</string>
+    <!-- The argument is the name of the switch on Trips that shows left-out trips. -->
+    <string name="home_delete_text">The trip ends now and leaves the list and the month\'s total. Dually starts no new trip until this vehicle disconnects. It is not destroyed: switch on \"%1$s\" on Trips to see it again and restore it.</string>
+    <string name="trip_edit_delete_text">The trip leaves the list and the month\'s total. It is not destroyed: switch on \"%1$s\" on Trips to see it again and restore it.</string>
     <string name="trips_change_failed">That trip could not be changed. The Log screen says why.</string>
     <!--
         Trips and Home: where a trip went. The arguments are the start and the end:

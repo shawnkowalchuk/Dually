@@ -9,6 +9,8 @@ import com.shawnkowalchuk.milo.core.util.localDateOf
 import com.shawnkowalchuk.milo.core.util.monthSpan
 import com.shawnkowalchuk.milo.data.report.SentReport
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
+import com.shawnkowalchuk.milo.data.trip.ON_HOME
+import com.shawnkowalchuk.milo.data.trip.TripCorrection
 import com.shawnkowalchuk.milo.data.trip.TripCorrections
 import com.shawnkowalchuk.milo.data.trip.TripRepository
 import com.shawnkowalchuk.milo.data.trip.serviceAlertsOf
@@ -290,6 +292,22 @@ class HomeViewModel(
             } catch (notStored: IOException) {
                 return@launch
             }
+        }
+    }
+
+    /**
+     * The bin on the trip being recorded (since 2026-11-03; Shawn: "i was driving in a work
+     * vehcle and my phone started tracking that trip we need a way to delete the trip from the
+     * started trip screen"). The trip is ended as End ends it, so that automatic start is held
+     * off until the vehicle disconnects (his choice), and once the controller has closed it, it
+     * is deleted as on Trips: out of the list and the totals, and Restore on Trips puts it back.
+     * A trip too short to keep is discarded by the ending itself and needs no deleting.
+     */
+    fun onDeleteRunning(tripId: Long) {
+        val by = corrections ?: return
+        controller.onTrigger(TripTrigger.MANUAL_END, "Delete button")
+        controller.whenCaughtUp {
+            viewModelScope.launch { by.apply(tripId, TripCorrection.DELETE, ON_HOME) }
         }
     }
 

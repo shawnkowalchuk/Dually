@@ -2,8 +2,18 @@
   "releases": [
     {
       "version": "0.3.2",
-      "date": null,
+      "date": "2026-11-03",
       "changes": [
+        {
+          "kind": "new",
+          "title": "Delete a trip while it records, or from its edit screen",
+          "body": "A trip that started in the wrong vehicle can go straight away: press the bin on Home's trip card, and Dually ends and deletes it, and starts no new trip until that vehicle disconnects. The edit screen has Delete trip too. Deleted trips can still be restored on Trips."
+        },
+        {
+          "kind": "new",
+          "title": "Asked when a work trip runs past your hours",
+          "body": "When a trip saved as Business is still going as your work hours end, a quiet notification asks whether to mark it Personal, with Mark Personal and Keep Business buttons. If you don't answer, it asks again when the trip ends. It shows on Android Auto too."
+        },
         {
           "kind": "improved",
           "title": "The top line stays put",

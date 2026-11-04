@@ -285,6 +285,8 @@ dependencies {
     // Trip recording (platform/): GPS fixes from the fused location provider, and CarConnection,
     // which says whether Android Auto is connected.
     implementation(libs.play.services.location)
+    // Lifts the fragment library Play services pulls in (1.1.0, flagged by Play Console).
+    implementation(libs.androidx.fragment)
     implementation(libs.androidx.car.app)
 
     // The Android Auto screen (platform/car/). "app-projected" is what makes a Car App Library

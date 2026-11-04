@@ -62,6 +62,7 @@ internal class HomeActions(
     val todayRows: TodayRowActions = TodayRowActions(onMark = { _, _ -> }, onEdit = {}),
     val onRunningCategory: (tripId: Long, category: TripCategory) -> Unit = { _, _ -> },
     val onServiceDone: (itemId: Long) -> Unit = {},
+    val onDeleteRunning: (tripId: Long) -> Unit = {},
 )
 
 /**
@@ -132,6 +133,7 @@ fun HomeScreen(
                 todayRows = TodayRowActions(onMark = viewModel::onMark, onEdit = onEditTrip),
                 onRunningCategory = viewModel::onRunningCategory,
                 onServiceDone = viewModel::onServiceDone,
+                onDeleteRunning = viewModel::onDeleteRunning,
             ),
         modifier = modifier,
     )
