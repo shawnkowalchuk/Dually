@@ -117,7 +117,7 @@ class ReportInMilesTest {
 
     @Test
     fun `the odometer is printed in miles, an estimate marked`() {
-        val reading = OdometerReading(edmonton("2026-10-01T07:00"), 74_500, miles)
+        val reading = OdometerReading(denver("2026-10-01T07:00"), 74_500, miles)
         val start = OdometerFigure(74_500, miles, reading, drivenTenths = 0, estimated = false)
         val end = OdometerFigure(74_587, miles, reading, drivenTenths = 869, estimated = true)
 

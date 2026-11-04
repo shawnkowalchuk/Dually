@@ -34,7 +34,7 @@ abstract class MonthlyReminderFixture {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
-    protected val zone: ZoneId = ZoneId.of("America/Edmonton")
+    protected val zone: ZoneId = ZoneId.of("America/Denver")
     protected val september: YearMonth = YearMonth.of(2026, 9)
     protected val log = FakeEventLogDao()
     protected val settingsFile = FakeSettingsFile()

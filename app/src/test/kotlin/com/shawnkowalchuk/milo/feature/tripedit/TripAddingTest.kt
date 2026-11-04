@@ -24,7 +24,7 @@ import org.junit.Test
 class TripAddingTest : TripEditingFixture() {
     @Test
     fun `a missed trip is stored as a finished trip marked as added by hand`() = runTest {
-        assertEquals(SaveResult.Stored, editing.add(missed, schedule, edmonton))
+        assertEquals(SaveResult.Stored, editing.add(missed, schedule, denver))
 
         assertEquals(
             Trip(
@@ -49,7 +49,7 @@ class TripAddingTest : TripEditingFixture() {
         assertEquals(
             listOf(
                 "Trip 1: added by hand on the edit screen: 2026-10-05 10:00:00 to " +
-                    "2026-10-05 10:40:00 (America/Edmonton), 23400 m, from \"Shop\" to " +
+                    "2026-10-05 10:40:00 (America/Denver), 23400 m, from \"Shop\" to " +
                     "\"Site 7\", Business (sorted by the work schedule). It has no GPS points, " +
                     "is marked as added by hand and is counted like any finished trip",
             ),
@@ -62,8 +62,8 @@ class TripAddingTest : TripEditingFixture() {
         val evening = missed.copy(date = LocalDate.of(2026, 10, 4), start = LocalTime.of(19, 0))
             .copy(end = LocalTime.of(19, 40))
 
-        editing.add(evening, schedule, edmonton)
-        editing.add(evening.copy(chosenCategory = TripCategory.BUSINESS), schedule, edmonton)
+        editing.add(evening, schedule, denver)
+        editing.add(evening.copy(chosenCategory = TripCategory.BUSINESS), schedule, denver)
 
         assertEquals(TripCategory.PERSONAL, row(1).category)
         assertFalse(row(1).categorySetByHand)
@@ -73,7 +73,7 @@ class TripAddingTest : TripEditingFixture() {
 
     @Test
     fun `a missed trip that is not filled in properly is not added`() = runTest {
-        val result = editing.add(missed.copy(end = null, kilometres = "x"), schedule, edmonton)
+        val result = editing.add(missed.copy(end = null, kilometres = "x"), schedule, denver)
 
         assertEquals(
             SaveResult.Invalid(
@@ -90,7 +90,7 @@ class TripAddingTest : TripEditingFixture() {
     fun `a missed trip may not be added over the trip that is being recorded`() = runTest {
         val recording = recorded(TripStatus.OPEN)
 
-        val result = editing.add(missed, schedule, edmonton)
+        val result = editing.add(missed, schedule, denver)
 
         // The recording started at 08:14, and the missed trip would run from 10:00.
         assertEquals(
@@ -106,7 +106,7 @@ class TripAddingTest : TripEditingFixture() {
     @Test
     fun `a trip that was added by hand is edited like any other and stays added by hand`() =
         runTest {
-            editing.add(missed, schedule, edmonton)
+            editing.add(missed, schedule, denver)
             val added = row(1)
 
             val result = save(added) { it.copy(kilometres = "25", to = "Site 9") }
@@ -120,7 +120,7 @@ class TripAddingTest : TripEditingFixture() {
     fun `a failure to add is logged, and no trip is stored`() = runTest {
         trips.failNextInsert = IOException("the disk is full")
 
-        assertEquals(SaveResult.Failed, editing.add(missed, schedule, edmonton))
+        assertEquals(SaveResult.Failed, editing.add(missed, schedule, denver))
 
         assertTrue(trips.rows.isEmpty())
         assertEquals(

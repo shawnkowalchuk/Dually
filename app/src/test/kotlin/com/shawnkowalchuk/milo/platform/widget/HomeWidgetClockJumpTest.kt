@@ -29,7 +29,7 @@ private const val SECOND_MS = 1_000L
  * year's total, a trip a day longer. Each now shows the drawing as it should be.
  */
 class HomeWidgetClockJumpTest {
-    private val zone: ZoneId = ZoneId.of("America/Edmonton")
+    private val zone: ZoneId = ZoneId.of("America/Denver")
     private var nextId = 1L
 
     private fun at(text: String): Long =

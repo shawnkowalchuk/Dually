@@ -92,7 +92,7 @@ class NothingRecordedCheckTest : NothingRecordedCheckFixture() {
             assertEquals(0, shown)
             // The detail holds what the decision went by, and no position or address.
             assertEquals(
-                "Time zone America/Edmonton. Switch on, time set 12:00. Tue: tracked, 08:00 " +
+                "Time zone America/Denver. Switch on, time set 12:00. Tue: tracked, 08:00 " +
                     "to 16:30. Notification last shown: never. Trips looked at: none.",
                 log.entries.first().detail,
             )

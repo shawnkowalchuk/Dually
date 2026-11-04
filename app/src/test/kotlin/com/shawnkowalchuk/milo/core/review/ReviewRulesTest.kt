@@ -7,10 +7,10 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-private val EDMONTON: ZoneId = ZoneId.of("America/Edmonton")
+private val DENVER: ZoneId = ZoneId.of("America/Denver")
 
 private fun at(day: Int, hour: Int, minute: Int = 0): Long =
-    LocalDateTime.of(2026, 10, day, hour, minute).atZone(EDMONTON).toInstant().toEpochMilli()
+    LocalDateTime.of(2026, 10, day, hour, minute).atZone(DENVER).toInstant().toEpochMilli()
 
 private fun stored(vararg asked: ReviewMoment, lastAttemptAtMs: Long? = null) =
     ReviewsStored(asked.associateWith { MomentStanding.ASKED }, lastAttemptAtMs)
@@ -47,7 +47,7 @@ class ReviewRulesTest {
             fromGooglePlay,
             mayBeDriving,
             nowMs,
-            EDMONTON,
+            DENVER,
         ),
     )
 
@@ -69,7 +69,7 @@ class ReviewRulesTest {
             fromGooglePlay,
             mayBeDriving,
             nowMs,
-            EDMONTON,
+            DENVER,
         ),
     )
 
@@ -257,7 +257,7 @@ class ReviewRulesTest {
         val launchedAt = at(11, 17)
         val launched = ReviewsStored().afterLaunch(FIVE, launchedAt)
         val november10 =
-            LocalDateTime.of(2026, 11, 10, 16, 0).atZone(EDMONTON).toInstant().toEpochMilli()
+            LocalDateTime.of(2026, 11, 10, 16, 0).atZone(DENVER).toInstant().toEpochMilli()
 
         assertEquals(later(launchedAt, days = 30), november10)
         assertFalse(launchedLately(launched, november10))
@@ -327,8 +327,8 @@ class ReviewRulesTest {
         val late = at(11, 23, 30)
         val stored = ReviewsStored(lastAttemptAtMs = late)
 
-        assertTrue(attemptedToday(stored, at(11, 23, 45), EDMONTON))
-        assertFalse(attemptedToday(stored, at(12, 0, 15), EDMONTON))
+        assertTrue(attemptedToday(stored, at(11, 23, 45), DENVER))
+        assertFalse(attemptedToday(stored, at(12, 0, 15), DENVER))
         assertTrue(attemptedToday(stored, at(12, 0, 15), ZoneId.of("America/Toronto")))
     }
 
@@ -337,13 +337,13 @@ class ReviewRulesTest {
         // Written by another installation, or under a date that was wrong (ADR-006).
         val ahead = ReviewsStored(lastAttemptAtMs = at(11, 18))
 
-        assertFalse(attemptedToday(ahead, at(11, 12), EDMONTON))
+        assertFalse(attemptedToday(ahead, at(11, 12), DENVER))
         assertEquals(ReviewJudgement.Ask(FIVE), atHome(5, ahead, nowMs = at(11, 12)))
     }
 
     @Test
     fun `with no last time nothing is held`() {
-        assertFalse(attemptedToday(ReviewsStored(), at(11, 12), EDMONTON))
+        assertFalse(attemptedToday(ReviewsStored(), at(11, 12), DENVER))
     }
 
     // ---- Only a copy from Google Play asks ------------------------------------------------------

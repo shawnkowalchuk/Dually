@@ -13,20 +13,20 @@ import org.junit.Test
 private const val MINUTE_MS = 60_000L
 
 /**
- * Business or Personal from when a trip started. Times are written as Edmonton wall-clock times
- * unless a test says otherwise; Edmonton is where the truck is, and its clocks change twice a
- * year. In 2026: 5 October is a Monday, clocks go back on Sunday 1 November and forward on
+ * Business or Personal from when a trip started. Times are written as Denver wall-clock times
+ * unless a test says otherwise: a zone whose clocks still change twice a year (Edmonton's
+ * stopped on 1 November 2026, when Alberta kept summer time). In 2026: 5 October is a Monday, clocks go back on Sunday 1 November and forward on
  * Sunday 8 March.
  */
 class TripClassificationTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
     private val business = TripClassification(TripCategory.BUSINESS, ranPastSchedule = false)
     private val ranPast = TripClassification(TripCategory.BUSINESS, ranPastSchedule = true)
     private val personal = TripClassification(TripCategory.PERSONAL, ranPastSchedule = false)
 
     /** A local date and time in Edmonton, such as "2026-10-05T08:00", as a stored time. */
     private fun local(dateTime: String): Long =
-        LocalDateTime.parse(dateTime).atZone(edmonton).toInstant().toEpochMilli()
+        LocalDateTime.parse(dateTime).atZone(denver).toInstant().toEpochMilli()
 
     private fun utc(instant: String): Long = Instant.parse(instant).toEpochMilli()
 
@@ -35,7 +35,7 @@ class TripClassificationTest {
         start: Long,
         end: Long? = start + 20 * MINUTE_MS,
         schedule: WorkSchedule = DEFAULT_WORK_SCHEDULE,
-        zone: ZoneId = edmonton,
+        zone: ZoneId = denver,
     ): TripClassification = classifyTrip(start, end, schedule, zone)
 
     private fun scheduleWith(day: DayOfWeek, start: LocalTime, end: LocalTime): WorkSchedule =
@@ -104,15 +104,15 @@ class TripClassificationTest {
 
     @Test
     fun `the day and the time are read in the phone's time zone`() {
-        // 14:30 UTC on Monday 5 October is 08:30 in Edmonton and 23:30 in Tokyo.
+        // 14:30 UTC on Monday 5 October is 08:30 in Denver and 23:30 in Tokyo.
         val start = utc("2026-10-05T14:30:00Z")
 
-        assertEquals(business, sort(start, zone = edmonton))
+        assertEquals(business, sort(start, zone = denver))
         assertEquals(business, sort(start, zone = ZoneId.of("UTC")))
         assertEquals(personal, sort(start, zone = ZoneId.of("Asia/Tokyo")))
-        // 02:00 UTC on Tuesday is still Monday evening in Edmonton, and a work morning in Tokyo.
+        // 02:00 UTC on Tuesday is still Monday evening in Denver, and a work morning in Tokyo.
         val later = utc("2026-10-06T02:00:00Z")
-        assertEquals(personal, sort(later, zone = edmonton))
+        assertEquals(personal, sort(later, zone = denver))
         assertEquals(business, sort(later, zone = ZoneId.of("Asia/Tokyo")))
     }
 

@@ -15,7 +15,7 @@ import org.junit.Test
 
 /** The graph's months: what each adds up to, and where the lines stop. */
 class MonthFigureTest {
-    private val zone = ZoneId.of("America/Edmonton")
+    private val zone = ZoneId.of("America/Denver")
     private val october = YearMonth.of(2026, 10)
 
     private fun trip(

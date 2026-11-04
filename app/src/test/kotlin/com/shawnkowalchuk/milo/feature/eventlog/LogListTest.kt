@@ -12,7 +12,7 @@ import org.junit.Test
 
 /** How the Log screen lists its lines by day, and how it writes a time and a day. */
 class LogListTest {
-    private val zone = ZoneId.of("America/Edmonton")
+    private val zone = ZoneId.of("America/Denver")
     private val today = LocalDate.of(2026, 10, 6)
     private var nextId = 100L
 

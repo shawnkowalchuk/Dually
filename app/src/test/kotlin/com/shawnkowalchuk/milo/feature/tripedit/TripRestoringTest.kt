@@ -27,7 +27,7 @@ class TripRestoringTest : TripEditingFixture() {
         val trip = recorded()
         save(trip) { it.copy(start = LocalTime.of(8, 0), kilometres = "20", from = "Home") }
 
-        assertTrue(editing.restore(trip.id, schedule, edmonton))
+        assertTrue(editing.restore(trip.id, schedule, denver))
 
         assertEquals(
             trip.copy(
@@ -42,7 +42,7 @@ class TripRestoringTest : TripEditingFixture() {
         assertEquals(
             "Trip 1: recorded values restored on the edit screen: start 2026-10-05 08:00:00 → " +
                 "2026-10-05 08:14:27; distance 20000 m → 12345 m; from \"Home\" → none (times " +
-                "in America/Edmonton). It is no longer marked as edited. An address typed by " +
+                "in America/Denver). It is no longer marked as edited. An address typed by " +
                 "hand was removed and is looked up again.",
             logged(EventCategory.TRIP).last(),
         )
@@ -51,10 +51,10 @@ class TripRestoringTest : TripEditingFixture() {
     @Test
     fun `a trip that was never edited, or was added by hand, has nothing to restore`() = runTest {
         val untouched = recorded()
-        editing.add(missed, schedule, edmonton)
+        editing.add(missed, schedule, denver)
 
-        assertFalse(editing.restore(untouched.id, schedule, edmonton))
-        assertFalse(editing.restore(2, schedule, edmonton))
+        assertFalse(editing.restore(untouched.id, schedule, denver))
+        assertFalse(editing.restore(2, schedule, denver))
 
         assertEquals(untouched, row(untouched.id))
         assertEquals(
@@ -75,7 +75,7 @@ class TripRestoringTest : TripEditingFixture() {
         val edited = row(trip.id)
         trips.failNextByHandWrite = IOException("the disk is full")
 
-        assertFalse(editing.restore(trip.id, schedule, edmonton))
+        assertFalse(editing.restore(trip.id, schedule, denver))
 
         assertEquals(edited, row(trip.id))
         assertEquals(
@@ -115,9 +115,9 @@ class TripRestoringTest : TripEditingFixture() {
 
         editing.save(
             trip,
-            formFor(trip, edmonton, DistanceUnit.KILOMETRES).copy(start = LocalTime.of(7, 0)),
+            formFor(trip, denver, DistanceUnit.KILOMETRES).copy(start = LocalTime.of(7, 0)),
             schedule = null,
-            edmonton,
+            denver,
         )
 
         assertNull(row(trip.id).category)

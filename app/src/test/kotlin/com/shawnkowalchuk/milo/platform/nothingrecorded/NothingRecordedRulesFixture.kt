@@ -17,7 +17,7 @@ import java.time.ZoneId
  * notification is due, and the trips and schedules the cases are made of.
  */
 abstract class NothingRecordedRulesFixture {
-    protected val zone: ZoneId = ZoneId.of("America/Edmonton")
+    protected val zone: ZoneId = ZoneId.of("America/Denver")
     protected val noon: LocalTime = LocalTime.NOON
     protected val tuesday: LocalDate = LocalDate.of(2026, 10, 6)
 

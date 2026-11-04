@@ -28,10 +28,10 @@ import org.junit.Test
  * 14:32 in Edmonton.
  */
 class TripEditUiStateTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
 
     private fun local(dateTime: String): Long =
-        LocalDateTime.parse(dateTime).atZone(edmonton).toInstant().toEpochMilli()
+        LocalDateTime.parse(dateTime).atZone(denver).toInstant().toEpochMilli()
 
     private val openedAtMs = local("2026-10-06T14:32:40")
 
@@ -51,7 +51,7 @@ class TripEditUiStateTest {
         )
 
     private fun session(trip: Trip?, schedule: WorkSchedule? = DEFAULT_WORK_SCHEDULE) =
-        EditSession(trip, schedule, edmonton, openedAtMs, DistanceUnit.KILOMETRES)
+        EditSession(trip, schedule, denver, openedAtMs, DistanceUnit.KILOMETRES)
 
     private fun shown(
         form: TripForm,
@@ -67,8 +67,8 @@ class TripEditUiStateTest {
         closing = false,
     )
 
-    private val opened = formFor(stored, edmonton, DistanceUnit.KILOMETRES)
-    private val blank = blankForm(openedAtMs, edmonton, DistanceUnit.KILOMETRES)
+    private val opened = formFor(stored, denver, DistanceUnit.KILOMETRES)
+    private val blank = blankForm(openedAtMs, denver, DistanceUnit.KILOMETRES)
 
     // ---- The fields -----------------------------------------------------------------------------
 
@@ -238,7 +238,7 @@ class TripEditUiStateTest {
             )
         for (form in forms) {
             val saved =
-                editedTrip(stored, form.toEdit(stored, edmonton), DEFAULT_WORK_SCHEDULE, edmonton)
+                editedTrip(stored, form.toEdit(stored, denver), DEFAULT_WORK_SCHEDULE, denver)
 
             assertEquals("$form", saved.category, shown(form).category)
         }
@@ -251,8 +251,8 @@ class TripEditUiStateTest {
                 kilometres = "40",
             )
         for (form in listOf(missed, missed.copy(chosenCategory = TripCategory.PERSONAL))) {
-            val typed = checkNotNull(form.toTypedTrip(edmonton))
-            val added = tripAddedByHand(typed, DEFAULT_WORK_SCHEDULE, edmonton)
+            val typed = checkNotNull(form.toTypedTrip(denver))
+            val added = tripAddedByHand(typed, DEFAULT_WORK_SCHEDULE, denver)
 
             assertEquals("$form", added.category, shown(form, trip = null).category)
         }
@@ -267,24 +267,24 @@ class TripEditUiStateTest {
                 stored,
                 TripEdit(distanceMetres = 20_000.0),
                 DEFAULT_WORK_SCHEDULE,
-                edmonton,
+                denver,
             )
         val addedByHand = stored.copy(addedByHand = true, startAddressByHand = true)
 
         assertNull(shown(opened).recorded)
         assertEquals(
             RecordedValues(stored.startedAtMs, local("2026-10-05T08:39:02"), 12_344.7),
-            shown(formFor(edited, edmonton, DistanceUnit.KILOMETRES), trip = edited).recorded,
+            shown(formFor(edited, denver, DistanceUnit.KILOMETRES), trip = edited).recorded,
         )
         assertNull(
             shown(
-                formFor(addedByHand, edmonton, DistanceUnit.KILOMETRES),
+                formFor(addedByHand, denver, DistanceUnit.KILOMETRES),
                 trip = addedByHand,
             ).recorded,
         )
         assertTrue(
             shown(
-                formFor(addedByHand, edmonton, DistanceUnit.KILOMETRES),
+                formFor(addedByHand, denver, DistanceUnit.KILOMETRES),
                 trip = addedByHand,
             ).addedByHand,
         )
@@ -296,7 +296,7 @@ class TripEditUiStateTest {
 
         assertTrue(
             shown(
-                formFor(overnight, edmonton, DistanceUnit.KILOMETRES),
+                formFor(overnight, denver, DistanceUnit.KILOMETRES),
                 trip = overnight,
             ).endsNextDay,
         )

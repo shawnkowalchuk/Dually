@@ -42,7 +42,7 @@ class TripCategoryCatchUpTest {
     @get:Rule
     val folder = TemporaryFolder()
 
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
     private val trips = FakeTripDao()
     private val log = FakeEventLogDao()
     private val settings = SettingsStore(FakeSettingsFile())
@@ -54,7 +54,7 @@ class TripCategoryCatchUpTest {
             settings = store,
             eventLog = EventLogRepository(log),
             crashFileStore = CrashFileStore(folder.root),
-            zone = { edmonton },
+            zone = { denver },
             clock = { nowMs },
             scope = backgroundScope,
         )
@@ -67,7 +67,7 @@ class TripCategoryCatchUpTest {
         setByHand: Boolean = false,
         minutes: Long = 20,
     ): Trip {
-        val startedAtMs = LocalDateTime.parse(start).atZone(edmonton).toInstant().toEpochMilli()
+        val startedAtMs = LocalDateTime.parse(start).atZone(denver).toInstant().toEpochMilli()
         val open = status == TripStatus.OPEN
         val trip =
             Trip(
@@ -207,7 +207,7 @@ class TripCategoryCatchUpTest {
     }
 
     private fun businessFor(trip: Trip) =
-        classifyTrip(trip.startedAtMs, trip.endedAtMs, DEFAULT_WORK_SCHEDULE, edmonton)
+        classifyTrip(trip.startedAtMs, trip.endedAtMs, DEFAULT_WORK_SCHEDULE, denver)
 
     // ---- What it says -----------------------------------------------------------------------------
 
@@ -232,11 +232,11 @@ class TripCategoryCatchUpTest {
         assertEquals(
             listOf(
                 "Trip 1: Business: it started on a Mon at 10:00:00; that day's hours are 08:00 " +
-                    "to 16:30 (America/Edmonton)",
+                    "to 16:30 (America/Denver)",
                 "Trip 2: Business, ran past schedule: it started on a Mon at 16:20:00; that " +
-                    "day's hours are 08:00 to 16:30 (America/Edmonton)",
+                    "day's hours are 08:00 to 16:30 (America/Denver)",
                 "Trip 3: Personal: it started on a Sat at 10:00:00; Sat is not a tracked day " +
-                    "(America/Edmonton)",
+                    "(America/Denver)",
             ),
             line.detail?.lines(),
         )

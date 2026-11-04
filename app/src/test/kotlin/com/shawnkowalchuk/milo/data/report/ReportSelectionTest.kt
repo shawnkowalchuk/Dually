@@ -23,7 +23,7 @@ class ReportSelectionTest {
     fun `a finished Business trip that started in the month is on the report`() {
         val trip = storedTrip("2026-10-05T08:14")
 
-        val selection = selectForReport(listOf(trip), october, EDMONTON)
+        val selection = selectForReport(listOf(trip), october, DENVER)
 
         val listed = selection.trips.single()
         assertEquals(trip.startedAtMs, listed.startedAtMs)
@@ -44,7 +44,7 @@ class ReportSelectionTest {
                 storedTrip("2026-10-05T11:00", TripStatus.DELETED),
             )
 
-        val selection = selectForReport(trips, october, EDMONTON)
+        val selection = selectForReport(trips, october, DENVER)
 
         assertEquals(listOf(at("2026-10-05T08:00")), starts(selection))
         assertTrue(selection.tripInProgress)
@@ -65,7 +65,7 @@ class ReportSelectionTest {
                 storedTrip("2026-10-08T18:00", TripStatus.DELETED, TripCategory.PERSONAL),
             )
 
-        val selection = selectForReport(trips, october, EDMONTON)
+        val selection = selectForReport(trips, october, DENVER)
 
         assertEquals(listOf(at("2026-10-05T08:00")), starts(selection))
         assertEquals(2, selection.personalLeftOut)
@@ -94,7 +94,7 @@ class ReportSelectionTest {
                 storedTrip("2026-09-30T18:00", category = TripCategory.PERSONAL),
             )
 
-        val selection = selectForReport(trips, october, EDMONTON)
+        val selection = selectForReport(trips, october, DENVER)
 
         assertEquals(2, selection.personalLeftOut)
         assertEquals(182L, selection.personalTenths(DistanceUnit.KILOMETRES))
@@ -112,7 +112,7 @@ class ReportSelectionTest {
         // Two trips that start at the same instant keep the order they were stored in.
         val twin = trips[3].copy(id = 99, distanceMetres = 1.0)
 
-        val selection = selectForReport(trips + twin, october, EDMONTON)
+        val selection = selectForReport(trips + twin, october, DENVER)
 
         assertEquals(
             listOf(
@@ -137,7 +137,7 @@ class ReportSelectionTest {
                 storedTrip("2026-10-05T10:00").copy(categorySetByHand = true),
             )
 
-        val marks = selectForReport(trips, october, EDMONTON).trips.map { it.mark }
+        val marks = selectForReport(trips, october, DENVER).trips.map { it.mark }
 
         assertEquals(listOf(ReportMark.ADDED, ReportMark.EDITED, null), marks)
     }
@@ -157,7 +157,7 @@ class ReportSelectionTest {
                 ),
             )
 
-        val selection = selectForReport(trips, october, EDMONTON)
+        val selection = selectForReport(trips, october, DENVER)
 
         assertEquals(
             listOf(null, "12 Shop Rd, Edmonton", "12 Shop Rd, Edmonton"),
@@ -174,7 +174,7 @@ class ReportSelectionTest {
 
     @Test
     fun `a period without trips has nothing on it and nothing left off`() {
-        val selection = selectForReport(listOf(storedTrip("2026-09-15T08:00")), october, EDMONTON)
+        val selection = selectForReport(listOf(storedTrip("2026-09-15T08:00")), october, DENVER)
 
         assertEquals(ReportSelection(emptyList(), 0, 0, 0, false, emptyList()), selection)
     }

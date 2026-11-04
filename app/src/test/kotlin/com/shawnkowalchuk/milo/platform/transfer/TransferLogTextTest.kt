@@ -98,7 +98,7 @@ class TransferLogTextTest {
 
         assertEquals(
             "Dually-export-2026-10-06.json",
-            exportFileName(justBeforeMidnightInEdmonton, ZoneId.of("America/Edmonton")),
+            exportFileName(justBeforeMidnightInEdmonton, ZoneId.of("America/Denver")),
         )
         assertEquals(
             "Dually-export-2026-10-07.json",

@@ -17,11 +17,11 @@ import org.junit.Test
  * Monday 5 October 2026; the schedule is Monday to Friday, 08:00 to 16:30.
  */
 class TripRestoreTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
     private val schedule = DEFAULT_WORK_SCHEDULE
 
     private fun local(dateTime: String): Long =
-        LocalDateTime.parse(dateTime).atZone(edmonton).toInstant().toEpochMilli()
+        LocalDateTime.parse(dateTime).atZone(denver).toInstant().toEpochMilli()
 
     /** A trip as MilO recorded it: exact to the second, both addresses looked up. */
     private val recorded =
@@ -44,9 +44,9 @@ class TripRestoreTest {
             category = TripCategory.BUSINESS,
         )
 
-    private fun edit(trip: Trip, edit: TripEdit): Trip = editedTrip(trip, edit, schedule, edmonton)
+    private fun edit(trip: Trip, edit: TripEdit): Trip = editedTrip(trip, edit, schedule, denver)
 
-    private fun restore(trip: Trip): Trip? = restoredTrip(trip, schedule, edmonton)
+    private fun restore(trip: Trip): Trip? = restoredTrip(trip, schedule, denver)
 
     @Test
     fun `restore puts back the recorded times and distance and takes the mark away`() {

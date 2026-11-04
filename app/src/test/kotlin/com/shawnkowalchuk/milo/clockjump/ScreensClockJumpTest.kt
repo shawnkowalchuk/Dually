@@ -43,7 +43,7 @@ private const val MINUTE_MS = 60 * SECOND_MS
  * the trip where it belongs.
  */
 class ScreensClockJumpTest {
-    private val zone = ZoneId.of("America/Edmonton")
+    private val zone = ZoneId.of("America/Denver")
 
     /** The unit the edit screen's form shows a distance in. No test here looks at a distance. */
     private val unit = DistanceUnit.KILOMETRES

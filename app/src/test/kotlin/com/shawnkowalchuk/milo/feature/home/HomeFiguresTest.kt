@@ -26,13 +26,13 @@ private const val MINUTE_MS = 60_000L
  * out of the month's, the last trip, and when the minutes of a trip in progress next change.
  */
 class HomeFiguresTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
     private val today = LocalDate.of(2026, 10, 6)
     private var nextId = 1L
 
     /** A local date and time in Edmonton, as stored time. */
     private fun at(text: String): Long =
-        LocalDateTime.parse(text).atZone(edmonton).toInstant().toEpochMilli()
+        LocalDateTime.parse(text).atZone(denver).toInstant().toEpochMilli()
 
     /** A trip that started at [start], local time, and ended twenty minutes later. */
     private fun trip(
@@ -84,7 +84,7 @@ class HomeFiguresTest {
     fun `a month without a kilometre has no share, and nothing is divided by zero`() {
         assertNull(businessPercent(totals(business = 0)))
         assertNull(
-            homeTrips(today, edmonton, emptyList(), DistanceUnit.KILOMETRES).month.businessPercent,
+            homeTrips(today, denver, emptyList(), DistanceUnit.KILOMETRES).month.businessPercent,
         )
     }
 
@@ -122,7 +122,7 @@ class HomeFiguresTest {
                 trip("2026-10-03T08:00", 9_000.0, TripCategory.PERSONAL),
             )
 
-        val figures = homeTrips(today, edmonton, month, DistanceUnit.MILES)
+        val figures = homeTrips(today, denver, month, DistanceUnit.MILES)
 
         assertEquals(DistanceUnit.MILES, figures.unit)
         // The month: 0.7 + 0.7 + 0.7 + 7.6 mi of Business.
@@ -135,7 +135,7 @@ class HomeFiguresTest {
         // The rows keep their metres: each is written from them, in the unit of the figures.
         assertEquals(listOf(5_000.0, 12_300.0, 1_149.0), figures.rows.map { it.distanceMetres })
         // The same reading in kilometres is what it was.
-        val inKilometres = homeTrips(today, edmonton, month, DistanceUnit.KILOMETRES)
+        val inKilometres = homeTrips(today, denver, month, DistanceUnit.KILOMETRES)
         assertEquals(156L, inKilometres.month.businessTenths)
         assertEquals(156L, inKilometres.month.businessKmTenths)
         assertEquals(Tally(2, 134), inKilometres.todayTotals.business)
@@ -155,7 +155,7 @@ class HomeFiguresTest {
                 trip("2026-10-05T08:00", 50_000.0, status = TripStatus.DISCARDED),
             )
 
-        val figures = homeTrips(today, edmonton, month, DistanceUnit.KILOMETRES).month
+        val figures = homeTrips(today, denver, month, DistanceUnit.KILOMETRES).month
 
         assertEquals(YearMonth.of(2026, 10), figures.month)
         assertEquals(33L, figures.businessTenths)
@@ -172,7 +172,7 @@ class HomeFiguresTest {
                 trip("2026-10-07T00:00", 8_000.0),
             )
 
-        val figures = homeTrips(today, edmonton, month, DistanceUnit.KILOMETRES)
+        val figures = homeTrips(today, denver, month, DistanceUnit.KILOMETRES)
 
         assertEquals(2, figures.today.count)
         assertEquals(130L, figures.today.totals(DistanceUnit.KILOMETRES).business.tenths)
@@ -189,7 +189,7 @@ class HomeFiguresTest {
                 trip("2026-10-06T11:00", 9_900.0, status = TripStatus.DELETED),
             )
 
-        val figures = homeTrips(today, edmonton, month, DistanceUnit.KILOMETRES)
+        val figures = homeTrips(today, denver, month, DistanceUnit.KILOMETRES)
 
         assertEquals(2, figures.today.count)
         assertEquals(Tally(1, 123), figures.today.totals(DistanceUnit.KILOMETRES).business)
@@ -209,7 +209,7 @@ class HomeFiguresTest {
                 trip("2026-10-05T17:00", 9_000.0, from = "Shop", to = "Home"),
             )
 
-        val last = homeTrips(today, edmonton, month, DistanceUnit.KILOMETRES).rows.firstOrNull()
+        val last = homeTrips(today, denver, month, DistanceUnit.KILOMETRES).rows.firstOrNull()
 
         assertEquals(
             PlacesText.FromTo(PlaceSide.Address("Supplier"), PlaceSide.Address("Shop")),
@@ -224,7 +224,7 @@ class HomeFiguresTest {
     fun `a trip without addresses says so in words`() {
         val unknown = trip("2026-10-06T12:40", 20_300.0)
 
-        val rows = homeTrips(today, edmonton, listOf(unknown), DistanceUnit.KILOMETRES).rows
+        val rows = homeTrips(today, denver, listOf(unknown), DistanceUnit.KILOMETRES).rows
 
         assertEquals(
             PlacesText.Sentence(R.string.trips_addresses_left_blank),
@@ -240,7 +240,7 @@ class HomeFiguresTest {
                 trip("2026-10-06T08:00", 0.0, status = TripStatus.OPEN),
             )
 
-        val figures = homeTrips(today, edmonton, month, DistanceUnit.KILOMETRES)
+        val figures = homeTrips(today, denver, month, DistanceUnit.KILOMETRES)
 
         assertTrue(figures.rows.isEmpty())
         assertEquals(0, figures.today.count)
