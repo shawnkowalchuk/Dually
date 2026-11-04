@@ -32,10 +32,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-private val EDMONTON: ZoneId = ZoneId.of("America/Edmonton")
+private val DENVER: ZoneId = ZoneId.of("America/Denver")
 
 private fun at(day: Int, hour: Int): Long =
-    LocalDateTime.of(2026, 10, day, hour, 0).atZone(EDMONTON).toInstant().toEpochMilli()
+    LocalDateTime.of(2026, 10, day, hour, 0).atZone(DENVER).toInstant().toEpochMilli()
 
 private val FIVE = setOf(ReviewMoment.FIVE_TRIPS)
 private val REPORT = setOf(ReviewMoment.REPORT_SENT)
@@ -69,7 +69,7 @@ class ReviewViewModelTest {
             eventLog = EventLogRepository(log),
             crashFileStore = CrashFileStore(folder.root),
             clock = { nowMs },
-            zone = { EDMONTON },
+            zone = { DENVER },
         )
     }
 

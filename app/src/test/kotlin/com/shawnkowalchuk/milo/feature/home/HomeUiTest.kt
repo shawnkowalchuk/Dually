@@ -26,12 +26,12 @@ import org.junit.Test
  * together from its parts.
  */
 class HomeUiTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
     private val september = YearMonth.of(2026, 9)
     private val october6 = LocalDate.of(2026, 10, 6)
 
     private fun at(text: String): Long =
-        LocalDateTime.parse(text).atZone(edmonton).toInstant().toEpochMilli()
+        LocalDateTime.parse(text).atZone(denver).toInstant().toEpochMilli()
 
     private fun trip(start: String, category: TripCategory = TripCategory.BUSINESS): Trip {
         val startedAtMs = at(start)
@@ -66,7 +66,7 @@ class HomeUiTest {
         stored: MiloSettings? = MiloSettings(),
         sent: List<SentReport> = emptyList(),
         trips: List<Trip> = septemberTrips,
-    ): YearMonth? = reportWaiting(at(now), edmonton, stored, sent, trips)
+    ): YearMonth? = reportWaiting(at(now), denver, stored, sent, trips)
 
     // ---- The report tile --------------------------------------------------------------------------
 
@@ -140,7 +140,7 @@ class HomeUiTest {
 
     private val read =
         HomeRead(
-            figures = homeTrips(october6, edmonton, emptyList(), DistanceUnit.KILOMETRES),
+            figures = homeTrips(october6, denver, emptyList(), DistanceUnit.KILOMETRES),
             reportWaiting = september,
             nowMs = at("2026-10-06T14:32"),
         )
@@ -161,7 +161,7 @@ class HomeUiTest {
         val yesterdays = read.copy(
             figures = homeTrips(
                 october6.minusDays(1),
-                edmonton,
+                denver,
                 emptyList(),
                 DistanceUnit.KILOMETRES,
             ),
@@ -181,7 +181,7 @@ class HomeUiTest {
         assertNull(ui.figures)
         // Once they have been added up again, in miles, they are shown.
         val again = read.copy(
-            figures = homeTrips(october6, edmonton, emptyList(), DistanceUnit.MILES),
+            figures = homeTrips(october6, denver, emptyList(), DistanceUnit.MILES),
         )
         assertEquals(again.figures, homeUi(inMiles, again).figures)
         assertEquals(DistanceUnit.KILOMETRES, homeUi(now, read).unit)

@@ -14,10 +14,10 @@ import java.time.ZoneId
  * Edmonton is the kind of zone the phone is in: seven hours behind UTC in winter, six in
  * summer, with the clocks changing on 8 March and 1 November 2026.
  */
-internal val EDMONTON: ZoneId = ZoneId.of("America/Edmonton")
+internal val DENVER: ZoneId = ZoneId.of("America/Denver")
 
 /** A local wall-clock time in [zone], as stored time. */
-internal fun at(text: String, zone: ZoneId = EDMONTON): Long =
+internal fun at(text: String, zone: ZoneId = DENVER): Long =
     LocalDateTime.parse(text).atZone(zone).toInstant().toEpochMilli()
 
 /**

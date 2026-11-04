@@ -24,13 +24,13 @@ import java.time.ZoneId
  * Each test class gets a fresh one for every test, as JUnit builds the class anew each time.
  */
 abstract class TripEditingFixture {
-    protected val edmonton: ZoneId = ZoneId.of("America/Edmonton")
+    protected val denver: ZoneId = ZoneId.of("America/Denver")
     protected val schedule = DEFAULT_WORK_SCHEDULE
     protected val trips = FakeTripDao()
     protected val log = FakeEventLogDao()
 
     protected fun local(dateTime: String): Long =
-        LocalDateTime.parse(dateTime).atZone(edmonton).toInstant().toEpochMilli()
+        LocalDateTime.parse(dateTime).atZone(denver).toInstant().toEpochMilli()
 
     protected val nowMs = local("2026-10-05T14:00:00")
 
@@ -77,9 +77,9 @@ abstract class TripEditingFixture {
     protected suspend fun save(stored: Trip, change: (TripForm) -> TripForm): SaveResult =
         editing.save(
             stored,
-            change(formFor(stored, edmonton, DistanceUnit.KILOMETRES)),
+            change(formFor(stored, denver, DistanceUnit.KILOMETRES)),
             schedule,
-            edmonton,
+            denver,
         )
 
     /** A missed trip, filled in properly. */

@@ -23,7 +23,7 @@ import org.junit.Test
  * what "Mark as sent" would do.
  */
 class ReportTilesTest {
-    private val zone = ZoneId.of("America/Edmonton")
+    private val zone = ZoneId.of("America/Denver")
 
     /** The reminder's day is the 1st unless a test says otherwise, so October's has come. */
     private val today = LocalDate.of(2026, 10, 7)

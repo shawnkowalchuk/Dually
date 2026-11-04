@@ -45,7 +45,7 @@ private const val TRUCK = "AA:BB:CC:DD:EE:FF"
 // library; there is no stable equivalent.
 @OptIn(ExperimentalCoroutinesApi::class)
 class OdometerViewModelTest {
-    private val zone = ZoneId.of("America/Edmonton")
+    private val zone = ZoneId.of("America/Denver")
     private val file = FakeSettingsFile()
     private val settings = SettingsStore(file)
     private val trips = FakeTripDao()

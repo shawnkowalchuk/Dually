@@ -28,7 +28,7 @@ internal const val DAY_MS = 24 * 60 * MINUTE_MS
 internal val ENTERED = VehicleReport(entered = true, ageMs = 4_000)
 internal val LEFT = VehicleReport(entered = false, ageMs = 4_000)
 
-internal val EDMONTON: ZoneId = ZoneId.of("America/Edmonton")
+internal val DENVER: ZoneId = ZoneId.of("America/Denver")
 
 /** Wall-clock milliseconds of a date and time in Edmonton. October 2026: the 6th is a Tuesday. */
 internal fun at(day: Int, hour: Int, minute: Int, second: Int = 0): Long = LocalDateTime.of(
@@ -38,7 +38,7 @@ internal fun at(day: Int, hour: Int, minute: Int, second: Int = 0): Long = Local
     hour,
     minute,
     second,
-).atZone(EDMONTON).toInstant().toEpochMilli()
+).atZone(DENVER).toInstant().toEpochMilli()
 
 /** The Tuesday morning inside the work hours that the tests of the rules start from. */
 internal val TUESDAY_MORNING = at(day = 6, hour = 10, minute = 15)
@@ -58,7 +58,7 @@ internal fun drivingMoment(
     lastAlertAtMs: Long? = null,
     nowMs: Long = TUESDAY_MORNING,
     schedule: WorkSchedule = DEFAULT_WORK_SCHEDULE,
-    zone: ZoneId = EDMONTON,
+    zone: ZoneId = DENVER,
     truckNoLongerWatched: Boolean = false,
 ) = DrivingMoment(
     reports = reports,

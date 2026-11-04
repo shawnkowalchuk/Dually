@@ -28,10 +28,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-private val EDMONTON: ZoneId = ZoneId.of("America/Edmonton")
+private val DENVER: ZoneId = ZoneId.of("America/Denver")
 
 private fun at(year: Int, day: Int = 6, hour: Int = 7): Long =
-    LocalDateTime.of(year, 10, day, hour, 42).atZone(EDMONTON).toInstant().toEpochMilli()
+    LocalDateTime.of(year, 10, day, hour, 42).atZone(DENVER).toInstant().toEpochMilli()
 
 private const val OWN_CHIRP = "file:/data/trip_sound/own_trip_start_sound_1"
 private const val OWN_CHIME = "file:/data/trip_sound/own_trip_start_sound_2"
@@ -231,7 +231,7 @@ class TripStartSoundsTest {
         eventLog = EventLogRepository(log),
         crashFileStore = CrashFileStore(folder.root),
         clock = { nowMs },
-        zone = { EDMONTON },
+        zone = { DENVER },
     )
 
     private suspend fun moment(
@@ -267,7 +267,7 @@ class TripStartSoundsTest {
                 eventLog = EventLogRepository(log),
                 crashFileStore = CrashFileStore(folder.root),
                 clock = { nowMs },
-                zone = { EDMONTON },
+                zone = { DENVER },
             )
 
         moment(party, listOf(TripSound.DRIVING_OFF), tripStarts = false)

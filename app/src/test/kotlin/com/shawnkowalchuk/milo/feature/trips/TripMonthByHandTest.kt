@@ -32,10 +32,10 @@ import org.junit.Test
  * wall-clock times on Monday 5 October 2026.
  */
 class TripMonthByHandTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
 
     private fun local(dateTime: String): Long =
-        LocalDateTime.parse(dateTime).atZone(edmonton).toInstant().toEpochMilli()
+        LocalDateTime.parse(dateTime).atZone(denver).toInstant().toEpochMilli()
 
     /** A trip MilO recorded: 12 km of Business in the morning. */
     private val recorded =
@@ -58,7 +58,7 @@ class TripMonthByHandTest {
 
     /** The same trip after its distance was put right by hand: 15 km. */
     private val edited =
-        editedTrip(recorded, TripEdit(distanceMetres = 15_000.0), DEFAULT_WORK_SCHEDULE, edmonton)
+        editedTrip(recorded, TripEdit(distanceMetres = 15_000.0), DEFAULT_WORK_SCHEDULE, denver)
             .copy(id = 2)
 
     /** A trip MilO missed, typed in: 20 km of Business before noon, with one address. */
@@ -73,13 +73,13 @@ class TripMonthByHandTest {
                 category = null,
             ),
             DEFAULT_WORK_SCHEDULE,
-            edmonton,
+            denver,
         ).copy(id = 3)
 
     private fun summary(trips: List<Trip>, showLeftOut: Boolean = false): MonthSummary =
         monthSummary(
             trips = trips,
-            zone = edmonton,
+            zone = denver,
             showLeftOut = showLeftOut,
             liveTripId = null,
             liveDistanceMetres = null,
@@ -138,7 +138,7 @@ class TripMonthByHandTest {
                 recorded,
                 TripEdit(category = TripCategory.PERSONAL),
                 DEFAULT_WORK_SCHEDULE,
-                edmonton,
+                denver,
             )
 
         assertNull(line(marked).mark)
@@ -154,7 +154,7 @@ class TripMonthByHandTest {
 
     @Test
     fun `a trip that was restored to its recorded values carries no mark`() {
-        val restored = checkNotNull(restoredTrip(edited, DEFAULT_WORK_SCHEDULE, edmonton))
+        val restored = checkNotNull(restoredTrip(edited, DEFAULT_WORK_SCHEDULE, denver))
 
         assertNull(line(restored).mark)
         assertEquals(12_000.0, line(restored).distanceMetres)
@@ -199,12 +199,12 @@ class TripMonthByHandTest {
         // Added for 29 September while October was on screen.
         assertEquals(
             YearMonth.of(2026, 9),
-            monthOfSavedTrip(local("2026-09-29T09:00:00"), edmonton, current = october),
+            monthOfSavedTrip(local("2026-09-29T09:00:00"), denver, current = october),
         )
         // Added for today while September was being looked at.
         assertEquals(
             october,
-            monthOfSavedTrip(local("2026-10-05T09:00:00"), edmonton, current = october),
+            monthOfSavedTrip(local("2026-10-05T09:00:00"), denver, current = october),
         )
     }
 
@@ -215,7 +215,7 @@ class TripMonthByHandTest {
 
         assertEquals(
             YearMonth.of(2026, 9),
-            monthOfSavedTrip(lastEvening, edmonton, current = YearMonth.of(2026, 10)),
+            monthOfSavedTrip(lastEvening, denver, current = YearMonth.of(2026, 10)),
         )
         assertEquals(
             YearMonth.of(2026, 10),
@@ -228,7 +228,7 @@ class TripMonthByHandTest {
         // The form refuses a trip in the future, so this takes a clock that was set back.
         assertEquals(
             YearMonth.of(2026, 10),
-            monthOfSavedTrip(local("2026-11-02T09:00:00"), edmonton, YearMonth.of(2026, 10)),
+            monthOfSavedTrip(local("2026-11-02T09:00:00"), denver, YearMonth.of(2026, 10)),
         )
     }
 }

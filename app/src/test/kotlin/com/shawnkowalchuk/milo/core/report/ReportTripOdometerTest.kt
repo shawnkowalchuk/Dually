@@ -13,9 +13,9 @@ import org.junit.Test
 /** Each trip's odometer on the report (2026-10-16): how it is worked out, printed and exported. */
 class ReportTripOdometerTest {
     private val reading =
-        OdometerReading(edmonton("2026-10-01T07:00"), 120_000, DistanceUnit.KILOMETRES)
-    private val first = DrivenTrip(edmonton("2026-10-01T08:00"), 12_000.0)
-    private val second = DrivenTrip(edmonton("2026-10-01T10:00"), 8_400.0)
+        OdometerReading(denver("2026-10-01T07:00"), 120_000, DistanceUnit.KILOMETRES)
+    private val first = DrivenTrip(denver("2026-10-01T08:00"), 12_000.0)
+    private val second = DrivenTrip(denver("2026-10-01T10:00"), 8_400.0)
 
     @Test
     fun `a trip's start holds the trips before it, and its end the trip itself`() {
@@ -23,7 +23,7 @@ class ReportTripOdometerTest {
             odometerOverTrip(
                 second.startedAtMs,
                 second.startedAtMs + 1_200_000,
-                EDMONTON,
+                DENVER,
                 listOf(reading),
                 listOf(first, second),
                 DistanceUnit.KILOMETRES,
@@ -40,7 +40,7 @@ class ReportTripOdometerTest {
             odometerOverTrip(
                 first.startedAtMs,
                 first.startedAtMs + 60_000,
-                EDMONTON,
+                DENVER,
                 emptyList(),
                 listOf(first),
                 DistanceUnit.KILOMETRES,
@@ -54,7 +54,7 @@ class ReportTripOdometerTest {
             odometerOverTrip(
                 first.startedAtMs,
                 first.startedAtMs + 1_200_000,
-                EDMONTON,
+                DENVER,
                 listOf(reading),
                 listOf(first),
                 DistanceUnit.KILOMETRES,

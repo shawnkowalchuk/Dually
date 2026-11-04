@@ -25,7 +25,7 @@ private const val VAN = "22:33:44:55:66:77"
  * odometers themselves are `vehicleOdometers`'; this is about what Home adds to them.
  */
 class HomeOdometerTest {
-    private val zone = ZoneId.of("America/Edmonton")
+    private val zone = ZoneId.of("America/Denver")
     private val readAt = 1_791_000_000_000L
     private val now = readAt + 3 * 24 * 3_600_000L
     private val tripStartedAt = now - 600_000

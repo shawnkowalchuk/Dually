@@ -25,7 +25,7 @@ import org.junit.Test
 
 /** Which GPS points a sent month's cleanup deletes, and what it leaves alone. */
 class PointCleanupTest {
-    private val zone = ZoneId.of("America/Edmonton")
+    private val zone = ZoneId.of("America/Denver")
     private val september = YearMonth.of(2026, 9)
     private val october = YearMonth.of(2026, 10)
 

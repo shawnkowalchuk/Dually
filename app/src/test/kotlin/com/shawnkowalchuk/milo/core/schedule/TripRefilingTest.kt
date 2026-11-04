@@ -9,16 +9,16 @@ private const val MINUTE_MS = 60_000L
 
 /**
  * What an edit of a trip's times does to its Business or Personal and to "ran past schedule".
- * Times are Edmonton wall-clock times; 5 October 2026 is a Monday, and the default schedule is
+ * Times are Denver wall-clock times; 5 October 2026 is a Monday, and the default schedule is
  * Monday to Friday, 08:00 to 16:30.
  */
 class TripRefilingTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
     private val business = TripFiled(TripCategory.BUSINESS, false, ranPastSchedule = false)
     private val personal = TripFiled(TripCategory.PERSONAL, false, ranPastSchedule = false)
 
     private fun local(dateTime: String): Long =
-        LocalDateTime.parse(dateTime).atZone(edmonton).toInstant().toEpochMilli()
+        LocalDateTime.parse(dateTime).atZone(denver).toInstant().toEpochMilli()
 
     /** Files a trip again. By default nothing about it changed and nothing was chosen. */
     private fun refile(
@@ -37,7 +37,7 @@ class TripRefilingTest {
         endedAtMs = end?.let(::local) ?: (local(start) + 20 * MINUTE_MS),
         chosen = chosen,
         schedule = schedule,
-        zone = edmonton,
+        zone = denver,
     )
 
     // ---- Business or Personal -------------------------------------------------------------------

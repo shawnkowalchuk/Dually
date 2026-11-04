@@ -109,15 +109,15 @@ class MileageReportTest {
                 trip(monday, "08:14"),
             )
 
-        val days = reportDays(trips, EDMONTON)
+        val days = reportDays(trips, DENVER)
 
         assertEquals(listOf(monday, tuesday), days.map { it.date })
         assertEquals(
-            listOf(edmonton("2026-10-05T08:14"), edmonton("2026-10-05T15:30")),
+            listOf(denver("2026-10-05T08:14"), denver("2026-10-05T15:30")),
             days[0].trips.map { it.startedAtMs },
         )
         assertEquals(
-            listOf(edmonton("2026-10-06T08:00"), edmonton("2026-10-06T13:00")),
+            listOf(denver("2026-10-06T08:00"), denver("2026-10-06T13:00")),
             days[1].trips.map { it.startedAtMs },
         )
     }
@@ -126,7 +126,7 @@ class MileageReportTest {
     fun `a trip past midnight is listed once, under the day it started`() {
         val late = trip(monday, "23:40", minutes = 45)
 
-        val days = reportDays(listOf(late), EDMONTON)
+        val days = reportDays(listOf(late), DENVER)
 
         assertEquals(listOf(monday), days.map { it.date })
         assertEquals(1, days.single().trips.size)
@@ -137,7 +137,7 @@ class MileageReportTest {
         // 23:30 on Monday in Edmonton is already Tuesday in UTC and in Toronto.
         val late = trip(monday, "23:30")
 
-        assertEquals(monday, reportDays(listOf(late), EDMONTON).single().date)
+        assertEquals(monday, reportDays(listOf(late), DENVER).single().date)
         assertEquals(tuesday, reportDays(listOf(late), ZoneId.of("UTC")).single().date)
         assertEquals(tuesday, reportDays(listOf(late), ZoneId.of("America/Toronto")).single().date)
     }

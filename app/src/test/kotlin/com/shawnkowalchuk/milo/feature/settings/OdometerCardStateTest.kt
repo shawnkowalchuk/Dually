@@ -16,7 +16,7 @@ import org.junit.Test
 
 /** What the odometer's tile shows: the last reading plus the truck trips since. */
 class OdometerCardStateTest {
-    private val zone = ZoneId.of("America/Edmonton")
+    private val zone = ZoneId.of("America/Denver")
     private val readAt = 1_791_000_000_000L
     private val now = readAt + 3 * 24 * 3_600_000L
 

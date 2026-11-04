@@ -18,13 +18,13 @@ class EventLogFilesTest {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
     private val dao = FakeEventLogDao()
     private val log = EventLogRepository(dao)
     private val folder: File get() = File(temporaryFolder.root, "reports")
 
     private fun at(text: String): Long =
-        LocalDateTime.parse(text).atZone(edmonton).toInstant().toEpochMilli()
+        LocalDateTime.parse(text).atZone(denver).toInstant().toEpochMilli()
 
     // ---- The text ---------------------------------------------------------------------------------
 
@@ -32,7 +32,7 @@ class EventLogFilesTest {
     fun `the file is named by the day it was written, in the phone's time zone`() {
         assertEquals(
             "Dually-log-2026-10-06.txt",
-            eventLogFileName(at("2026-10-06T23:59"), edmonton),
+            eventLogFileName(at("2026-10-06T23:59"), denver),
         )
         // The same moment is already the 7th in UTC.
         val utc = ZoneId.of("UTC")
@@ -41,11 +41,11 @@ class EventLogFilesTest {
 
     @Test
     fun `the first lines say what the file is, when it was written and how its times are meant`() {
-        val header = eventLogFileHeader(at("2026-10-06T14:32:10"), edmonton, lineCount = 1_234)
+        val header = eventLogFileHeader(at("2026-10-06T14:32:10"), denver, lineCount = 1_234)
 
         assertEquals(
             "Dually event log\n" +
-                "Written 2026-10-06 14:32:10. Every time is in America/Edmonton.\n" +
+                "Written 2026-10-06 14:32:10. Every time is in America/Denver.\n" +
                 "1234 lines, oldest first. Dually removes lines older than 90 days, except the " +
                 "newest 1000.\n\n",
             header,
@@ -71,13 +71,13 @@ class EventLogFilesTest {
                 "2026-10-05 08:14:04  TRIGGER  Bluetooth receiver: ACL connected for the truck\n" +
                 "    before: idle\n" +
                 "    after: recording\n",
-            eventLogFileLines(entries, edmonton),
+            eventLogFileLines(entries, denver),
         )
     }
 
     @Test
     fun `no entries are no text`() {
-        assertEquals("", eventLogFileLines(emptyList(), edmonton))
+        assertEquals("", eventLogFileLines(emptyList(), denver))
     }
 
     // ---- The file ---------------------------------------------------------------------------------
@@ -93,7 +93,7 @@ class EventLogFilesTest {
             val file = EventLogFiles(
                 log,
                 ReportFileStore(folder),
-            ).write(at("2026-10-06T14:32"), edmonton)
+            ).write(at("2026-10-06T14:32"), denver)
 
             assertEquals(File(folder, "Dually-log-2026-10-06.txt"), file)
             val lines = file.readLines()
@@ -112,11 +112,11 @@ class EventLogFilesTest {
     fun `a second file on the same day takes the place of the first`() = runBlocking {
         val files = EventLogFiles(log, ReportFileStore(folder))
         log.add(at("2026-10-06T08:00"), EventCategory.TRIP, "the first line")
-        val first = files.write(at("2026-10-06T09:00"), edmonton)
+        val first = files.write(at("2026-10-06T09:00"), denver)
         assertFalse(first.readText().contains("the second line"))
 
         log.add(at("2026-10-06T10:00"), EventCategory.TRIP, "the second line")
-        val second = files.write(at("2026-10-06T11:00"), edmonton)
+        val second = files.write(at("2026-10-06T11:00"), denver)
 
         assertEquals(first, second)
         assertTrue(second.readText().contains("the second line"))
@@ -130,7 +130,7 @@ class EventLogFilesTest {
         val file = EventLogFiles(
             log,
             ReportFileStore(folder),
-        ).write(at("2026-10-06T09:00"), edmonton)
+        ).write(at("2026-10-06T09:00"), denver)
 
         assertTrue(file.readText(Charsets.UTF_8).contains("from \"Église, Montréal\" → none"))
     }
