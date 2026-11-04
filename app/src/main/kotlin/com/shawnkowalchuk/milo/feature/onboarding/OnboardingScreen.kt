@@ -16,7 +16,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.designsystem.component.AppHeader
-import com.shawnkowalchuk.milo.core.designsystem.component.PinnedButtonColumn
+import com.shawnkowalchuk.milo.core.designsystem.component.PinnedHeaderColumn
 import com.shawnkowalchuk.milo.core.designsystem.component.PrimaryButton
 import com.shawnkowalchuk.milo.core.designsystem.component.Tile
 import com.shawnkowalchuk.milo.core.designsystem.component.TileKind
@@ -40,7 +40,7 @@ private val SECTIONS =
  * One page that scrolls (Shawn's choice of "One page, then OK" over a few pages), made of the
  * app's own parts: the top line with the app's mark, the one accent tile of the screen with
  * what MilO is, a plain tile for each thing to know, and the main button, which since 2026-10-09
- * stays at the bottom of the screen while the tiles scroll ([PinnedButtonColumn]).
+ * stays at the bottom of the screen while the tiles scroll ([PinnedHeaderColumn]).
  *
  * Back leaves MilO, as from Home; the page shows again at the next start until OK is pressed.
  *
@@ -59,7 +59,8 @@ fun OnboardingScreen(onOk: () -> Unit, modifier: Modifier = Modifier) {
 private fun OnboardingContent(onOk: () -> Unit) {
     val spacing = MiloTheme.spacing
     // OK stays at the bottom of the screen while the tiles scroll (2026-10-09).
-    PinnedButtonColumn(
+    PinnedHeaderColumn(
+        header = { AppHeader(title = stringResource(R.string.onboarding_title)) },
         button = {
             PrimaryButton(
                 text = stringResource(R.string.action_ok),
@@ -69,10 +70,6 @@ private fun OnboardingContent(onOk: () -> Unit) {
         },
         modifier = Modifier.fillMaxSize().safeDrawingPadding(),
     ) {
-        AppHeader(
-            title = stringResource(R.string.onboarding_title),
-            modifier = Modifier.padding(bottom = spacing.extraSmall),
-        )
         Tile(
             modifier = Modifier.fillMaxWidth(),
             kind = TileKind.ACCENT,

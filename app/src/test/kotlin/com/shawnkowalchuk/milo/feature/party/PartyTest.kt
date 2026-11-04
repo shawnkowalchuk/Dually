@@ -9,10 +9,10 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-private val EDMONTON: ZoneId = ZoneId.of("America/Edmonton")
+private val DENVER: ZoneId = ZoneId.of("America/Denver")
 
 private fun at(hour: Int, minute: Int = 0, day: Int = 6): Long =
-    LocalDateTime.of(2027, 10, day, hour, minute).atZone(EDMONTON).toInstant().toEpochMilli()
+    LocalDateTime.of(2027, 10, day, hour, minute).atZone(DENVER).toInstant().toEpochMilli()
 
 /** Which party plays over Home, by the facts of one moment. */
 class PartyTest {
@@ -22,7 +22,7 @@ class PartyTest {
     private val owedAndWatching =
         PartyFacts(read = true, owedSinceMs = tripStarted, watching = true)
 
-    private fun PartyFacts.at(nowMs: Long) = settled(nowMs, EDMONTON)
+    private fun PartyFacts.at(nowMs: Long) = settled(nowMs, DENVER)
 
     @Test
     fun `nothing owed and nothing asked for, nothing plays`() {

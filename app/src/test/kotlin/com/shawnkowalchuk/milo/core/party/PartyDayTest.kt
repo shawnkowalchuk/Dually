@@ -9,7 +9,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-private val EDMONTON: ZoneId = ZoneId.of("America/Edmonton")
+private val DENVER: ZoneId = ZoneId.of("America/Denver")
 private val TORONTO: ZoneId = ZoneId.of("America/Toronto")
 
 /** A moment by the clock on the wall in [zone]. */
@@ -19,7 +19,7 @@ private fun at(
     day: Int,
     hour: Int = 12,
     minute: Int = 0,
-    zone: ZoneId = EDMONTON,
+    zone: ZoneId = DENVER,
 ): Long = LocalDateTime.of(year, month, day, hour, minute).atZone(zone).toInstant().toEpochMilli()
 
 /** A trip MilO recorded itself, never edited. */
@@ -38,7 +38,7 @@ class PartyDayTest {
     @Test
     fun `with no trip stored there is no first trip, and no party on any day`() {
         assertNull(firstRecordedStartMs(emptyList()))
-        assertFalse(isPartyDay(null, at(2027, 10, 6), EDMONTON))
+        assertFalse(isPartyDay(null, at(2027, 10, 6), DENVER))
     }
 
     @Test
@@ -70,40 +70,40 @@ class PartyDayTest {
 
     @Test
     fun `the day is the first trip's day of the year, one year on`() {
-        assertTrue(isPartyDay(firstTrip, at(2027, 10, 6), EDMONTON))
-        assertFalse(isPartyDay(firstTrip, at(2027, 10, 5), EDMONTON))
-        assertFalse(isPartyDay(firstTrip, at(2027, 10, 7), EDMONTON))
-        assertFalse(isPartyDay(firstTrip, at(2027, 9, 6), EDMONTON))
-        assertFalse(isPartyDay(firstTrip, at(2027, 11, 6), EDMONTON))
+        assertTrue(isPartyDay(firstTrip, at(2027, 10, 6), DENVER))
+        assertFalse(isPartyDay(firstTrip, at(2027, 10, 5), DENVER))
+        assertFalse(isPartyDay(firstTrip, at(2027, 10, 7), DENVER))
+        assertFalse(isPartyDay(firstTrip, at(2027, 9, 6), DENVER))
+        assertFalse(isPartyDay(firstTrip, at(2027, 11, 6), DENVER))
     }
 
     @Test
     fun `it comes every year on that date`() {
         for (year in 2027..2040) {
-            assertTrue("$year", isPartyDay(firstTrip, at(year, 10, 6), EDMONTON))
+            assertTrue("$year", isPartyDay(firstTrip, at(year, 10, 6), DENVER))
         }
     }
 
     @Test
     fun `the first trip's own day is not the day, and no day before it is`() {
-        assertFalse(isPartyDay(firstTrip, firstTrip, EDMONTON))
-        assertFalse(isPartyDay(firstTrip, at(2026, 10, 6, hour = 23), EDMONTON))
+        assertFalse(isPartyDay(firstTrip, firstTrip, DENVER))
+        assertFalse(isPartyDay(firstTrip, at(2026, 10, 6, hour = 23), DENVER))
         // A phone whose date was really set back to before MilO's first trip.
-        assertFalse(isPartyDay(firstTrip, at(2025, 10, 6), EDMONTON))
-        assertFalse(isPartyDay(firstTrip, at(2020, 10, 6), EDMONTON))
+        assertFalse(isPartyDay(firstTrip, at(2025, 10, 6), DENVER))
+        assertFalse(isPartyDay(firstTrip, at(2020, 10, 6), DENVER))
     }
 
     @Test
     fun `it is the whole day, from midnight to midnight, whatever time the first trip started`() {
-        assertFalse(isPartyDay(firstTrip, at(2027, 10, 6) - 12 * 3_600_000L - 1, EDMONTON))
-        assertTrue(isPartyDay(firstTrip, at(2027, 10, 6, hour = 0), EDMONTON))
-        assertTrue(isPartyDay(firstTrip, at(2027, 10, 6, hour = 23, minute = 59), EDMONTON))
-        assertTrue(isPartyDay(firstTrip, at(2027, 10, 7, hour = 0) - 1, EDMONTON))
-        assertFalse(isPartyDay(firstTrip, at(2027, 10, 7, hour = 0), EDMONTON))
+        assertFalse(isPartyDay(firstTrip, at(2027, 10, 6) - 12 * 3_600_000L - 1, DENVER))
+        assertTrue(isPartyDay(firstTrip, at(2027, 10, 6, hour = 0), DENVER))
+        assertTrue(isPartyDay(firstTrip, at(2027, 10, 6, hour = 23, minute = 59), DENVER))
+        assertTrue(isPartyDay(firstTrip, at(2027, 10, 7, hour = 0) - 1, DENVER))
+        assertFalse(isPartyDay(firstTrip, at(2027, 10, 7, hour = 0), DENVER))
         // A first trip a minute before midnight has the same day.
         val lateTrip = at(2026, 10, 6, hour = 23, minute = 59)
-        assertTrue(isPartyDay(lateTrip, at(2027, 10, 6, hour = 0), EDMONTON))
-        assertFalse(isPartyDay(lateTrip, at(2027, 10, 7, hour = 0), EDMONTON))
+        assertTrue(isPartyDay(lateTrip, at(2027, 10, 6, hour = 0), DENVER))
+        assertFalse(isPartyDay(lateTrip, at(2027, 10, 7, hour = 0), DENVER))
     }
 
     // ---- 29 February -----------------------------------------------------------------------------
@@ -112,28 +112,28 @@ class PartyDayTest {
     fun `a first trip on 29 February is celebrated on 28 February in a year without one`() {
         val leapDay = at(2028, 2, 29)
 
-        assertTrue(isPartyDay(leapDay, at(2029, 2, 28), EDMONTON))
-        assertFalse(isPartyDay(leapDay, at(2029, 3, 1), EDMONTON))
-        assertFalse(isPartyDay(leapDay, at(2029, 2, 27), EDMONTON))
-        assertTrue(isPartyDay(leapDay, at(2030, 2, 28), EDMONTON))
-        assertTrue(isPartyDay(leapDay, at(2031, 2, 28), EDMONTON))
+        assertTrue(isPartyDay(leapDay, at(2029, 2, 28), DENVER))
+        assertFalse(isPartyDay(leapDay, at(2029, 3, 1), DENVER))
+        assertFalse(isPartyDay(leapDay, at(2029, 2, 27), DENVER))
+        assertTrue(isPartyDay(leapDay, at(2030, 2, 28), DENVER))
+        assertTrue(isPartyDay(leapDay, at(2031, 2, 28), DENVER))
     }
 
     @Test
     fun `and on 29 February, not the 28th, in a year that has one`() {
         val leapDay = at(2028, 2, 29)
 
-        assertTrue(isPartyDay(leapDay, at(2032, 2, 29), EDMONTON))
-        assertFalse(isPartyDay(leapDay, at(2032, 2, 28), EDMONTON))
-        assertFalse(isPartyDay(leapDay, at(2032, 3, 1), EDMONTON))
+        assertTrue(isPartyDay(leapDay, at(2032, 2, 29), DENVER))
+        assertFalse(isPartyDay(leapDay, at(2032, 2, 28), DENVER))
+        assertFalse(isPartyDay(leapDay, at(2032, 3, 1), DENVER))
     }
 
     @Test
     fun `a first trip on 28 February is not moved by a leap year`() {
         val lastOfFebruary = at(2027, 2, 28)
 
-        assertTrue(isPartyDay(lastOfFebruary, at(2028, 2, 28), EDMONTON))
-        assertFalse(isPartyDay(lastOfFebruary, at(2028, 2, 29), EDMONTON))
+        assertTrue(isPartyDay(lastOfFebruary, at(2028, 2, 28), DENVER))
+        assertFalse(isPartyDay(lastOfFebruary, at(2028, 2, 29), DENVER))
     }
 
     // ---- The zone the phone is in ----------------------------------------------------------------
@@ -144,8 +144,8 @@ class PartyDayTest {
         val lateInEdmonton = at(2026, 10, 6, hour = 23, minute = 30)
 
         // At home the party is on the 6th.
-        assertTrue(isPartyDay(lateInEdmonton, at(2027, 10, 6), EDMONTON))
-        assertFalse(isPartyDay(lateInEdmonton, at(2027, 10, 7), EDMONTON))
+        assertTrue(isPartyDay(lateInEdmonton, at(2027, 10, 6), DENVER))
+        assertFalse(isPartyDay(lateInEdmonton, at(2027, 10, 7), DENVER))
         // With the phone in Toronto that trip is shown under the 7th, and so is the party.
         assertFalse(isPartyDay(lateInEdmonton, at(2027, 10, 6, zone = TORONTO), TORONTO))
         assertTrue(isPartyDay(lateInEdmonton, at(2027, 10, 7, zone = TORONTO), TORONTO))
@@ -156,11 +156,11 @@ class PartyDayTest {
         // 23:00 on the 6th in Edmonton is already the 7th in Toronto.
         val lateEvening = at(2027, 10, 6, hour = 23)
 
-        assertTrue(isPartyDay(firstTrip, lateEvening, EDMONTON))
+        assertTrue(isPartyDay(firstTrip, lateEvening, DENVER))
         assertFalse(isPartyDay(firstTrip, lateEvening, TORONTO))
         // 23:30 on the 5th in Edmonton: not yet the day there, but 01:30 on the 6th in Toronto.
         val eveBefore = at(2027, 10, 5, hour = 23, minute = 30)
-        assertFalse(isPartyDay(firstTrip, eveBefore, EDMONTON))
+        assertFalse(isPartyDay(firstTrip, eveBefore, DENVER))
         assertTrue(isPartyDay(firstTrip, eveBefore, TORONTO))
     }
 
@@ -170,12 +170,12 @@ class PartyDayTest {
         val spring = at(2026, 3, 14)
         val autumn = at(2026, 11, 7)
 
-        assertTrue(isPartyDay(spring, at(2027, 3, 14, hour = 0), EDMONTON))
-        assertTrue(isPartyDay(spring, at(2027, 3, 14, hour = 23, minute = 59), EDMONTON))
-        assertFalse(isPartyDay(spring, at(2027, 3, 15, hour = 0), EDMONTON))
-        assertTrue(isPartyDay(autumn, at(2027, 11, 7, hour = 0), EDMONTON))
-        assertTrue(isPartyDay(autumn, at(2027, 11, 7, hour = 23, minute = 59), EDMONTON))
-        assertFalse(isPartyDay(autumn, at(2027, 11, 8, hour = 0), EDMONTON))
+        assertTrue(isPartyDay(spring, at(2027, 3, 14, hour = 0), DENVER))
+        assertTrue(isPartyDay(spring, at(2027, 3, 14, hour = 23, minute = 59), DENVER))
+        assertFalse(isPartyDay(spring, at(2027, 3, 15, hour = 0), DENVER))
+        assertTrue(isPartyDay(autumn, at(2027, 11, 7, hour = 0), DENVER))
+        assertTrue(isPartyDay(autumn, at(2027, 11, 7, hour = 23, minute = 59), DENVER))
+        assertFalse(isPartyDay(autumn, at(2027, 11, 8, hour = 0), DENVER))
     }
 
     // ---- A date with no trip: the days that make up for it -----------------------------------
@@ -184,12 +184,12 @@ class PartyDayTest {
     fun `with no party held, each of the seven days after the date makes up for it`() {
         val date = LocalDate.of(2027, 10, 6)
 
-        assertEquals(date, partyDateToday(firstTrip, null, at(2027, 10, 6), EDMONTON))
+        assertEquals(date, partyDateToday(firstTrip, null, at(2027, 10, 6), DENVER))
         for (day in 7..13) {
-            assertEquals(date, partyDateToday(firstTrip, null, at(2027, 10, day), EDMONTON))
+            assertEquals(date, partyDateToday(firstTrip, null, at(2027, 10, day), DENVER))
         }
-        assertNull(partyDateToday(firstTrip, null, at(2027, 10, 14, hour = 0), EDMONTON))
-        assertNull(partyDateToday(firstTrip, null, at(2027, 10, 5), EDMONTON))
+        assertNull(partyDateToday(firstTrip, null, at(2027, 10, 14, hour = 0), DENVER))
+        assertNull(partyDateToday(firstTrip, null, at(2027, 10, 5), DENVER))
     }
 
     @Test
@@ -198,17 +198,17 @@ class PartyDayTest {
         val heldOnThe9th = LocalDate.of(2027, 10, 9)
 
         // Held on the date: no make-up.
-        assertNull(partyDateToday(firstTrip, date, at(2027, 10, 7), EDMONTON))
+        assertNull(partyDateToday(firstTrip, date, at(2027, 10, 7), DENVER))
         // Held on the 9th: the rest of the 9th is the party's, the 10th is not.
-        assertEquals(date, partyDateToday(firstTrip, heldOnThe9th, at(2027, 10, 9, 20), EDMONTON))
-        assertNull(partyDateToday(firstTrip, heldOnThe9th, at(2027, 10, 10), EDMONTON))
+        assertEquals(date, partyDateToday(firstTrip, heldOnThe9th, at(2027, 10, 9, 20), DENVER))
+        assertNull(partyDateToday(firstTrip, heldOnThe9th, at(2027, 10, 10), DENVER))
         // Last year's party does not count against this year's.
         assertEquals(
             LocalDate.of(2028, 10, 6),
-            partyDateToday(firstTrip, LocalDate.of(2027, 10, 6), at(2028, 10, 8), EDMONTON),
+            partyDateToday(firstTrip, LocalDate.of(2027, 10, 6), at(2028, 10, 8), DENVER),
         )
         // The date itself has its party whatever is stored.
-        assertEquals(date, partyDateToday(firstTrip, heldOnThe9th, at(2027, 10, 6), EDMONTON))
+        assertEquals(date, partyDateToday(firstTrip, heldOnThe9th, at(2027, 10, 6), DENVER))
     }
 
     @Test
@@ -217,14 +217,14 @@ class PartyDayTest {
 
         assertEquals(
             LocalDate.of(2027, 12, 29),
-            partyDateToday(lateDecember, null, at(2028, 1, 2), EDMONTON),
+            partyDateToday(lateDecember, null, at(2028, 1, 2), DENVER),
         )
-        assertNull(partyDateToday(lateDecember, null, at(2028, 1, 6), EDMONTON))
+        assertNull(partyDateToday(lateDecember, null, at(2028, 1, 6), DENVER))
     }
 
     @Test
     fun `nothing is made up in the first year, or with no trip recorded`() {
-        assertNull(partyDateToday(firstTrip, null, at(2026, 10, 7), EDMONTON))
-        assertNull(partyDateToday(null, null, at(2027, 10, 7), EDMONTON))
+        assertNull(partyDateToday(firstTrip, null, at(2026, 10, 7), DENVER))
+        assertNull(partyDateToday(null, null, at(2027, 10, 7), DENVER))
     }
 }

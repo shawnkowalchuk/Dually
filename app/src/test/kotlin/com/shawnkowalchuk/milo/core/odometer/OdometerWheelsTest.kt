@@ -14,7 +14,7 @@ import org.junit.Test
  * Every figure here is made by [odometerAt] itself, so a change of its rule shows in this test.
  */
 class OdometerWheelsTest {
-    private val zone: ZoneId = ZoneId.of("America/Edmonton")
+    private val zone: ZoneId = ZoneId.of("America/Denver")
     private val km = DistanceUnit.KILOMETRES
     private val mi = DistanceUnit.MILES
 

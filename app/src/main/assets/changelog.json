@@ -2,8 +2,28 @@
   "releases": [
     {
       "version": "0.3.2",
-      "date": null,
+      "date": "2026-11-03",
       "changes": [
+        {
+          "kind": "new",
+          "title": "Delete a trip while it records, or from its edit screen",
+          "body": "A trip that started in the wrong vehicle can go straight away: press the bin on Home's trip card, and Dually ends and deletes it, and starts no new trip until that vehicle disconnects. The edit screen has Delete trip too. Deleted trips can still be restored on Trips."
+        },
+        {
+          "kind": "new",
+          "title": "Asked when a work trip runs past your hours",
+          "body": "When a trip saved as Business is still going as your work hours end, a quiet notification asks whether to mark it Personal, with Mark Personal and Keep Business buttons. If you don't answer, it asks again when the trip ends. It shows on Android Auto too."
+        },
+        {
+          "kind": "improved",
+          "title": "The top line stays put",
+          "body": "On every screen, the top line with the app's name, the date, the title and the back arrow now stays at the top while you scroll."
+        },
+        {
+          "kind": "fixed",
+          "title": "Trips start even when the phone thinks the truck never left",
+          "body": "Some phones keep showing the truck's Bluetooth as connected after it has gone. Dually then waits beside the truck, and now two more things tell it you are driving: Android Auto connecting, and the phone leaving the spot where the truck was parked. The trip starts from the parked spot. Walking away does nothing."
+        },
         {
           "kind": "new",
           "title": "Service reminders",

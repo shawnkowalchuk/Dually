@@ -57,6 +57,7 @@ internal class TripServiceLink {
         val watching: Boolean,
         val checkAtMs: Long?,
         val gps: ParkedGps,
+        val fence: FencePlace?,
     )
 
     /** The service is in the foreground and is handing a trigger over. */
@@ -77,14 +78,15 @@ internal class TripServiceLink {
      * or stop.
      *
      * @param parkedGps beside the parked truck, how GPS is read (`ParkedGps`).
+     * @param fence beside the parked truck, where it stands, for the geofence around it.
      */
-    fun sync(state: TripState?, rules: TripRules, parkedGps: ParkedGps) {
+    fun sync(state: TripState?, rules: TripRules, parkedGps: ParkedGps, fence: FencePlace? = null) {
         val service = recorder
         if (service == null || state == null) return
         if (state.wantsService) {
             val watching = state.trip == null
             val checkAtMs = TripStateMachine.nextCheckAtMs(state, rules)
-            val orders = Orders(service, watching, checkAtMs, parkedGps)
+            val orders = Orders(service, watching, checkAtMs, parkedGps, fence.takeIf { watching })
             val sounds =
                 listOfNotNull(
                     TripSound.CONNECT.takeIf { tripJustStarted },
@@ -93,7 +95,7 @@ internal class TripServiceLink {
             // Told again only when something changed: this runs after every GPS fix.
             if (sounds.isNotEmpty() || orders != lastOrders) {
                 if (watching) {
-                    service.watchParked(orders.checkAtMs, orders.gps)
+                    service.watchParked(orders.checkAtMs, orders.gps, orders.fence)
                 } else {
                     val tripStarts = tripJustStarted || (drivingOff && drivingOffStartsTrip)
                     service.record(orders.checkAtMs, sounds, tripStarts)

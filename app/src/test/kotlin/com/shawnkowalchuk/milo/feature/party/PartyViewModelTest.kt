@@ -32,10 +32,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-private val EDMONTON: ZoneId = ZoneId.of("America/Edmonton")
+private val DENVER: ZoneId = ZoneId.of("America/Denver")
 
 private fun at(year: Int, hour: Int, minute: Int = 0, day: Int = 6): Long =
-    LocalDateTime.of(year, 10, day, hour, minute).atZone(EDMONTON).toInstant().toEpochMilli()
+    LocalDateTime.of(year, 10, day, hour, minute).atZone(DENVER).toInstant().toEpochMilli()
 
 /**
  * The party over Home through its ViewModel, on a settings file held in memory and the real
@@ -66,7 +66,7 @@ class PartyViewModelTest {
         eventLog = EventLogRepository(log),
         crashFileStore = CrashFileStore(folder.root),
         clock = { nowMs },
-        zone = { EDMONTON },
+        zone = { DENVER },
     )
 
     /** MilO's screens as a fresh start builds them, the settings read. Home is not in front yet. */
@@ -79,7 +79,7 @@ class PartyViewModelTest {
                 playPop = { pops++ },
                 eventLog = EventLogRepository(log),
                 clock = { nowMs },
-                zone = { EDMONTON },
+                zone = { DENVER },
             )
         runCurrent()
         return viewModel
@@ -125,7 +125,7 @@ class PartyViewModelTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val viewModel =
             PartyViewModel(partyOn(), { heard }, { pops++ }, EventLogRepository(log), { nowMs }) {
-                EDMONTON
+                DENVER
             }
 
         assertNull(viewModel.hasTheScreen.value)

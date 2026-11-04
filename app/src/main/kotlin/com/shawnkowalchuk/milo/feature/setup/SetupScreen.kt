@@ -25,7 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.designsystem.component.AppHeader
 import com.shawnkowalchuk.milo.core.designsystem.component.CameToFrontEffect
-import com.shawnkowalchuk.milo.core.designsystem.component.PinnedButtonColumn
+import com.shawnkowalchuk.milo.core.designsystem.component.PinnedHeaderColumn
 import com.shawnkowalchuk.milo.core.designsystem.component.PrimaryButton
 import com.shawnkowalchuk.milo.core.designsystem.component.Tile
 import com.shawnkowalchuk.milo.core.designsystem.component.TileColumn
@@ -153,7 +153,7 @@ fun SetupLinkTile(viewModel: SetupViewModel, onOpenSetup: () -> Unit) {
  * read for the first time, one tile says so in place of all of them.
  *
  * During the first start, "Done, go to Settings" stays at the bottom of the screen while the
- * rows scroll (2026-10-09, [PinnedButtonColumn]).
+ * rows scroll (2026-10-09, [PinnedHeaderColumn]).
  */
 @Composable
 private fun SetupContent(
@@ -164,13 +164,10 @@ private fun SetupContent(
     onDone: (() -> Unit)? = null,
 ) {
     val spacing = MiloTheme.spacing
+    val header: @Composable () -> Unit = {
+        AppHeader(title = stringResource(R.string.setup_title), onBack = onBack)
+    }
     val tiles: @Composable ColumnScope.() -> Unit = {
-        AppHeader(
-            title = stringResource(R.string.setup_title),
-            onBack = onBack,
-            // As on Home: with the gap between two tiles, the design's 16 under the top line.
-            modifier = Modifier.padding(bottom = spacing.extraSmall),
-        )
         if (rows == null) {
             Tile(modifier = Modifier.fillMaxWidth()) { Note(R.string.setup_reading) }
         } else {
@@ -178,17 +175,10 @@ private fun SetupContent(
         }
     }
     if (onDone == null) {
-        TileColumn(
-            modifier =
-                modifier
-                    .fillMaxSize()
-                    // Large font settings or a small window must scroll rather than cut off.
-                    .verticalScroll(rememberScrollState())
-                    .padding(vertical = spacing.small),
-            content = tiles,
-        )
+        PinnedHeaderColumn(header = header, modifier = modifier.fillMaxSize(), content = tiles)
     } else {
-        PinnedButtonColumn(
+        PinnedHeaderColumn(
+            header = header,
             button = {
                 PrimaryButton(
                     text = stringResource(R.string.setup_done),

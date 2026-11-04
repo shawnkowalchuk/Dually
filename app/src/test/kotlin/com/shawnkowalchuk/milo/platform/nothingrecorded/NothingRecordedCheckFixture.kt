@@ -37,7 +37,7 @@ abstract class NothingRecordedCheckFixture {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
-    protected val zone: ZoneId = ZoneId.of("America/Edmonton")
+    protected val zone: ZoneId = ZoneId.of("America/Denver")
     protected val tuesday: LocalDate = LocalDate.of(2026, 10, 6)
     protected val log = FakeEventLogDao()
     protected val settingsFile = FakeSettingsFile()

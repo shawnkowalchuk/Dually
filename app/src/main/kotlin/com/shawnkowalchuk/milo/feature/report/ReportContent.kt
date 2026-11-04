@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.designsystem.component.AppHeader
+import com.shawnkowalchuk.milo.core.designsystem.component.PinnedHeaderColumn
 import com.shawnkowalchuk.milo.core.designsystem.component.RowStatus
 import com.shawnkowalchuk.milo.core.designsystem.component.StatusRow
 import com.shawnkowalchuk.milo.core.designsystem.component.Tile
@@ -56,28 +57,23 @@ internal fun ReportContent(
     val locale = LocalConfiguration.current.locales[0]
     val spacing = MiloTheme.spacing
     val ready = state as? ReportUiState.Ready
-    TileColumn(
-        modifier =
-            modifier
-                .fillMaxSize()
-                // Large font settings or a small window must scroll rather than cut content off.
-                .verticalScroll(rememberScrollState())
-                .padding(vertical = spacing.small),
+    PinnedHeaderColumn(
+        header = {
+            AppHeader(
+                // The month by its name, as drawn; a date range has no short name of its own.
+                title =
+                    if (ready != null && ready.choice.kind == PeriodKind.MONTH) {
+                        val month = formatMonthName(ready.choice.month, locale)
+                        stringResource(R.string.report_month_title, month)
+                    } else {
+                        stringResource(R.string.report_title)
+                    },
+                onBack = onBack,
+                line = stringResource(R.string.report_for_accountant),
+            )
+        },
+        modifier = modifier.fillMaxSize(),
     ) {
-        AppHeader(
-            // The month by its name, as drawn; a date range has no short name of its own.
-            title =
-                if (ready != null && ready.choice.kind == PeriodKind.MONTH) {
-                    val month = formatMonthName(ready.choice.month, locale)
-                    stringResource(R.string.report_month_title, month)
-                } else {
-                    stringResource(R.string.report_title)
-                },
-            onBack = onBack,
-            line = stringResource(R.string.report_for_accountant),
-            // As on Home: with the gap between two tiles, the design's 16 under the top line.
-            modifier = Modifier.padding(bottom = spacing.extraSmall),
-        )
         when (state) {
             ReportUiState.Reading ->
                 Tile(modifier = Modifier.fillMaxWidth()) {

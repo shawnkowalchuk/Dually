@@ -12,7 +12,7 @@ import java.util.Locale
 // English, and a way to measure text without Android.
 
 /** Seven hours behind UTC in winter, six in summer; the clocks change on 8 March and 1 November. */
-internal val EDMONTON: ZoneId = ZoneId.of("America/Edmonton")
+internal val DENVER: ZoneId = ZoneId.of("America/Denver")
 
 internal val OCTOBER: YearMonth = YearMonth.of(2026, 10)
 
@@ -20,8 +20,8 @@ internal val OCTOBER: YearMonth = YearMonth.of(2026, 10)
 internal fun utc(text: String): Long = Instant.parse(text).toEpochMilli()
 
 /** A moment written as Edmonton wall-clock time: "2026-10-05T08:14". */
-internal fun edmonton(text: String): Long =
-    LocalDateTime.parse(text).atZone(EDMONTON).toInstant().toEpochMilli()
+internal fun denver(text: String): Long =
+    LocalDateTime.parse(text).atZone(DENVER).toInstant().toEpochMilli()
 
 /** The words the string resources hold, written out here so the tests need no Android. */
 internal val WORDS =
@@ -83,7 +83,7 @@ internal fun trip(
     to: String? = "48 Main St, Leduc",
     mark: ReportMark? = null,
 ): ReportTrip {
-    val startedAtMs = edmonton("${day}T$start")
+    val startedAtMs = denver("${day}T$start")
     return ReportTrip(startedAtMs, startedAtMs + minutes * 60_000, from, to, metres, mark)
 }
 
@@ -103,8 +103,8 @@ internal fun report(
     period = period,
     generatedOn = LocalDate.of(2026, 10, 6),
     revision = revision,
-    zone = EDMONTON,
+    zone = DENVER,
     unit = unit,
-    days = reportDays(trips, EDMONTON),
+    days = reportDays(trips, DENVER),
     personal = personal,
 )

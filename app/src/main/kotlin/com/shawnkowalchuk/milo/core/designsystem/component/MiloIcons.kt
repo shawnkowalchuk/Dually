@@ -51,6 +51,11 @@ private const val SERVICE_PATH =
     "M14.7,6.3a1,1 0 0 0 0,1.4l1.6,1.6a1,1 0 0 0 1.4,0l3.77,-3.77a6,6 0 0 1 -7.94,7.94" +
         "l-6.91,6.91a2.12,2.12 0 0 1 -3,-3l6.91,-6.91a6,6 0 0 1 7.94,-7.94l-3.76,3.76z"
 
+// A bin with a lid and two lines: delete the trip being recorded (since 2026-11-03).
+private const val TRASH_PATH =
+    "M3,6h18M8,6V4a2,2 0 0 1 2,-2h4a2,2 0 0 1 2,2v2" +
+        "M19,6l-1,14a2,2 0 0 1 -2,2H8a2,2 0 0 1 -2,-2L5,6M10,11v6M14,11v6"
+
 private const val BACK_PATH = "M15,18l-6,-6l6,-6"
 
 // Three sliders: the Settings screen, a button of the bottom bar. Each line is broken by its knob.
@@ -100,6 +105,7 @@ object MiloIcons {
     val Trips: ImageVector by lazy { lineIcon(name = "Trips", pathData = TRIPS_PATH) }
     val Log: ImageVector by lazy { lineIcon(name = "Log", pathData = LOG_PATH) }
     val Service: ImageVector by lazy { lineIcon(name = "Service", pathData = SERVICE_PATH) }
+    val Trash: ImageVector by lazy { lineIcon(name = "Trash", pathData = TRASH_PATH) }
     val Back: ImageVector by lazy {
         lineIcon(name = "Back", pathData = BACK_PATH, lineWidth = BOLD_LINE_WIDTH)
     }

@@ -137,6 +137,9 @@ internal class TripLedger(
     /** One fix while waiting beside the parked truck. See [TripParking.onFix]. */
     fun watchFix(fix: RawPoint): Long? = parking.onFix(fix)
 
+    /** Where the truck is parked while MilO waits beside it, for the geofence, or null. */
+    val parkedPlace: FencePlace? get() = parking.place
+
     /**
      * Records the paired vehicle the open trip is in (since 2026-10-08), once.
      *

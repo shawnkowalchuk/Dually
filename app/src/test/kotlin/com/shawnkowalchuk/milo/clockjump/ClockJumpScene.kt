@@ -12,6 +12,7 @@ import com.shawnkowalchuk.milo.data.point.RawPointRepository
 import com.shawnkowalchuk.milo.data.settings.TripSound
 import com.shawnkowalchuk.milo.data.trip.TripRepository
 import com.shawnkowalchuk.milo.platform.trip.FakeWorld
+import com.shawnkowalchuk.milo.platform.trip.FencePlace
 import com.shawnkowalchuk.milo.platform.trip.FixRate
 import com.shawnkowalchuk.milo.platform.trip.RecordingStarter
 import com.shawnkowalchuk.milo.platform.trip.StartFailure
@@ -128,7 +129,7 @@ class ClockJumpService(private val clock: () -> Long, elapsedNow: () -> Long) :
         gpsTimer.set(null)
     }
 
-    override fun watchParked(checkAtMs: Long?, gps: ParkedGps) {
+    override fun watchParked(checkAtMs: Long?, gps: ParkedGps, fence: FencePlace?) {
         recording = false
         watchingParked = true
         checkTimer.set(checkAtMs)

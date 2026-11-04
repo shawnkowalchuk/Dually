@@ -6,7 +6,10 @@ import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.trip.ByHandOutcome
+import com.shawnkowalchuk.milo.data.trip.ON_EDIT
 import com.shawnkowalchuk.milo.data.trip.Trip
+import com.shawnkowalchuk.milo.data.trip.TripCorrection
+import com.shawnkowalchuk.milo.data.trip.TripCorrections
 import com.shawnkowalchuk.milo.data.trip.TripRepository
 import com.shawnkowalchuk.milo.data.trip.addedText
 import com.shawnkowalchuk.milo.data.trip.canBeEdited
@@ -111,6 +114,14 @@ class TripEditing(
             true
         }
     }
+
+    /**
+     * Deletes the trip from the edit screen (since 2026-11-03; Shawn: "there is not option to
+     * delete a trip in the edit screen"), as on Trips: out of the list and the totals, and
+     * Restore on Trips puts it back.
+     */
+    suspend fun delete(tripId: Long): Boolean =
+        TripCorrections(trips, eventLog, clock).apply(tripId, TripCorrection.DELETE, ON_EDIT)
 
     /**
      * Puts back what MilO recorded of an edited trip.

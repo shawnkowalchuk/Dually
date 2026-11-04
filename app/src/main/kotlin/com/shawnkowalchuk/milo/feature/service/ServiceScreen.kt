@@ -27,11 +27,11 @@ import com.shawnkowalchuk.milo.core.designsystem.component.AppHeader
 import com.shawnkowalchuk.milo.core.designsystem.component.ConfirmDialog
 import com.shawnkowalchuk.milo.core.designsystem.component.GroupLabel
 import com.shawnkowalchuk.milo.core.designsystem.component.LocalMiloClock
+import com.shawnkowalchuk.milo.core.designsystem.component.PinnedHeaderColumn
 import com.shawnkowalchuk.milo.core.designsystem.component.RowStatus
 import com.shawnkowalchuk.milo.core.designsystem.component.StatusRow
 import com.shawnkowalchuk.milo.core.designsystem.component.Tile
 import com.shawnkowalchuk.milo.core.designsystem.component.TileButton
-import com.shawnkowalchuk.milo.core.designsystem.component.TileColumn
 import com.shawnkowalchuk.milo.core.designsystem.component.TileLabel
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
 import com.shawnkowalchuk.milo.core.service.DueState
@@ -54,22 +54,16 @@ fun ServiceScreen(viewModel: ServiceViewModel, modifier: Modifier = Modifier) {
     var doneId by rememberSaveable { mutableStateOf<Long?>(null) }
     var deletingId by rememberSaveable { mutableStateOf<Long?>(null) }
     val spacing = MiloTheme.spacing
-    TileColumn(
-        modifier =
-            modifier.fillMaxSize().verticalScroll(
-                rememberScrollState(),
-            ).padding(vertical = spacing.small),
+    PinnedHeaderColumn(
+        header = { AppHeader(title = stringResource(R.string.service_title)) },
+        modifier = modifier.fillMaxSize(),
     ) {
-        AppHeader(
-            title = stringResource(R.string.service_title),
-            modifier = Modifier.padding(bottom = spacing.extraSmall),
-        )
         val vehicles = state.vehicles
         if (vehicles == null) {
             Tile(modifier = Modifier.fillMaxWidth()) {
                 Quiet(stringResource(R.string.service_reading))
             }
-            return@TileColumn
+            return@PinnedHeaderColumn
         }
         for (vehicle in vehicles) {
             vehicle.name?.let { GroupLabel(it) }

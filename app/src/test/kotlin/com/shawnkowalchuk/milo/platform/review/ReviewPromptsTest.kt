@@ -33,10 +33,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-private val EDMONTON: ZoneId = ZoneId.of("America/Edmonton")
+private val DENVER: ZoneId = ZoneId.of("America/Denver")
 
 private fun at(day: Int, hour: Int, minute: Int = 0): Long =
-    LocalDateTime.of(2026, 10, day, hour, minute).atZone(EDMONTON).toInstant().toEpochMilli()
+    LocalDateTime.of(2026, 10, day, hour, minute).atZone(DENVER).toInstant().toEpochMilli()
 
 private val FIVE = setOf(ReviewMoment.FIVE_TRIPS)
 private val HUNDRED = setOf(ReviewMoment.HUNDRED_TRIPS)
@@ -97,7 +97,7 @@ class ReviewPromptsTest {
         eventLog = EventLogRepository(eventLog),
         crashFileStore = CrashFileStore(folder.root),
         clock = { nowMs },
-        zone = { EDMONTON },
+        zone = { DENVER },
     )
 
     private suspend fun ReviewPrompts.askAt(occasion: ReviewOccasion) =

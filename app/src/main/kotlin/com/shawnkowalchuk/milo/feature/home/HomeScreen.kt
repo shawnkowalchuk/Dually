@@ -28,6 +28,7 @@ import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.designsystem.component.AppHeader
 import com.shawnkowalchuk.milo.core.designsystem.component.AttentionTile
 import com.shawnkowalchuk.milo.core.designsystem.component.CameToFrontEffect
+import com.shawnkowalchuk.milo.core.designsystem.component.PinnedHeaderColumn
 import com.shawnkowalchuk.milo.core.designsystem.component.RowStatus
 import com.shawnkowalchuk.milo.core.designsystem.component.SectionCard
 import com.shawnkowalchuk.milo.core.designsystem.component.StatusRow
@@ -61,6 +62,7 @@ internal class HomeActions(
     val todayRows: TodayRowActions = TodayRowActions(onMark = { _, _ -> }, onEdit = {}),
     val onRunningCategory: (tripId: Long, category: TripCategory) -> Unit = { _, _ -> },
     val onServiceDone: (itemId: Long) -> Unit = {},
+    val onDeleteRunning: (tripId: Long) -> Unit = {},
 )
 
 /**
@@ -131,6 +133,7 @@ fun HomeScreen(
                 todayRows = TodayRowActions(onMark = viewModel::onMark, onEdit = onEditTrip),
                 onRunningCategory = viewModel::onRunningCategory,
                 onServiceDone = viewModel::onServiceDone,
+                onDeleteRunning = viewModel::onDeleteRunning,
             ),
         modifier = modifier,
     )
@@ -162,23 +165,18 @@ internal fun HomeContent(shown: HomeShown, actions: HomeActions, modifier: Modif
     val locale = LocalConfiguration.current.locales[0]
     val format =
         HomeFormat(locale, ZoneId.systemDefault(), rememberTwentyFourHourClock(), ui.unit)
-    TileColumn(
-        modifier =
-            modifier
-                .fillMaxSize()
-                // Large font settings or a small window must scroll rather than cut content off.
-                .verticalScroll(rememberScrollState())
-                .padding(vertical = MiloTheme.spacing.small),
+    PinnedHeaderColumn(
+        header = {
+            AppHeader(
+                title = stringResource(R.string.nav_home),
+                // With the gap between two tiles, and the room the top line keeps free for a
+                // finger, the design's 16 under the top line.
+                // Nothing at the end of Home's top line (2026-10-09): the bar says it is Home.
+                titleShown = false,
+            )
+        },
+        modifier = modifier.fillMaxSize(),
     ) {
-        AppHeader(
-            title = stringResource(R.string.nav_home),
-            // With the gap between two tiles, and the room the top line keeps free for a
-            // finger, the design's 16 under the top line.
-            modifier = Modifier.padding(bottom = MiloTheme.spacing.extraSmall),
-            // Nothing at the end of Home's top line (2026-10-09): the bar says it is Home.
-            titleShown = false,
-        )
-
         // The two things that can stop a trip from being recorded come before everything else.
         if (ui.setupNeedsAttention) SetupWarningTile(actions.onOpenSetup)
         // The Setup warning already sends to the checklist, which names Battery Saver too.

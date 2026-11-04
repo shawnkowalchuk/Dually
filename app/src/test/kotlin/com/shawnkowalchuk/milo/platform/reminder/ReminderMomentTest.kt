@@ -21,11 +21,11 @@ import org.junit.Test
  * and the home screen's tile both go through this one function.
  */
 class ReminderMomentTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
     private val september = YearMonth.of(2026, 9)
 
     private fun at(text: String): Long =
-        LocalDateTime.parse(text).atZone(edmonton).toInstant().toEpochMilli()
+        LocalDateTime.parse(text).atZone(denver).toInstant().toEpochMilli()
 
     private val now = at("2026-10-06T10:00")
 
@@ -58,12 +58,12 @@ class ReminderMomentTest {
         val shown = ReminderShown(september, LocalDate.of(2026, 10, 5))
         val stored = MiloSettings(reminderEnabled = false, reminderDay = 12, reminderShown = shown)
 
-        val moment = reminderMoment(now, edmonton, stored, emptyList(), emptyList())
+        val moment = reminderMoment(now, denver, stored, emptyList(), emptyList())
 
         assertEquals(
             ReminderMoment(
                 nowMs = now,
-                zone = edmonton,
+                zone = denver,
                 enabled = false,
                 reminderDay = 12,
                 submitted = false,
@@ -89,7 +89,7 @@ class ReminderMomentTest {
                 trip("2026-08-31T23:59"),
             )
 
-        val moment = reminderMoment(now, edmonton, MiloSettings(), emptyList(), trips)
+        val moment = reminderMoment(now, denver, MiloSettings(), emptyList(), trips)
 
         assertEquals(2, moment.businessTrips)
     }
@@ -101,7 +101,7 @@ class ReminderMomentTest {
         val august = ReportPeriod.Month(YearMonth.of(2026, 8))
 
         fun submitted(report: SentReport): Boolean =
-            reminderMoment(now, edmonton, MiloSettings(), listOf(report), emptyList()).submitted
+            reminderMoment(now, denver, MiloSettings(), listOf(report), emptyList()).submitted
 
         assertEquals(true, submitted(sent(month, SentReportKind.MONTH)))
         assertEquals(false, submitted(sent(sameDays, SentReportKind.RANGE)))

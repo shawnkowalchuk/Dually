@@ -41,7 +41,7 @@ class TripEditingTest : TripEditingFixture() {
             listOf(
                 "Trip 1: changed by hand on the edit screen: end 2026-10-05 08:39:02 → " +
                     "2026-10-05 08:45:00; distance 12345 m → 13000 m (times in " +
-                    "America/Edmonton). It is now marked as edited, and \"Restore recorded " +
+                    "America/Denver). It is now marked as edited, and \"Restore recorded " +
                     "values\" puts back what Dually recorded",
             ),
             logged(EventCategory.TRIP),
@@ -165,11 +165,11 @@ class TripEditingTest : TripEditingFixture() {
         val lookingUp = recorded().copy(startAddress = null, endAddress = null)
         trips.rows[0] = lookingUp
         // The form is opened, and then the lookup's answer arrives.
-        val form = formFor(lookingUp, edmonton, DistanceUnit.KILOMETRES)
+        val form = formFor(lookingUp, denver, DistanceUnit.KILOMETRES)
         trips.rows[0] = lookingUp.copy(startAddress = "12 Shop Rd, Edmonton")
 
         // Saved with the from field as it was opened: empty, and untouched.
-        editing.save(lookingUp, form.copy(kilometres = "13"), schedule, edmonton)
+        editing.save(lookingUp, form.copy(kilometres = "13"), schedule, denver)
 
         assertEquals("12 Shop Rd, Edmonton", row(lookingUp.id).startAddress)
         assertFalse(row(lookingUp.id).startAddressByHand)

@@ -17,7 +17,7 @@ import org.junit.Test
 
 /** Which report a press would make, from what is stored at that moment. */
 class ReportSourcesTest {
-    private val zone = ZoneId.of("America/Edmonton")
+    private val zone = ZoneId.of("America/Denver")
     private val today = LocalDate.of(2026, 10, 6)
     private val september = YearMonth.of(2026, 9)
     private val trip = ReportTrip(1_789_000_000_000, 1_789_001_200_000, "Shop", "Site 7", 12_340.0)

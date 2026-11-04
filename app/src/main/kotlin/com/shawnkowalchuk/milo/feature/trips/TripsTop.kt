@@ -35,8 +35,8 @@ internal fun monthName(state: TripsUiState): String =
     formatMonthAndYear(state.month, LocalConfiguration.current.locales[0])
 
 /**
- * What stands above the trips, whatever the month holds: the top line every screen has, the
- * month with the two steps, the month's tile, "Personal" and "Add missed trip", the warning
+ * What stands above the trips, whatever the month holds (the top line every screen has is pinned
+ * above the list since 2026-10-19, `TripsScreen`): the month with the two steps, the month's tile, "Personal" and "Add missed trip", the warning
  * for a month that changed after its report was sent, the switch, and that a change to a trip
  * was not made.
  */
@@ -44,13 +44,6 @@ internal fun LazyListScope.monthItems(state: TripsUiState, actions: TripsActions
     val summary = state.summary
     // Each part has a name of its own, so that the list keeps its place when one of the
     // parts that are not always there (the warning, the failed change) comes or goes.
-    item(key = "title") {
-        AppHeader(
-            title = stringResource(R.string.trips_title),
-            // As on Home: with the gap between two tiles, the design's 16 under the top line.
-            modifier = Modifier.padding(bottom = MiloTheme.spacing.extraSmall),
-        )
-    }
     item(key = "steps") {
         SteppedTitle(
             text = monthName(state),

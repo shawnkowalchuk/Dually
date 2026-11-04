@@ -25,7 +25,11 @@ class TripCorrections(
      * state the change starts from, for example still being recorded) or storage failed; the
      * event log says which, and nothing was changed.
      */
-    suspend fun apply(tripId: Long, correction: TripCorrection): Boolean {
+    suspend fun apply(
+        tripId: Long,
+        correction: TripCorrection,
+        where: String = ON_TRIPS,
+    ): Boolean {
         val outcome =
             try {
                 trips.correct(tripId, correction)
@@ -39,7 +43,11 @@ class TripCorrections(
                 eventLog.add(clock(), EventCategory.ERROR, what, failure.stackTraceToString())
                 return false
             }
-        eventLog.add(clock(), EventCategory.TRIP, correctionText(tripId, correction, outcome))
+        eventLog.add(
+            clock(),
+            EventCategory.TRIP,
+            correctionText(tripId, correction, outcome, where),
+        )
         return outcome is TripCorrectionOutcome.Done
     }
 
@@ -69,26 +77,32 @@ class TripCorrections(
     }
 }
 
+/** Where a change by hand was made, for its line in the event log. */
+const val ON_TRIPS = "on the Trips screen"
+const val ON_HOME = "with the bin on Home, while it was recorded"
+const val ON_EDIT = "on the edit screen"
+
 /** The event-log line for one change by hand: what was asked for and what became of it. */
 internal fun correctionText(
     tripId: Long,
     correction: TripCorrection,
     outcome: TripCorrectionOutcome,
+    where: String = ON_TRIPS,
 ): String = when (outcome) {
     is TripCorrectionOutcome.Done -> {
         val metres = outcome.trip.distanceMetres.roundToInt()
         val was = correction.from.inWords()
         when (correction) {
             TripCorrection.DELETE ->
-                "Trip $tripId: deleted on the Trips screen ($metres m, was $was). It is no " +
+                "Trip $tripId: deleted $where ($metres m, was $was). It is no " +
                     "longer counted. Its row and its GPS points are kept, and Restore puts it back"
 
             TripCorrection.RESTORE ->
-                "Trip $tripId: restored on the Trips screen ($metres m, was $was). It is " +
+                "Trip $tripId: restored $where ($metres m, was $was). It is " +
                     "counted again"
 
             TripCorrection.COUNT ->
-                "Trip $tripId: counted on the Trips screen ($metres m, was $was). It is now a " +
+                "Trip $tripId: counted $where ($metres m, was $was). It is now a " +
                     "finished trip"
         }
     }

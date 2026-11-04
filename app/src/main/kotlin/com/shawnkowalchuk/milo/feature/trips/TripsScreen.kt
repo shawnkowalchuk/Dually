@@ -1,6 +1,7 @@
 package com.shawnkowalchuk.milo.feature.trips
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,7 +18,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.shawnkowalchuk.milo.R
+import com.shawnkowalchuk.milo.core.designsystem.component.AppHeader
 import com.shawnkowalchuk.milo.core.designsystem.component.CameToFrontEffect
+import com.shawnkowalchuk.milo.core.designsystem.component.PinnedHeader
 import com.shawnkowalchuk.milo.core.designsystem.component.rememberTwentyFourHourClock
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
 import com.shawnkowalchuk.milo.core.schedule.TripCategory
@@ -200,39 +203,44 @@ internal fun TripsContent(
 
     // A lazy list: a busy month has a day's tile for every day, and only the ones on screen
     // are laid out. The tiles stand as on Home: 18 dp from the sides, 10 dp apart.
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        state = list,
-        contentPadding =
-            PaddingValues(
-                horizontal = MiloTheme.spacing.gutter,
-                vertical = MiloTheme.spacing.small,
-            ),
-        verticalArrangement = Arrangement.spacedBy(MiloTheme.spacing.tileGap),
-    ) {
-        monthItems(state, actions)
-        if (summary == null) {
-            item(key = "reading") { SentenceTile(stringResource(R.string.trips_reading)) }
-            return@LazyColumn
-        }
-        summary.inProgress?.let { trip ->
-            item(key = "in progress") {
-                InProgressTile(trip, state.zone, twentyFourHour, state.unit)
+    Column(modifier = modifier.fillMaxSize()) {
+        // The top line stays while the month scrolls (since 2026-10-19).
+        PinnedHeader { AppHeader(title = stringResource(R.string.trips_title)) }
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            state = list,
+            contentPadding =
+                PaddingValues(
+                    start = MiloTheme.spacing.gutter,
+                    end = MiloTheme.spacing.gutter,
+                    bottom = MiloTheme.spacing.small,
+                ),
+            verticalArrangement = Arrangement.spacedBy(MiloTheme.spacing.tileGap),
+        ) {
+            monthItems(state, actions)
+            if (summary == null) {
+                item(key = "reading") { SentenceTile(stringResource(R.string.trips_reading)) }
+                return@LazyColumn
             }
-        }
-        summary.emptyWordsRes()?.let { words ->
-            item(key = "nothing to list") {
-                SentenceTile(stringResource(words, monthName(state)))
+            summary.inProgress?.let { trip ->
+                item(key = "in progress") {
+                    InProgressTile(trip, state.zone, twentyFourHour, state.unit)
+                }
             }
-        }
-        items(items = summary.days, key = { it.date.toEpochDay() }) { day ->
-            DayTile(
-                day = day,
-                today = state.today,
-                expanded = day.date in state.openDays,
-                onToggle = { onToggleDay(day) },
-                context = rows,
-            )
+            summary.emptyWordsRes()?.let { words ->
+                item(key = "nothing to list") {
+                    SentenceTile(stringResource(words, monthName(state)))
+                }
+            }
+            items(items = summary.days, key = { it.date.toEpochDay() }) { day ->
+                DayTile(
+                    day = day,
+                    today = state.today,
+                    expanded = day.date in state.openDays,
+                    onToggle = { onToggleDay(day) },
+                    context = rows,
+                )
+            }
         }
     }
 

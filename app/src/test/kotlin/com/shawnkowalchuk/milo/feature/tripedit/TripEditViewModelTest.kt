@@ -50,7 +50,7 @@ class TripEditViewModelTest : TripEditingFixture() {
                 unit = MutableStateFlow(inMemory),
                 lookUpAddresses = {},
                 clock = { nowMs },
-                zone = { edmonton },
+                zone = { denver },
             )
         // The state is worked out only while something watches it, as the screen does.
         backgroundScope.launch { viewModel.state.collect {} }

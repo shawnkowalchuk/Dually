@@ -24,6 +24,44 @@
 
 ## Log
 
+### 2026-11-03
+
+**`[CHANGE]` Delete the trip being recorded from Home, and any trip from its edit screen (version 0.3.2)**
+Shawn: "i was driving in a work vehcle and my phone started tracking that trip we need a way to delete the trip from the started trip screen. maybe a trash icon that gives a prompt to delete trip ... also there is not option to delete a trip in the edit screen". His answer: after the delete, "Stop until the vehicle disconnects". A bin beside End on Home's recording card, asked first; it ends the trip as End does (the hold-off) and, once the controller has caught up, deletes it as Trips does (`TripCorrections`, log "deleted with the bin on Home, while it was recorded"). The edit screen has Delete trip, asked first, then back to Trips. A deleted trip can be restored on Trips. Tests: `TripControllerDeleteRunningTest`, `TripDeletingTest`. Not yet on the phone: DT-1 to DT-3.
+- **Added to the design system:** `MiloIcons.Trash`.
+
+**`[CHANGE]` Dependency: androidx.fragment 1.9.1, named to lift the 1.1.0 Play services brings**
+Play Console's release dashboard for 0.3.1 flagged "androidx.fragment:fragment 1.1.0 ... outdated". Dually uses no fragment itself; `play-services-location` 21.4.0 (its newest) pulls 1.1.0 through `play-services-base`. Declaring the current stable `androidx.fragment` 1.9.1 makes Gradle take it. Shawn asked for this, the delete buttons and the work-hours question to go into 0.3.2 rather than 0.3.3 ("i wanted ths all built and added to this version"), which keeps build 5: Play had not received it yet.
+- **Not changed, on purpose:** the dashboard's edge-to-edge notes name calls made inside AndroidX's own edge-to-edge helper for old Android versions; and the portrait lock matters only on tablets and foldables, where Android 16 ignores it.
+
+**`[CHANGE]` The work-hours question: a Business trip that runs past the hours is asked about (version 0.3.2)**
+Shawn: "when im driving and for example it goes from personal hours to work hours and vise versa to get a notifcation ... for example im leaving work early by 5 minutes that trip should be flagged and i should get some prompt if i want to change to personal". His answers: both a heads-up and the question at the end; Business trips past the hours only; buttons on the notification; phone and Android Auto. APP_ENCYCLOPEDIA, Schedule and Business/Personal, 12; WH-1 to WH-4.
+- **`[DECISION]` The answers go through what exists:** during the drive the running trip's choice (Home's button), after it a marking by hand (Trips). No new way to file a trip.
+- **`[DECISION]` The heads-up is silent;** the question at the end has a sound, as the driver is parked by then.
+- **Moved:** the end of a day's hours as a point in time out of `classifyTrip` into `workHoursEndMs`, which both use.
+- **Not proven:** the car's screen showing the notification (`CarAppExtender`) has been seen nowhere; Android Auto may show it only in its notification list.
+
+### 2026-10-19
+
+**`[CHANGE]` The top line stays put on every screen (version 0.3.2)**
+Shawn: "the top header should be pinned on all screens". One component for it, `PinnedHeaderColumn` (with `PinnedHeader` for the two lazy lists), used by all 13 screens with a top line; it took the place of `PinnedButtonColumn`, whose pinned main button it keeps as an option, so there are not two such frames. APP_ENCYCLOPEDIA, Design system; PH-1 to PH-3.
+- **Decided for Shawn, not asked:** the spacing stays as it was; the tiles scroll under the header and are cut off at it, with nothing drawn behind it.
+- **Not seen drawn:** the emulator in use belonged to another session (running another app; one tap and a scroll reached it before that was noticed), and a second one cannot start beside it. Seen in the tests only so far.
+
+**`[FINDING]` The phone's Bluetooth reported the truck connected for three days after it had gone**
+Shawn: "Today morning and after work my app was connected to my truck, but the trips didn't automatically start." Read from the phone over adb (Dually's Log through the screen, `dumpsys`): Dually had waited beside a "connected and parked" truck since Saturday 12:17; every reading since Friday said the hands-free profile listed the truck, at midnight and all day at work; Android's own A2DP history had no change since Friday 12:38, with media "playing" for three days. Turning the phone's Bluetooth off and on cleared it: the phone then tried and failed to reach "Baby Mav", and Dually ended the wait. **A fault of the phone's Bluetooth (POCO X5 Pro, HyperOS), not of Dually or the truck.** Dually's waiting rules did what they say; their only way out of GPS-off, the motion sensor, reported Sunday's two drives and neither of Monday's. Shawn thinks the app he used before had trouble for the same reason. Nothing in 0.3.2 touched trip starting.
+- The "connected" sound he heard as the truck started was not Dually's (its Log records every sound: none that morning): the truck's own, or Android Auto's.
+- **`[FINDING]` adb was held by a second server** (`adb -L tcp:5038`, running since 2026-10-05); `adb -P 5038` reaches the phone when the default server lists nothing.
+
+**`[CHANGE]` Two safety nets beside the parked truck: Android Auto, and a geofence (version 0.3.2)**
+His answer: "yes go ahead with both safety nets". Android Auto connecting, and the phone leaving a geofence of 150 m around the parked place, now turn GPS on for ten minutes as the motion sensor's report does; the fixes decide, at 15 km/h. APP_ENCYCLOPEDIA, Truck pairing and trip detection, rule 15; SN-1 to SN-3. Unit tests; not yet run on the phone.
+- **`[DECISION]` Signs, not starts.** Neither can tell the truck from another vehicle, so neither opens a trip; they only give the existing rule its fixes. Walking away costs ten minutes of GPS. **Known limit, told to Shawn:** while the phone's Bluetooth is stuck, a ride over 15 km/h in another vehicle is recorded as a truck trip.
+- **Decided for Shawn, not asked:** 150 m (Google's advised minimum); the geofence lives with the trip service's watch and expires with the wait's 72 hours.
+- **Reviewed** by a second pass: no way found for either sign to open a trip or change the trip rules' state. Taken from it: the geofence reports a phone already outside at once (`INITIAL_TRIGGER_EXIT`), or one put up again after a restart mid-drive would never fire. **`[DEBT]`** a geofence that fails to go up is logged and not retried until the next wait. Android Auto's sign also counts a report taken for a stuck value, on purpose: ten minutes of GPS.
+
+**`[FINDING]` The signing keystore was in the Mac's Trash**
+A build stopped: `~/keys/milo.jks` was missing. The whole `keys` folder (and a second copy of `milo.jks`) was in `~/.Trash`, the same key by its SHA-256, with no other copy found on the Mac. Emptying the Trash would have made every later update impossible to install over the app on his phone. Asked Shawn to put it back and keep a second copy.
+
 ### 2026-10-16
 
 **`[CHANGE]` Website: the home page lists the features of 0.3.2**

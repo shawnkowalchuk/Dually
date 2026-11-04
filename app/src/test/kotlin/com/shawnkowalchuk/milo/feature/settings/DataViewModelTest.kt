@@ -51,7 +51,7 @@ class DataViewModelTest {
         // The Settings screen is opened: a new ViewModel, as after leaving it and coming back.
         val viewModel =
             DataViewModel(transfer, world.settings.settings, flowOf(false), { 0L }) {
-                ZoneId.of("America/Edmonton")
+                ZoneId.of("America/Denver")
             }
         val drawnWith = mutableListOf<DataCardState?>()
         backgroundScope.launch { viewModel.state.toList(drawnWith) }

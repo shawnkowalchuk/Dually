@@ -165,6 +165,9 @@ class FakeService :
     /** And until when it said GPS is read every 5 seconds, or null. */
     var fastGpsUntilMs: Long? = null
 
+    /** Where it was told the geofence goes (since 2026-10-19), or null: none, or taken away. */
+    var fence: FencePlace? = null
+
     @Synchronized
     override fun start(request: StartRequest): StartFailure? {
         startRequests += request
@@ -186,6 +189,7 @@ class FakeService :
     override fun record(checkAtMs: Long?, sounds: List<TripSound>, tripStarts: Boolean) {
         recording = true
         watchingParked = false
+        fence = null
         this.checkAtMs = checkAtMs
         this.sounds += sounds
         if (tripStarts) firstSoundsOfTrips += sounds
@@ -194,18 +198,20 @@ class FakeService :
     }
 
     @Synchronized
-    override fun watchParked(checkAtMs: Long?, gps: ParkedGps) {
+    override fun watchParked(checkAtMs: Long?, gps: ParkedGps, fence: FencePlace?) {
         recording = false
         watchingParked = true
         this.checkAtMs = checkAtMs
         gpsUntilMs = gps.untilMs
         fastGpsUntilMs = gps.fastUntilMs
+        this.fence = fence
     }
 
     @Synchronized
     override fun stop() {
         recording = false
         watchingParked = false
+        fence = null
         stops++
     }
 }

@@ -78,7 +78,7 @@ class SentRunAtISentItTest {
             eventLog = EventLogRepository(log),
             crashFileStore = CrashFileStore(folder.root),
             clock = { nowMs },
-            zone = { ZoneId.of("America/Edmonton") },
+            zone = { ZoneId.of("America/Denver") },
         )
     }
 

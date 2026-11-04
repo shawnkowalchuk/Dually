@@ -12,7 +12,7 @@ import org.junit.Test
 
 /** The odometer: Shawn's reading, plus or minus the truck trips recorded since or before it. */
 class OdometerTest {
-    private val zone: ZoneId = ZoneId.of("America/Edmonton")
+    private val zone: ZoneId = ZoneId.of("America/Denver")
 
     private fun at(day: Int, hour: Int, minute: Int = 0): Long =
         LocalDate.of(2026, 10, day).atTime(hour, minute).atZone(zone).toInstant().toEpochMilli()

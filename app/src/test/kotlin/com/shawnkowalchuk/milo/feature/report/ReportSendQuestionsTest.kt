@@ -16,7 +16,7 @@ import org.junit.Test
  * report would do. Kept apart from `ReportUiStateTest`, which is at its size limit.
  */
 class ReportSendQuestionsTest {
-    private val zone = ZoneId.of("America/Edmonton")
+    private val zone = ZoneId.of("America/Denver")
     private val october = ReportPeriod.Month(YearMonth.of(2026, 10))
     private val september = ReportPeriod.Month(YearMonth.of(2026, 9))
 

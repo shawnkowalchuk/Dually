@@ -28,7 +28,7 @@ private const val TRUCK = "AA:BB:CC:DD:EE:FF"
  * from the stored trips (`drivenTrips`) and the stored readings.
  */
 class ReportOdometerDuringTripTest {
-    private val zone = ZoneId.of("America/Edmonton")
+    private val zone = ZoneId.of("America/Denver")
     private val readingDay = LocalDate.of(2026, 10, 10)
 
     private fun at(text: String): Long =

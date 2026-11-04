@@ -20,6 +20,7 @@ import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.designsystem.component.AppHeader
 import com.shawnkowalchuk.milo.core.designsystem.component.ChartLine
 import com.shawnkowalchuk.milo.core.designsystem.component.LineChart
+import com.shawnkowalchuk.milo.core.designsystem.component.PinnedHeaderColumn
 import com.shawnkowalchuk.milo.core.designsystem.component.SteppedTitle
 import com.shawnkowalchuk.milo.core.designsystem.component.StepperButton
 import com.shawnkowalchuk.milo.core.designsystem.component.Tile
@@ -53,18 +54,15 @@ fun TripGraphScreen(
     val state by viewModel.state.collectAsState()
     val locale = LocalConfiguration.current.locales[0]
     val spacing = MiloTheme.spacing
-    TileColumn(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(vertical = spacing.small),
+    PinnedHeaderColumn(
+        header = {
+            AppHeader(
+                title = stringResource(R.string.graph_title),
+                onBack = onBack,
+            )
+        },
+        modifier = modifier.fillMaxSize(),
     ) {
-        AppHeader(
-            title = stringResource(R.string.graph_title),
-            onBack = onBack,
-            modifier = Modifier.padding(bottom = spacing.extraSmall),
-        )
         SteppedTitle(
             text = state.year.toString(),
             previous =

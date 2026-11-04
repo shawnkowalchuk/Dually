@@ -8,9 +8,9 @@ import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.point.RawPoint
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.transfer.CheckedExport
+import com.shawnkowalchuk.milo.data.transfer.DENVER
 import com.shawnkowalchuk.milo.data.transfer.DataExport
 import com.shawnkowalchuk.milo.data.transfer.DataImport
-import com.shawnkowalchuk.milo.data.transfer.EDMONTON
 import com.shawnkowalchuk.milo.data.transfer.ExportReading
 import com.shawnkowalchuk.milo.data.transfer.FakeMainTransferDao
 import com.shawnkowalchuk.milo.data.transfer.FakePointsTransferDao
@@ -105,7 +105,7 @@ class TransferWorld(
     private val eventLog = EventLogRepository(if (logUnwritable) UnwritableLog(log) else log)
     private val failures =
         TransferFailures(eventLog, CrashFileStore(File(root, "crashes"))) { nowMs }
-    private val export = DataExport(main, points, settings, "0.1.0", { nowMs }, { EDMONTON })
+    private val export = DataExport(main, points, settings, "0.1.0", { nowMs }, { DENVER })
     private val import = DataImport(main, points)
 
     /**

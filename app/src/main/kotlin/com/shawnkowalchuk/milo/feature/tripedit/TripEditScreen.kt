@@ -17,12 +17,20 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.shawnkowalchuk.milo.R
+import com.shawnkowalchuk.milo.core.designsystem.component.ActionButton
+import com.shawnkowalchuk.milo.core.designsystem.component.ActionButtonRow
+import com.shawnkowalchuk.milo.core.designsystem.component.ActionKind
 import com.shawnkowalchuk.milo.core.designsystem.component.AppHeader
+import com.shawnkowalchuk.milo.core.designsystem.component.ConfirmDialog
+import com.shawnkowalchuk.milo.core.designsystem.component.PinnedHeaderColumn
 import com.shawnkowalchuk.milo.core.designsystem.component.PrimaryButton
 import com.shawnkowalchuk.milo.core.designsystem.component.RowStatus
 import com.shawnkowalchuk.milo.core.designsystem.component.StatusRow
@@ -49,6 +57,7 @@ internal class TripEditActions(
     val onCategory: (TripCategory) -> Unit,
     val onSave: () -> Unit,
     val onRestore: () -> Unit,
+    val onDelete: () -> Unit = {},
 )
 
 /**
@@ -91,6 +100,7 @@ fun TripEditScreen(
             onCategory = viewModel::onCategory,
             onSave = viewModel::onSave,
             onRestore = viewModel::onRestore,
+            onDelete = viewModel::onDelete,
         )
 
     val ready = state as? TripEditUiState.Ready
@@ -125,21 +135,18 @@ internal fun TripEditContent(
 ) {
     val spacing = MiloTheme.spacing
     val adding = (state as? TripEditUiState.Ready)?.adding == true
-    TileColumn(
-        modifier =
-            modifier
-                .fillMaxSize()
-                // Large font settings or a small window must scroll rather than cut content off.
-                .verticalScroll(rememberScrollState())
-                .padding(vertical = spacing.small),
+    PinnedHeaderColumn(
+        header = {
+            AppHeader(
+                title =
+                    stringResource(
+                        if (adding) R.string.trip_add_title else R.string.trip_edit_title,
+                    ),
+                onBack = onBack,
+            )
+        },
+        modifier = modifier.fillMaxSize(),
     ) {
-        AppHeader(
-            title =
-                stringResource(if (adding) R.string.trip_add_title else R.string.trip_edit_title),
-            onBack = onBack,
-            // As on Home: with the gap between two tiles, the design's 16 under the top line.
-            modifier = Modifier.padding(bottom = spacing.extraSmall),
-        )
         when (state) {
             TripEditUiState.Reading ->
                 Tile(modifier = Modifier.fillMaxWidth()) {
@@ -202,6 +209,40 @@ private fun ColumnScope.Form(state: TripEditUiState.Ready, actions: TripEditActi
     Note(stringResource(state.kindSource.noteRes()))
     SaveArea(state, actions.onSave, Modifier.bringIntoViewRequester(saveArea))
     state.recorded?.let { RecordedTile(it, state, actions.onRestore) }
+    // Last, and apart from Save: a trip that is to go (since 2026-11-03).
+    if (!state.adding) DeleteArea(actions.onDelete)
+}
+
+/** Delete trip, asked first, as on Trips. */
+@Composable
+private fun DeleteArea(onDelete: () -> Unit) {
+    var asking by rememberSaveable { mutableStateOf(false) }
+    ActionButtonRow(
+        actions =
+            listOf(
+                ActionButton(
+                    stringResource(R.string.trips_action_delete),
+                    ActionKind.DANGER,
+                    { asking = true },
+                ),
+            ),
+    )
+    if (asking) {
+        ConfirmDialog(
+            title = stringResource(R.string.trips_delete_title),
+            text = stringResource(
+                R.string.trip_edit_delete_text,
+                stringResource(R.string.trips_show_left_out),
+            ),
+            confirmLabel = stringResource(R.string.trips_delete_confirm),
+            dismissLabel = stringResource(R.string.action_cancel),
+            onConfirm = {
+                asking = false
+                onDelete()
+            },
+            onDismiss = { asking = false },
+        )
+    }
 }
 
 private fun TripEditUiState.Ready.introRes(): Int? = when {

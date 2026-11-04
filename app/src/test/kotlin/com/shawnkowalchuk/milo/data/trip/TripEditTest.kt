@@ -18,11 +18,11 @@ import org.junit.Test
  * on Monday 5 October 2026; the schedule is Monday to Friday, 08:00 to 16:30.
  */
 class TripEditTest {
-    private val edmonton = ZoneId.of("America/Edmonton")
+    private val denver = ZoneId.of("America/Denver")
     private val schedule = DEFAULT_WORK_SCHEDULE
 
     private fun local(dateTime: String): Long =
-        LocalDateTime.parse(dateTime).atZone(edmonton).toInstant().toEpochMilli()
+        LocalDateTime.parse(dateTime).atZone(denver).toInstant().toEpochMilli()
 
     /** A trip as MilO recorded it: exact to the second, both addresses looked up. */
     private val recorded =
@@ -53,7 +53,7 @@ class TripEditTest {
             distanceMetres = 12_344.7,
         )
 
-    private fun edit(trip: Trip, edit: TripEdit): Trip = editedTrip(trip, edit, schedule, edmonton)
+    private fun edit(trip: Trip, edit: TripEdit): Trip = editedTrip(trip, edit, schedule, denver)
 
     // ---- What counts as an edit -----------------------------------------------------------------
 
@@ -221,7 +221,7 @@ class TripEditTest {
                     category = null,
                 ),
                 schedule,
-                edmonton,
+                denver,
             ).copy(id = 31)
 
         val after =
@@ -230,7 +230,7 @@ class TripEditTest {
         assertEquals(added.copy(distanceMetres = 25_000.0, endAddress = "Site"), after)
         assertEquals(ByHandMark.ADDED, after.byHandMark)
         assertNull("It has nothing recorded to put back", after.recordedValues)
-        assertNull(restoredTrip(after, schedule, edmonton))
+        assertNull(restoredTrip(after, schedule, denver))
     }
 
     // ---- Which trips ----------------------------------------------------------------------------

@@ -114,8 +114,10 @@ interface TripRecorder {
      * @param checkAtMs as in [record]: when the wait has lasted too long.
      * @param gps how GPS is read meanwhile: until when at all, and until when every 5 seconds
      * (`ParkedGps`). A later order with later times turns it on again.
+     * @param fence where the truck is parked, for the geofence around it (`ParkedFence`, since
+     * 2026-10-19), or null while that is not known.
      */
-    fun watchParked(checkAtMs: Long?, gps: ParkedGps)
+    fun watchParked(checkAtMs: Long?, gps: ParkedGps, fence: FencePlace? = null)
 
     /**
      * No trip is open: stop recording and stop the service, unless the service has reported in

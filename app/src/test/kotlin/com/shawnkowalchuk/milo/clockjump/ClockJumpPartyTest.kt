@@ -22,10 +22,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-private val EDMONTON: ZoneId = ZoneId.of("America/Edmonton")
+private val DENVER: ZoneId = ZoneId.of("America/Denver")
 
 private fun at(year: Int, day: Int, hour: Int, minute: Int = 0): Long =
-    LocalDateTime.of(year, 10, day, hour, minute).atZone(EDMONTON).toInstant().toEpochMilli()
+    LocalDateTime.of(year, 10, day, hour, minute).atZone(DENVER).toInstant().toEpochMilli()
 
 /**
  * MilO's one-year party on a phone whose date is set a day ahead by hand for a few seconds
@@ -49,7 +49,7 @@ class ClockJumpPartyTest {
         eventLog = EventLogRepository(log),
         crashFileStore = CrashFileStore(folder.root),
         clock = { phone.clock.now() },
-        zone = { EDMONTON },
+        zone = { DENVER },
     )
 
     @Test
@@ -84,10 +84,10 @@ class ClockJumpPartyTest {
         // What Home owes is dated by MilO's time too, and is owed there and then.
         val owed = settings.current().partyOwedSinceMs
         assertEquals(at(2027, 6, 19, 30) + 4_000, owed)
-        assertTrue(partyOwedNow(owed, phone.clock.now(), EDMONTON))
+        assertTrue(partyOwedNow(owed, phone.clock.now(), DENVER))
         phone.advance(8_000)
         phone.setBack()
-        assertTrue(partyOwedNow(owed, phone.clock.now(), EDMONTON))
+        assertTrue(partyOwedNow(owed, phone.clock.now(), DENVER))
     }
 
     @Test
@@ -109,7 +109,7 @@ class ClockJumpPartyTest {
         // It is 00:00:45 on the 7th now, by every clock.
         assertEquals(PopAtTripStart.NOT_TODAY, party.atTripStart())
         val owed = settings.current().partyOwedSinceMs
-        assertFalse(partyOwedNow(owed, phone.clock.now(), EDMONTON))
+        assertFalse(partyOwedNow(owed, phone.clock.now(), DENVER))
     }
 
     @Test
@@ -150,6 +150,6 @@ class ClockJumpPartyTest {
             assertEquals(PopAtTripStart.NOT_TODAY, party.atTripStart())
             // What it stored lies a day ahead of now, and is not owed.
             assertEquals(at(2027, 5, 19, 30) + DAY_MS, owed)
-            assertFalse(partyOwedNow(owed, phone.clock.now(), EDMONTON))
+            assertFalse(partyOwedNow(owed, phone.clock.now(), DENVER))
         }
 }
