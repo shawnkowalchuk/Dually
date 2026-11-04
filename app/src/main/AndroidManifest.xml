@@ -299,6 +299,14 @@
             android:exported="false" />
 
         <!--
+            The two buttons of the work-hours notification (platform/pasthours, since
+            2026-11-03). Not exported: only MilO's own notification sends to it.
+        -->
+        <receiver
+            android:name=".platform.pasthours.PastHoursReceiver"
+            android:exported="false" />
+
+        <!--
             Where the daily alarm of the monthly reminder arrives (platform/reminder/). Declared
             here so that the alarm can start MilO's process. It looks at whether last month's
             report is still to be sent and posts a notification at most; it never touches a

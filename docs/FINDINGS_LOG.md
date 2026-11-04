@@ -24,6 +24,23 @@
 
 ## Log
 
+### 2026-11-03
+
+**`[CHANGE]` Delete the trip being recorded from Home, and any trip from its edit screen (version 0.3.2)**
+Shawn: "i was driving in a work vehcle and my phone started tracking that trip we need a way to delete the trip from the started trip screen. maybe a trash icon that gives a prompt to delete trip ... also there is not option to delete a trip in the edit screen". His answer: after the delete, "Stop until the vehicle disconnects". A bin beside End on Home's recording card, asked first; it ends the trip as End does (the hold-off) and, once the controller has caught up, deletes it as Trips does (`TripCorrections`, log "deleted with the bin on Home, while it was recorded"). The edit screen has Delete trip, asked first, then back to Trips. A deleted trip can be restored on Trips. Tests: `TripControllerDeleteRunningTest`, `TripDeletingTest`. Not yet on the phone: DT-1 to DT-3.
+- **Added to the design system:** `MiloIcons.Trash`.
+
+**`[CHANGE]` Dependency: androidx.fragment 1.9.1, named to lift the 1.1.0 Play services brings**
+Play Console's release dashboard for 0.3.1 flagged "androidx.fragment:fragment 1.1.0 ... outdated". Dually uses no fragment itself; `play-services-location` 21.4.0 (its newest) pulls 1.1.0 through `play-services-base`. Declaring the current stable `androidx.fragment` 1.9.1 makes Gradle take it. Shawn asked for this, the delete buttons and the work-hours question to go into 0.3.2 rather than 0.3.3 ("i wanted ths all built and added to this version"), which keeps build 5: Play had not received it yet.
+- **Not changed, on purpose:** the dashboard's edge-to-edge notes name calls made inside AndroidX's own edge-to-edge helper for old Android versions; and the portrait lock matters only on tablets and foldables, where Android 16 ignores it.
+
+**`[CHANGE]` The work-hours question: a Business trip that runs past the hours is asked about (version 0.3.2)**
+Shawn: "when im driving and for example it goes from personal hours to work hours and vise versa to get a notifcation ... for example im leaving work early by 5 minutes that trip should be flagged and i should get some prompt if i want to change to personal". His answers: both a heads-up and the question at the end; Business trips past the hours only; buttons on the notification; phone and Android Auto. APP_ENCYCLOPEDIA, Schedule and Business/Personal, 12; WH-1 to WH-4.
+- **`[DECISION]` The answers go through what exists:** during the drive the running trip's choice (Home's button), after it a marking by hand (Trips). No new way to file a trip.
+- **`[DECISION]` The heads-up is silent;** the question at the end has a sound, as the driver is parked by then.
+- **Moved:** the end of a day's hours as a point in time out of `classifyTrip` into `workHoursEndMs`, which both use.
+- **Not proven:** the car's screen showing the notification (`CarAppExtender`) has been seen nowhere; Android Auto may show it only in its notification list.
+
 ### 2026-10-19
 
 **`[CHANGE]` The top line stays put on every screen (version 0.3.2)**

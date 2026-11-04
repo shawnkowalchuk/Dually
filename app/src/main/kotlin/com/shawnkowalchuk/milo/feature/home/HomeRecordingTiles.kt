@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.stringResource
 import com.shawnkowalchuk.milo.R
+import com.shawnkowalchuk.milo.core.designsystem.component.ConfirmDialog
 import com.shawnkowalchuk.milo.core.designsystem.component.DotWord
 import com.shawnkowalchuk.milo.core.designsystem.component.FigureSize
 import com.shawnkowalchuk.milo.core.designsystem.component.FigureText
@@ -23,6 +24,7 @@ import com.shawnkowalchuk.milo.core.designsystem.component.HeroIconButton
 import com.shawnkowalchuk.milo.core.designsystem.component.MiloIcons
 import com.shawnkowalchuk.milo.core.designsystem.component.Pill
 import com.shawnkowalchuk.milo.core.designsystem.component.PillButton
+import com.shawnkowalchuk.milo.core.designsystem.component.SquareIconButton
 import com.shawnkowalchuk.milo.core.designsystem.component.Tile
 import com.shawnkowalchuk.milo.core.designsystem.component.TileKind
 import com.shawnkowalchuk.milo.core.designsystem.component.TileLabel
@@ -54,7 +56,14 @@ internal fun RecordingTiles(
 ) {
     // Which side of today's card is up (`HomeCardSide.kt`). Kept through a turn of the phone.
     var monthChosenIn by rememberSaveable { mutableStateOf<Long?>(null) }
-    RecordingTile(ui, trip, format, actions.onEnd, actions.onRunningCategory)
+    RecordingTile(
+        ui,
+        trip,
+        format,
+        actions.onEnd,
+        actions.onRunningCategory,
+        actions.onDeleteRunning,
+    )
     TilePair(
         first = { half -> SmallTruckTile(ui.truck.state, half) },
         second = { half ->
@@ -102,8 +111,11 @@ private fun RecordingTile(
     format: HomeFormat,
     onEnd: () -> Unit,
     onCategory: (tripId: Long, category: TripCategory) -> Unit,
+    onDelete: (tripId: Long) -> Unit,
 ) {
     val spacing = MiloTheme.spacing
+    // Asked first (Shawn: "a trash icon that gives a prompt to delete trip"); kept through a turn.
+    var askingToDelete by rememberSaveable(trip.tripId) { mutableStateOf(false) }
     Tile(
         modifier = Modifier.fillMaxWidth(),
         kind = TileKind.ACCENT,
@@ -140,6 +152,13 @@ private fun RecordingTile(
                 size = FigureSize.TOTAL,
                 spoken = stringResource(distanceSpokenRes(format.unit), soFar),
             )
+            // The bin, before End and apart from it: a trip in the wrong vehicle (since
+            // 2026-11-03). A screen reader is told what it does.
+            SquareIconButton(
+                icon = MiloIcons.Trash,
+                description = stringResource(R.string.home_delete_trip),
+                onClick = { askingToDelete = true },
+            )
             // The square of "stop" and no words. A screen reader is told what it does.
             HeroIconButton(
                 icon = MiloIcons.Stop,
@@ -151,6 +170,22 @@ private fun RecordingTile(
         recordingNoteRes(ui.truck.state)?.let { note ->
             Text(text = stringResource(note), style = MiloTheme.textStyles.sentence)
         }
+    }
+    if (askingToDelete) {
+        ConfirmDialog(
+            title = stringResource(R.string.trips_delete_title),
+            text = stringResource(
+                R.string.home_delete_text,
+                stringResource(R.string.trips_show_left_out),
+            ),
+            confirmLabel = stringResource(R.string.trips_delete_confirm),
+            dismissLabel = stringResource(R.string.action_cancel),
+            onConfirm = {
+                askingToDelete = false
+                onDelete(trip.tripId)
+            },
+            onDismiss = { askingToDelete = false },
+        )
     }
 }
 

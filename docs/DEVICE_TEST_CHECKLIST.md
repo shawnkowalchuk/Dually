@@ -1933,6 +1933,23 @@ Unit tests only.
 | PH-2 | Open a trip's Edit, the Report, the Log and What's new; scroll. | Same; the back arrow stays in reach. | not run |
 | PH-3 | Setup during the first start. | The top line stays at the top and "Done, go to Settings" at the bottom. | not run |
 
+## The work-hours question (2026-11-03)
+
+| # | Do this | Expect | Result |
+|---|---|---|---|
+| WH-1 | On a work day, start a drive a few minutes before your hours end and keep driving past the end. | At the end time a silent notification "Work hours ended at …" with Mark Personal and Keep Business; with Android Auto, it is in the car's notifications too. | not run |
+| WH-2 | Press Mark Personal during the drive. | Home's card shows Personal; the trip is saved Personal when it ends, and no question follows. | not run |
+| WH-3 | Leave it unanswered until the trip ends. | "Trip … to … ran past work hours" with a sound; Mark Personal changes the trip on Trips. | not run |
+| WH-4 | A drive that starts after your hours. | No notification at all. | not run |
+
+## Delete from Home and the edit screen (2026-11-03)
+
+| # | Do this | Expect | Result |
+|---|---|---|---|
+| DT-1 | Start a trip; press the bin beside End; Cancel. | The question "Delete this trip?"; Cancel keeps it recording. | not run |
+| DT-2 | Press the bin again; Delete. | Home shows no trip; Trips shows it among deleted and discarded; no new trip starts while the truck stays connected. | not run |
+| DT-3 | Trips, a trip's Edit, Delete trip, Delete. | Back on Trips; the trip is gone from the list and restorable. | not run |
+
 ## Later work packages
 
 Nothing waiting. A work package that adds behaviour only the phone can prove adds its checks above.

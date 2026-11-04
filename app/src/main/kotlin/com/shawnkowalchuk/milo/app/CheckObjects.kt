@@ -11,6 +11,9 @@ import com.shawnkowalchuk.milo.platform.nothingrecorded.NothingRecordedCheck
 import com.shawnkowalchuk.milo.platform.nothingrecorded.NothingRecordedNotification
 import com.shawnkowalchuk.milo.platform.odometer.OdometerCheck
 import com.shawnkowalchuk.milo.platform.odometer.OdometerCheckNotification
+import com.shawnkowalchuk.milo.platform.pasthours.PastHoursNotices
+import com.shawnkowalchuk.milo.platform.pasthours.PastHoursNotification
+import com.shawnkowalchuk.milo.platform.pasthours.PastHoursPrompt
 import com.shawnkowalchuk.milo.platform.service.ServiceNotification
 import com.shawnkowalchuk.milo.platform.service.ServiceReminder
 import java.time.ZoneId
@@ -45,6 +48,35 @@ class CheckObjects(private val appContext: Context, private val container: AppCo
             clock = container.clock,
             zone = ZoneId::systemDefault,
             locale = { appContext.resources.configuration.locales[0] },
+        )
+    }
+
+    /** The work-hours notification (since 2026-11-03), shared with its buttons' receiver. */
+    val pastHoursNotification: PastHoursNotification by lazy {
+        PastHoursNotification(appContext, opens = MainActivity::class.java)
+    }
+
+    /**
+     * The question about a Business trip that runs past the work hours (since 2026-11-03).
+     * Started with the process; it only watches the trips.
+     */
+    val pastHours: PastHoursPrompt by lazy {
+        PastHoursPrompt(
+            settings = container.settingsStore,
+            trips = container.tripRepository,
+            notices =
+                object : PastHoursNotices {
+                    override fun duringTrip(tripId: Long, hoursEndMs: Long) =
+                        pastHoursNotification.showDuringTrip(tripId, hoursEndMs)
+
+                    override fun afterTrip(tripId: Long, startedAtMs: Long, endedAtMs: Long) =
+                        pastHoursNotification.showAfterTrip(tripId, startedAtMs, endedAtMs)
+
+                    override fun cancel() = pastHoursNotification.cancel()
+                },
+            eventLog = container.eventLogRepository,
+            clock = container.clock,
+            zone = ZoneId::systemDefault,
         )
     }
 
