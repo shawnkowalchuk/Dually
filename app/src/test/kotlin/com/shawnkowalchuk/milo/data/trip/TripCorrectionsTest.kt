@@ -120,6 +120,19 @@ class TripCorrectionsTest {
     }
 
     @Test
+    fun `a refusal says where it was asked for`() = runTest {
+        val discarded = stored(TripStatus.DISCARDED)
+
+        assertFalse(corrections.apply(discarded.id, TripCorrection.DELETE, ON_HOME))
+
+        assertEquals(
+            "Trip 1: delete refused with the bin on Home, while it was recorded: it is " +
+                "discarded, not finished. Nothing changed",
+            logged(EventCategory.TRIP).last(),
+        )
+    }
+
+    @Test
     fun `a second delete changes nothing and says so`() = runTest {
         val trip = stored(TripStatus.FINISHED)
 
