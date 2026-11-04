@@ -1942,6 +1942,14 @@ Unit tests only.
 | WH-3 | Leave it unanswered until the trip ends. | "Trip … to … ran past work hours" with a sound; Mark Personal changes the trip on Trips. | not run |
 | WH-4 | A drive that starts after your hours. | No notification at all. | not run |
 
+## Delete from Home and the edit screen (2026-11-03)
+
+| # | Do this | Expect | Result |
+|---|---|---|---|
+| DT-1 | Start a trip; press the bin beside End; Cancel. | The question "Delete this trip?"; Cancel keeps it recording. | not run |
+| DT-2 | Press the bin again; Delete. | Home shows no trip; Trips shows it among deleted and discarded; no new trip starts while the truck stays connected. | not run |
+| DT-3 | Trips, a trip's Edit, Delete trip, Delete. | Back on Trips; the trip is gone from the list and restorable. | not run |
+
 ## Later work packages
 
 Nothing waiting. A work package that adds behaviour only the phone can prove adds its checks above.

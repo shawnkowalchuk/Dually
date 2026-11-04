@@ -50,6 +50,9 @@ navigation3 = "1.2.0"
 playReview = "2.0.2"
 # Google Play services' fused location provider: the GPS fixes of a trip.
 playServicesLocation = "21.4.0"
+# Not used by Dually's own code. Play services (above) still asks for fragment 1.1.0, which Play
+# Console flags as outdated; naming the current stable version lifts it (2026-11-03).
+fragment = "1.9.1"
 # Room's runtime, its KSP compiler and its Gradle plugin are released together under one version.
 room = "3.0.3"
 # The runtime of kotlinx.serialization. Navigation 3 saves its back stack through it, so every
@@ -69,6 +72,7 @@ kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", v
 ktlint-cli = { module = "com.pinterest.ktlint:ktlint-cli", version.ref = "ktlint" }
 
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+androidx-fragment = { module = "androidx.fragment:fragment", version.ref = "fragment" }
 androidx-car-app = { module = "androidx.car.app:app", version.ref = "carApp" }
 # What makes the Car App Library screen an Android Auto app (projected from the phone). It does
 # not bring "app" in for compiling, so both are declared, as Google's own setup does.
