@@ -1,6 +1,17 @@
 {
   "releases": [
     {
+      "version": "0.3.3",
+      "date": null,
+      "changes": [
+        {
+          "kind": "fixed",
+          "title": "A clearer Log after deleting a short trip",
+          "body": "When you delete a trip with the bin on Home that was too short to keep, the Log now says only that it was discarded, without a second line about a refused delete."
+        }
+      ]
+    },
+    {
       "version": "0.3.2",
       "date": "2026-11-03",
       "changes": [

@@ -24,6 +24,14 @@
 
 ## Log
 
+### 2026-11-03 (evening, 0.3.3 begins)
+
+**`[FIX]` Home's bin on a trip too short to keep (version 0.3.3)**
+Seen in the release check of 0.3.2 on the phone: a 0 m test trip, deleted with the bin, was discarded by its ending (as it should be), and the delete that followed wrote "Trip 151: delete refused on the Trips screen: it is discarded, not finished". Home now deletes only a trip that is still finished once it has ended, and a refusal names where it was asked for (`ON_HOME`, `ON_EDIT`). Version raised to 0.3.3 (build 6): Google Play takes build 5 once.
+
+**`[FINDING]` Play Console's edge-to-edge notes are AndroidX's own code**
+The 0.3.1 release dashboard named `setStatusBarColor`, `setNavigationBarColor` and `LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES` "in g90.a, i90.a, f90.b". The 0.3.1 mapping file names them `androidx.activity.EdgeToEdgeApi29`, `EdgeToEdgeApi35` and `EdgeToEdgeApi28`: the helpers behind `enableEdgeToEdge`, which use those calls on older Android versions only. Dually's own code makes none of them. Nothing to change; the note will stay on the dashboard.
+
 ### 2026-11-03
 
 **`[CHANGE]` Website: a Product Hunt review badge**

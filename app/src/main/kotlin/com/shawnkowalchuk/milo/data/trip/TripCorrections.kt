@@ -114,7 +114,7 @@ internal fun correctionText(
                 TripStatus.OPEN -> "it is still being recorded"
                 else -> "it is ${outcome.found.inWords()}, not ${correction.from.inWords()}"
             }
-        "Trip $tripId: ${correction.inWords()} refused on the Trips screen: $why. Nothing changed"
+        "Trip $tripId: ${correction.inWords()} refused $where: $why. Nothing changed"
     }
 }
 

@@ -307,7 +307,14 @@ class HomeViewModel(
         val by = corrections ?: return
         controller.onTrigger(TripTrigger.MANUAL_END, "Delete button")
         controller.whenCaughtUp {
-            viewModelScope.launch { by.apply(tripId, TripCorrection.DELETE, ON_HOME) }
+            viewModelScope.launch {
+                // A trip that ending it discarded (too short) is out of the list already, and
+                // its line says so: no second line that a delete was refused (0.3.3).
+                val ended = trips.findTrip(tripId)?.status
+                if (ended == TripCorrection.DELETE.from) {
+                    by.apply(tripId, TripCorrection.DELETE, ON_HOME)
+                }
+            }
         }
     }
 
