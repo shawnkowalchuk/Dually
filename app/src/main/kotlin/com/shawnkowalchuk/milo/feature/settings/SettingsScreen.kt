@@ -264,6 +264,7 @@ internal fun SettingsContent(
         // person with a problem is looking for, and the Log is what it asks for.
         SupportTile()
         onOpenLog?.let { LogLinkTile(it) }
+        ReviewLinkTile()
         if (showCoffee) CoffeeTile()
         versionTile()
     }

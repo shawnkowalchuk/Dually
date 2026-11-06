@@ -24,6 +24,11 @@
 
 ## Log
 
+### 2026-11-06
+
+**`[CHANGE]` A "Review on Google Play" tile in Settings (version 0.3.3)**
+Shawn: "can we have it say when prompted a specific wording?" about Google Play's review card. It cannot: the card's text is Google's, and Google's rules forbid an app's own question before it or a button that opens it. So a tile above Buy me a coffee opens Dually's page in the Play Store (the web page if there is no Play Store), with his wording. He first asked for one tile: "if you enjoy dually please buy us a coffe to suppor us. If that is to much please give us a review on google". The coffee cannot be in Google Play's copy (ADR-004, payments policy); asked, he chose the review alone, in every copy. The address is built from the app's own package name, so a build under another ID opens its own page. Phone only. Device checks RL-1 to RL-3.
+
 ### 2026-11-03 (evening, 0.3.3 begins)
 
 **`[FIX]` Home's bin on a trip too short to keep (version 0.3.3)**
