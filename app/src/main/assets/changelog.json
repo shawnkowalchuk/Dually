@@ -8,6 +8,11 @@
           "kind": "fixed",
           "title": "A clearer Log after deleting a short trip",
           "body": "When you delete a trip with the bin on Home that was too short to keep, the Log now says only that it was discarded, without a second line about a refused delete."
+        },
+        {
+          "kind": "new",
+          "title": "Review Dually on Google Play from Settings",
+          "body": "Settings has a new tile above Buy me a coffee: if you enjoy Dually, press it to open Dually's page in the Play Store and leave a review."
         }
       ]
     },

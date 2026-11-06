@@ -1383,6 +1383,14 @@ Shawn's request of 2026-10-08: a label for each trip, picked from those used bef
 | BC-2 | **Open it.** Tap the tile. | The browser opens buymeacoffee.com/SeaWingman; Back returns to Dually's Settings. | not run |
 | BC-3 | **The website.** Open dually.top on the phone after the merge. | A yellow "☕ Buy me a coffee" button in the last tile, a "Buy me a coffee" link in the footer; both open the same page. Nothing is wider than the screen. | not run |
 
+## Review on Google Play tile (2026-11-06, 0.3.3)
+
+| # | Do | Expect | Result |
+|---|---|---|---|
+| RL-1 | **The tile.** Open Settings and scroll to the end. | Between the Log link and Buy me a coffee (or the version, in Google Play's copy): "Review on Google Play" with its arrowhead, "If you enjoy Dually, please leave us a review on Google Play." and the grey line "It helps other drivers find Dually. Opens the Play Store." | not run |
+| RL-2 | **The press.** Tap the tile. | The Play Store opens on Dually Trip Tracker's page, with its review section. Back returns to Settings. | not run |
+| RL-3 | **The copy from Google Play.** After Google Play has installed 0.3.3, open Settings. | The review tile is there and Buy me a coffee is not. | not run |
+
 ## Ready for Google Play (2026-10-09)
 
 ADR-004: the location question, the battery list, the coffee tile from Google Play, and the first start's buttons that stay in view. Built and unit tested only; never drawn anywhere. On a phone where location is already "Allow all the time", GP-1 and GP-2 need it set back to "Allow only while using the app" first, in Android's settings for Dually.

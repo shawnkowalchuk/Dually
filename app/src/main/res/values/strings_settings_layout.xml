@@ -131,4 +131,15 @@
     <string name="settings_coffee_open">open the page in the browser</string>
     <!-- On the tile after a press, on a phone with no app that opens a web page. -->
     <string name="settings_coffee_no_browser">No app on this phone opens web pages. The address above can be typed into a browser on another device.</string>
+    <!--
+        The tile above Buy me a coffee (2026-11-06) that opens Dually's page in the Play Store,
+        where a review can be left. Shawn's wording. In every copy, from Google Play or not.
+    -->
+    <string name="settings_review_label">Review on Google Play</string>
+    <string name="settings_review_value">If you enjoy Dually, please leave us a review on Google Play.</string>
+    <string name="settings_review_hint">It helps other drivers find Dually. Opens the Play Store.</string>
+    <!-- Spoken by the screen reader for what a press on the tile does. -->
+    <string name="settings_review_open">open Dually\'s page in the Play Store</string>
+    <!-- On the tile after a press, on a phone with neither the Play Store nor a browser. -->
+    <string name="settings_review_no_store">This phone has neither the Play Store nor a browser. Dually is on Google Play as Dually Trip Tracker.</string>
 </resources>
