@@ -457,6 +457,17 @@ main > * {
   font-size: 14px;
 }
 
+/* Product Hunt's review badge (2026-11-06), saved on the site so the page loads nothing else. */
+.hero .hero-badge {
+  margin: 16px 0 0;
+}
+
+.hero .hero-badge img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
 /*
  * The Buy me a coffee button: Buy Me a Coffee's yellow with black words, as its own button
  * has them, drawn here so that the page loads nothing from another site.
