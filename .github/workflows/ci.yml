@@ -58,14 +58,14 @@ jobs:
         run: python3 tools/make_launcher_icon.py --check
 
       - name: Set up JDK 17
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           distribution: temurin
           # Must match gradle/gradle-daemon-jvm.properties.
           java-version: "17"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
         with:
           # The default "enhanced" cache is a proprietary service that is only a free preview on
           # private repositories. "basic" is the open-source one built on GitHub's own cache.
