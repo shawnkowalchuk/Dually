@@ -3,7 +3,7 @@
 > **Note, 2026-10-13:** the product was renamed from MilO to Dually Trip Tracker on 2026-10-13 (ADR-010). This record keeps the old name, and the old addresses, in everything written before that day.
 
 Date: 2026-10-08
-Status: Accepted
+Status: Accepted. Its "the app gets no Firebase" is replaced by ADR-012 (2026-11-11): the app gets an optional cloud backup on Firebase, in a Firebase project of its own. Everything else here about the website stands.
 
 ## Context
 
