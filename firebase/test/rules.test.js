@@ -125,6 +125,17 @@ describe('another account, and nobody signed in', () => {
   });
 });
 
+describe('the purchase check\'s own records', () => {
+  test('no app can read or write a purchase or a deletion', async () => {
+    await seed('purchases/abc', { uid: OWNER });
+    await seed(`deletions/${OWNER}`, { dueAt: 1 });
+    for (const path of ['purchases/abc', `deletions/${OWNER}`]) {
+      await assertFails(getDoc(doc(as(OWNER), path)));
+      await assertFails(setDoc(doc(as(OWNER), path), { uid: OWNER }));
+    }
+  });
+});
+
 describe('the unlocks', () => {
   beforeEach(() => unlock(OWNER));
 

@@ -372,6 +372,8 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
+    // The one-time purchase that unlocks the backup (ADR-013), checked on the server.
+    implementation(libs.play.billing)
     implementation(libs.androidx.work.runtime)
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)

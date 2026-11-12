@@ -26,6 +26,25 @@
 
 ### 2026-11-11
 
+**`[CHANGE]` Cloud backup, slice 1d: the US$19.99 unlock and its purchase check (ADR-013 amended)**
+Shawn: "go on with 1d". Asked, he said Dually's Play Console is under shawn.seawingman@gmail.com (not the Gmail used for Firebase), and its payments profile is set up.
+- **In the app:**
+  - Play Billing 9.1.0 (`PlayBilling`): price, purchase sheet, owned purchases.
+  - A direct HTTPS call to the purchase check (`CloudUnlockCheck`, with the protocol in `data/cloud/CloudCallable.kt`).
+  - `unlockAfter` and `restoreFrom` (`data/cloud/CloudUnlock.kt`).
+  - The account's file keeps `unlocked`, and uploads follow it.
+  - The tile gains Unlock with Google Play's price, Restore purchase, and nine endings.
+- **On the server:** `firebase/functions` (Node 22, Montréal) with the callable `unlockBackup` and the daily `checkRefunds` (`unlock.js`). 8 tests on the emulator with a stand-in for Google Play, plus one rule test that no app reaches `purchases/` or `deletions/`. 17 server tests in all.
+- **CI:** CI now also loads the functions with their exact packages, and Dependabot gets their npm entry.
+- **The tie between purchase and account:** the SHA-256 of the account id. Tested on both sides against one value (`27dfbde6…65ac` for `owner-uid`), so the app and the server cannot drift apart.
+- **The rules file:** only its header comment changed. It is published again after merge.
+**`[DECISION]` Refunds by a daily check of Google Play's voided purchases, not by real-time notifications.** Notifications need a Pub/Sub topic that Google Play publishes to, plus its own function and permissions. Polling once a day needs none of that, and a day of uploads after a refund costs nothing. ADR-013 is amended.
+**`[DECISION]` One purchase unlocks one account.** `purchases/{SHA-256 of the token}` remembers which account it unlocked. Another account presenting the same token gets "another account's purchase", even though Google Play's own tag check would already refuse it. A refunded purchase never unlocks again.
+**`[FINDING]` Firebase's Functions client library (firebase-functions 23.0.0) brings Google's old Instance ID (firebase-iid 21.1.0), and with it Cloud Messaging and the push permission `com.google.android.c2dm.permission.RECEIVE`.** That is Messaging, which ADR-012 rules out. It was in the first build of this slice and seen in the release APK's permissions. Removed: the app makes the one call itself, by Firebase's documented callable protocol, a POST of `{"data":…}` with the account's ID token. That is about 40 lines plus a tested parser (`CloudCallableTest`). STANDARDS: under 50 lines, write it rather than add a dependency.
+**`[FINDING]` Cloud Functions' newest runtime is Node 22 (Google's docs, 2026-11-11), whose support ends April 2027.** `firebase.json` names `nodejs22`, and Dependabot does not move it. Move to 24 when Google offers it.
+**`[FINDING]` A Python string written into strings.xml loses `\'` and becomes `'`, which aapt2 refuses** ("unescaped apostrophe"). Write string resources with a raw string or the Edit tool.
+Not proven yet, and waiting on Shawn: the Blaze plan (his card), `firebase login` on the Mac, an upload of a build with the billing library to a Play track so the product can be made, the product itself, the service account's access in Play Console, and a licence-test purchase on the phone.
+
 **`[CHANGE]` Cloud backup, slice 1c: the upload, Firestore and its security rules (ADR-012 amended)**
 Shawn: "go on with 1c". On the branch `app/cloud-backup`, like 1b.
 - **When it uploads:** `CloudUploads` asks WorkManager (2.12.0) for an upload. It asks 30 s after the trips or sent reports change (Room's `InvalidationTracker` flow, so every writer is covered, Android Auto and an import included) or the travelling settings do, at each app start and sign-in, and daily. `CloudBackupWorker` runs `CloudObjects.upload`. That runs the 1a comparison until a run finds nothing (`uploadUntilQuiet`, five at most) and answers success, retry (network) or failure (refused).

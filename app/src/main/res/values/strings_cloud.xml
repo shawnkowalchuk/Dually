@@ -1,19 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-        The Cloud backup tile in Settings (ADR-012). It signs in to a Google account and out
-        again; the uploads follow by themselves (slice 1c). The one-time unlock and the restore
-        come later. Every
+        The Cloud backup tile in Settings (ADR-012, ADR-013). It signs in to a Google account and
+        out again, unlocks the backup with the one-time purchase (slice 1d), and the uploads
+        follow by themselves (slice 1c). Restoring the trips comes later. Every
         %1$s below is the account's email address.
     -->
     <string name="settings_cloud_title">Cloud backup</string>
     <string name="settings_cloud_line_off">Off. Your trips stay on this phone</string>
-    <string name="settings_cloud_line_signed_in">Signed in as %1$s</string>
+    <string name="settings_cloud_line_signed_in">Signed in as %1$s. Not unlocked yet</string>
+    <string name="settings_cloud_line_on">On, as %1$s</string>
     <string name="settings_cloud_line_unavailable">Not in this build</string>
     <string name="settings_cloud_explained">Optional. Sign in with your Google account to keep a copy of your trips, without their GPS points, on Dually\'s server in Canada.</string>
     <string name="settings_cloud_sign_in">Sign in with Google</string>
     <string name="settings_cloud_signed_in">Signed in as %1$s. Your trips upload by themselves after each change, when the phone is online. The Log has a line for each upload.</string>
     <string name="settings_cloud_sign_out">Sign out</string>
+    <!-- The account is signed in but does not hold the one-time unlock (ADR-013). -->
+    <string name="settings_cloud_locked">Signed in as %1$s. Unlock the backup once and every trip is kept on Dually\'s server in Canada, without its GPS points. Bought it already, on this phone or another? Restore it.</string>
+    <!-- %1$s is the price as Google Play shows it: US$19.99, CA$27.99. -->
+    <string name="settings_cloud_unlock_price">Unlock for %1$s</string>
+    <string name="settings_cloud_unlock">Unlock the backup</string>
+    <string name="settings_cloud_restore">Restore purchase</string>
+    <string name="settings_cloud_unlocked">Backup unlocked. Your trips start uploading now.</string>
+    <string name="settings_cloud_pending">Payment pending. The backup unlocks when Google Play says it is paid; press Restore purchase then.</string>
+    <string name="settings_cloud_not_offered">Google Play cannot sell the backup on this phone right now.</string>
+    <string name="settings_cloud_other_account">That purchase belongs to another Dually backup account. Sign in with the Google account you used when you bought it.</string>
+    <string name="settings_cloud_refunded">That purchase was refunded, so it no longer unlocks the backup.</string>
+    <string name="settings_cloud_nothing_to_restore">No purchase of the backup was found in this phone\'s Google Play account.</string>
+    <string name="settings_cloud_unlock_failed">Unlocking did not work. If you paid, the purchase is kept: try Restore purchase. The Log says why.</string>
     <string name="settings_cloud_no_account">This phone has no Google account to sign in with. Add one in the phone\'s settings, then try again.</string>
     <string name="settings_cloud_offline">Google could not be reached. Check the phone is online and try again.</string>
     <string name="settings_cloud_failed">Signing in did not work. Try again; the Log says why.</string>

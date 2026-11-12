@@ -2,6 +2,7 @@ package com.shawnkowalchuk.milo.feature.settings
 
 import com.shawnkowalchuk.milo.data.cloud.CloudAccount
 import com.shawnkowalchuk.milo.data.cloud.CloudSignInResult
+import com.shawnkowalchuk.milo.data.cloud.CloudUnlockResult
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.platform.trip.FakeEventLogDao
@@ -33,6 +34,11 @@ class CloudBackupViewModelTest {
     private var stored: CloudAccount? = null
     private var sheets = 0
     private var signOuts = 0
+    private var priceAsked = 0
+
+    /** What Google Play's purchase sheet, then the server, answer next. */
+    private var unlockAnswer: CloudUnlockResult = CloudUnlockResult.Unlocked
+    private var restoreAnswer: CloudUnlockResult = CloudUnlockResult.Unlocked
 
     /** What Google's sheet answers next. Completed by the test, so it can look while it is open. */
     private var answer = CompletableDeferred<CloudSignInResult>()
@@ -50,6 +56,12 @@ class CloudBackupViewModelTest {
                 signOuts++
                 stored = null
             },
+            price = {
+                priceAsked++
+                "US$19.99"
+            },
+            unlock = { unlockAnswer },
+            restore = { restoreAnswer },
             eventLog = EventLogRepository(log),
             clock = { 1_000L },
         ).also { runCurrent() }
@@ -107,9 +119,9 @@ class CloudBackupViewModelTest {
         val cases =
             listOf(
                 CloudSignInResult.Cancelled to null,
-                CloudSignInResult.NoGoogleAccount to CloudSignInNote.NO_GOOGLE_ACCOUNT,
-                CloudSignInResult.Offline to CloudSignInNote.OFFLINE,
-                CloudSignInResult.Failed("Firebase: refused") to CloudSignInNote.FAILED,
+                CloudSignInResult.NoGoogleAccount to CloudNote.NO_GOOGLE_ACCOUNT,
+                CloudSignInResult.Offline to CloudNote.OFFLINE,
+                CloudSignInResult.Failed("Firebase: refused") to CloudNote.SIGN_IN_FAILED,
             )
         for ((result, note) in cases) {
             answer = CompletableDeferred(result)
@@ -146,5 +158,73 @@ class CloudBackupViewModelTest {
         assertEquals(1, signOuts)
         assertNull(tile.state.value.account)
         assertFalse(tile.state.value.working)
+    }
+
+    @Test
+    fun `an account without the unlock is shown the price, and one that has it is not asked`() =
+        runTest {
+            stored = account
+            assertEquals("US$19.99", viewModel().state.value.price)
+
+            stored = account.copy(unlocked = true)
+            priceAsked = 0
+            assertNull(viewModel().state.value.price)
+            assertEquals(0, priceAsked)
+        }
+
+    @Test
+    fun `an unlock unlocks the account shown and says so`() = runTest {
+        stored = account
+        val tile = viewModel()
+
+        tile.onUnlock(Unit)
+        runCurrent()
+
+        assertEquals(true, tile.state.value.account?.unlocked)
+        assertEquals(CloudNote.UNLOCKED, tile.state.value.note)
+        assertFalse(tile.state.value.working)
+    }
+
+    @Test
+    fun `each way an unlock or a restore ends has its note, and the account stays locked`() =
+        runTest {
+            stored = account
+            val tile = viewModel()
+            val cases =
+                listOf(
+                    CloudUnlockResult.Cancelled to null,
+                    CloudUnlockResult.Pending to CloudNote.PENDING,
+                    CloudUnlockResult.NotOffered to CloudNote.NOT_OFFERED,
+                    CloudUnlockResult.OtherAccount to CloudNote.OTHER_ACCOUNT,
+                    CloudUnlockResult.Refunded to CloudNote.REFUNDED,
+                    CloudUnlockResult.NothingToRestore to CloudNote.NOTHING_TO_RESTORE,
+                    CloudUnlockResult.Offline to CloudNote.OFFLINE,
+                    CloudUnlockResult.Failed("Purchase check: INTERNAL") to CloudNote.UNLOCK_FAILED,
+                )
+            for ((result, note) in cases) {
+                unlockAnswer = result
+                tile.onUnlock(Unit)
+                runCurrent()
+                assertEquals(note, tile.state.value.note)
+
+                restoreAnswer = result
+                tile.onRestore()
+                runCurrent()
+                assertEquals(note, tile.state.value.note)
+                assertEquals(false, tile.state.value.account?.unlocked)
+            }
+        }
+
+    @Test
+    fun `an account that holds the unlock is offered no unlock`() = runTest {
+        stored = account.copy(unlocked = true)
+        val tile = viewModel()
+        unlockAnswer = CloudUnlockResult.Failed("should not be asked")
+
+        tile.onUnlock(Unit)
+        tile.onRestore()
+        runCurrent()
+
+        assertNull(tile.state.value.note)
     }
 }

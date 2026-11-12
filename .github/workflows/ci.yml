@@ -121,5 +121,13 @@ jobs:
       - name: Install the test tools
         run: npm ci --no-audit --no-fund
 
-      - name: Test the rules
+      - name: Test the rules and the purchase check
         run: npm test
+
+      # The Cloud Functions themselves (firebase/functions), with exactly the packages they are
+      # deployed with: loading them proves every import is found. Their logic is tested above.
+      - name: Load the Cloud Functions
+        working-directory: firebase/functions
+        run: |
+          npm ci --no-audit --no-fund
+          GCLOUD_PROJECT=demo-dually node -e "import('./index.js').then((m) => console.log(Object.keys(m).join(', ')))"

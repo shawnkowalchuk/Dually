@@ -6,6 +6,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+import java.security.MessageDigest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
@@ -22,9 +23,21 @@ private const val ACCOUNT_FILE_BEING_WRITTEN = "account.json.new"
  * @param id Firebase's id of the account: the name of its folder in the cloud, and what the
  * ledger is kept for. It never changes for one Google account.
  * @param email what the Settings tile shows, so the user sees which Google account it is.
+ * @param unlocked whether the account held the one-time unlock when the app last looked
+ * (ADR-013). Uploads run only while it does; the server's rules decide in the end.
  */
 @Serializable
-data class CloudAccount(val id: String, val email: String)
+data class CloudAccount(val id: String, val email: String, val unlocked: Boolean = false)
+
+/**
+ * What a purchase carries to Google Play as its "obfuscated account id": the SHA-256 of the
+ * account's id, in hex. The purchase check on the server computes the same and unlocks only the
+ * account that made the purchase (firebase/functions/unlock.js, accountTag), without Google Play
+ * seeing the account.
+ */
+fun cloudAccountTag(accountId: String): String = MessageDigest.getInstance("SHA-256")
+    .digest(accountId.toByteArray(Charsets.UTF_8))
+    .joinToString("") { "%02x".format(it) }
 
 /**
  * Which account the backup is signed in to, kept by Dually itself so that the app can tell
