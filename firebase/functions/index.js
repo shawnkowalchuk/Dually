@@ -26,8 +26,12 @@ const REFUND_LOOK_BACK_MS = 31 * 24 * 60 * 60 * 1000;
 /**
  * Called by the app after a purchase, and by "Restore purchase", with the purchase's token.
  * Answers { unlocked: true }, or an error whose message is the reason (unlock.js).
+ *
+ * `invoker: 'public'` lets the call reach the function at all; who may use it is checked
+ * inside, by the Firebase sign-in on the call (`request.auth`). Without it a function that was
+ * not created by a clean first deploy turns every caller away with a 403 (2026-11-12).
  */
-export const unlockBackup = onCall(async (request) => {
+export const unlockBackup = onCall({ invoker: 'public' }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'not-signed-in');
   try {
     return await unlock({
