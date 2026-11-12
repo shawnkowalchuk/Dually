@@ -52,6 +52,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
@@ -315,7 +316,10 @@ class AppContainer(context: Context, private val trustedClock: TrustedClock) {
     val party: PartyObjects by lazy { PartyObjects(appContext, this) }
     val review: ReviewObjects by lazy { ReviewObjects(appContext, this) }
     val sentRun: SentRunObjects by lazy { SentRunObjects(appContext, this) }
-    val cloud: CloudObjects by lazy { CloudObjects(appContext) }
+    val cloud: CloudObjects by lazy {
+        val changes = miloDatabase.invalidationTracker.createFlow("trips", "sent_reports")
+        CloudObjects(appContext, this, miloDatabase.mainTransferDao(), changes.map { })
+    }
 
     /**
      * Makes an audio file Shawn picked the connect sound or the trip-start sound, by copying it

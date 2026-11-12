@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-        The Cloud backup tile in Settings (ADR-012). In slice 1b it signs in to a Google account
-        and out again; what is backed up, the one-time unlock and the restore come later. Every
+        The Cloud backup tile in Settings (ADR-012). It signs in to a Google account and out
+        again; the uploads follow by themselves (slice 1c). The one-time unlock and the restore
+        come later. Every
         %1$s below is the account's email address.
     -->
     <string name="settings_cloud_title">Cloud backup</string>
@@ -11,7 +12,7 @@
     <string name="settings_cloud_line_unavailable">Not in this build</string>
     <string name="settings_cloud_explained">Optional. Sign in with your Google account to keep a copy of your trips, without their GPS points, on Dually\'s server in Canada.</string>
     <string name="settings_cloud_sign_in">Sign in with Google</string>
-    <string name="settings_cloud_signed_in">Signed in as %1$s. Uploading your trips is not built yet.</string>
+    <string name="settings_cloud_signed_in">Signed in as %1$s. Your trips upload by themselves after each change, when the phone is online. The Log has a line for each upload.</string>
     <string name="settings_cloud_sign_out">Sign out</string>
     <string name="settings_cloud_no_account">This phone has no Google account to sign in with. Add one in the phone\'s settings, then try again.</string>
     <string name="settings_cloud_offline">Google could not be reached. Check the phone is online and try again.</string>

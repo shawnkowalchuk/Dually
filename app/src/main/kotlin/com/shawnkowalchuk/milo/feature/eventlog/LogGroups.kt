@@ -2,7 +2,7 @@ package com.shawnkowalchuk.milo.feature.eventlog
 
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 
-// How the Log screen sorts the log's thirteen categories into the four chips of the owner's
+// How the Log screen sorts the log's fourteen categories into the four chips of the owner's
 // design, and which word a line's tag carries. Pure functions: the words on the chips are in
 // the string resources, and the colours are the theme's.
 
@@ -22,8 +22,8 @@ enum class LogGroup { TRIPS, BLUETOOTH, ANDROID_AUTO, ERRORS }
  *   whatever caused the look), and the truck's pairing.
  * - **Android Auto:** its connection.
  * - **Errors:** a failure that was caught, and a crash.
- * - **Under "All" only:** the process, the trip service, GPS, the driving alert and the report.
- *   None of them is a trip, the truck's connection, Android Auto or a failure.
+ * - **Under "All" only:** the process, the trip service, GPS, the driving alert, the report and
+ *   the cloud backup. None of them is a trip, the truck's connection, Android Auto or a failure.
  */
 fun EventCategory.logGroup(): LogGroup? = when (this) {
     EventCategory.TRIP, EventCategory.GRACE, EventCategory.ADDRESS -> LogGroup.TRIPS
@@ -39,6 +39,7 @@ fun EventCategory.logGroup(): LogGroup? = when (this) {
     EventCategory.LOCATION,
     EventCategory.DRIVING,
     EventCategory.REPORT,
+    EventCategory.CLOUD,
     -> null
 }
 

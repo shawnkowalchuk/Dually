@@ -45,8 +45,7 @@ coroutines = "1.11.0"
 credentials = "1.6.0"
 datastore = "1.2.1"
 # The Firebase BoM pins every Firebase library below to versions tested together, as the Compose
-# BoM does. Only Authentication today (slice 1b of the cloud backup, ADR-012); Firestore follows
-# in 1c. Never Analytics, Crashlytics, Messaging, Performance or Remote Config (ADR-012).
+# BoM does: Authentication (slice 1b of the cloud backup, ADR-012) and Firestore (1c). Never Analytics, Crashlytics, Messaging, Performance or Remote Config (ADR-012).
 firebaseBom = "35.2.0"
 # Google's "Sign in with Google" request for Credential Manager, which hands back the Google ID
 # token Firebase Authentication takes.
@@ -72,6 +71,9 @@ serializationJson = "1.11.0"
 # The SQLite build Room 3 runs on. It is compiled into the app, so the database engine is the
 # same on every Android version and does not change under the stored trips after a system update.
 sqlite = "2.7.1"
+# WorkManager: runs the cloud backup's upload when the phone has a network, retries it with
+# back-off, and once a day as a safety net (ADR-012). Nothing that starts a trip uses it.
+work = "2.12.0"
 
 [libraries]
 # AGP 9 compiles Kotlin itself and bundles an older Kotlin Gradle plugin. The root build script
@@ -127,6 +129,8 @@ androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.r
 # await() on a Google Play services Task, which is what Firebase answers with. Released with,
 # and pinned to, the coroutines library above.
 kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "coroutines" }
+androidx-work-runtime = { module = "androidx.work:work-runtime", version.ref = "work" }
+
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 # Tests only: a clock and a scheduler the test controls, for code that runs in coroutines.
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
@@ -140,6 +144,7 @@ play-review = { module = "com.google.android.play:review", version.ref = "playRe
 
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
+firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleId" }
 
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }

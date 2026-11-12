@@ -4,6 +4,9 @@ import android.content.Context
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.MemoryCacheSettings
+import com.google.firebase.firestore.firestoreSettings
 import com.shawnkowalchuk.milo.BuildConfig
 
 /**
@@ -37,6 +40,25 @@ class CloudFirebase(private val context: Context) {
      * @throws IllegalStateException in a build without the Firebase settings.
      */
     fun auth(): FirebaseAuth = FirebaseAuth.getInstance(app())
+
+    /**
+     * Firestore, starting Firebase the first time it is asked for. Its cache is kept in memory
+     * only: the backup reads nothing back, and a write that did not reach the server must not
+     * wait on the disk to be sent later behind the ledger's back (`CloudLedger`).
+     *
+     * @throws IllegalStateException in a build without the Firebase settings.
+     */
+    fun firestore(): FirebaseFirestore = synchronized(this) {
+        firestore ?: FirebaseFirestore
+            .getInstance(app())
+            .apply {
+                firestoreSettings = firestoreSettings {
+                    setLocalCacheSettings(MemoryCacheSettings.newBuilder().build())
+                }
+            }.also { firestore = it }
+    }
+
+    private var firestore: FirebaseFirestore? = null
 
     private fun app(): FirebaseApp = synchronized(this) {
         check(isConfigured) { "This build has no Firebase settings (app/build.gradle.kts)." }
