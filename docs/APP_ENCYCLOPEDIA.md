@@ -1920,7 +1920,7 @@ The trips table (which trips count, Business or Personal, the marks of a trip ad
    - **It is never read whole.** The newest 200 entries are read, through the index on the time. "Show older entries" at the bottom adds 200 more each time. The list is drawn lazily, so only the lines on screen are laid out. It opens as fast with ten thousand entries as with ten.
    - It follows the log: a line written while the screen is open appears at the top.
    - A setup button that could not open its HyperOS screen writes an `ERROR` line here (see [Permission checklist](#permission-checklist)).
-   - **Five chips narrow the list** (since 2026-10-07; from phase 4 until then there was one chip for each category): "All", "Trips", "Bluetooth", "Android Auto" and "Errors". Each of the log's thirteen categories is placed by one pure function, `logGroup`:
+   - **Five chips narrow the list** (since 2026-10-07; from phase 4 until then there was one chip for each category): "All", "Trips", "Bluetooth", "Android Auto" and "Errors". Each of the log's fourteen categories is placed by one pure function, `logGroup`:
 
      | Chip | The categories it shows |
      |---|---|
@@ -1928,7 +1928,7 @@ The trips table (which trips count, Business or Personal, the marks of a trip ad
      | Bluetooth | `TRIGGER` (each look at the truck's connection), `PAIRING` |
      | Android Auto | `ANDROID_AUTO` |
      | Errors | `ERROR`, `CRASH` |
-     | "All" only | `PROCESS`, `SERVICE`, `LOCATION`, `DRIVING`, `REPORT` |
+     | "All" only | `PROCESS`, `SERVICE`, `LOCATION`, `DRIVING`, `REPORT`, `CLOUD` (the cloud backup's uploads, since 2026-11-11) |
 
      The last five are none of the four things the chips name, so they are shown under "All" and nowhere else. **That is less than before:** the list can no longer be narrowed to `PROCESS` or to `LOCATION` alone. A new category does not compile until it is placed, and a unit test fails until the test says where. The filter is still part of the query, not a sieve over the 200 lines in hand, so a chip's lines are found however far back they are. "Show older entries" works under a chip. A chip without a line says so ("The log has no error and no crash.").
    - **Share the whole log** (since 2026-10-06, phase 4) is the square button beside the title since 2026-10-07: see "Sharing the log", below.
@@ -2250,7 +2250,7 @@ Android only: `SystemClock.elapsedRealtime`, `Settings.Global.BOOT_COUNT` and th
 
 ## Cloud backup
 
-**Status:** Being built (phase 1 of the iPhone and cloud backup plan, ADR-012 and ADR-013). Slice 1a (the comparison) is in main; slice 1b (Firebase and Google sign-in, the Settings tile) is on the branch `app/cloud-backup`, where slices 1b to 1f gather until the whole backup goes to main with its privacy page (FINDINGS_LOG, 2026-11-11). Nothing uploads yet. · **Platforms:** Android, phone screen only (the iPhone later, from the same logic, ADR-014; Android Auto has no Settings) · **Last updated:** 2026-11-11
+**Status:** Being built (phase 1 of the iPhone and cloud backup plan, ADR-012 and ADR-013). Slice 1a (the comparison) is in main; slices 1b (Firebase and Google sign-in, the Settings tile) and 1c (the upload, Firestore and its security rules) are on the branch `app/cloud-backup`, where slices 1b to 1f gather until the whole backup goes to main with its privacy page (FINDINGS_LOG, 2026-11-11). Uploads are refused until the account holds the unlock, which only the console can give until slice 1d. · **Platforms:** Android, phone screen only (the iPhone later, from the same logic, ADR-014; Android Auto has no Settings) · **Last updated:** 2026-11-11
 
 **What it does (when finished)**
 An optional backup of the trips to Dually's server (Firebase, Montréal), off until the user turns it on in Settings and unlocked by a one-time US$19.99 purchase. Every finished trip and every change to one is uploaded; a new phone signs in and restores. No GPS points, no ads.
@@ -2262,6 +2262,9 @@ An optional backup of the trips to Dually's server (Firebase, Montréal), off un
 - A trip's document is `trips/{id}`: ids are never used twice on a phone, and an import and a restore keep them.
 - **Sign-in (slice 1b):** the Cloud backup tile in Settings, above Backup, export and import. "Sign in with Google" opens Google's own sheet (Android's Credential Manager); the token it hands back is given to Firebase Authentication, whose account id names the account's folder in the cloud. The tile then says "Signed in as" the email, with Sign out. Closing the sheet says nothing; no Google account on the phone, no network, and any other failure each have a line, and a failure writes its kind (never the account) to the Log as an error.
 - **Firebase stays silent until then:** its automatic start is removed from the manifest, and `CloudFirebase` starts it at the first sign-in or sign-out. Which account is signed in is kept by Dually in `no_backup/cloud/account.json`, so the app knows without starting Firebase. Neither Android's backup nor an export carries it: a new phone signs in again.
+- **When it uploads (slice 1c):** 30 seconds after the trips, the sent reports or the settings that travel last changed, from any screen, Android Auto or an import (Room's change signal for the two tables, the settings file's for the settings); at every start of the app and at a sign-in; and once a day. Always through WorkManager, with a network. One upload at a time: a request while one waits or runs is dropped, and the upload runs again until a run finds nothing left (at most five runs), so a trip that ends mid-upload is sent by it. Stopped by the network: tried again from 1 minute, doubling. Refused by the cloud (no unlock, or no longer signed in to Firebase): not tried again until the next change. A sign-out cancels both.
+- **In the cloud:** `users/{uid}/trips/{id}`, `users/{uid}/backup/sentReports` and `users/{uid}/backup/settings`, each one field, `json`, holding exactly the JSON that was fingerprinted. Firestore's cache is in memory only. The security rules (`firebase/firestore.rules`) let an account read and remove only its own documents, write them only while `unlocks/{uid}` exists, and give no app a way to write an unlock. Tested on Firebase's emulator in CI.
+- **The Log** has a CLOUD line for each upload that did something ("Cloud backup: 3 sent, 0 removed.") and for each that stopped, with Firestore's code. Never an email or a trip.
 - **A build without the Firebase settings** (debug builds on CI, Dependabot's pull requests) says "Not in this build" and offers nothing. A release build without them stops.
 
 **Where the code lives**
@@ -2272,9 +2275,12 @@ An optional backup of the trips to Dually's server (Firebase, Montréal), off un
 - `data/transfer/TransferDaos.kt`: `allRows`, the one-transaction read.
 - `data/cloud/CloudAccount.kt`: the account signed in, and its file. `data/cloud/CloudSignInResult.kt`: how a sign-in ended.
 - `platform/cloud/CloudFirebase.kt`: the one way into Firebase, started by hand from the four values the build reads from `~/keys/dually-firebase.properties`. `platform/cloud/GoogleCloudSignIn.kt`: Credential Manager, then Firebase.
-- `feature/settings/CloudBackupTile.kt` and `CloudBackupViewModel.kt`; words in `res/values/strings_cloud.xml`; `app/CloudObjects.kt` holds the three and builds the ViewModel.
+- `data/cloud/CloudUpload.kt`: one upload, run until quiet, and what it tells the job (`uploadUntilQuiet`).
+- `platform/cloud/FirestoreCloudStore.kt`: a batch into Firestore, and its errors as unreachable or refused. `platform/cloud/CloudUploads.kt`: when uploads are asked for, and `CloudBackupWorker`, WorkManager's job.
+- `firebase/`: the security rules, their tests, and how they are published (`firebase/README.md`).
+- `feature/settings/CloudBackupTile.kt` and `CloudBackupViewModel.kt`; words in `res/values/strings_cloud.xml`; `app/CloudObjects.kt` holds the parts, the account signed in and the upload, and builds the ViewModel; `MiloApplication` starts it.
 - The build: `app/build.gradle.kts` ("Firebase, for the optional cloud backup"), and the manifest's INTERNET permission and three removed ones.
-- Tests: `app/src/test/.../data/cloud/` (`CloudBackupTest`, `CloudPlanTest`, `CloudLedgerTest`, `CloudAccountFileTest`) and `feature/settings/CloudBackupViewModelTest`. The sign-in itself is proven on the phone only.
+- Tests: `app/src/test/.../data/cloud/` (`CloudBackupTest`, `CloudPlanTest`, `CloudLedgerTest`, `CloudAccountFileTest`, `CloudUploadTest`), `firebase/test/rules.test.js`, and `feature/settings/CloudBackupViewModelTest`. The sign-in, Firestore and WorkManager themselves are proven on the phone only.
 
 **Edge cases & gotchas**
 - The ledger only knows what this phone sent. If the cloud copy is emptied from elsewhere (an account deleted, a refund's deletion after 30 days), the ledger must be cleared, or nothing is sent again. Likewise a phone that takes over the backup without restoring must clear the account's documents first (ADR-012, slice 1e).
@@ -2282,7 +2288,7 @@ An optional backup of the trips to Dually's server (Firebase, Montréal), off un
 - Google answers the sign-in sheet only for an app signed with a key whose fingerprint is in the Firebase project. Dually has one key for every build (Google Play signs with it too, FINDINGS_LOG 2026-10-14), and its SHA-1 and SHA-256 are registered. A build with the throwaway debug key gets "Signing in did not work".
 - Signing out does not delete anything in the cloud; deleting the account and its backup is slice 1e.
 
-**Not built yet:** the WorkManager job and Firestore with its security rules (1c), the purchase (1d), restore, account deletion and the finished Settings tile (1e), the privacy page, website and data safety answers (1f).
+**Not built yet:** the purchase and its Cloud Function, which writes `unlocks/{uid}` (1d), restore, account deletion and the finished Settings tile (1e), the privacy page, website and data safety answers (1f).
 
 ## Units: kilometres or miles
 

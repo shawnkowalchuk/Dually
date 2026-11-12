@@ -70,3 +70,8 @@ firebase-debug.*.log
 # --- Python scripts (tools/) --------------------------------------------------------------------
 # What Python leaves beside a script when one of them reads another.
 __pycache__/
+
+# --- The cloud backup's security rules and their tests (firebase/, ADR-012) -------------------
+firebase/node_modules/
+firestore-debug.log
+ui-debug.log

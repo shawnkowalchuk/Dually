@@ -47,6 +47,19 @@ updates:
           - "(1.8.0-rc01,1.8.0)"
           - "[1.9.0-alpha01,1.9.0)"
 
+  # The tools that test the cloud backup's security rules (firebase/package.json, ADR-012):
+  # firebase-tools with its emulator, Firebase's JavaScript library and its rules-testing kit.
+  # Never shipped in the app; CI runs them.
+  - package-ecosystem: "npm"
+    directory: "/firebase"
+    schedule:
+      interval: "weekly"
+    groups:
+      firebase-tools-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
   # The actions used by the workflows in .github/workflows. Each one is pinned to a commit SHA
   # with its release in a trailing comment (for example "# v7.0.1"). Dependabot reads that
   # comment to tell a patch from a major, and rewrites the SHA and the comment together.

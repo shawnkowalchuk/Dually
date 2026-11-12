@@ -366,10 +366,13 @@ dependencies {
     implementation(libs.play.review)
 
     // The optional cloud backup (ADR-012): Firebase Authentication with a Google account, which
-    // Credential Manager signs in to. Firebase is started by the app itself, only once the backup
+    // Credential Manager signs in to; Firestore, where the documents go; WorkManager, which runs
+    // the upload. Firebase is started by the app itself, only once the backup
     // is on; its automatic start is removed in the manifest.
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.androidx.work.runtime)
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
