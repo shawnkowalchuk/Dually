@@ -10,8 +10,9 @@ rules_version = '2';
 //     while it holds the unlock. Each document is one field, "json", a string the app wrote:
 //     the same JSON as the export file (data/cloud/CloudDocuments.kt).
 //   - unlocks/{uid}: the one-time purchase (ADR-013). The account reads its own; nobody
-//     writes one from an app. Only the purchase check on the server (slice 1d) or the console
-//     does.
+//     writes one from an app. Only the purchase check on the server (functions/unlock.js) or
+//     the console does.
+//   - purchases/ and deletions/: the purchase check's own records. No app reads or writes them.
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedInAs(uid) {

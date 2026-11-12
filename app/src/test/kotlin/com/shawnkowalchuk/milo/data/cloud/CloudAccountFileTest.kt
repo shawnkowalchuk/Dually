@@ -26,6 +26,27 @@ class CloudAccountFileTest {
     }
 
     @Test
+    fun `the unlock is kept, and a file written before it existed reads as not unlocked`() {
+        file.write(account.copy(unlocked = true))
+        assertEquals(true, file.read()?.unlocked)
+
+        File(
+            folder,
+            "account.json",
+        ).writeText("{\"id\":\"uid-1\",\"email\":\"driver@example.com\"}")
+        assertEquals(account, file.read())
+    }
+
+    @Test
+    fun `the account tag is the SHA-256 of the id in hex, as the server computes it`() {
+        // firebase/test/unlock.test.js checks the same value for the same id.
+        assertEquals(
+            "27dfbde6ec9d28c36258ee6edad10e40cdaeca1adf3f7ea7cdb23b494a1765ac",
+            cloudAccountTag("owner-uid"),
+        )
+    }
+
+    @Test
     fun `a damaged file is no account`() {
         file.write(account)
         File(folder, "account.json").writeText("{\"id\":\"uid")

@@ -170,7 +170,11 @@ android {
         // a newer one, and the only way past that is to uninstall, which deletes every trip.
         // Google Play takes a versionCode once, so a second bundle of the same version would need
         // a higher one too.
-        versionCode = 6
+        // Build 7 is the cloud backup's test build on Google Play's internal testing track
+        // (2026-11-11, Shawn's choice): Play Console makes the backup's product only once a build
+        // with the billing library is uploaded. Its name stays 0.3.3 until the backup's release
+        // (slice 1f) writes its line in the list of changes.
+        versionCode = 7
         versionName = "0.3.3"
 
         // The Firebase settings (above), empty in a build without the file.
@@ -372,6 +376,8 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
+    // The one-time purchase that unlocks the backup (ADR-013), checked on the server.
+    implementation(libs.play.billing)
     implementation(libs.androidx.work.runtime)
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)

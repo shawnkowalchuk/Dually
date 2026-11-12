@@ -9,6 +9,9 @@ import com.google.firebase.firestore.MemoryCacheSettings
 import com.google.firebase.firestore.firestoreSettings
 import com.shawnkowalchuk.milo.BuildConfig
 
+/** Where the Cloud Functions run: Montréal, with the data (ADR-012). */
+private const val FUNCTIONS_REGION = "northamerica-northeast1"
+
 /**
  * Dually's way into Firebase, for the optional cloud backup (ADR-012), and the only one: nothing
  * else in the app names Firebase.
@@ -59,6 +62,10 @@ class CloudFirebase(private val context: Context) {
     }
 
     private var firestore: FirebaseFirestore? = null
+
+    /** The address of the Cloud Function [name], in Montréal like Firestore (firebase/functions). */
+    fun functionUrl(name: String): String =
+        "https://$FUNCTIONS_REGION-${BuildConfig.FIREBASE_PROJECT_ID}.cloudfunctions.net/$name"
 
     private fun app(): FirebaseApp = synchronized(this) {
         check(isConfigured) { "This build has no Firebase settings (app/build.gradle.kts)." }

@@ -21,6 +21,9 @@ ktlint = "1.8.0"
 
 # Libraries.
 activityCompose = "1.13.0"
+# Google Play Billing: the one-time purchase that unlocks the cloud backup, US$19.99 (ADR-013).
+# Google Play makes apps move to a newer major version every two years; Dependabot offers each.
+billing = "9.1.0"
 # The Car App Library: the Android Auto screen, and CarConnection, which tells the trip service
 # whether Android Auto is connected.
 # THE ONE EXCEPTION to "stable only", decided by Shawn on 2026-10-06 (ADR-001, "Exception"): a
@@ -45,7 +48,9 @@ coroutines = "1.11.0"
 credentials = "1.6.0"
 datastore = "1.2.1"
 # The Firebase BoM pins every Firebase library below to versions tested together, as the Compose
-# BoM does: Authentication (slice 1b of the cloud backup, ADR-012) and Firestore (1c). Never Analytics, Crashlytics, Messaging, Performance or Remote Config (ADR-012).
+# BoM does: Authentication (slice 1b of the cloud backup, ADR-012) and Firestore (1c). Not
+# Functions: its client brings Google's old Instance ID and Cloud Messaging, so the one call to the
+# purchase check is made directly (platform/cloud/CloudUnlockCheck.kt). Never Analytics, Crashlytics, Messaging, Performance or Remote Config (ADR-012).
 firebaseBom = "35.2.0"
 # Google's "Sign in with Google" request for Credential Manager, which hands back the Google ID
 # token Firebase Authentication takes.
@@ -140,6 +145,8 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 # The review library itself, without its Kotlin extensions ("review-ktx"): with those the release
 # build does not get through R8, because they name a class no library holds (ADR-009). What they
 # would save is some fifteen lines, which platform/review/PlayReviewCard.kt has instead.
+play-billing = { module = "com.android.billingclient:billing", version.ref = "billing" }
+
 play-review = { module = "com.google.android.play:review", version.ref = "playReview" }
 
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }

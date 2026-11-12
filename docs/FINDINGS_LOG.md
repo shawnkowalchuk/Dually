@@ -26,6 +26,27 @@
 
 ### 2026-11-11
 
+**`[CHANGE]` Cloud backup, slice 1d: the US$19.99 unlock and its purchase check (ADR-013 amended)**
+Shawn: "go on with 1d". Asked, he said Dually's Play Console is under shawn.seawingman@gmail.com (not the Gmail used for Firebase), and its payments profile is set up.
+- **In the app:**
+  - Play Billing 9.1.0 (`PlayBilling`): price, purchase sheet, owned purchases.
+  - A direct HTTPS call to the purchase check (`CloudUnlockCheck`, with the protocol in `data/cloud/CloudCallable.kt`).
+  - `unlockAfter` and `restoreFrom` (`data/cloud/CloudUnlock.kt`).
+  - The account's file keeps `unlocked`, and uploads follow it.
+  - The tile gains Unlock with Google Play's price, Restore purchase, and nine endings.
+- **On the server:** `firebase/functions` (Node 22, Montréal) with the callable `unlockBackup` and the daily `checkRefunds` (`unlock.js`). 8 tests on the emulator with a stand-in for Google Play, plus one rule test that no app reaches `purchases/` or `deletions/`. 17 server tests in all.
+- **CI:** CI now also loads the functions with their exact packages, and Dependabot gets their npm entry.
+- **The tie between purchase and account:** the SHA-256 of the account id. Tested on both sides against one value (`27dfbde6…65ac` for `owner-uid`), so the app and the server cannot drift apart.
+- **The rules file:** only its header comment changed. It is published again after merge.
+**`[DECISION]` Refunds by a daily check of Google Play's voided purchases, not by real-time notifications.** Notifications need a Pub/Sub topic that Google Play publishes to, plus its own function and permissions. Polling once a day needs none of that, and a day of uploads after a refund costs nothing. ADR-013 is amended.
+**`[DECISION]` One purchase unlocks one account.** `purchases/{SHA-256 of the token}` remembers which account it unlocked. Another account presenting the same token gets "another account's purchase", even though Google Play's own tag check would already refuse it. A refunded purchase never unlocks again.
+**`[FINDING]` Firebase's Functions client library (firebase-functions 23.0.0) brings Google's old Instance ID (firebase-iid 21.1.0), and with it Cloud Messaging and the push permission `com.google.android.c2dm.permission.RECEIVE`.** That is Messaging, which ADR-012 rules out. It was in the first build of this slice and seen in the release APK's permissions. Removed: the app makes the one call itself, by Firebase's documented callable protocol, a POST of `{"data":…}` with the account's ID token. That is about 40 lines plus a tested parser (`CloudCallableTest`). STANDARDS: under 50 lines, write it rather than add a dependency.
+**`[FINDING]` Cloud Functions' newest runtime is Node 22 (Google's docs, 2026-11-11), whose support ends April 2027.** `firebase.json` names `nodejs22`, and Dependabot does not move it. Move to 24 when Google offers it.
+**`[FINDING]` A Python string written into strings.xml loses `\'` and becomes `'`, which aapt2 refuses** ("unescaped apostrophe"). Write string resources with a raw string or the Edit tool.
+**`[DECISION]` The functions run as their own service account, `purchase-check`, with one role (Cloud Datastore User),** not as the default compute account Google creates at the first deploy with Editor on the whole project. That account is also the one Play Console allows to view orders. Made in the console on 2026-11-11, along with the Google Play Android Developer API turned on, and a budget alert of CA$15 a month (emails at 50, 90 and 100 %). The billing account is in CAD. Shawn put the project on Blaze, and the Firebase CLI on the Mac was already signed in as him. Spend caps were left off: a cap that pauses Cloud Run would also stop paying users' purchase checks.
+**`[CHANGE]` Play Console, 2026-11-11 (Dually is in developer account 5027449388988344342, signed in as shawn.seawingman@gmail.com; Shawn's main Gmail sees only some of its apps).** Shawn uploaded build 7 to internal testing, available to testers at 22:07. The one-time product `cloud_backup`, "Cloud backup", purchase option `lifetime` (Buy, backwards compatible), was created and activated. Price: US$19.99 set for all 174 regions, Google's conversion elsewhere (CA$28.99, £17.99). Inviting `purchase-check` into Play Console with order access was refused to me by the browser's safety check, as an access grant to an outside account: Shawn does it himself (firebase/README.md has the steps), along with the licence testers.
+Not proven yet, and waiting on Shawn: the service account's access in Play Console, the licence testers, and a licence-test purchase on the phone. Build 7 (the backup's test build, his choice; the next public release becomes build 8) is on internal testing, and the product is active.
+
 **`[CHANGE]` Cloud backup, slice 1c: the upload, Firestore and its security rules (ADR-012 amended)**
 Shawn: "go on with 1c". On the branch `app/cloud-backup`, like 1b.
 - **When it uploads:** `CloudUploads` asks WorkManager (2.12.0) for an upload. It asks 30 s after the trips or sent reports change (Room's `InvalidationTracker` flow, so every writer is covered, Android Auto and an import included) or the travelling settings do, at each app start and sign-in, and daily. `CloudBackupWorker` runs `CloudObjects.upload`. That runs the 1a comparison until a run finds nothing (`uploadUntilQuiet`, five at most) and answers success, retry (network) or failure (refused).

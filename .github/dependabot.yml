@@ -60,6 +60,19 @@ updates:
           - "minor"
           - "patch"
 
+  # The Cloud Functions' own packages (firebase/functions/package.json, ADR-013): what is
+  # deployed to Firebase. A major update of firebase-functions or firebase-admin can change how
+  # a function is declared; deploy and try the purchase after merging one.
+  - package-ecosystem: "npm"
+    directory: "/firebase/functions"
+    schedule:
+      interval: "weekly"
+    groups:
+      functions-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
   # The actions used by the workflows in .github/workflows. Each one is pinned to a commit SHA
   # with its release in a trailing comment (for example "# v7.0.1"). Dependabot reads that
   # comment to tell a patch from a major, and rewrites the SHA and the comment together.

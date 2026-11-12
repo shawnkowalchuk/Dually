@@ -40,8 +40,8 @@ private const val RETRY_FIRST_S = 60L
 
 /**
  * When the cloud backup uploads (ADR-012): after every change to what it keeps, and once a day,
- * each time with a network, through WorkManager. While no account is signed in it asks for
- * nothing and cancels what was asked.
+ * each time with a network, through WorkManager. While no account is signed in, or the one
+ * signed in does not hold the unlock (ADR-013), it asks for nothing and cancels what was asked.
  *
  * Asking only schedules work; it starts no Firebase. The job does that, and only with an account
  * signed in ([CloudBackupWorker]).
@@ -65,7 +65,7 @@ class CloudUploads(
         scope.launch {
             account.collectLatest { signedIn ->
                 val work = WorkManager.getInstance(context)
-                if (signedIn == null) {
+                if (signedIn == null || !signedIn.unlocked) {
                     work.cancelUniqueWork(UPLOAD_NOW)
                     work.cancelUniqueWork(UPLOAD_DAILY)
                     return@collectLatest

@@ -72,6 +72,6 @@ firebase-debug.*.log
 __pycache__/
 
 # --- The cloud backup's security rules and their tests (firebase/, ADR-012) -------------------
-firebase/node_modules/
+firebase/**/node_modules/
 firestore-debug.log
 ui-debug.log
