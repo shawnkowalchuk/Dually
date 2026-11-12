@@ -226,6 +226,8 @@ fun MiloNavigation(
                             viewModel(factory = odometerViewModelFactory(container)),
                         widgetViewModel =
                             viewModel(factory = homeWidgetViewModelFactory(container)),
+                        cloudViewModel =
+                            viewModel(factory = cloudBackupViewModelFactory(container)),
                         onChangeTruck = { backStack.openOnTop(PairingKey) },
                         onOpenSounds = { backStack.openOnTop(SoundListKey(it)) },
                         onBack =

@@ -2250,7 +2250,7 @@ Android only: `SystemClock.elapsedRealtime`, `Settings.Global.BOOT_COUNT` and th
 
 ## Cloud backup
 
-**Status:** Being built (phase 1 of the iPhone and cloud backup plan, ADR-012 and ADR-013). Slice 1a of 2026-11-11 is in the code: unit tests only, called from nowhere, sends nothing. · **Platforms:** Android (the iPhone later, from the same logic, ADR-014) · **Last updated:** 2026-11-11
+**Status:** Being built (phase 1 of the iPhone and cloud backup plan, ADR-012 and ADR-013). Slice 1a (the comparison) is in main; slice 1b (Firebase and Google sign-in, the Settings tile) is on the branch `app/cloud-backup`, where slices 1b to 1f gather until the whole backup goes to main with its privacy page (FINDINGS_LOG, 2026-11-11). Nothing uploads yet. · **Platforms:** Android, phone screen only (the iPhone later, from the same logic, ADR-014; Android Auto has no Settings) · **Last updated:** 2026-11-11
 
 **What it does (when finished)**
 An optional backup of the trips to Dually's server (Firebase, Montréal), off until the user turns it on in Settings and unlocked by a one-time US$19.99 purchase. Every finished trip and every change to one is uploaded; a new phone signs in and restores. No GPS points, no ads.
@@ -2260,6 +2260,9 @@ An optional backup of the trips to Dually's server (Firebase, Montréal), off un
 - How a change is found: by comparison, not by a list of changes. Each run reads every trip and the sent reports in one transaction and the settings, turns each into its document, and compares the document's fingerprint (SHA-256 of its JSON) with the one it had when last uploaded. New and changed documents are sent, documents of trips the phone no longer has are removed (an import or a restore replaced them). Settings that cannot be read are neither sent nor removed.
 - In batches of at most 400 (Firestore takes 500). The ledger is written after each batch, so a run cut off loses at most one batch, which the next run sends again.
 - A trip's document is `trips/{id}`: ids are never used twice on a phone, and an import and a restore keep them.
+- **Sign-in (slice 1b):** the Cloud backup tile in Settings, above Backup, export and import. "Sign in with Google" opens Google's own sheet (Android's Credential Manager); the token it hands back is given to Firebase Authentication, whose account id names the account's folder in the cloud. The tile then says "Signed in as" the email, with Sign out. Closing the sheet says nothing; no Google account on the phone, no network, and any other failure each have a line, and a failure writes its kind (never the account) to the Log as an error.
+- **Firebase stays silent until then:** its automatic start is removed from the manifest, and `CloudFirebase` starts it at the first sign-in or sign-out. Which account is signed in is kept by Dually in `no_backup/cloud/account.json`, so the app knows without starting Firebase. Neither Android's backup nor an export carries it: a new phone signs in again.
+- **A build without the Firebase settings** (debug builds on CI, Dependabot's pull requests) says "Not in this build" and offers nothing. A release build without them stops.
 
 **Where the code lives**
 - `data/cloud/CloudDocuments.kt`: the three kinds of document and the snapshot of what the cloud is to hold.
@@ -2267,13 +2270,19 @@ An optional backup of the trips to Dually's server (Firebase, Montréal), off un
 - `data/cloud/CloudLedger.kt`: what was uploaded, by account, in `no_backup/cloud/uploaded.json`.
 - `data/cloud/CloudBackup.kt`: one run, against a `CloudStore` (Firestore in slice 1c).
 - `data/transfer/TransferDaos.kt`: `allRows`, the one-transaction read.
-- Tests: `app/src/test/.../data/cloud/` (`CloudBackupTest`, `CloudPlanTest`, `CloudLedgerTest`).
+- `data/cloud/CloudAccount.kt`: the account signed in, and its file. `data/cloud/CloudSignInResult.kt`: how a sign-in ended.
+- `platform/cloud/CloudFirebase.kt`: the one way into Firebase, started by hand from the four values the build reads from `~/keys/dually-firebase.properties`. `platform/cloud/GoogleCloudSignIn.kt`: Credential Manager, then Firebase.
+- `feature/settings/CloudBackupTile.kt` and `CloudBackupViewModel.kt`; words in `res/values/strings_cloud.xml`; `app/CloudObjects.kt` holds the three and builds the ViewModel.
+- The build: `app/build.gradle.kts` ("Firebase, for the optional cloud backup"), and the manifest's INTERNET permission and three removed ones.
+- Tests: `app/src/test/.../data/cloud/` (`CloudBackupTest`, `CloudPlanTest`, `CloudLedgerTest`, `CloudAccountFileTest`) and `feature/settings/CloudBackupViewModelTest`. The sign-in itself is proven on the phone only.
 
 **Edge cases & gotchas**
 - The ledger only knows what this phone sent. If the cloud copy is emptied from elsewhere (an account deleted, a refund's deletion after 30 days), the ledger must be cleared, or nothing is sent again. Likewise a phone that takes over the backup without restoring must clear the account's documents first (ADR-012, slice 1e).
 - Signing in to another account uploads everything to it and leaves the first account's documents as they are.
+- Google answers the sign-in sheet only for an app signed with a key whose fingerprint is in the Firebase project. Dually has one key for every build (Google Play signs with it too, FINDINGS_LOG 2026-10-14), and its SHA-1 and SHA-256 are registered. A build with the throwaway debug key gets "Signing in did not work".
+- Signing out does not delete anything in the cloud; deleting the account and its backup is slice 1e.
 
-**Not built yet:** Firebase in the app, sign-in, the WorkManager job, the security rules, the purchase, restore, account deletion, the Settings tile (slices 1b to 1f).
+**Not built yet:** the WorkManager job and Firestore with its security rules (1c), the purchase (1d), restore, account deletion and the finished Settings tile (1e), the privacy page, website and data safety answers (1f).
 
 ## Units: kilometres or miles
 

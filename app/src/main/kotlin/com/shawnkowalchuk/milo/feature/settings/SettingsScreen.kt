@@ -1,5 +1,6 @@
 package com.shawnkowalchuk.milo.feature.settings
 
+import android.content.Context
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -80,6 +81,8 @@ internal class ScheduleActions(
  * @param checkViewModel the daily check's tile has one of its own too.
  * @param odometerViewModel and so has the odometer's.
  * @param widgetViewModel and the home-screen widget's.
+ * @param cloudViewModel and the optional cloud backup's (ADR-012), shown above the tile for
+ * backup, export and import.
  * @param onChangeTruck opens the truck pairing screen. Navigation belongs to the app, not the
  * feature.
  * @param onOpenSounds opens the screen of one of the two sounds, where its sound is chosen
@@ -102,6 +105,7 @@ fun SettingsScreen(
     checkViewModel: NothingRecordedViewModel,
     odometerViewModel: OdometerViewModel,
     widgetViewModel: HomeWidgetViewModel,
+    cloudViewModel: CloudBackupViewModel<Context>,
     onChangeTruck: () -> Unit,
     onOpenSounds: (TripSound) -> Unit,
     onBack: (() -> Unit)?,
@@ -156,6 +160,7 @@ fun SettingsScreen(
         widgetTile = { HomeWidgetTile(widgetViewModel) },
         rateRows = { RateRows(widgetViewModel) },
         dataTile = {
+            CloudBackupTile(cloudViewModel)
             DataTile(dataViewModel)
             GpsPointsTile(pointsViewModel)
         },
