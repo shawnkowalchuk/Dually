@@ -49,7 +49,7 @@ Asked on 2026-11-11, Shawn chose: **Firebase** (over his own server); **backup o
 
 - **Cloud Firestore**, in the **Montréal region (`northamerica-northeast1`)**, so the data of a Canadian company's users stays in Canada. The region of a Firestore database cannot be changed after it is created.
 - One document per trip under `users/{uid}/trips/{tripUuid}`, sent reports and settings beside them. **Security rules** let a signed-in user read and write only their own documents, and only while their account holds the unlock (ADR-013). **App Check** (Play Integrity on Android, App Attest on iPhone) keeps other programs out.
-- **A new Firebase project for the app**, not the website's `milotriplog` project. The website's deploy key then has no rights over anyone's trips, and the app's project can be on a paid plan without touching the site. The purchase check (ADR-013) runs as Cloud Functions, which need Firebase's pay-as-you-go plan (Blaze); a **budget alert** is set at creation.
+- **A new Firebase project for the app, "Dually" (`dually-trip-tracker`, created 2026-11-11)**, not the website's `milotriplog` project. The website's deploy key then has no rights over anyone's trips, and the app's project can be on a paid plan without touching the site. The purchase check (ADR-013) runs as Cloud Functions, which need Firebase's pay-as-you-go plan (Blaze); a **budget alert** is set at creation.
 
 ### Firebase stays silent until backup is on
 
