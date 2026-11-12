@@ -58,11 +58,12 @@ Asked on 2026-11-11, Shawn chose: **Firebase** (over his own server); **backup o
 
 ### The app's configuration file
 
-- Firebase's `google-services.json` (and `GoogleService-Info.plist` on iPhone) holds the project's identifiers and a Firebase API key. Google says these are not secrets, since the security rules protect the data. **They are treated as secrets anyway**, as CLAUDE.md asks of any API key: git-ignored, kept on the Mac beside the signing key's file, and given to CI from a GitHub Actions secret. A build without it fails loudly and says where it goes.
+- Firebase's `google-services.json` (and `GoogleService-Info.plist` on iPhone) holds the project's identifiers and a Firebase API key. Google says these are not secrets, since the security rules protect the data. **They are treated as secrets anyway**, as CLAUDE.md asks of any API key.
+- **Changed in slice 1b, 2026-11-11:** Android uses no `google-services.json` and no Google Services Gradle plugin. Dually starts Firebase by hand anyway, so it needs only the four values (project id, app id, API key, web client id). They are in `~/keys/dually-firebase.properties`, beside the signing key, outside the repository; the build puts them in `BuildConfig`. **CI is given none of them:** it builds debug only, and a debug build without the file has no backup to offer ("Not in this build"), which also keeps Dependabot's pull requests (which get no secrets) green. **A release build without the file stops** and says where it goes. One plugin fewer to keep current, and no secret in GitHub.
 
 ### What changes with it
 
-- The **internet permission** (and network state, for WorkManager) is added. On Android it applies to the whole app, whether backup is on or off.
+- The **internet permission** (and network state, for WorkManager) is added. On Android it applies to the whole app, whether backup is on or off. The sign-in's libraries also declare fingerprint, biometric (Credential Manager, for passkeys) and READ_GSERVICES (Firebase's reCAPTCHA, for sign-in by email or phone); Dually uses none of them, and the manifest removes all three (slice 1b).
 - The **privacy page, the comparison page and the private-mileage-tracker page** change in the same pull request as the code (ADR-003's rule). New wording: private by default; an optional paid backup sends trips, without GPS points, to Dually's server in Canada.
 - The **Play Console's data safety form** gains: precise location (start and end positions), email address (sign-in), and purchase history, all optional, for app functionality, encrypted in transit, deletable. Apple's privacy label says the same.
 - **CLAUDE.md and ENGINEERING_STANDARDS §12** ("Dually has no backend, no API keys and no sign-in") are updated in the pull request that builds it, since they describe the app as it is.
