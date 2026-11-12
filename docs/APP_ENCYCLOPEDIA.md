@@ -106,6 +106,7 @@ Each line gives the phase the brief put the capability in, and the states of its
 - [Diagnostics and reminders](#diagnostics-and-reminders) — phases 1 and 4. Built, proven on the phone (the event log being written). Built, not yet proven on the phone (the Log screen; the reminder; the watch on Android Auto outside trips; the daily "nothing recorded" check)
 - [Dually's clock](#duallys-clock) — not in the brief; ADR-006 of 2026-10-07. Built, not yet proven on the phone (it has run in unit tests only)
 - [Backup, export and import](#backup-export-and-import) — phase 4, part B. Built, not yet proven on the phone
+- [Cloud backup](#cloud-backup) — not in the brief; Shawn's request of 2026-11-11 (ADR-012, ADR-013). Being built: slice 1a (what to upload, the comparison, the ledger), unit tests only, not reachable from any screen
 - [Units: kilometres or miles](#units-kilometres-or-miles) — not in the brief; Shawn's request of 2026-10-07. Built, not yet proven on the phone (unit tests and an emulator; the Android Auto screen has run nowhere)
 - [Service](#service) — not in the brief; Shawn's request of 2026-10-16. Built, not yet proven on the phone (unit tests, and an emulator: the screen, Home's tile, the notification at a trip's end and its tap)
 - [Settings](#settings) — phases 1 to 4. Built, not yet proven on the phone
@@ -2246,6 +2247,33 @@ Android only: `SystemClock.elapsedRealtime`, `Settings.Global.BOOT_COUNT` and th
 - **No new category in the event log:** the lines of an export and an import are `REPORT` lines, a restore's and a collected backup's are `PROCESS` and `PAIRING`, a refused backup's is `ERROR`. A build of phase 4, part A, installed over this one reads everything (seen on the emulator).
 
 ---
+
+## Cloud backup
+
+**Status:** Being built (phase 1 of the iPhone and cloud backup plan, ADR-012 and ADR-013). Slice 1a of 2026-11-11 is in the code: unit tests only, called from nowhere, sends nothing. · **Platforms:** Android (the iPhone later, from the same logic, ADR-014) · **Last updated:** 2026-11-11
+
+**What it does (when finished)**
+An optional backup of the trips to Dually's server (Firebase, Montréal), off until the user turns it on in Settings and unlocked by a one-time US$19.99 purchase. Every finished trip and every change to one is uploaded; a new phone signs in and restores. No GPS points, no ads.
+
+**Required behaviour**
+- What goes up: every closed trip (finished, discarded, deleted), as the export file holds it; one document of every report recorded as sent; one of the settings that travel. Never a GPS point, never the trip being recorded.
+- How a change is found: by comparison, not by a list of changes. Each run reads every trip and the sent reports in one transaction and the settings, turns each into its document, and compares the document's fingerprint (SHA-256 of its JSON) with the one it had when last uploaded. New and changed documents are sent, documents of trips the phone no longer has are removed (an import or a restore replaced them). Settings that cannot be read are neither sent nor removed.
+- In batches of at most 400 (Firestore takes 500). The ledger is written after each batch, so a run cut off loses at most one batch, which the next run sends again.
+- A trip's document is `trips/{id}`: ids are never used twice on a phone, and an import and a restore keep them.
+
+**Where the code lives**
+- `data/cloud/CloudDocuments.kt`: the three kinds of document and the snapshot of what the cloud is to hold.
+- `data/cloud/CloudPlan.kt`: the comparison (`cloudPlanFor`).
+- `data/cloud/CloudLedger.kt`: what was uploaded, by account, in `no_backup/cloud/uploaded.json`.
+- `data/cloud/CloudBackup.kt`: one run, against a `CloudStore` (Firestore in slice 1c).
+- `data/transfer/TransferDaos.kt`: `allRows`, the one-transaction read.
+- Tests: `app/src/test/.../data/cloud/` (`CloudBackupTest`, `CloudPlanTest`, `CloudLedgerTest`).
+
+**Edge cases & gotchas**
+- The ledger only knows what this phone sent. If the cloud copy is emptied from elsewhere (an account deleted, a refund's deletion after 30 days), the ledger must be cleared, or nothing is sent again. Likewise a phone that takes over the backup without restoring must clear the account's documents first (ADR-012, slice 1e).
+- Signing in to another account uploads everything to it and leaves the first account's documents as they are.
+
+**Not built yet:** Firebase in the app, sign-in, the WorkManager job, the security rules, the purchase, restore, account deletion, the Settings tile (slices 1b to 1f).
 
 ## Units: kilometres or miles
 
