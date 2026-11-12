@@ -82,6 +82,14 @@ interface MainTransferDao {
         if (countTripsWith(open) > 0) null else MainRows(allTrips(), allSentReports())
 
     /**
+     * Every trip, the open one included, and every sent report, read in one transaction: for
+     * the cloud backup, which leaves an open trip out itself and runs during a trip as well
+     * (`data/cloud/CloudDocuments.kt`).
+     */
+    @Transaction
+    suspend fun allRows(): MainRows = MainRows(allTrips(), allSentReports())
+
+    /**
      * Replaces every trip and every sent report with the ones given, in one transaction: if
      * anything in it fails, the tables are as they were before.
      *
