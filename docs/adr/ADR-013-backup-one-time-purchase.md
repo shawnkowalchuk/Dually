@@ -1,7 +1,7 @@
-# ADR-013: Cloud backup is unlocked by a one-time purchase of $19.99; no ads
+# ADR-013: Cloud backup is unlocked by a one-time purchase of US$19.99; no ads
 
 Date: 2026-11-11
-Status: Accepted. Not built (phase 0 of the iPhone and cloud backup plan). The currency of the base price is to be confirmed.
+Status: Accepted. Not built (phase 0 of the iPhone and cloud backup plan).
 
 ## Context
 
@@ -17,13 +17,13 @@ What weighs on the price:
 ## Decision
 
 - **Dually stays free.** Every feature it has today stays free: trip detection, the trip log, reports, export and import, Android Auto, the widget.
-- **Cloud backup is the one paid feature:** a one-time, non-consumable purchase of **$19.99**, named "Cloud backup", for the life of the app. The store pages and the app say "for the life of the app", never "forever".
+- **Cloud backup is the one paid feature:** a one-time, non-consumable purchase of **US$19.99** (Shawn, asked the currency: "usd"), named "Cloud backup", for the life of the app. The store pages and the app say "for the life of the app", never "forever".
 - **No ads, anywhere, in any version.** No ad library is added.
 - **Android:** Google Play Billing Library. **iPhone:** StoreKit 2. Each at its current stable version when it is added.
 - **The purchase belongs to the account,** not to the phone or the store. A Cloud Function checks the purchase with the store that sold it (Google Play's Developer API; Apple's App Store Server API) and writes the unlock to the user's account. Firestore's security rules accept backup writes only from an account that holds the unlock (ADR-012). Someone who buys on Android and moves to an iPhone signs in and has backup there without paying again; Apple's rules allow that for a service bought elsewhere, as long as it can also be bought in the iPhone app.
 - **Refunds:** the stores' notifications (Google Play's real-time developer notifications, Apple's App Store Server Notifications) reach a Cloud Function that removes the unlock. A refunded user's phone keeps every trip; uploading stops, and the cloud copy is deleted after 30 days with a notice in the app.
 - **"Restore purchase"** is a button in the Cloud backup tile (Apple requires one).
-- **Price per country:** set in each store from the base price, with the stores' own conversion. Sales tax is collected by the stores where they are the seller; what 2795748 Alberta Ltd. reports is a question for the accountant before launch.
+- **Price per country:** US$19.99 is the base price in both stores; every other country's price is the stores' own conversion of it (Canada's included). Sales tax is collected by the stores where they are the seller; what 2795748 Alberta Ltd. reports is a question for the accountant before launch.
 - **Apple's Small Business Program** is joined before the first sale.
 
 ## Consequences
