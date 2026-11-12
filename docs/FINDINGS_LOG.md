@@ -24,6 +24,22 @@
 
 ## Log
 
+### 2026-11-11
+
+**`[DECISION]` An iPhone app with CarPlay, and a paid cloud backup (ADR-012 to ADR-015, phase 0)**
+Shawn: "i want to make a ios version of the app native to ios and also add the ability to save your files to my server. This should upload every time a user finishes a trip. it should upload any changes they make." He first wanted backup free with ads. Told that banner ads in an app people rarely open would earn a few cents a user a month and bring consent screens and Apple's tracking prompt, he chose "no ads and just a paid option a one time fee 19.99". His other answers: Firebase over his own server; backup only, not sync; standard encryption, not end-to-end; shared Kotlin logic with SwiftUI screens; iPhone and CarPlay together at launch; Android backup first. Asked whether GPS points belong in the backup ("i think way points should only be stored per month. isnt this what we do on the android?"), he was told what Android does today (every point kept, about 83 MB a year at his driving, until he deletes a sent and ended month's points) and chose "Don't back up points".
+- ADR-012: optional backup on Firestore in Montréal, in a new Firebase project; sign-in with Google (and Apple on iPhone); an outbox written in the same transaction as each change, emptied by WorkManager; a UUID per trip; one phone backs up per account; Firebase silent until backup is on; its configuration file treated as a secret.
+- ADR-013: US$19.99 once (Shawn: "usd"), for the life of the app, through Play Billing and StoreKit, checked by Cloud Functions and held by the account. No ads in any version.
+- ADR-014: a Kotlin Multiplatform module `:shared` with `core/` (57 files outside the design system, none importing Android; 26 using `java.time`, to move to kotlinx-datetime), the database, the settings, the export format and the backup logic; the iPhone app in SwiftUI under `ios/`; CarPlay's entitlement requested early.
+- ADR-015 (Proposed): the iPhone starts a trip from a Shortcuts automation on the truck's Bluetooth or CarPlay, with a location-and-motion safety net and manual buttons, to be proven by real drives.
+- **An earlier figure was wrong:** in planning, a heavy user's GPS points were put at "a few megabytes a year". The docs say about 83 MB a year at Shawn's driving. The decision not to back up points rests on the right figure.
+- **Set up in the consoles the same day** (Shawn: "please drive my chrome browser and do all the submissions and changes for firebase/ google play console/ apple developer"):
+  - **CarPlay entitlement requested,** category Driving Task. Apple's form asks nothing else for that category (its description boxes are hidden), and its CarPlay addendum names "mileage trackers" as a Driving Task example. Shawn ticked the addendum and clicked Agree himself. Apple: "We'll review your request and contact you soon"; the answer goes to the account's contact address, shawn@seawingman.com.
+  - **App ID `top.dually.triptracker`** ("Dually Trip Tracker") registered in Apple Developer, team 3GA4CQ43F4, with App Attest, Sign In with Apple and In-App Purchase.
+  - **Firebase project "Dually", ID `dually-trip-tracker`,** in shawnkowalchuk@gmail.com's console beside `milotriplog`. Google Analytics off, Gemini in Firebase off. **Firestore (default), Standard edition, `northamerica-northeast1`, production-mode rules (everything denied).** Still on the free Spark plan: Blaze, its budget alert, Firestore's scheduled backups, Authentication's providers and the two apps' registration wait for phase 1.
+  - **Google Play Console: nothing changed.** An in-app product can be created only after a build with Play Billing is uploaded, and the data safety form changes with the release that sends data.
+- ADR-003 now says its "the app gets no Firebase" is replaced by ADR-012. CLAUDE.md, ENGINEERING_STANDARDS §12, ARCHITECTURE and the privacy page are changed when the backup is built, since they describe the app as it is.
+
 ### 2026-11-06
 
 **`[CHANGE]` The Product Hunt badge moves into the hero**
