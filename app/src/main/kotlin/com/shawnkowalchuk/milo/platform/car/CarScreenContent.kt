@@ -3,12 +3,16 @@ package com.shawnkowalchuk.milo.platform.car
 import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.allowance.allowanceCents
 import com.shawnkowalchuk.milo.core.allowance.formatWholeDollars
+import com.shawnkowalchuk.milo.core.schedule.TripCategory
+import com.shawnkowalchuk.milo.core.schedule.WorkSchedule
+import com.shawnkowalchuk.milo.core.schedule.categoryWhileRecorded
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.daySpan
 import com.shawnkowalchuk.milo.core.util.formatDistance
 import com.shawnkowalchuk.milo.core.util.formatMonthName
 import com.shawnkowalchuk.milo.core.util.formatTenths
 import com.shawnkowalchuk.milo.core.util.wholeHoursAndMinutes
+import com.shawnkowalchuk.milo.data.settings.RunningTripCategory
 import com.shawnkowalchuk.milo.data.trip.Trip
 import com.shawnkowalchuk.milo.data.trip.categoryTotals
 import com.shawnkowalchuk.milo.data.trip.todayTrips
@@ -21,6 +25,7 @@ import com.shawnkowalchuk.milo.platform.trip.TripTrigger
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
+import java.time.format.TextStyle
 import java.util.Locale
 
 // What the Android Auto screen shows, decided from the trip controller's state, the month's
@@ -109,14 +114,17 @@ data class TripFigures(val kilometres: String, val hours: Long, val minutes: Lon
  * the month's dollars. Until then the row was "Today" and counted every finished trip, Business
  * and Personal together.
  *
- * **The odometer is not in it.** It was, for an hour: with it the line was too long for the
- * smallest car display (800 by 480), wrapped, and the car put scroll arrows beside the rows,
- * which is what the two rows were made to end. The truck's own dashboard shows it.
+ * **The odometer is added to it by the screen** ([CarScreenContent.odometer], since 2026-11-12,
+ * Shawn: "vehicle mileage would be nice so that i could see if it was out easier"). On
+ * 2026-10-09 it made the line too long for the smallest car display (800 by 480): the line
+ * wrapped and the car put scroll arrows beside the rows. So while the odometer is shown the
+ * dollars are left out and the month is named short (his choice: "Drop the dollars").
  *
  * @param today and [month] today's and the month's Business distance, the numbers only, with
  * one decimal: the sum of the trips' own figures, each rounded to a tenth first, like every
  * total on the phone and on the report.
  * @param monthName the month's name in the phone's language: "October".
+ * @param shortMonthName the same, short, for the line with the odometer: "Oct.".
  * @param dollars the month's Business kilometres priced at the rate set in Settings, as the
  * widget and Home price them ("$289"), or null while the rate cannot be read.
  * @param unit the unit the two distances are in. Figures made in another unit than the
@@ -125,6 +133,7 @@ data class TripFigures(val kilometres: String, val hours: Long, val minutes: Lon
 data class BusinessFigures(
     val today: String,
     val monthName: String,
+    val shortMonthName: String,
     val month: String,
     val dollars: String?,
     val unit: DistanceUnit,
@@ -160,6 +169,7 @@ fun businessFigures(input: BusinessInput, locale: Locale, unit: DistanceUnit): B
     return BusinessFigures(
         today = formatTenths(todayTrips(startedToday).totals(unit).business.tenths, locale),
         monthName = formatMonthName(YearMonth.from(input.date), locale),
+        shortMonthName = input.date.month.getDisplayName(TextStyle.SHORT, locale),
         month = formatTenths(categoryTotals(input.monthTrips, unit).business.tenths, locale),
         dollars =
             input.centsPerKm?.let {
@@ -178,6 +188,13 @@ fun businessFigures(input: BusinessInput, locale: Locale, unit: DistanceUnit): B
  * @param unit the unit the figures are in, and are to be written with (since 2026-10-07).
  * It is part of the content, so a change of the unit in Settings is a change that is drawn at
  * once, not one that waits like a trip's running figures.
+ * @param category what the trip being recorded will be saved as (since 2026-11-12): Shawn's
+ * choice for it, or else what the work hours make of its start, as Home's pill says it. Null
+ * with no trip, or while the schedule has not been read.
+ * @param switchTo the second button while a trip is recorded: the other category, for the
+ * trip it was drawn for. Null when [category] is.
+ * @param odometer the vehicle's odometer now, in whole units of [unit], or null before its
+ * first reading or while it has not been worked out.
  */
 data class CarScreenContent(
     val status: CarStatus,
@@ -185,7 +202,39 @@ data class CarScreenContent(
     val business: BusinessFigures?,
     val action: CarAction,
     val unit: DistanceUnit,
+    val category: TripCategory? = null,
+    val switchTo: CategorySwitch? = null,
+    val odometer: CarOdometer? = null,
 )
+
+/**
+ * The second button (since 2026-11-12, Shawn: "i couldnt see if it was a business or personal
+ * trip and or switch it on the screen"): "Make Personal" on a Business trip, "Make Business" on
+ * a Personal one. A press stores the choice for the trip being recorded exactly as Home's pill
+ * does (`setRunningTripCategory`), so the trip is saved as that when it ends, set by hand.
+ */
+data class CategorySwitch(val tripId: Long, val to: TripCategory)
+
+/**
+ * The odometer as the car prints it: the whole number in the phone's language ("102,684") and
+ * the unit it was worked out in. A figure in another unit than the content's is not shown.
+ */
+data class CarOdometer(val value: String, val unit: DistanceUnit)
+
+/**
+ * What the trip being recorded will be saved as, as Home works it out (`categoryWhileRecorded`):
+ * the choice stored for this trip, or else the work hours by its start.
+ */
+fun carTripCategory(
+    activity: TripActivity,
+    running: RunningTripCategory?,
+    schedule: WorkSchedule?,
+    zone: ZoneId,
+): TripCategory? {
+    val trip = activity.trip ?: return null
+    val chosen = running?.takeIf { it.tripId == trip.tripId }?.category
+    return categoryWhileRecorded(trip.startedAtMs, chosen, schedule, zone)
+}
 
 /**
  * The screen's content for one moment.
@@ -196,6 +245,8 @@ data class CarScreenContent(
  * setup checklist is not in order.
  * @param locale decides the decimal separator of the distance figures.
  * @param unit the unit chosen in Settings: the figures are worked out and written in it.
+ * @param category what the trip will be saved as ([carTripCategory]); the widget passes none.
+ * @param odometer the odometer now; the widget passes none.
  */
 fun carScreenContent(
     activity: TripActivity,
@@ -204,8 +255,11 @@ fun carScreenContent(
     nowMs: Long,
     locale: Locale,
     unit: DistanceUnit,
+    category: TripCategory? = null,
+    odometer: CarOdometer? = null,
 ): CarScreenContent {
     val trip = activity.trip
+    val shownCategory = category.takeIf { trip != null }
     return CarScreenContent(
         status = carStatus(activity, setupNeedsAttention),
         trip = trip?.let { tripFigures(it, nowMs, locale, unit) },
@@ -216,17 +270,30 @@ fun carScreenContent(
         // for as long as a trip is open, the grace period included, as on the phone.
         action = if (trip == null) CarAction.START_TRIP else CarAction.END_TRIP,
         unit = unit,
+        category = shownCategory,
+        switchTo =
+            if (trip != null && shownCategory != null) {
+                CategorySwitch(trip.tripId, shownCategory.other())
+            } else {
+                null
+            },
+        odometer = odometer?.takeIf { it.unit == unit },
     )
 }
 
+private fun TripCategory.other(): TripCategory =
+    if (this == TripCategory.BUSINESS) TripCategory.PERSONAL else TripCategory.BUSINESS
+
 /**
  * Whether [next] differs from this content only in the running figures of a trip that is open
- * in both. Such a change waits for the gap between refreshes; any other change (the status, the
- * button, a trip starting or ending, the Business row's figures) is drawn at once.
+ * in both: its distance and time, and the odometer it moves. Such a change waits for the gap
+ * between refreshes; any other change (the status, the buttons, a trip starting or ending, the
+ * Business row's figures) is drawn at once.
  */
 fun CarScreenContent?.differsOnlyInTripFigures(next: CarScreenContent): Boolean =
-    this != null && trip != null && next.trip != null && trip != next.trip &&
-        copy(trip = next.trip) == next
+    this != null && trip != null && next.trip != null &&
+        (trip != next.trip || odometer != next.odometer) &&
+        copy(trip = next.trip, odometer = next.odometer) == next
 
 /**
  * One line, so the most telling thing wins. An open trip comes first: while one is recording,

@@ -1958,6 +1958,16 @@ Unit tests only.
 | DT-2 | Press the bin again; Delete. | Home shows no trip; Trips shows it among deleted and discarded; no new trip starts while the truck stays connected. | not run |
 | DT-3 | Trips, a trip's Edit, Delete trip, Delete. | Back on Trips; the trip is gone from the list and restorable. | not run |
 
+## Business or Personal, and the odometer, on Android Auto (2026-11-12)
+
+| # | Do this | Expect | Result |
+|---|---|---|---|
+| AC-1 | Drive with Android Auto on during your work hours, and look at the car screen. | This trip reads "Recording · Business · … km · … min"; beside End trip a second button, Make Personal. | not run |
+| AC-2 | Press Make Personal. | Within a moment the row says Personal and the button Make Business; Home's pill on the phone says Personal too. The Log has "Trip …: Personal chosen on the Android Auto screen". | not run |
+| AC-3 | End the trip. | Trips shows it saved as Personal; no work-hours question follows. | not run |
+| AC-4 | With an odometer reading typed in Settings, look at the Business row before and during a drive. | "Today … · Nov. … · Odo …" on one line, no scroll arrows, no dollars; the Odo figure is Home's, and goes up by one about every kilometre while driving. | not run |
+| AC-5 | Compare the Odo figure with the truck's dashboard. | Close to it; if it is out, a reading typed in Settings puts it right. | not run |
+
 ## Later work packages
 
 Nothing waiting. A work package that adds behaviour only the phone can prove adds its checks above.

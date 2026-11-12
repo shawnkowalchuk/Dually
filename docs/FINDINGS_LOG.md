@@ -24,6 +24,14 @@
 
 ## Log
 
+### 2026-11-12
+
+**`[CHANGE]` Android Auto: Business or Personal, a switch, and the odometer**
+Shawn's first drive with the car screen on the truck (from Play's internal testing build 7): "it was nice except i couldnt see if it was a business or personal trip and or switch it on the screen", and "vehiclemileage would be nice so that i could see if it was out wasier". His answers: the odometer, to compare with the dashboard; a second button; drop the dollars if it does not fit. The car does not get rules of its own. What the trip will be saved as is Home's `categoryWhileRecorded`. The button stores the choice with Home's `setRunningTripCategory`, so `TripLedger` saves the trip as that when it ends, and the work-hours prompt stands down. The odometer is `vehicleOdometers`' first vehicle. The odometer's whole-unit changes wait for the 15-second gap like the trip's own figures (`differsOnlyInTripFigures`). The line with it is "Today 17.9 km · Nov. 412.3 km · Odo 102,684 km", about 47 characters; the 61-character one of 2026-10-09 wrapped. Whether 47 fits the smallest display is not seen yet (AC-4). Android Auto only; the phone and the widget are unchanged. Opens 0.3.4 as build 8, because build 7 is the cloud backup's test build on Play.
+
+**`[FINDING]` A deploy runs from the folder as it is while it uploads**
+The first deploy of the purchase check (from `firebase/`, in the background) uploaded an empty functions folder: "function.js does not exist". I had switched the checkout to another branch while it ran. Both functions were created broken, and the next deploy only updated them. Updating did not give `unlockBackup` public access, so every call was refused with a 403 before the function could check the sign-in. That is why Shawn's test purchase said "unlocking did not work". Fixes: deploy from a copy that nothing else touches (`git worktree` or `git archive`), and `invoker: 'public'` is now in the code (PR into `app/cloud-backup`), so it no longer depends on how the function was first created. The deploy also set Artifact Registry's cleanup policy (images older than a day deleted), so old builds do not run up a bill.
+
 ### 2026-11-11
 
 **`[CHANGE]` Cloud backup, slice 1a: what to upload, found by comparison (ADR-012 amended)**

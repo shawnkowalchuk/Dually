@@ -5,6 +5,7 @@ import androidx.car.app.Screen
 import androidx.car.app.Session
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.shawnkowalchuk.milo.core.schedule.TripCategory
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
@@ -31,6 +32,7 @@ class MiloCarSession(
     private val settings: Flow<MiloSettings>,
     private val shownUnit: StateFlow<DistanceUnit>,
     private val clock: () -> Long,
+    private val chooseCategory: suspend (tripId: Long, category: TripCategory) -> Unit,
 ) : Session() {
     init {
         lifecycle.addObserver(
@@ -41,8 +43,16 @@ class MiloCarSession(
     }
 
     /** The only screen. Nothing is ever pushed on top of it (see [TripStatusScreen]). */
-    override fun onCreateScreen(intent: Intent): Screen =
-        TripStatusScreen(carContext, controller, trips, checklist, settings, shownUnit, clock)
+    override fun onCreateScreen(intent: Intent): Screen = TripStatusScreen(
+        carContext,
+        controller,
+        trips,
+        checklist,
+        settings,
+        shownUnit,
+        clock,
+        chooseCategory,
+    )
 
     private fun logLineFor(event: Lifecycle.Event): String? = when (event) {
         Lifecycle.Event.ON_CREATE -> sessionCreatedText(hostPackage(), carApiLevel())
