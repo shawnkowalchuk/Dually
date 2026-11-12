@@ -115,8 +115,10 @@ android {
         // a newer one, and the only way past that is to uninstall, which deletes every trip.
         // Google Play takes a versionCode once, so a second bundle of the same version would need
         // a higher one too.
-        versionCode = 6
-        versionName = "0.3.3"
+        // 8, not 7: build 7 is the cloud backup's test build on Play's internal testing track
+        // (branch app/cloud-backup, 2026-11-11), and Play takes a versionCode once.
+        versionCode = 8
+        versionName = "0.3.4"
     }
 
     signingConfigs {

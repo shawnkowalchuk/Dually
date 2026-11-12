@@ -18,16 +18,23 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.shawnkowalchuk.milo.R
+import com.shawnkowalchuk.milo.core.designsystem.text.categoryWordsRes
 import com.shawnkowalchuk.milo.core.designsystem.text.distanceRes
+import com.shawnkowalchuk.milo.core.odometer.formatOdometer
+import com.shawnkowalchuk.milo.core.schedule.TripCategory
+import com.shawnkowalchuk.milo.core.schedule.WorkSchedule
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.localDateOf
 import com.shawnkowalchuk.milo.core.util.monthSpan
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
+import com.shawnkowalchuk.milo.data.settings.RunningTripCategory
 import com.shawnkowalchuk.milo.data.trip.TripRepository
+import com.shawnkowalchuk.milo.data.trip.vehicleOdometers
 import com.shawnkowalchuk.milo.platform.system.SetupChecklist
 import com.shawnkowalchuk.milo.platform.system.needsAttention
 import com.shawnkowalchuk.milo.platform.trip.TripController
+import com.shawnkowalchuk.milo.platform.trip.tripSoFar
 import java.io.IOException
 import java.time.LocalDate
 import java.time.YearMonth
@@ -59,6 +66,17 @@ private const val FIGURES_MIN_GAP_MS = 15_000L
 private const val CLOCK_TICK_MS = 10_000L
 
 /**
+ * What the screen reads from the settings and the finished trips besides the Business row
+ * (since 2026-11-12): the choice stored for the trip being recorded and the work hours, which
+ * say what the trip will be saved as, and the odometer now.
+ */
+private data class CarExtras(
+    val running: RunningTripCategory? = null,
+    val schedule: WorkSchedule? = null,
+    val odometer: CarOdometer? = null,
+)
+
+/**
  * MilO's one screen on the car's display: whether a trip is being recorded, the trip's
  * kilometres and time, what Home shows of today and the month, and one button that starts or
  * ends a trip by hand.
@@ -85,6 +103,8 @@ private const val CLOCK_TICK_MS = 10_000L
  * @param settings the stored settings: the rate the month's dollars are priced at. Read only,
  * and only while the car shows the screen.
  * @param shownUnit the unit chosen in Settings (`ShownUnit`). A change of it is drawn at once.
+ * @param chooseCategory stores Business or Personal for the trip being recorded, as Home's
+ * pill does (`setRunningTripCategory`). The second button's press.
  */
 class TripStatusScreen(
     carContext: CarContext,
@@ -94,9 +114,13 @@ class TripStatusScreen(
     private val settings: Flow<MiloSettings>,
     private val shownUnit: StateFlow<DistanceUnit>,
     private val clock: () -> Long,
+    private val chooseCategory: suspend (tripId: Long, category: TripCategory) -> Unit,
 ) : Screen(carContext) {
     /** The Business row's figures, or null until storage has answered. Kept between visits. */
     private val business = MutableStateFlow<BusinessFigures?>(null)
+
+    /** The trip's category inputs and the odometer, empty until storage has answered. */
+    private val extras = MutableStateFlow(CarExtras())
 
     /** The app's accent, for the two rows' icons and the button. */
     private val accent: CarColor =
@@ -137,9 +161,10 @@ class TripStatusScreen(
                     row(
                         R.string.car_row_business,
                         R.drawable.ic_car_business,
-                        businessLine(content.business, content.unit),
+                        businessLine(content.business, content.odometer, content.unit),
                     ),
                 ).addAction(button(content.action))
+                .apply { content.switchTo?.let { addAction(switchButton(it)) } }
                 .build()
         val header =
             Header
@@ -179,6 +204,38 @@ class TripStatusScreen(
         .setOnClickListener { controller.onTrigger(action.trigger, action.source) }
         .build()
 
+    /**
+     * The second button while a trip is recorded: "Make Personal" or "Make Business". Not the
+     * primary one, so that End trip keeps the accent. Like End, it works while driving.
+     */
+    private fun switchButton(switch: CategorySwitch): Action {
+        val label =
+            if (switch.to == TripCategory.PERSONAL) {
+                R.string.car_make_personal
+            } else {
+                R.string.car_make_business
+            }
+        return Action
+            .Builder()
+            .setTitle(carContext.getString(label))
+            .setOnClickListener { lifecycleScope.launch { storeCategory(switch) } }
+            .build()
+    }
+
+    /** Stores the press, and says so in the Log as the work-hours notification's buttons do. */
+    private suspend fun storeCategory(switch: CategorySwitch) {
+        val name = carContext.getString(categoryWordsRes(switch.to, ranPastSchedule = false))
+        try {
+            chooseCategory(switch.tripId, switch.to)
+            val what = "Trip ${switch.tripId}: $name chosen on the Android Auto screen, " +
+                "for the trip being recorded"
+            controller.note(EventCategory.TRIP, what)
+        } catch (notStored: IOException) {
+            val what = "The Android Auto screen's Business/Personal choice could not be stored"
+            controller.note(EventCategory.ERROR, what, notStored.stackTraceToString())
+        }
+    }
+
     /** A figure with its unit, as every screen writes a distance: "12.3 km". */
     private fun distance(figure: String, unit: DistanceUnit): String =
         carContext.getString(distanceRes(unit), figure)
@@ -189,12 +246,16 @@ class TripStatusScreen(
 
     /**
      * The "This trip" row: the status line alone while no trip is open ("Truck parked. A trip
-     * starts when it moves"), and the status with the trip's figures while one is ("Recording ·
-     * 12.3 km · 23 min").
+     * starts when it moves"), and the status with what the trip will be saved as and its
+     * figures while one is ("Recording · Business · 12.3 km · 23 min").
      */
     private fun tripLine(content: CarScreenContent): String {
         val status = carContext.getString(content.status.textRes)
         val trip = content.trip ?: return status
+        val statusAndCategory =
+            content.category?.let {
+                joined(status, carContext.getString(categoryWordsRes(it, ranPastSchedule = false)))
+            } ?: status
         val shown = distance(trip.kilometres, content.unit)
         val figures =
             if (trip.hours == 0L) {
@@ -207,15 +268,38 @@ class TripStatusScreen(
                     trip.minutes,
                 )
             }
-        return joined(status, figures)
+        return joined(statusAndCategory, figures)
     }
 
     /**
-     * The "Business" row: "Today 17.9 km · October 412.3 km, $289". Kept to what fits one line
-     * of the smallest display with a busy month's figures in it.
+     * The "Business" row: "Today 17.9 km · October 412.3 km, $289", or with the odometer
+     * "Today 17.9 km · Nov. 412.3 km · Odo 102,684 km". Kept to what fits one line of the
+     * smallest display with a busy month's figures in it: with the odometer the month is named
+     * short and the dollars are left out (Shawn's choice, 2026-11-12).
      */
-    private fun businessLine(business: BusinessFigures?, unit: DistanceUnit): String {
-        if (business == null) return carContext.getString(R.string.car_business_unknown)
+    private fun businessLine(
+        business: BusinessFigures?,
+        odometer: CarOdometer?,
+        unit: DistanceUnit,
+    ): String {
+        val odo = odometer?.let {
+            carContext.getString(R.string.car_odometer, distance(it.value, unit))
+        }
+        if (business == null) {
+            val unknown = carContext.getString(R.string.car_business_unknown)
+            return odo?.let { joined(unknown, it) } ?: unknown
+        }
+        if (odo != null) {
+            val today =
+                carContext.getString(R.string.car_business_today, distance(business.today, unit))
+            val month =
+                carContext.getString(
+                    R.string.car_business_month,
+                    business.shortMonthName,
+                    distance(business.month, unit),
+                )
+            return joined(joined(today, month), odo)
+        }
         val today =
             carContext.getString(R.string.car_business_today, distance(business.today, unit))
         val monthShown = distance(business.month, unit)
@@ -243,6 +327,7 @@ class TripStatusScreen(
         try {
             coroutineScope {
                 launch { followBusiness() }
+                launch { followExtras() }
                 followTrip()
             }
         } catch (cancelled: CancellationException) {
@@ -285,14 +370,26 @@ class TripStatusScreen(
     private fun contents(): Flow<CarScreenContent> {
         // False until the phone has been read: no warning is better than one that flashes.
         val setupOpen = checklist.rows.map { rows -> rows != null && needsAttention(rows) }
+        val rows = combine(business, extras, ::Pair)
         return combine(
             controller.activity,
-            business,
+            rows,
             setupOpen,
             shownUnit,
             ticks(),
-        ) { trip, figures, open, shownIn, _ ->
-            carScreenContent(trip, figures, open, clock(), locale(), shownIn)
+        ) { trip, (figures, more), open, shownIn, _ ->
+            val category =
+                carTripCategory(trip, more.running, more.schedule, ZoneId.systemDefault())
+            carScreenContent(
+                trip,
+                figures,
+                open,
+                clock(),
+                locale(),
+                shownIn,
+                category,
+                more.odometer,
+            )
         }.distinctUntilChanged()
     }
 
@@ -321,6 +418,40 @@ class TripStatusScreen(
                 val what = "The Android Auto screen could not read the month's trips"
                 controller.note(EventCategory.ERROR, what, failure.stackTraceToString())
             }
+        }
+    }
+
+    /**
+     * Keeps [extras] in step with the settings, the finished trips and the trip being recorded.
+     * The odometer is the first vehicle's, the truck's, as Home and Settings work it out
+     * (`vehicleOdometers`); while a trip in it is recorded it counts up as the trip is driven.
+     */
+    private suspend fun followExtras() {
+        try {
+            combine(
+                storedSettings(),
+                trips.observeFinishedTrips(),
+                controller.activity.map { it.tripSoFar() }.distinctUntilChanged(),
+            ) { stored, finished, soFar ->
+                if (stored == null) return@combine CarExtras()
+                val figure =
+                    vehicleOdometers(stored, finished, clock(), ZoneId.systemDefault(), soFar)
+                        .firstOrNull()
+                        ?.figure
+                CarExtras(
+                    running = stored.runningTripCategory,
+                    schedule = stored.schedule,
+                    odometer =
+                        figure?.let { CarOdometer(formatOdometer(it.value, locale()), it.unit) },
+                )
+            }.collect { extras.value = it }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (failure: Exception) {
+            // Storage failed. The trip is still followed, without its category or the odometer.
+            extras.value = CarExtras()
+            val what = "The Android Auto screen could not read the odometer and the trip's category"
+            controller.note(EventCategory.ERROR, what, failure.stackTraceToString())
         }
     }
 

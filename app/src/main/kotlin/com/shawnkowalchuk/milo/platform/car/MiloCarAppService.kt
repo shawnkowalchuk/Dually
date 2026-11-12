@@ -7,6 +7,7 @@ import androidx.car.app.SessionInfo
 import androidx.car.app.validation.HostValidator
 import com.shawnkowalchuk.milo.app.MiloApplication
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
+import com.shawnkowalchuk.milo.data.settings.setRunningTripCategory
 
 /**
  * The entry point of the Android Auto screen. Android Auto binds this service when MilO is
@@ -54,6 +55,9 @@ class MiloCarAppService : CarAppService() {
         settings = container.settingsStore.settings,
         shownUnit = container.shownUnit.unit,
         clock = container.clock,
+        chooseCategory = { tripId, category ->
+            container.settingsStore.setRunningTripCategory(tripId, category)
+        },
     )
 
     override fun onDestroy() {

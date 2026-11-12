@@ -26,6 +26,7 @@ internal fun businessOf(today: String = "0.0", unit: DistanceUnit = DistanceUnit
     BusinessFigures(
         today = today,
         monthName = "October",
+        shortMonthName = "Oct.",
         month = "412.3",
         dollars = "$289",
         unit = unit,
