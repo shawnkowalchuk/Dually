@@ -9,7 +9,13 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { googlePlay } from './play.js';
 import { revokeRefunded, unlock, UnlockError } from './unlock.js';
 
-setGlobalOptions({ region: 'northamerica-northeast1', maxInstances: 3 });
+// The functions run as their own service account, which may read and write Firestore (Cloud
+// Datastore User) and, in Play Console, view Dually's orders: nothing else (firebase/README.md).
+setGlobalOptions({
+  region: 'northamerica-northeast1',
+  maxInstances: 3,
+  serviceAccount: 'purchase-check@dually-trip-tracker.iam.gserviceaccount.com',
+});
 initializeApp();
 const db = getFirestore();
 const play = googlePlay();
