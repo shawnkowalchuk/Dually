@@ -75,6 +75,12 @@ Asked on 2026-11-11, Shawn chose: **Firebase** (over his own server); **backup o
 - `feature/settings/`: a Cloud backup tile next to the one for backup, export and import.
 - All rules that are not about Firebase itself (what is queued, when, how a trip maps) sit in `data/` or `core/` and are written to move into the shared module of ADR-014.
 
+### Built in slice 1e, 2026-11-12
+- **Ownership:** `users/{uid}/backup/owner` names the install backing up; each upload reads the backup first (`cloudStart`). Another phone named: the phone stops (if it was backing up) or asks Restore here / Back up this phone.
+- **Restore:** through the import, as planned: the backup becomes an export file of format 3 without points.
+- **Deletion:** the callable function `deleteMyAccount` deletes the backup, the unlock, any waiting deletion and the sign-in account, and releases the purchase so that it can be restored to a new account. Refunds' backups are deleted by `runDeletions` in the daily job, 30 days after the refund.
+- **Rules:** `backup/owner` added to the known paths; an account may list its own `trips` and `backup` folders.
+
 ## Consequences
 
 - Better: a lost or replaced phone keeps every trip, for users who want that, without a file to remember to export.

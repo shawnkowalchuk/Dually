@@ -132,6 +132,51 @@ class DataTransfer internal constructor(
         }
     }
 
+    /**
+     * Replaces what the phone holds with the online backup (since 2026-11-12, ADR-012's
+     * restore): [export] is the backup written as an export file, without GPS points
+     * (`cloudRestoreExport`). It goes the way of a picked file in every step but the question,
+     * which the Online backup tile has already asked: checked whole, then a safety copy of what
+     * the phone holds, then the import, with its line in the Log.
+     *
+     * @return what it came to; null if something else was under way or waiting for an answer.
+     */
+    suspend fun restoreFromBackup(export: String): TransferOutcome? {
+        if (!claim(TransferWork.IMPORTING)) return null
+        val outcome =
+            withContext(Dispatchers.IO) {
+                try {
+                    restoreNow(export)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (failure: Exception) {
+                    failures.report(TransferWork.IMPORTING.inWords(), failure)
+                    TransferOutcome.Refused(TransferRefusal.FileNotRead)
+                }
+            }
+        mutableStatus.value = TransferStatus(outcome = outcome)
+        return outcome
+    }
+
+    private suspend fun restoreNow(export: String): TransferOutcome {
+        if (tripInProgress()) return TransferOutcome.Refused(TransferRefusal.TripInProgress)
+        val file = export.byteInputStream(Charsets.UTF_8).use(incoming::take)
+        return when (val reading = import.check(file)) {
+            is ExportReading.Refused -> {
+                incoming.clear()
+                eventLog.add(clock(), EventCategory.REPORT, importRefusedLine(reading.problem))
+                TransferOutcome.Refused(reading.problem.asRefusal())
+            }
+
+            is ExportReading.Good ->
+                importRun.run(
+                    file,
+                    reading.export,
+                    importOffer(reading.export, import.storedNow(), safetyCopyAtMs = null),
+                )
+        }
+    }
+
     /** Shawn's no: the copy of the picked file is removed, and nothing was changed. */
     fun declineImport() {
         var declined = false

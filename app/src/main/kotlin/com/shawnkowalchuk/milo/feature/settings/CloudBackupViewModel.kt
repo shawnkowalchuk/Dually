@@ -3,7 +3,9 @@ package com.shawnkowalchuk.milo.feature.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shawnkowalchuk.milo.data.cloud.CloudAccount
+import com.shawnkowalchuk.milo.data.cloud.CloudRestoreResult
 import com.shawnkowalchuk.milo.data.cloud.CloudSignInResult
+import com.shawnkowalchuk.milo.data.cloud.CloudStartResult
 import com.shawnkowalchuk.milo.data.cloud.CloudUnlockResult
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
@@ -25,6 +27,28 @@ enum class CloudNote {
     REFUNDED,
     NOTHING_TO_RESTORE,
     UNLOCK_FAILED,
+    PLAY_NOT_READY,
+
+    /** The backup's trips are on this phone now: [CloudBackupCardState.restoredTrips]. */
+    RESTORED,
+
+    /** Not while a trip is being recorded. */
+    TRIP_IN_PROGRESS,
+
+    /** The restore did not work; nothing was changed, or the safety copy has it. */
+    RESTORE_FAILED,
+
+    /** This phone backs up to the account now, in place of the other. */
+    BACKING_UP_HERE,
+
+    /** The online backup could not be reached; nothing was changed. */
+    BACKUP_OFFLINE,
+
+    /** The account could not be deleted; nothing was changed. */
+    DELETE_FAILED,
+
+    /** The online backup and the account are deleted. */
+    DELETED,
 }
 
 /**
@@ -35,6 +59,10 @@ enum class CloudNote {
  * @param account the account signed in, or null. Unknown until the file was read: [read].
  * @param read whether the account's file has been read yet. No button is offered before.
  * @param price the unlock's price as Google Play shows it, once asked, or null.
+ * @param standing how the backup stands for an account that holds the unlock (since
+ * 2026-11-12): this phone backs up, or another phone's trips are in it and the user chooses.
+ * Null until it was asked.
+ * @param restoredTrips how many trips the last restore brought back, for its note.
  */
 data class CloudBackupCardState(
     val available: Boolean,
@@ -43,6 +71,8 @@ data class CloudBackupCardState(
     val working: Boolean = false,
     val note: CloudNote? = null,
     val price: String? = null,
+    val standing: CloudStartResult? = null,
+    val restoredTrips: Int = 0,
 )
 
 /**
@@ -66,6 +96,12 @@ class CloudBackupViewModel<H>(
     private val price: suspend () -> String?,
     private val unlock: suspend (H) -> CloudUnlockResult,
     private val restore: suspend () -> CloudUnlockResult,
+    private val startBackup: suspend () -> CloudStartResult = { CloudStartResult.BackingUp },
+    private val restoreTrips: suspend () -> CloudRestoreResult = {
+        CloudRestoreResult.Failed("Not offered")
+    },
+    private val backUpHere: suspend () -> Boolean = { false },
+    private val deleteAccount: suspend (H) -> Boolean = { false },
     private val eventLog: EventLogRepository,
     private val clock: () -> Long,
 ) : ViewModel() {
@@ -78,6 +114,7 @@ class CloudBackupViewModel<H>(
                 val account = readAccount()
                 mutableState.update { it.copy(account = account, read = true) }
                 askPriceIfLocked()
+                lookAtBackup()
             }
         }
     }
@@ -97,13 +134,70 @@ class CloudBackupViewModel<H>(
         if (readyToBuy()) work { if (signedIn(host) && locked()) unlocked(restore()) }
     }
 
+    /** "Restore my trips here", once the user said yes to the question. */
+    fun onRestoreTrips() {
+        if (!unlockedAndIdle()) return
+        work {
+            val note =
+                when (val result = restoreTrips()) {
+                    is CloudRestoreResult.Restored -> {
+                        mutableState.update {
+                            it.copy(
+                                restoredTrips = result.trips,
+                                standing = CloudStartResult.BackingUp,
+                            )
+                        }
+                        CloudNote.RESTORED
+                    }
+
+                    CloudRestoreResult.TripInProgress -> CloudNote.TRIP_IN_PROGRESS
+
+                    CloudRestoreResult.Offline -> CloudNote.BACKUP_OFFLINE
+
+                    is CloudRestoreResult.Failed -> CloudNote.RESTORE_FAILED
+                }
+            mutableState.update { it.copy(note = note) }
+        }
+    }
+
+    /** "Back up this phone instead", once the user said yes to the question. */
+    fun onBackUpHere() {
+        if (!unlockedAndIdle()) return
+        work {
+            val done = backUpHere()
+            mutableState.update {
+                if (done) {
+                    it.copy(standing = CloudStartResult.BackingUp, note = CloudNote.BACKING_UP_HERE)
+                } else {
+                    it.copy(note = CloudNote.BACKUP_OFFLINE)
+                }
+            }
+        }
+    }
+
+    /** "Delete my online backup and account", once the user said yes to the question. */
+    fun onDeleteAccount(host: H) {
+        val shown = state.value
+        if (shown.working || shown.account == null) return
+        work {
+            val done = deleteAccount(host)
+            mutableState.update {
+                if (done) {
+                    it.copy(account = null, standing = null, note = CloudNote.DELETED)
+                } else {
+                    it.copy(note = CloudNote.DELETE_FAILED)
+                }
+            }
+        }
+    }
+
     /** "Sign out". */
     fun onSignOut(host: H) {
         val shown = state.value
         if (shown.working || shown.account == null) return
         work {
             signOut(host)
-            mutableState.update { it.copy(account = null, note = null) }
+            mutableState.update { it.copy(account = null, note = null, standing = null) }
         }
     }
 
@@ -150,10 +244,24 @@ class CloudBackupViewModel<H>(
             )
         }
         askPriceIfLocked()
+        lookAtBackup()
         return account != null
     }
 
-    private fun unlocked(result: CloudUnlockResult) {
+    private fun unlockedAndIdle(): Boolean {
+        val shown = state.value
+        return !shown.working && shown.account?.unlocked == true
+    }
+
+    /** Asks how the backup stands, for an account that holds the unlock. */
+    private suspend fun lookAtBackup() {
+        if (state.value.account?.unlocked == true) {
+            val standing = startBackup()
+            mutableState.update { it.copy(standing = standing) }
+        }
+    }
+
+    private suspend fun unlocked(result: CloudUnlockResult) {
         mutableState.update {
             it.copy(
                 account =
@@ -172,10 +280,12 @@ class CloudBackupViewModel<H>(
                         CloudUnlockResult.Refunded -> CloudNote.REFUNDED
                         CloudUnlockResult.NothingToRestore -> CloudNote.NOTHING_TO_RESTORE
                         CloudUnlockResult.Offline -> CloudNote.OFFLINE
+                        CloudUnlockResult.PlayNotReady -> CloudNote.PLAY_NOT_READY
                         is CloudUnlockResult.Failed -> CloudNote.UNLOCK_FAILED
                     },
             )
         }
+        lookAtBackup()
     }
 
     /**

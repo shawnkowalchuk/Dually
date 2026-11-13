@@ -9,7 +9,15 @@ import {
   assertSucceeds,
   initializeTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import { deleteDoc, doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  writeBatch,
+} from 'firebase/firestore';
 
 const OWNER = 'owner-uid';
 const OTHER = 'other-uid';
@@ -59,6 +67,18 @@ describe('an account that holds the unlock', () => {
       await assertSucceeds(getDoc(ref));
       await assertSucceeds(deleteDoc(ref));
     }
+  });
+
+  test('writes and reads which phone is backing up (since 2026-11-12)', async () => {
+    const ref = doc(as(OWNER), `users/${OWNER}/backup/owner`);
+    await assertSucceeds(setDoc(ref, { json: '{"install":"a1"}' }));
+    await assertSucceeds(getDoc(ref));
+  });
+
+  test('reads the whole of its trips and its backup folder at once, for a restore', async () => {
+    const db = as(OWNER);
+    await assertSucceeds(getDocs(collection(db, `users/${OWNER}/trips`)));
+    await assertSucceeds(getDocs(collection(db, `users/${OWNER}/backup`)));
   });
 
   test('sends a batch of 400 writes and removals at once', async () => {
@@ -113,6 +133,11 @@ describe('another account, and nobody signed in', () => {
     await unlock(OWNER);
     await unlock(OTHER);
     await seed(`users/${OWNER}/trips/17`, trip);
+  });
+
+  test('cannot list the owner\'s trips', async () => {
+    await assertFails(getDocs(collection(as(OTHER), `users/${OWNER}/trips`)));
+    await assertFails(getDocs(collection(as(null), `users/${OWNER}/trips`)));
   });
 
   test('can neither read, write nor remove the owner\'s documents', async () => {

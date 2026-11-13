@@ -35,9 +35,14 @@ class CloudCallableTest {
             CloudUnlockResult.Refunded,
             unlockAnswer(400, refusal("FAILED_PRECONDITION", "refunded")),
         )
+        // The check was reached and Google Play behind it was not (2026-11-12): not "offline".
+        assertEquals(
+            CloudUnlockResult.PlayNotReady,
+            unlockAnswer(503, refusal("UNAVAILABLE", "play-unreachable")),
+        )
         assertEquals(
             CloudUnlockResult.Offline,
-            unlockAnswer(503, refusal("UNAVAILABLE", "play-unreachable")),
+            unlockAnswer(503, refusal("UNAVAILABLE", "")),
         )
         assertEquals(
             CloudUnlockResult.Failed("Purchase check: FAILED_PRECONDITION, not-purchased"),
