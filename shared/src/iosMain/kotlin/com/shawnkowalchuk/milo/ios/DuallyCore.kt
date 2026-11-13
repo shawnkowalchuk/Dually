@@ -47,7 +47,29 @@ class DuallyCore private constructor(
     /** The Trips screen's months and changes (phase 4c). */
     val trips: IosTrips,
     private val addresses: TripAddresses,
+    private val automations: TruckBelief,
 ) {
+    /**
+     * The Setup screen (phase 4d, second part) for what iOS reports, with the check that each
+     * automation has run.
+     */
+    fun setup(
+        location: LocationAccess,
+        precise: Boolean,
+        alwaysAsked: Boolean,
+        vehicle: VehicleLink?,
+    ): SetupScreen = setupScreen(
+        location = location,
+        precise = precise,
+        alwaysAsked = alwaysAsked,
+        vehicle = vehicle,
+        connectHeardAtMs = automations.connectHeardAtMs,
+        disconnectHeardAtMs = automations.disconnectHeardAtMs,
+        nowMs = nowMs(),
+        zone = systemZoneId(),
+        locale = phoneLocale(),
+    )
+
     /**
      * The app has started: picks up a trip left open when it last stopped, then looks up the
      * addresses that are due, as Android does at process start once its trip controller has
@@ -118,12 +140,13 @@ class DuallyCore private constructor(
                     settings,
                     zone = ::systemZoneId,
                 )
+            val truck = StoredTruckBelief()
             val recorder =
                 IosTripRecorder(
                     ledger,
                     eventLog,
                     TripRuleSettings(settings, eventLog, clock),
-                    StoredTruckBelief(),
+                    truck,
                     clock,
                 )
             val network = IosNetworkStatus()
@@ -152,7 +175,7 @@ class DuallyCore private constructor(
                     clock = clock,
                     openTripStart = { addresses.openTripStart.value },
                 )
-            return DuallyCore(database, recorder, trips, addresses)
+            return DuallyCore(database, recorder, trips, addresses, truck)
         }
     }
 }

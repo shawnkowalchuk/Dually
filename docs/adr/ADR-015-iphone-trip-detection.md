@@ -1,7 +1,7 @@
 # ADR-015: How the iPhone starts a trip
 
 Date: 2026-11-11
-Status: Proposed. Shawn's choices of 2026-11-13 are below ("Shawn's choices"). To be proven by real drives with Shawn's iPhone in his truck before the iPhone app is released. Layer 1's actions are built (2026-11-13, "Built so far"); its guided setup and layer 2 are not.
+Status: Proposed. Shawn's choices of 2026-11-13 are below ("Shawn's choices"). To be proven by real drives with Shawn's iPhone in his truck before the iPhone app is released. Layer 1's actions and its guided setup are built (2026-11-13, "Built so far"); layer 2 is not.
 
 ## Context
 
@@ -40,6 +40,8 @@ Asked the four open questions of this record, Shawn chose:
 ## Built so far
 
 - **2026-11-13, layer 1's actions (phase 4d, first part).** The App Intents "Start a trip" and "End a trip" (`ios/Dually/Recording/TripIntents.swift`), run in the background by the user's automations. Start is `TripEvent.TruckLinkConnected`, End is `TripEvent.TruckConnection(false)`: the events Android's Bluetooth connect and disconnect send, so the grace period, the hold-off and the parked rule work as on Android. The iPhone has no reading of the truck, so `IosTripRecorder` keeps what the last automation said (`TruckBelief`, in the app's defaults) and passes it where Android reads the truck. At a restart it carries on only what was stored and never starts a trip, because a missed disconnect leaves it saying "connected". Beside a parked truck the iPhone watches the GPS for the drive-off as Android does. Run on the simulator from the Shortcuts app with Dually closed; the automations themselves (Bluetooth, CarPlay) cannot fire on a simulator.
+
+- **2026-11-13, layer 1's guided setup (phase 4d, second part).** A Setup tab (`ios/Dually/Setup/`, rows worded in `IosSetup.kt`): location Always and precise, the vehicle (CarPlay or Bluetooth, the user's pick), and one row per automation with its steps in the Shortcuts app. The check that an automation fires is that its action has run: each row turns ready, with when it last ran, the first time it does. Home warns while Setup is not complete. Apple's automation editor, as seen on the simulator: a Bluetooth automation asks for the device, "Is Connected" or "Is Disconnected", and "Run After Confirmation" (the default) or "Run Immediately", which the steps tell the user to choose. CarPlay's editor is not on the simulator, so its steps are unchecked until Shawn's iPhone.
 
 ## Consequences
 

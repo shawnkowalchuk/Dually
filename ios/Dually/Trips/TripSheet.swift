@@ -41,12 +41,12 @@ struct TripSheet: View {
                                 .font(Typography.body(15))
                                 .foregroundStyle(Palette.textSecondary)
                             if trip.canMarkBusiness {
-                                SheetButton(title: "Mark Business", filled: true) {
+                                WideButton(title: "Mark Business", filled: true) {
                                     Task { await model.mark(trip, business: true); onClose() }
                                 }
                             }
                             if trip.canMarkPersonal {
-                                SheetButton(title: "Mark Personal", filled: true) {
+                                WideButton(title: "Mark Personal", filled: true) {
                                     Task { await model.mark(trip, business: false); onClose() }
                                 }
                             }
@@ -76,13 +76,13 @@ struct TripSheet: View {
                                     }
                                 }
                             }
-                            SheetButton(title: "Save the label", filled: false) {
+                            WideButton(title: "Save the label", filled: false) {
                                 Task { await model.setLabel(trip, to: label); onClose() }
                             }
                         }
                     }
                     if let words = trip.correctionWords {
-                        SheetButton(title: words, filled: false) {
+                        WideButton(title: words, filled: false) {
                             if trip.correction == "DELETE" {
                                 askingToDelete = true
                             } else {
@@ -109,24 +109,5 @@ struct TripSheet: View {
         }
         .presentationDetents([.medium, .large])
         .task { choices = await model.labelChoices(for: trip) }
-    }
-}
-
-/// A full-width button of the sheet: orange for the main choices, quiet for the others.
-private struct SheetButton: View {
-    let title: String
-    let filled: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(Typography.body(16, weight: .bold))
-                .frame(maxWidth: .infinity, minHeight: 46)
-                .background(filled ? Palette.accent : Palette.controlFill,
-                            in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .foregroundStyle(filled ? Palette.markLetter : Palette.text)
-        }
-        .buttonStyle(.plain)
     }
 }

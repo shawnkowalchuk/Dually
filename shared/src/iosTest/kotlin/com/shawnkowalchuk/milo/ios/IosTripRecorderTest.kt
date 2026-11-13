@@ -152,6 +152,8 @@ class IosTripRecorderTest {
         private val truck =
             object : TruckBelief {
                 override var connected = false
+                override var connectHeardAtMs: Long? = null
+                override var disconnectHeardAtMs: Long? = null
             }
 
         fun truckBelief(connected: Boolean) {
