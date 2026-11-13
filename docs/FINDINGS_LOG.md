@@ -26,6 +26,14 @@
 
 ### 2026-11-13
 
+**`[CHANGE]` Phase 4a: the iPhone app opens** (ADR-014; APP_ENCYCLOPEDIA, iPhone app)
+Shawn: "start building the iphone app". `ios/Dually.xcodeproj` with one SwiftUI target, Home's two figures from the shared code and database, Dually's colours, typefaces and mark, and an app icon from the mark (square, as iOS rounds it). Plan for the rest of phase 4 in ADR-014's Progress.
+- **The project file is written by hand, small on purpose:** Xcode 16's synchronized folder (`PBXFileSystemSynchronizedRootGroup`) takes in whatever is under `ios/Dually/`, so adding a Swift file needs no edit of the project file and no tool such as XcodeGen.
+- **Xcode builds the shared code itself:** a first build step runs Gradle (`embedAndSignAppleFrameworkForXcode`) with the Mac's Java 17; script sandboxing is off for it, as Kotlin's own template does.
+- **`[DEBT]` CI does not build the iPhone app yet.** It needs a Mac runner with Xcode 26; added before TestFlight. Until then the Mac's build and the simulator are the check.
+- **`[FINDING]` The simulator's first start of the day can take minutes,** and an install sent before it is ready hangs; shutting it down and starting it again cleared it.
+- **Checks:** the app builds for the simulator with warnings as errors; Android's checks are unchanged (the shared module only gained the iPhone's framework, its database opener and `DuallyCore`).
+
 **`[DECISION]` How the iPhone starts a trip: Shawn's four answers** (ADR-015, still Proposed)
 The trigger is the user's pick in setup (CarPlay or the truck's Bluetooth, through a Shortcuts automation); setup walks them through it and checks it; driving noticed with no trip is handled as on Android; the Live Activity is in at launch. He also asked why the drive-off sound comes about 30 seconds into a drive while the distance is right: by design, the sound waits for proof the truck has left (15 km/h and away from the parked place), and the trip starts at the parked place.
 
