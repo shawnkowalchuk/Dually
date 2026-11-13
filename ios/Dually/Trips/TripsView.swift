@@ -51,9 +51,20 @@ struct TripsView: View {
             .padding(.bottom, 24)
         }
         .background(Palette.page.ignoresSafeArea())
-        .task { await model.load() }
+        .task {
+            model.lookUpAddresses()
+            // Again every few seconds while the screen is up: an address found, a trip ended
+            // and the distance of the trip being recorded all show without a tap.
+            while !Task.isCancelled {
+                await model.load()
+                try? await Task.sleep(nanoseconds: 5_000_000_000)
+            }
+        }
         .onChange(of: scenePhase) { phase in
-            if phase == .active { Task { await model.load() } }
+            if phase == .active {
+                model.lookUpAddresses()
+                Task { await model.load() }
+            }
         }
         .sheet(item: Binding(get: { chosen.map(ChosenTrip.init) }, set: { chosen = $0?.trip })) { item in
             TripSheet(trip: item.trip, model: model) { chosen = nil }

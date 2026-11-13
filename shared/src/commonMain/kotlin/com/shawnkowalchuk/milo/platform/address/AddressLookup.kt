@@ -49,9 +49,9 @@ sealed interface LookupAnswer {
 }
 
 /**
- * Asks for the address of a position. In the app this is Android's own geocoder
- * ([GeocoderAddressLookup]); an interface so that everything built on it is tested with a
- * stand-in.
+ * Asks for the address of a position. On Android this is its own geocoder
+ * (GeocoderAddressLookup), on the iPhone Apple's (IosAddressLookup); an interface so that
+ * everything built on it is tested with a stand-in.
  *
  * It never throws for a lookup that went wrong: that is a [LookupAnswer.Failed].
  */

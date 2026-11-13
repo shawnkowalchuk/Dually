@@ -1,8 +1,8 @@
 package com.shawnkowalchuk.milo.platform.address
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 /**
  * Turning a geocoder's answer into the one line a trip shows. The answers are made up in the
@@ -25,7 +25,7 @@ class AddressLineTest {
     // ---- The four shapes of an answer -------------------------------------------------------------
 
     @Test
-    fun `a full street address is the house number, the street and the town`() {
+    fun `a full street address is the house number the street and the town`() {
         assertEquals("12 Shop Rd, Edmonton", addressLine(listOf(shopRoad)))
     }
 
@@ -73,7 +73,7 @@ class AddressLineTest {
     // ---- Falling back -----------------------------------------------------------------------------
 
     @Test
-    fun `where no town is named, the district, the county or the province stands in`() {
+    fun `where no town is named the district the county or the province stands in`() {
         val rural = PlaceParts(street = "Range Rd 250", county = "Sturgeon County", region = "AB")
 
         assertEquals("Range Rd 250, Sturgeon County", addressLine(listOf(rural)))
@@ -86,7 +86,7 @@ class AddressLineTest {
     }
 
     @Test
-    fun `with no street and no town, the geocoder's own line is used without country and code`() {
+    fun `with no street and no town the geocoder's own line is used without country and code`() {
         val onlyALine =
             PlaceParts(
                 firstLine = "Elk Island Park Gate, AB T8L 0A1, Canada",
@@ -120,7 +120,7 @@ class AddressLineTest {
     }
 
     @Test
-    fun `of candidates that say as much, the geocoder's first is used`() {
+    fun `of candidates that say as much the geocoder's first is used`() {
         val next = shopRoad.copy(houseNumber = "14")
 
         assertEquals("12 Shop Rd, Edmonton", addressLine(listOf(shopRoad, next)))

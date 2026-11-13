@@ -1,16 +1,13 @@
 package com.shawnkowalchuk.milo.platform.address
 
-import com.shawnkowalchuk.milo.data.crash.CrashFileStore
-import com.shawnkowalchuk.milo.data.crash.CrashRecord
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.trip.Trip
 import com.shawnkowalchuk.milo.data.trip.TripRepository
-import com.shawnkowalchuk.milo.platform.trip.CurrentTrip
-import com.shawnkowalchuk.milo.platform.trip.TripActivity
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +17,7 @@ import kotlinx.coroutines.launch
 /**
  * Finds the start and end address of each trip and stores them on its row.
  *
- * **It only watches.** It reads the trip controller's published state and the stored trips, and
+ * **It only watches.** It reads the trip being recorded and the stored trips, and
  * writes nothing but a finished trip's address columns. Ending a trip never waits for it, and
  * whatever goes wrong here leaves the trip as it was: the worst outcome is a trip with no
  * address. An address Shawn typed, or emptied, is never asked about and never written to.
@@ -37,20 +34,27 @@ import kotlinx.coroutines.launch
  * worked off by one coroutine, so two passes never ask for the same trip, and a request made
  * during a pass leads to one more pass after it.
  *
+ * Shared by both phones (since 2026-11-13): Android hands in its trip controller's state, the
+ * iPhone its trip recorder's, and each its own geocoder.
+ *
  * @param isOnline whether the phone has a working internet connection. Without one nothing is
  * asked and no attempt is counted.
- * @param tripActivity the trip controller's state.
+ * @param tripUnderWay the trip being recorded, or null, each time that changes.
+ * @param tripUnderWayNow the same, read at once: it must agree with [tripUnderWay].
  * @param clock wall-clock milliseconds.
+ * @param unlogged where a failure goes when the event log cannot take it either: Android's crash
+ * file, which reaches the log at a later start.
  * @param scope the application scope. The two coroutines run in it for the life of the process.
  */
 class TripAddresses(
     private val trips: TripRepository,
     private val eventLog: EventLogRepository,
-    private val crashFileStore: CrashFileStore,
     private val lookup: AddressLookup,
     private val isOnline: () -> Boolean,
-    private val tripActivity: StateFlow<TripActivity>,
+    private val tripUnderWay: Flow<TripUnderWay?>,
+    private val tripUnderWayNow: () -> TripUnderWay?,
     private val clock: () -> Long,
+    private val unlogged: (atMs: Long, failure: Throwable) -> Unit,
     scope: CoroutineScope,
 ) {
     private val requests = Channel<String>(Channel.CONFLATED)
@@ -86,8 +90,7 @@ class TripAddresses(
 
     private suspend fun watchTheTripInProgress() {
         var lastTripId: Long? = null
-        tripActivity.collect { activity ->
-            val trip = activity.trip
+        tripUnderWay.collect { trip ->
             val ended = lastTripId
             // The row is closed in storage before the controller publishes, so the trip that
             // was in progress a moment ago can be read as finished (or discarded) by now.
@@ -98,7 +101,7 @@ class TripAddresses(
     }
 
     /** Remembers where [trip] started. Returns true if that is news, and so needs a lookup. */
-    private fun noteStartOf(trip: CurrentTrip): Boolean {
+    private fun noteStartOf(trip: TripUnderWay): Boolean {
         val latitude = trip.startLatitude ?: return false
         val longitude = trip.startLongitude ?: return false
         val known = mutableOpenTripStart.value
@@ -224,7 +227,7 @@ class TripAddresses(
 
     /** The start of the trip in progress, if it is still waiting for its address. */
     private fun openStartToLookUp(): OpenTripStart? = mutableOpenTripStart.value?.takeIf {
-        it.place == TripPlace.LookingUp && tripActivity.value.trip?.tripId == it.tripId
+        it.place == TripPlace.LookingUp && tripUnderWayNow()?.tripId == it.tripId
     }
 
     /**
@@ -262,9 +265,9 @@ class TripAddresses(
     }
 
     /**
-     * Writes a failed pass to the event log. If the log is what failed, the failure goes to a
-     * crash file, which reaches the log at a later start (the same route as
-     * `StartupDiagnostics`).
+     * Writes a failed pass to the event log. If the log is what failed, the failure goes to
+     * [unlogged]: on Android a crash file, which reaches the log at a later start (the same route
+     * as `StartupDiagnostics`).
      */
     private suspend fun report(failure: Exception) {
         val message = "The address lookup failed"
@@ -274,10 +277,15 @@ class TripAddresses(
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (logFailure: Exception) {
-            val unlogged = IllegalStateException(message, failure)
-            unlogged.addSuppressed(logFailure)
-            val thread = Thread.currentThread().name
-            crashFileStore.write(CrashRecord.from(atMs, thread, unlogged))
+            val unloggedFailure = IllegalStateException(message, failure)
+            unloggedFailure.addSuppressed(logFailure)
+            unlogged(atMs, unloggedFailure)
         }
     }
 }
+
+/**
+ * The trip being recorded, as the address lookup needs it: its id and where it started, which is
+ * its first usable GPS fix and is null until there is one.
+ */
+data class TripUnderWay(val tripId: Long, val startLatitude: Double?, val startLongitude: Double?)
