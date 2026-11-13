@@ -72,9 +72,10 @@ jobs:
           cache-provider: basic
 
       # The same four gates, in the same order, that are run locally before a change is called
-      # done: formatting, Android Lint, unit tests, then a debug build.
+      # done: formatting, Android Lint, unit tests, then a debug build. The shared module's tests
+      # (ADR-014, phase 3) run here on Android's side; their iOS run needs a Mac and is run there.
       - name: Check, test and build
-        run: ./gradlew spotlessCheck lintDebug testDebugUnitTest assembleDebug
+        run: ./gradlew spotlessCheck lintDebug testDebugUnitTest :shared:testAndroidHostTest assembleDebug
 
       # The console only prints the first lint error and a one-line test summary. The full lint
       # and test reports are kept, for failed runs only, so a red build can be diagnosed without

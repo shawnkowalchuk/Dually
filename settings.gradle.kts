@@ -28,3 +28,6 @@ rootProject.name = "MilO"
 
 // One module on purpose: features are packages inside :app (see docs/ENGINEERING_STANDARDS.md).
 include(":app")
+
+// The code both phones share (ADR-014, phase 3): Kotlin Multiplatform, for Android and iOS.
+include(":shared")

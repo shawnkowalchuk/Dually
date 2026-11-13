@@ -630,7 +630,16 @@ The shared trip logic is placed by ADR-002: the pure rules (state machine, dista
 
 ## 5. Folder structure
 
-One Gradle module, `:app`. Packages under `com.shawnkowalchuk.milo`:
+Two Gradle modules since 2026-11-12: `:app`, the Android app, and `:shared`, the Kotlin
+Multiplatform module the iPhone app will use too (ADR-014, phase 3). Code moves from `:app` to
+`:shared` a package at a time, with its tests and with its package name unchanged, so the tree
+below reads the same whichever module a package sits in. `:shared` is compiled for Android and
+for iOS (`iosArm64`, `iosSimulatorArm64`); nothing in it may use Android's or Java's own APIs,
+or the iOS build fails. Its tests are in `shared/src/commonTest` and run on both
+(`:shared:testAndroidHostTest`, `:shared:iosSimulatorArm64Test`). The made-up GPS tracks the
+trip tests drive with (`TrackBuilder.kt`) live in `shared/src/testFixtures`, a folder both
+`:shared`'s tests and `:app`'s unit tests compile, so there is one copy. Moved so far:
+`core/trip/`. Packages under `com.shawnkowalchuk.milo`:
 
 ```
 app/                 # MiloApplication, the AppContainer (with ReportObjects, TransferObjects,
@@ -663,7 +672,9 @@ core/designsystem/   # theme tokens (colour, spacing, typography, shape), the sh
                      #   imports from platform
 core/trip/           # the trip rules: state machine, point filter, distance, trip closing,
                      #   and the parked rule with its watch on a parked truck.
-                     #   Pure Kotlin, no Android imports, unit tested (ADR-002)
+                     #   Pure Kotlin, no Android imports, unit tested (ADR-002). In
+                     #   :shared since 2026-11-12 (shared/src/commonMain), tested on
+                     #   Android and iOS
 core/schedule/       # the work schedule and the rule that makes a closed trip Business or
                      #   Personal, at its close and again when its times are changed by hand.
                      #   Pure Kotlin, no Android imports, unit tested. Never used by
@@ -1095,7 +1106,7 @@ No Sentry, no analytics, no API keys. The website's deploy key is the one secret
 
 There is one environment because there is no backend to separate (STANDARDS §13). The build on the phone holds real trip data, so an uninstall is data loss.
 
-Build and release path: a pull request runs CI (gitleaks, then `./gradlew spotlessCheck lintDebug testDebugUnitTest assembleDebug`). **CI builds and tests the debug build, which R8 does not touch; the release build is proven by installing it and looking it over before it is published** (ADR-008; README, "Making a release"). After merge the build is installed on the phone, and the device test checklist (`docs/DEVICE_TEST_CHECKLIST.md`, which grows with each work package) is run there. A phase's behaviour counts as proven only once its checks have run on the phone, but the next phase does not wait for them: on 2026-10-05 Shawn decided that the phases follow one another without a stop in between (FINDINGS_LOG, 2026-10-06; STANDARDS §11). An older build is never installed over a newer one without reading section 6's two rules first: a build from before a database version cannot open that database, and a build from before a stored enum constant crashes on a row that holds it. Until 2026-10-09 not merging red was a rule Shawn followed by hand (GitHub Free cannot block a merge in a private repo, and the repo was private until 2026-10-08). **Since 2026-10-09 GitHub keeps it:** a branch protection rule on `main` requires the CI check before any merge, for Shawn too (STANDARDS §14).
+Build and release path: a pull request runs CI (gitleaks, then `./gradlew spotlessCheck lintDebug testDebugUnitTest :shared:testAndroidHostTest assembleDebug`). **CI builds and tests the debug build, which R8 does not touch; the release build is proven by installing it and looking it over before it is published** (ADR-008; README, "Making a release"). After merge the build is installed on the phone, and the device test checklist (`docs/DEVICE_TEST_CHECKLIST.md`, which grows with each work package) is run there. A phase's behaviour counts as proven only once its checks have run on the phone, but the next phase does not wait for them: on 2026-10-05 Shawn decided that the phases follow one another without a stop in between (FINDINGS_LOG, 2026-10-06; STANDARDS §11). An older build is never installed over a newer one without reading section 6's two rules first: a build from before a database version cannot open that database, and a build from before a stored enum constant crashes on a row that holds it. Until 2026-10-09 not merging red was a rule Shawn followed by hand (GitHub Free cannot block a merge in a private repo, and the repo was private until 2026-10-08). **Since 2026-10-09 GitHub keeps it:** a branch protection rule on `main` requires the CI check before any merge, for Shawn too (STANDARDS §14).
 
 ---
 

@@ -31,6 +31,15 @@ Shawn: "make the 0.3.4 production release". The version is dated 2026-11-13 and 
 
 ### 2026-11-12
 
+**`[CHANGE]` Phase 3a: the trip rules move to the shared module** (ADR-014, "Progress")
+After build 9, Shawn: "please go to the next phase". A second Gradle module, `:shared` (Kotlin Multiplatform: Android, `iosArm64`, `iosSimulatorArm64`), and `core/trip/` moved into it with `git mv`, its 23 files and its tests, package names unchanged. Nothing the app does changes, so there is no line in the list of changes.
+- **Two lines of the rules changed,** both a Java call the iOS build cannot make: `Math.toRadians` is now a multiplication by Java's own constant, `0.017453292519943295` (`Haversine.kt`), so the distances are the same to the last bit; `lowercase(Locale.ROOT)` is now Kotlin's `lowercase()`, which never looks at the phone's language either (`TripLabels.kt`).
+- **The tests moved from JUnit to kotlin.test.** The random tests seeded `java.util.Random`; `SeededRandom` (commonTest) is a line-for-line copy of its algorithm, so every seed still draws the same numbers and so the same made-up trips: a test that failed on one seed before would fail on it now. kotlin.test puts an assert's message last, so the messages were moved, and `assertThrows` became `assertFailsWith`.
+- **`[FINDING]` Kotlin/Native allows no comma in a test's backticked name** ("Name contains illegal characters"); Android does. 76 names lost their comma. A test name in `:shared` must also avoid `.` `;` `:` `/` `<` `>` `[` `]`.
+- **The made-up GPS tracks** (`TrackBuilder.kt`) are used by the shared tests and by 16 of the app's own tests (the trip controller's). They live in `shared/src/testFixtures`, compiled by both, rather than as two copies.
+- **CI runs `:shared:testAndroidHostTest` too** (STANDARDS §10 and §14 updated). The iOS run needs a Mac, so it is run here before a change to `shared/` is called done.
+- **Checks:** `spotlessCheck lintDebug testDebugUnitTest :shared:testAndroidHostTest assembleDebug` pass; `:shared:iosSimulatorArm64Test` passes, 326 tests, the same 326 as on Android. Not yet run: the release check on the phone that ADR-014 asks for before phase 3 is called done; it waits for the next build Shawn installs.
+
 **`[CHANGE]` The online backup is in main (slice 1f), as build 9**
 Shawn: "than please merge to main", then overnight, "please do everything Autonomously". `app/cloud-backup` (slices 1b to 1f) merged into main, with what main gained meanwhile. Version 0.3.4, build 9, for Google Play's internal testing. The What's new list has its line ("Optional online backup").
 
