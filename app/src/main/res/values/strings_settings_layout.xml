@@ -43,12 +43,18 @@
     <string name="settings_units_title">Units</string>
     <string name="settings_units_kilometres">Kilometres</string>
     <string name="settings_units_miles">Miles</string>
-    <string name="settings_units_detail">Every screen, the Android Auto screen, the widget, the notifications and the report for the accountant show distances in this unit. Stored trips are not changed, so you can switch back at any time.</string>
     <!-- The look of the screens (since 2026-11-12). -->
     <string name="settings_look_title">Look</string>
     <string name="settings_look_dark">Dark</string>
     <string name="settings_look_light">Light</string>
-    <string name="settings_look_detail">Changes every screen of the app and the home-screen widget. The Android Auto screen follows the car\'s own day and night, and the report for the accountant is always a white page.</string>
+    <!--
+        Units and Look are two small tiles side by side, each one button (since 2026-11-12). The
+        last line says what a tap switches to.
+    -->
+    <string name="settings_units_tap_miles">Tap for miles</string>
+    <string name="settings_units_tap_kilometres">Tap for kilometres</string>
+    <string name="settings_look_tap_light">Tap for light</string>
+    <string name="settings_look_tap_dark">Tap for dark</string>
 
     <!-- Work schedule: the tile's label, as drawn. -->
     <string name="settings_schedule_label">Work schedule · trips in these hours are Business</string>

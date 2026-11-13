@@ -250,10 +250,13 @@ internal fun SettingsContent(
                 ReminderTile(state, actions.reminder)
                 TripRulesTile(state, actions)
                 // Under the trips' tile: it says how every distance is written, that tile's
-                // shortest trip included.
-                UnitsTile(state.distanceUnit, actions.onDistanceUnit)
-                // Beside the units: the other choice of how everything is shown.
-                LookTile(state.look, actions.onLook)
+                // shortest trip included. Beside it, the other choice of how everything is shown.
+                UnitsAndLookTiles(
+                    state.distanceUnit,
+                    state.look,
+                    actions.onDistanceUnit,
+                    actions.onLook,
+                )
                 ScheduleTile(state, actions.schedule)
                 OutsideHoursTile(state, actions.schedule)
                 // Under the schedule: the check goes by its work days and their start.
