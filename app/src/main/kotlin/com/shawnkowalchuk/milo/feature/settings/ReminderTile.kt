@@ -66,7 +66,6 @@ private const val LAST_TEEN = 13
  */
 @Composable
 internal fun ReminderTile(state: SettingsUiState.Ready, actions: ReminderActions) {
-    var aboutOpen by rememberSaveable { mutableStateOf(false) }
     val fromDay = stringResource(reminderLineRes(state.reminderDay), state.reminderDay)
     SettingsFold(
         title = stringResource(R.string.settings_reminder_title),
@@ -102,11 +101,7 @@ internal fun ReminderTile(state: SettingsUiState.Ready, actions: ReminderActions
                     ),
             )
         }
-        QuietExpander(
-            label = stringResource(R.string.settings_about_reminder),
-            expanded = aboutOpen,
-            onToggle = { aboutOpen = !aboutOpen },
-        ) {
+        SettingsAbout(label = stringResource(R.string.settings_about_reminder)) {
             Note(stringResource(R.string.settings_reminder_detail))
             Note(stringResource(R.string.settings_reminder_day_detail))
         }
@@ -114,7 +109,7 @@ internal fun ReminderTile(state: SettingsUiState.Ready, actions: ReminderActions
 }
 
 /** The sentence under the title, for the ending the stored day takes as an ordinal. */
-private fun reminderLineRes(day: Int): Int = when (ordinalEnding(day)) {
+internal fun reminderLineRes(day: Int): Int = when (ordinalEnding(day)) {
     OrdinalEnding.ST -> R.string.settings_reminder_from_st
     OrdinalEnding.ND -> R.string.settings_reminder_from_nd
     OrdinalEnding.RD -> R.string.settings_reminder_from_rd

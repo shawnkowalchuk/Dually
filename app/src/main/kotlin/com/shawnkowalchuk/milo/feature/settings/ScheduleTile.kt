@@ -67,7 +67,6 @@ internal fun ScheduleTile(state: SettingsUiState.Ready, actions: ScheduleActions
     val words = HoursWords(locale, rememberTwentyFourHourClock())
     // Asked for with the line under the slider. It belongs to the screen, not to the settings.
     var eachDayAsked by rememberSaveable { mutableStateOf(false) }
-    var aboutOpen by rememberSaveable { mutableStateOf(false) }
     val picker = rememberHoursPicker()
     val hold = rememberHoursHold()
 
@@ -153,14 +152,7 @@ internal fun ScheduleTile(state: SettingsUiState.Ready, actions: ScheduleActions
         ) {
             EachDayHours(workDays, shown, sliding, picker, actions.onCopyHours)
         }
-        QuietExpander(
-            label = stringResource(R.string.settings_about_schedule),
-            expanded = aboutOpen,
-            onToggle = { aboutOpen = !aboutOpen },
-            // A little more room above it: the line before it can be pressed too, and each
-            // keeps 10 dp free around itself for the finger.
-            modifier = Modifier.padding(top = MiloTheme.spacing.extraSmall),
-        ) {
+        SettingsAbout(label = stringResource(R.string.settings_about_schedule)) {
             Note(stringResource(R.string.settings_schedule_intro))
             Note(stringResource(R.string.settings_schedule_applies))
             Note(stringResource(R.string.settings_schedule_slider_note))
@@ -249,7 +241,7 @@ private fun SummaryLine(text: String) {
 
 /** "5 days · 42.5 h a week", or the sentence for a week without a work day. */
 @Composable
-private fun weekSummary(workDays: Int, weeklyMinutes: Int): String = if (workDays == 0) {
+internal fun weekSummary(workDays: Int, weeklyMinutes: Int): String = if (workDays == 0) {
     stringResource(R.string.settings_schedule_no_days)
 } else {
     pluralStringResource(

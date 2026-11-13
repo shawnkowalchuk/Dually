@@ -52,7 +52,7 @@ internal const val SUPPORT_ADDRESS = "support@dually.top"
  * with no email app says so on the tile, with the address to write to from elsewhere.
  */
 @Composable
-internal fun SupportTile(modifier: Modifier = Modifier) {
+internal fun SupportRow() {
     val context = LocalContext.current
     var noEmailApp by rememberSaveable { mutableStateOf(false) }
     val subject = stringResource(R.string.settings_support_subject)
@@ -65,32 +65,16 @@ internal fun SupportTile(modifier: Modifier = Modifier) {
             Build.VERSION.RELEASE,
             phoneName(Build.MANUFACTURER, Build.MODEL),
         )
-    Tile(
-        modifier = modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
-        press =
-            TilePress(
-                label = stringResource(R.string.settings_support_open),
-                onClick = {
-                    val draft = supportMailto(SUPPORT_ADDRESS, subject, supportBody(about))
-                    noEmailApp = !context.openEmailDraft(draft)
-                },
-            ),
-        gap = MiloTheme.spacing.extraSmall,
-    ) {
-        TileLinkLabel(stringResource(R.string.settings_support_label))
-        Text(text = SUPPORT_ADDRESS, style = MaterialTheme.typography.titleMedium)
-        Text(
-            text = stringResource(R.string.settings_support_hint),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        if (noEmailApp) {
-            StatusRow(
-                label = stringResource(R.string.settings_support_no_email_app),
-                status = RowStatus.PROBLEM,
-            )
-        }
-    }
+    FooterLink(
+        label = stringResource(R.string.settings_support_label),
+        pressLabel = stringResource(R.string.settings_support_open),
+        onClick = {
+            val draft = supportMailto(SUPPORT_ADDRESS, subject, supportBody(about))
+            noEmailApp = !context.openEmailDraft(draft)
+        },
+        value = SUPPORT_ADDRESS,
+        problem = stringResource(R.string.settings_support_no_email_app).takeIf { noEmailApp },
+    )
 }
 
 /**

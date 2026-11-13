@@ -130,7 +130,6 @@ internal fun DataTile(viewModel: DataViewModel) {
 internal fun DataTileContent(state: DataCardState, actions: DataActions) {
     val told = remember { BringIntoViewRequester() }
     var seen by remember { mutableStateOf(state.working to state.lines) }
-    var aboutOpen by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(state.working, state.lines) {
         if (seen != state.working to state.lines) {
             seen = state.working to state.lines
@@ -194,11 +193,7 @@ internal fun DataTileContent(state: DataCardState, actions: DataActions) {
         for (atMs in state.safetyCopiesAtMs) {
             SafetyCopy(atMs, state, actions.onRestoreSafetyCopy)
         }
-        QuietExpander(
-            label = stringResource(R.string.settings_about_data),
-            expanded = aboutOpen,
-            onToggle = { aboutOpen = !aboutOpen },
-        ) {
+        SettingsAbout(label = stringResource(R.string.settings_about_data)) {
             Note(stringResource(R.string.settings_data_backup))
             Note(stringResource(R.string.settings_data_export_intro))
             NamedNote(

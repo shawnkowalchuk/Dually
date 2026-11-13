@@ -889,7 +889,6 @@
         <item quantity="one">%1$s + %2$d more</item>
         <item quantity="other">%1$s + %2$d more</item>
     </plurals>
-    <string name="settings_truck_detail">A trip starts by itself when this truck connects.</string>
     <string name="settings_applies_next_trip">A change applies from the next trip. A trip that is being recorded may already use it.</string>
     <string name="settings_grace_label">Wait after the truck disconnects</string>
     <string name="settings_grace_detail">How long a trip stays open for the truck to reconnect. If it does, the same trip carries on.</string>
@@ -916,8 +915,6 @@
     <!-- Settings: the driving alert. -->
     <string name="settings_driving_title">Driving alert</string>
     <string name="settings_driving_enabled">Tell me when I drive without a trip</string>
-    <string name="settings_driving_detail">During your work hours, if the phone notices that you are driving while no trip is being recorded and the truck is not connected, Dually sends a notification. Tap it to start a trip. Dually never starts one from this by itself: the phone cannot tell the truck from any other vehicle.</string>
-    <string name="settings_driving_needs">It needs the Physical activity permission, which the Setup screen asks for. The phone can take a minute or more to notice that you are driving.</string>
     <!-- Settings: the monthly reminder to send last month's report. -->
     <string name="settings_reminder_title">Monthly reminder</string>
     <string name="settings_reminder_detail">A notification once a day, from the day set above until the report for last month is recorded as sent. Tap it to open that report. A month without a Business trip brings no reminder.</string>
