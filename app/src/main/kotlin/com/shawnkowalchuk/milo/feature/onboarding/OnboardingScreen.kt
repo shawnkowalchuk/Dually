@@ -85,6 +85,12 @@ private fun OnboardingContent(onOk: () -> Unit) {
                 text = stringResource(R.string.onboarding_hero_line),
                 style = MiloTheme.textStyles.sentence,
             )
+            // What it costs, said first (Shawn, 2026-11-12: "should we have it specify first
+            // off that it is free and the paid version is for purchasing of online backup only?").
+            Text(
+                text = stringResource(R.string.onboarding_free),
+                style = MaterialTheme.typography.titleSmall,
+            )
         }
         for ((title, text) in SECTIONS) Section(title, text)
     }
