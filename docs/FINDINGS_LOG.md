@@ -26,6 +26,16 @@
 
 ### 2026-11-12
 
+**`[CHANGE]` Build 8 for internal testing, and the iPhone app's record in App Store Connect**
+Shawn: "yes make build 8", then, while it built, "please setup the dually app in apple app connect and do all setting". Build 8 is `app/cloud-backup` with main merged in: 0.3.4, versionCode 8, the backup with the Android Auto changes and the light look. Its bundle is `app/build/outputs/bundle/release/Dually-0.3.4-build8-test.aab`, signed with `~/keys/milo.jks`. Because 8 went to Play's internal track, a release of main to Play before the backup joins it needs versionCode 9 or more. The App Store Connect record was set up by me in Shawn's Chrome, team 2799748 Alberta Ltd.:
+- **The app:** Apple ID 6834196352, iOS, "Dually Trip Tracker", English (U.S.), bundle ID `top.dually.triptracker`, SKU `dually-trip-tracker`. Subtitle "Mileage log for work trucks"; category Business, then Productivity; content rights "No"; age rating 4+, every question answered No or None; privacy page https://dually.top/privacy; support and marketing URL https://dually.top/; copyright "2026 2799748 Alberta Ltd.".
+- **Pricing:** free, in all 175 countries or regions.
+- **The in-app purchase:** non-consumable `cloud_backup`, "Cloud backup", Apple ID 6834197069, US$19.99 in all 175. Apple converts it to CA$24.99 and £19.99, where Play charges CA$28.99 and £17.99. Family Sharing is off. Its display description is "Back up every trip to Dually's server in Canada." (Apple allows 55 characters).
+- **Left until the iPhone app exists,** because each has to describe it: the description, keywords, screenshots, Apple's privacy questionnaire and the review notes. The Mac and Vision Pro availability ticks are left at Apple's defaults (on); they decide nothing until a build is uploaded.
+
+**`[CHANGE]` A Play edit nudged the purchase check's access through**
+At Shawn's request ("yes try the quick fix"), the "Cloud backup" product's description in Play Console was saved with its end reworded ("No subscription and no ads."). Minutes later Restore purchase worked: "backup unlocked". It was the first unlock on the phone (slice 1d proven).
+
 **`[CHANGE]` The purchase check can look up orders**
 Invited `purchase-check@dually-trip-tracker.iam.gserviceaccount.com` to Play Console at Shawn's request ("can you please do"), from his browser. It has access to Dually Trip Tracker only: "View app information" (required), "View financial data" and "Manage orders and subscriptions". Without it, `unlockBackup` got refused by Google Play, which the app showed as "Google could not be reached". That is why his test purchase did not unlock. Google can take hours to switch the access on; then "Restore purchase" unlocks without buying again. The app's message for this case is misleading; that is to fix in slice 1e.
 
