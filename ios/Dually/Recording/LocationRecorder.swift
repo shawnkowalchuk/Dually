@@ -26,8 +26,10 @@ final class LocationRecorder: NSObject, ObservableObject {
         manager.pausesLocationUpdatesAutomatically = false
     }
 
-    /// Starts the fixes, asking for permission first if it was never asked.
+    /// Starts the fixes, asking for permission first if it was never asked. Calling it while
+    /// they run changes nothing.
     func start() {
+        if recording { return }
         recording = true
         if manager.authorizationStatus == .notDetermined {
             manager.requestWhenInUseAuthorization()
@@ -37,6 +39,7 @@ final class LocationRecorder: NSObject, ObservableObject {
     }
 
     func stop() {
+        if !recording { return }
         recording = false
         manager.stopUpdatingLocation()
         manager.allowsBackgroundLocationUpdates = false

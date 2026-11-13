@@ -6,10 +6,10 @@ import okio.Path.Companion.toPath
 
 /**
  * Opens the settings file on the iPhone (phase 4b): the same keys and values as Android's, in a
- * file of the same name in the app's folder.
+ * file of the same name in [folder], the app's unless a test gives its own.
  */
-fun buildSettingsStore(): SettingsStore = SettingsStore(
+fun buildSettingsStore(folder: String = appFolderPath()): SettingsStore = SettingsStore(
     PreferenceDataStoreFactory.createWithPath(
-        produceFile = { (appFolderPath() + "/" + SETTINGS_FILE_NAME + ".preferences_pb").toPath() },
+        produceFile = { (folder + "/" + SETTINGS_FILE_NAME + ".preferences_pb").toPath() },
     ),
 )

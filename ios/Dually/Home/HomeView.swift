@@ -8,8 +8,8 @@ struct HomeView: View {
     @StateObject private var model: HomeModel
     @Environment(\.scenePhase) private var scenePhase
 
-    init(core: DuallyCore) {
-        _model = StateObject(wrappedValue: HomeModel(core: core))
+    init(session: TripSession) {
+        _model = StateObject(wrappedValue: HomeModel(session: session))
     }
 
     var body: some View {
@@ -34,7 +34,7 @@ struct HomeView: View {
                         note: "Business"
                     )
                 }
-                if let failure = model.failure {
+                if let failure = model.failure ?? model.recordingFailure {
                     Text(failure)
                         .font(Typography.body(14))
                         .foregroundStyle(Palette.amber)
