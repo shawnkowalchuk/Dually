@@ -5,20 +5,20 @@ import SwiftUI
 // Gradle build as the DuallyShared framework (the "Build the shared Kotlin code" step).
 @main
 struct DuallyApp: App {
-    /// The shared code's door, opened once: it opens the database.
-    private let core = DuallyCore.companion.open(placeFinder: AppleGeocoder())
+    /// The trip being recorded and the shared code's door, one for the whole app (phase 4d).
+    private let session = TripSession.shared
 
     var body: some Scene {
         WindowGroup {
             TabView {
-                HomeView(core: core)
+                HomeView(session: session)
                     .tabItem { Label("Home", systemImage: "house.fill") }
-                TripsView(core: core)
+                TripsView(core: session.core)
                     .tabItem { Label("Trips", systemImage: "list.bullet") }
             }
             .tint(Palette.accent)
             .preferredColorScheme(.dark)
-            .task { try? await core.appStarted() }
+            .task { await session.appStarted() }
         }
     }
 }

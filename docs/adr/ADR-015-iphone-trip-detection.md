@@ -1,7 +1,7 @@
 # ADR-015: How the iPhone starts a trip
 
 Date: 2026-11-11
-Status: Proposed. Shawn's choices of 2026-11-13 are below ("Shawn's choices"). To be proven by real drives with Shawn's iPhone in his truck before the iPhone app is released. Not built.
+Status: Proposed. Shawn's choices of 2026-11-13 are below ("Shawn's choices"). To be proven by real drives with Shawn's iPhone in his truck before the iPhone app is released. Layer 1's actions are built (2026-11-13, "Built so far"); its guided setup and layer 2 are not.
 
 ## Context
 
@@ -36,6 +36,10 @@ Asked the four open questions of this record, Shawn chose:
 - **Setup walks the user through making the automation,** and checks that it fires, over leaving it optional or skipping it.
 - **Driving noticed with no trip open: the same as Android.** With the truck's Bluetooth or CarPlay connected, the trip starts by itself, from where the truck was parked; without it, the "Driving? Start a trip" alert. Asked with it whether a trip's distance starts at the parked place when the drive-off sound comes about 30 seconds into a drive: it does, on Android and so on the iPhone (APP_ENCYCLOPEDIA, "Waiting beside the parked truck": the trip-start sound waits for a fix that shows the truck away at 15 km/h or more, and the trip's first point is the parked place).
 - **The Live Activity on the Lock Screen and in the Dynamic Island at launch,** with the kilometres and a Stop button: the iPhone's form of Android's trip notification.
+
+## Built so far
+
+- **2026-11-13, layer 1's actions (phase 4d, first part).** The App Intents "Start a trip" and "End a trip" (`ios/Dually/Recording/TripIntents.swift`), run in the background by the user's automations. Start is `TripEvent.TruckLinkConnected`, End is `TripEvent.TruckConnection(false)`: the events Android's Bluetooth connect and disconnect send, so the grace period, the hold-off and the parked rule work as on Android. The iPhone has no reading of the truck, so `IosTripRecorder` keeps what the last automation said (`TruckBelief`, in the app's defaults) and passes it where Android reads the truck. At a restart it carries on only what was stored and never starts a trip, because a missed disconnect leaves it saying "connected". Beside a parked truck the iPhone watches the GPS for the drive-off as Android does. Run on the simulator from the Shortcuts app with Dually closed; the automations themselves (Bluetooth, CarPlay) cannot fire on a simulator.
 
 ## Consequences
 

@@ -7,12 +7,12 @@ import kotlinx.coroutines.IO
 
 /**
  * Builds the main database on the iPhone (phase 4a): the same tables, version and migrations as
- * Android's ([buildMiloDatabase] in androidMain), in the app's folder ([appFolderPath]). As on
+ * Android's ([buildMiloDatabase] in androidMain), in [folder], the app's ([appFolderPath]). As on
  * Android there is no destructive-migration fallback: a missing migration fails loudly instead
  * of deleting trips.
  */
-fun buildMiloDatabase(): MiloDatabase = Room
-    .databaseBuilder<MiloDatabase>(name = appFolderPath() + "/" + MILO_DATABASE_FILE)
+fun buildMiloDatabase(folder: String = appFolderPath()): MiloDatabase = Room
+    .databaseBuilder<MiloDatabase>(name = folder + "/" + MILO_DATABASE_FILE)
     .setDriver(BundledSQLiteDriver())
     .setQueryCoroutineContext(Dispatchers.IO)
     .addMigrations(*MILO_MIGRATIONS)

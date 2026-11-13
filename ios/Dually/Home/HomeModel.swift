@@ -1,82 +1,55 @@
-import CoreLocation
+import Combine
 import DuallyShared
 import Foundation
 
 // What Home shows and does, through the shared code (ADR-014). The figures are worked out and
 // formatted in Kotlin (DuallyCore.homeFigures), so they say what Android's say; a trip is
-// recorded by the shared trip rules and ledger (IosTripRecorder, phase 4b), fed by the iPhone's
-// GPS (LocationRecorder).
+// recorded by the shared trip rules and ledger through the app's one TripSession, which the
+// Shortcuts automation's actions use too (phase 4d).
 @MainActor
 final class HomeModel: ObservableObject {
     @Published private(set) var figures: HomeFigures?
     /// The trip being recorded, or nil.
     @Published private(set) var recording: RecordingNow?
     @Published private(set) var failure: String?
+    @Published private(set) var recordingFailure: String?
 
-    let location = LocationRecorder()
-    private let core: DuallyCore
+    private let session: TripSession
+    var location: LocationRecorder { session.location }
 
-    init(core: DuallyCore) {
-        self.core = core
-        location.onFix = { [weak self] fix in
-            Task { await self?.add(fix) }
-        }
+    init(session: TripSession) {
+        self.session = session
+        session.$recording.assign(to: &$recording)
+        session.$failure.assign(to: &$recordingFailure)
     }
 
-    /// Reads everything again, as of now, and picks up a trip that was open when the app last
-    /// stopped: its GPS starts again.
+    /// Reads everything again, as of now. A trip that was open when the app last stopped has its
+    /// GPS started again.
     func refresh() async {
-        await run {
-            self.recording = try await self.core.recorder.now()
-            if self.recording != nil { self.location.start() }
-            self.figures = try await self.core.homeFigures(nowMs: Self.nowMs())
-        }
+        await session.refresh()
+        await readFigures()
     }
 
     func start() async {
-        await run {
-            self.recording = try await self.core.recorder.start()
-            if self.recording != nil { self.location.start() }
-        }
+        await session.start()
     }
 
     func end() async {
-        await run {
-            self.recording = try await self.core.recorder.end()
-            if self.recording == nil { self.location.stop() }
-            self.figures = try await self.core.homeFigures(nowMs: Self.nowMs())
-        }
+        await session.end()
+        await readFigures()
     }
 
     /// The running trip's distance as Home writes it: "12.3".
     func distanceText(_ trip: RecordingNow) -> String {
-        core.distanceText(metres: trip.metres)
+        session.core.distanceText(metres: trip.metres)
     }
 
-    private func add(_ fix: Fix) async {
-        await run {
-            self.recording = try await self.core.recorder.addFix(
-                wallClockMs: fix.wallClockMs,
-                elapsedMs: fix.elapsedMs,
-                latitude: fix.latitude,
-                longitude: fix.longitude,
-                accuracyMetres: fix.accuracyMetres.map { KotlinFloat(value: $0) },
-                speedMetresPerSecond: fix.speedMetresPerSecond.map { KotlinFloat(value: $0) }
-            )
-            if self.recording == nil { self.location.stop() }
-        }
-    }
-
-    private func run(_ work: @escaping () async throws -> Void) async {
+    private func readFigures() async {
         do {
-            try await work()
+            figures = try await session.core.homeFigures(nowMs: Int64(Date().timeIntervalSince1970 * 1000))
             failure = nil
         } catch {
             failure = error.localizedDescription
         }
-    }
-
-    private static func nowMs() -> Int64 {
-        Int64(Date().timeIntervalSince1970 * 1000)
     }
 }

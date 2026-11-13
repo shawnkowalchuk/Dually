@@ -123,6 +123,7 @@ class DuallyCore private constructor(
                     ledger,
                     eventLog,
                     TripRuleSettings(settings, eventLog, clock),
+                    StoredTruckBelief(),
                     clock,
                 )
             val network = IosNetworkStatus()
