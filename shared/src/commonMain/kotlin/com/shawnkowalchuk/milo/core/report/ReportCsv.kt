@@ -1,0 +1,121 @@
+package com.shawnkowalchuk.milo.core.report
+
+import com.shawnkowalchuk.milo.core.text.Locale
+import com.shawnkowalchuk.milo.core.text.rootLocale
+import com.shawnkowalchuk.milo.core.time.ZoneId
+import com.shawnkowalchuk.milo.core.time.formatIsoDay
+import com.shawnkowalchuk.milo.core.time.formatIsoTime
+import com.shawnkowalchuk.milo.core.util.formatTenths
+
+// The CSV export: the trips of a report, one row each, for a spreadsheet. Pure Kotlin.
+
+/**
+ * The words of the CSV: the titles of its nine columns, and what the last column says for a
+ * trip that was added or edited by hand. User-visible text, so the caller reads them from the
+ * string resources.
+ *
+ * @param km the title of the distance column: the short word of the report's unit, "km" or
+ * "mi", so the column says which of the two its figures are.
+ * @param label and [vehicle] the titles of the trip's label, its purpose, and of the vehicle it
+ * was in (since 2026-10-08).
+ * @param category the title of the column that says Business or Personal ([business],
+ * [personal]), there only when the report lists Personal trips (since 2026-10-16).
+ */
+data class CsvWords(
+    val date: String,
+    val start: String,
+    val end: String,
+    val from: String,
+    val to: String,
+    val label: String,
+    val vehicle: String,
+    val km: String,
+    val byHand: String,
+    val added: String,
+    val edited: String,
+    val category: String = "",
+    val business: String = "",
+    val personal: String = "",
+    val odometerStart: String = "",
+    val odometerEnd: String = "",
+)
+
+// A spreadsheet has to read these the same way whatever language the phone is set to, so the
+// date is written year first, the times on a 24-hour clock, and the distance with a dot, in
+// kilometres and in miles alike.
+
+/** Lines end the way the CSV standard (RFC 4180) says, which every spreadsheet reads. */
+private const val LINE_END = "\r\n"
+
+/** A cell that starts with one of these is run as a formula by a spreadsheet. */
+private const val FORMULA_STARTS = "=+-@\t\r"
+
+/**
+ * The trips of [report] as CSV text: a row of column titles, then one row for each trip, oldest
+ * first, with the facts the PDF prints for it, its label and its vehicle (empty where it has
+ * none) and, in the last column, whether it was added or edited by hand.
+ *
+ * It differs from the PDF where a spreadsheet needs it to: each row carries its own date, the
+ * formats are fixed (see above), a missing address is an empty cell where the PDF writes it
+ * out in words, and there are no subtotals, which would be counted twice by whoever sums the
+ * column. The distances are the figures the PDF prints, in the report's unit, so the column
+ * adds up to its total.
+ */
+fun reportCsv(report: MileageReport, words: CsvWords): String {
+    val header =
+        listOf(
+            words.date,
+            words.start,
+            words.end,
+            words.from,
+            words.to,
+            words.label,
+            words.vehicle,
+            words.category.takeIf { report.listsPersonal },
+            words.km,
+            words.odometerStart.takeIf { report.showsTripOdometer },
+            words.odometerEnd.takeIf { report.showsTripOdometer },
+            words.byHand,
+        ).filterNotNull()
+    val rows =
+        report.days.flatMap { it.trips }.map { trip ->
+            listOf(
+                formatIsoDay(trip.startedAtMs, report.zone),
+                formatIsoTime(trip.startedAtMs, report.zone),
+                trip.endedAtMs?.let { formatIsoTime(it, report.zone) }.orEmpty(),
+                trip.from.orEmpty(),
+                trip.to.orEmpty(),
+                trip.label.orEmpty(),
+                trip.vehicle.orEmpty(),
+                (if (trip.personal) words.personal else words.business)
+                    .takeIf { report.listsPersonal },
+                formatTenths(trip.tenths(report.unit), rootLocale),
+                trip.odometer?.start?.value?.toString().orEmpty().takeIf {
+                    report.showsTripOdometer
+                },
+                trip.odometer?.end?.value?.toString().orEmpty().takeIf { report.showsTripOdometer },
+                when (trip.mark) {
+                    ReportMark.ADDED -> words.added
+                    ReportMark.EDITED -> words.edited
+                    null -> ""
+                },
+            ).filterNotNull()
+        }
+    return (listOf(header) + rows).joinToString(separator = "") { row ->
+        row.joinToString(separator = ",", postfix = LINE_END, transform = ::csvCell)
+    }
+}
+
+/**
+ * One cell as it is written. A cell that holds a comma, a quotation mark or a line break is put
+ * in quotation marks, with every quotation mark inside it doubled: "48 Main St, Leduc" would
+ * otherwise be read as two cells.
+ *
+ * A cell that starts like a formula gets an apostrophe in front, which makes a spreadsheet show
+ * it as the text it is. No address starts that way; a typed one could.
+ */
+internal fun csvCell(text: String): String {
+    val safe = if (text.isNotEmpty() && text[0] in FORMULA_STARTS) "'$text" else text
+    val mustQuote = safe.any { it == ',' || it == '"' || it == '\n' || it == '\r' }
+    return if (mustQuote) "\"" + safe.replace("\"", "\"\"") + "\"" else safe
+}

@@ -42,6 +42,9 @@ composeBom = "2026.09.00"
 # and manifest name the class.
 core = "1.19.1"
 coroutines = "1.11.0"
+# Dates on the iPhone side of :shared only (ADR-014, phase 3). Android keeps java.time: the
+# shared code's date types are java.time's own there.
+datetime = "0.8.0"
 # Android's Credential Manager: the sheet that signs in with a Google account, for the optional
 # cloud backup (ADR-012). "credentials-play-services-auth" is what lets it reach Google accounts
 # on phones that do not have Credential Manager built in; both are released together.
@@ -136,6 +139,7 @@ androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.r
 kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "coroutines" }
 androidx-work-runtime = { module = "androidx.work:work-runtime", version.ref = "work" }
 
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "datetime" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 # Tests only: a clock and a scheduler the test controls, for code that runs in coroutines.
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }

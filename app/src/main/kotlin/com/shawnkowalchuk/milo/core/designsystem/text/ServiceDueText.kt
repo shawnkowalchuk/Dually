@@ -48,13 +48,14 @@ fun serviceDueText(
     words: Words,
 ): String {
     val kmLeft = due.kmLeft
+    val daysLeft = due.daysLeft
     val dueOn = due.dueOn?.let { formatMediumDay(it, locale) }
     fun km(value: Long) = kmText(value, unit, locale, words)
     return when {
         kmLeft != null && kmLeft <= 0 ->
             words(R.string.service_overdue_by, arrayOf(km(kmLeft.absoluteValue)))
 
-        due.daysLeft != null && due.daysLeft <= 0 && dueOn != null ->
+        daysLeft != null && daysLeft <= 0 && dueOn != null ->
             words(R.string.service_overdue_since, arrayOf(dueOn))
 
         kmLeft != null && dueOn != null ->
