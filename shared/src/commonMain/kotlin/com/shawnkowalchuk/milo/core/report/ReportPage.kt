@@ -331,7 +331,7 @@ private fun fittingLength(
         if (measure.width(word.substring(0, length + 1), style) > maxWidth) break
         length++
     }
-    if (length < word.length && Character.isLowSurrogate(word[length])) {
+    if (length < word.length && word[length].isLowSurrogate()) {
         length = if (length > 1) length - 1 else length + 1
     }
     return length

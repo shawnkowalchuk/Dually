@@ -1,5 +1,6 @@
 package com.shawnkowalchuk.milo.core.clock
 
+import com.shawnkowalchuk.milo.core.sync.Monitor
 import kotlin.math.abs
 
 /**
@@ -112,7 +113,7 @@ class TrustedClock(
     /** The two clocks at one moment: time since boot, and the phone's time of day. */
     private class Moment(val elapsedMs: Long, val phoneMs: Long)
 
-    private val lock = Any()
+    private val lock = Monitor()
 
     // Everything below is read and written under the lock.
     private var anchor: ClockAnchor
@@ -145,7 +146,7 @@ class TrustedClock(
      * Whether the anchor is on probation ([PROBATION_MS]). It says what the last reading left,
      * and reads no clock itself.
      */
-    val onProbation: Boolean get() = synchronized(lock) { anchor.onProbationSinceMs != null }
+    val onProbation: Boolean get() = lock.locked { anchor.onProbationSinceMs != null }
 
     /** The time of day, in milliseconds since 1970. This is what MilO's `clock` is. */
     fun now(): Long = read().first
@@ -164,7 +165,7 @@ class TrustedClock(
      */
     fun tellNewsTo(listener: (ClockNews) -> Unit) {
         val waiting =
-            synchronized(lock) {
+            lock.locked {
                 this.listener = listener
                 unheard.toList().also { unheard.clear() }
             }
@@ -174,7 +175,7 @@ class TrustedClock(
     private fun read(): Pair<Long, Boolean> {
         val news = mutableListOf<ClockNews>()
         val (answer, tell) =
-            synchronized(lock) {
+            lock.locked {
                 val answer = readLocked(news)
                 val tell = listener
                 if (tell == null) {

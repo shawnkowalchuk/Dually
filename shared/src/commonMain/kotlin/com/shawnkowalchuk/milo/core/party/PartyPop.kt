@@ -1,5 +1,6 @@
 package com.shawnkowalchuk.milo.core.party
 
+import com.shawnkowalchuk.milo.core.sync.Monitor
 import com.shawnkowalchuk.milo.core.time.ZoneId
 import com.shawnkowalchuk.milo.core.util.localDateOf
 
@@ -48,12 +49,12 @@ fun popAtTripStart(partyDay: Boolean, homeWatching: Boolean): PopAtTripStart = w
  * Safe from any thread: the service and the screens are on different ones.
  */
 class PopHandover {
+    private val lock = Monitor()
     private var left = false
 
     /** The trip service leaves the pop to the animation. */
-    @Synchronized
     fun leave() {
-        left = true
+        lock.locked { left = true }
     }
 
     /**
@@ -61,11 +62,10 @@ class PopHandover {
      *
      * @return true for the one caller who now has to see that it is played.
      */
-    @Synchronized
-    fun take(): Boolean {
+    fun take(): Boolean = lock.locked {
         val had = left
         left = false
-        return had
+        had
     }
 }
 
