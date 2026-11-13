@@ -73,6 +73,9 @@ class MiloApplication : Application() {
             container.tripController.activity,
             container.applicationScope,
         )
+        // The optional cloud backup (ADR-012): reads which account is signed in, if any, and
+        // has its uploads follow the trips. It starts no Firebase and touches no trip.
+        container.cloud.start(container.applicationScope)
 
         // Reading files and the database must not hold up the main thread, least of all when
         // the process was started by a trip trigger with seconds to begin recording.

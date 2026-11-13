@@ -188,7 +188,7 @@ PAGE_TEMPLATE = """<!doctype html>
     <footer>
       <p>Owned and operated by 2795748 Alberta Ltd.</p>
       <p>© 2026 Shawn Kowalchuk. All rights reserved.</p>
-      <p><a href="/privacy">Privacy</a> · <a href="mailto:support@dually.top?subject=Dually%20Trip%20Tracker%20support">Support</a> · <a href="https://github.com/shawnkowalchuk/Dually">Source on GitHub</a> · <a href="https://www.buymeacoffee.com/SeaWingman">Buy me a coffee</a> · The typefaces are <a href="/fonts/Archivo-OFL.txt">Archivo</a> and <a href="/fonts/IBMPlexMono-OFL.txt">IBM Plex Mono</a>, each under the SIL Open Font License 1.1.</p>
+      <p><a href="/privacy">Privacy</a> · <a href="/delete-account">Delete your online backup</a> · <a href="mailto:support@dually.top?subject=Dually%20Trip%20Tracker%20support">Support</a> · <a href="https://github.com/shawnkowalchuk/Dually">Source on GitHub</a> · <a href="https://www.buymeacoffee.com/SeaWingman">Buy me a coffee</a> · The typefaces are <a href="/fonts/Archivo-OFL.txt">Archivo</a> and <a href="/fonts/IBMPlexMono-OFL.txt">IBM Plex Mono</a>, each under the SIL Open Font License 1.1.</p>
     </footer>
   </div>
 </body>

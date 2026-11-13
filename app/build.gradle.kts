@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.androidx.room3)
@@ -90,6 +92,59 @@ fun readKeystorePassword(): String {
 val miloApplicationId: String =
     providers.gradleProperty("milo.applicationId").getOrElse("top.dually.triptracker")
 
+// --- Firebase, for the optional cloud backup (ADR-012) -------------------------------------
+// The four values that tie the app to the Firebase project "dually-trip-tracker". Google says
+// they are not secrets (the server's rules guard the data), but the repository is public and
+// CLAUDE.md treats every API key as one, so they live outside it, beside the signing key, in a
+// properties file: projectId, applicationId, apiKey and webClientId.
+//
+// Google's own Gradle plugin and its google-services.json are not used: the app starts Firebase
+// itself, and only once the backup is on (platform/cloud/CloudFirebase.kt), so it needs the
+// values, not the plugin. That leaves one plugin fewer to keep current.
+//
+// A debug build without the file is allowed, and has no cloud backup to offer: CI builds debug
+// only, and Dependabot's pull requests get no secrets. A release build without it stops, because
+// it would ship an app whose backup cannot work.
+val firebaseSettingsFile: File =
+    file(
+        providers
+            .gradleProperty("dually.firebase.file")
+            .getOrElse(
+                "${providers.systemProperty("user.home").get()}/keys/dually-firebase.properties",
+            ),
+    )
+
+val firebaseSettings: Map<String, String> =
+    if (firebaseSettingsFile.isFile) {
+        val loaded = Properties()
+        firebaseSettingsFile.inputStream().use { loaded.load(it) }
+        loaded.stringPropertyNames().associateWith { loaded.getProperty(it) }
+    } else {
+        emptyMap()
+    }
+
+val firebaseKeys = listOf("projectId", "applicationId", "apiKey", "webClientId")
+
+/** One value as a Java string literal for BuildConfig, or an empty one when there is no file. */
+fun firebaseValue(key: String): String = "\"${firebaseSettings[key].orEmpty()}\""
+
+val checkFirebaseSettings = tasks.register("checkFirebaseSettings") {
+    description = "Stops a release build that has no Firebase settings."
+    val missing = firebaseKeys.filter { firebaseSettings[it].isNullOrBlank() }
+    val path = firebaseSettingsFile.path
+    doLast {
+        if (missing.isNotEmpty()) {
+            throw GradleException(
+                "Dually's Firebase settings are missing or incomplete at $path " +
+                    "(missing: ${missing.joinToString()}).\n" +
+                    "A release build without them would offer a cloud backup that cannot work. " +
+                    "Put the file back at that path, or point the Gradle property " +
+                    "dually.firebase.file at it (ADR-012).",
+            )
+        }
+    }
+}
+
 room3 {
     // Room writes the tables of each database version to app/schemas as JSON. The folder is
     // committed: the phone holds real trips from phase 1 on, so every later change to a table
@@ -115,10 +170,18 @@ android {
         // a newer one, and the only way past that is to uninstall, which deletes every trip.
         // Google Play takes a versionCode once, so a second bundle of the same version would need
         // a higher one too.
-        // 8, not 7: build 7 is the cloud backup's test build on Play's internal testing track
-        // (branch app/cloud-backup, 2026-11-11), and Play takes a versionCode once.
+        // Build 7 was the cloud backup's first test build on Google Play's internal testing
+        // track (2026-11-11). Build 8 (2026-11-12) is the next one, with main's 0.3.4 merged in:
+        // the Android Auto category and odometer, and the light look. Play takes a versionCode
+        // once: a release of main to Play before the backup joins it needs 9 or more.
         versionCode = 8
         versionName = "0.3.4"
+
+        // The Firebase settings (above), empty in a build without the file.
+        buildConfigField("String", "FIREBASE_PROJECT_ID", firebaseValue("projectId"))
+        buildConfigField("String", "FIREBASE_APPLICATION_ID", firebaseValue("applicationId"))
+        buildConfigField("String", "FIREBASE_API_KEY", firebaseValue("apiKey"))
+        buildConfigField("String", "FIREBASE_WEB_CLIENT_ID", firebaseValue("webClientId"))
     }
 
     signingConfigs {
@@ -194,6 +257,8 @@ android {
 
     buildFeatures {
         compose = true
+        // For the Firebase settings only.
+        buildConfig = true
     }
 
     packaging {
@@ -240,6 +305,9 @@ kotlin {
 // does not see such reads, so after one of those files changed it could take the test run from
 // its build cache and report a pass that never ran (it did on 2026-10-14, for a picture the
 // mascot's redraw had changed). Named as inputs, a change to any of them runs the tests again.
+// The release build checks that the Firebase settings are there (see the top of this file).
+tasks.matching { it.name == "preReleaseBuild" }.configureEach { dependsOn(checkFirebaseSettings) }
+
 tasks.withType<Test>().configureEach {
     inputs.dir("src/main/res").withPathSensitivity(PathSensitivity.RELATIVE)
     inputs.dir("src/main/assets").withPathSensitivity(PathSensitivity.RELATIVE)
@@ -300,6 +368,21 @@ dependencies {
     // Google Play's review card (platform/review/, ADR-009): the one library of Google Play's
     // in the app. MilO asks, and Google Play decides whether its card appears.
     implementation(libs.play.review)
+
+    // The optional cloud backup (ADR-012): Firebase Authentication with a Google account, which
+    // Credential Manager signs in to; Firestore, where the documents go; WorkManager, which runs
+    // the upload. Firebase is started by the app itself, only once the backup
+    // is on; its automatic start is removed in the manifest.
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    // The one-time purchase that unlocks the backup (ADR-013), checked on the server.
+    implementation(libs.play.billing)
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+    implementation(libs.kotlinx.coroutines.play.services)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

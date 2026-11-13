@@ -1,0 +1,15 @@
+{
+  "name": "dually-functions",
+  "private": true,
+  "description": "The server side of Dually's cloud backup: the purchase check that gives an account its unlock, and the daily look for refunds (ADR-013).",
+  "type": "module",
+  "main": "index.js",
+  "engines": {
+    "node": "22"
+  },
+  "dependencies": {
+    "@googleapis/androidpublisher": "42.3.0",
+    "firebase-admin": "14.5.1",
+    "firebase-functions": "7.4.0"
+  }
+}
