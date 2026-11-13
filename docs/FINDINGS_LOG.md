@@ -26,6 +26,9 @@
 
 ### 2026-11-12
 
+**`[CHANGE]` The welcome page says Dually is free, and what the one purchase is**
+Shawn: "should we have it specify first off that it is free and the paid version is for purchasing of online backup only?". On the backup's branch, because main has no backup to name: the welcome page's orange card ends "Free, with every feature and no ads. The only purchase is the optional online backup." The privacy card stops saying "no account and no server". Still to match in slice 1f: the Google Play description ("Dually is free.", "no account, no server and no ads") and the privacy page; the App Store description is not written yet.
+
 **`[CHANGE]` "Online backup" on the main Settings screen, bought with one button**
 Shawn: "the backup shouldnt be hidden. also it should probably state something like purchase online backup". On the backup's branch, merged with the Settings redesign, the tile left the Your data page and stands open under Units and Look. "Purchase online backup · price" now signs in with Google first if needed, then opens Google Play. "Restore purchase" signs in first too. The two-step "Sign in with Google", then "Unlock", is gone, and with it the `TODO(debt)` about Google's "G" mark. The tile's tests went from 10 to 12: a purchase that signs in first, an account that already holds the unlock, a restore that signs in first.
 

@@ -795,6 +795,8 @@ Android's `AppWidgetManager` and the home screen app, which draws the widget. No
 
 **Seen on an emulator for the first time on 2026-10-13,** with the rebrand (Android 16; not on the phone): a new install opened the page, OK led to Setup with "Done, go to Settings" at its foot, and that button led to Settings. Checks OB-1 to OB-7 were not gone through one by one. **Since that day the page's accent tile is the app's name in full,** "Dually Trip Tracker", over "It logs your business driving by itself: every drive in your truck, …": the one place on a screen where the app says its whole name (ADR-010).
 
+**What it costs, said first (since 2026-11-12, on the backup's branch: it reaches main with the backup).** Shawn: "should we have it specify first off that it is free and the paid version is for purchasing of online backup only?". The accent tile ends with "Free, with every feature and no ads. The only purchase is the optional online backup." (`onboarding_free`). The card "Your trips stay on this phone" no longer says "Dually has no account and no server". It now says nothing leaves the phone except files sent or saved, Android's backup and, only with the optional online backup, a copy on Dually's server in Canada.
+
 **What it does**
 The first time Dually opens, a page says what Dually does and how it works, with OK at its end; OK opens Setup, which then has a button **"Done, go to Settings"** at its end; Done opens Settings. After that the app opens as it always has. Shawn's request of 2026-10-08: "when the app starts for the first time i want a onboarding. What the app does and how it works. than a ok. than go to the setup screen so the user can set up all settings for vehicle. once finished please send them to the settings screen."
 
