@@ -164,7 +164,7 @@ junit = { module = "junit:junit", version.ref = "junit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-# Writes each database's schema to app/schemas as JSON, so a later version can be migrated to and
+# Writes each database's schema to shared/schemas as JSON, so a later version can be migrated to and
 # the change to the tables shows up in the diff.
 androidx-room3 = { id = "androidx.room3", version.ref = "room" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

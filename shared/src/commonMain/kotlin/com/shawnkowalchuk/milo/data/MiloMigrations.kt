@@ -22,7 +22,7 @@ import androidx.sqlite.execSQL
  * for the first migration.
  *
  * The statements must produce exactly what `Trip` declares, or Room refuses the result. The
- * exported `app/schemas/.../2.json` is the reference.
+ * exported `shared/schemas/.../2.json` is the reference.
  */
 internal val MIGRATION_1_2: Migration =
     object : Migration(1, 2) {
@@ -48,7 +48,7 @@ internal val MIGRATION_1_2: Migration =
  * schedule is, and must not fail for a reason that has nothing to do with the tables; the
  * catch-up at the same process start sorts them (`data/trip/TripCategoryCatchUp.kt`).
  *
- * The exported `app/schemas/.../3.json` is the reference.
+ * The exported `shared/schemas/.../3.json` is the reference.
  */
 internal val MIGRATION_2_3: Migration =
     object : Migration(2, 3) {
@@ -75,7 +75,7 @@ internal val MIGRATION_2_3: Migration =
  * recorded, and they are copied into those columns by the first edit, not here. No stored
  * value is read or rewritten by this step.
  *
- * The exported `app/schemas/.../4.json` is the reference.
+ * The exported `shared/schemas/.../4.json` is the reference.
  */
 internal val MIGRATION_3_4: Migration =
     object : Migration(3, 4) {
@@ -108,7 +108,7 @@ internal val MIGRATION_3_4: Migration =
  *
  * The statement is the one Room itself would run to make the table new, so a database that was
  * migrated and one that was created at version 5 are the same. The exported
- * `app/schemas/.../5.json` is the reference.
+ * `shared/schemas/.../5.json` is the reference.
  */
 internal val MIGRATION_4_5: Migration =
     object : Migration(4, 5) {
@@ -134,7 +134,7 @@ internal val MIGRATION_4_5: Migration =
  * true of every one of them: until this version MilO printed nothing else. No stored figure is
  * read or rewritten, and the `trips` table is not named by this step.
  *
- * The exported `app/schemas/.../6.json` is the reference.
+ * The exported `shared/schemas/.../6.json` is the reference.
  */
 internal val MIGRATION_5_6: Migration =
     object : Migration(5, 6) {
@@ -155,7 +155,7 @@ internal val MIGRATION_5_6: Migration =
  * once, by `data/trip/TripVehicleCatchUp`: this step cannot read the settings file the truck is
  * in. No trip had a label before.
  *
- * The exported `app/schemas/.../7.json` is the reference.
+ * The exported `shared/schemas/.../7.json` is the reference.
  */
 internal val MIGRATION_6_7: Migration =
     object : Migration(6, 7) {

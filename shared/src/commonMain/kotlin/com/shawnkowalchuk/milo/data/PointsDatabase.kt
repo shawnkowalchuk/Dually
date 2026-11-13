@@ -1,14 +1,12 @@
 package com.shawnkowalchuk.milo.data
 
-import android.content.Context
+import androidx.room3.ConstructedBy
 import androidx.room3.Database
-import androidx.room3.Room
 import androidx.room3.RoomDatabase
-import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import androidx.room3.RoomDatabaseConstructor
 import com.shawnkowalchuk.milo.data.point.RawPoint
 import com.shawnkowalchuk.milo.data.point.RawPointDao
 import com.shawnkowalchuk.milo.data.transfer.PointsTransferDao
-import kotlinx.coroutines.Dispatchers
 
 /**
  * The file name of the raw points database. The backup rules
@@ -28,6 +26,7 @@ const val POINTS_DATABASE_FILE = "points.db"
  * can be left out of the backup while the trips stay in
  * (docs/research/2026-10-03-pdf-email-backup.md).
  */
+@ConstructedBy(PointsDatabaseConstructor::class)
 @Database(entities = [RawPoint::class], version = 1)
 abstract class PointsDatabase : RoomDatabase() {
     abstract fun rawPointDao(): RawPointDao
@@ -36,9 +35,10 @@ abstract class PointsDatabase : RoomDatabase() {
     abstract fun pointsTransferDao(): PointsTransferDao
 }
 
-/** Builds the raw points database. Called once, by the `AppContainer`. No destructive fallback. */
-fun buildPointsDatabase(context: Context): PointsDatabase = Room
-    .databaseBuilder<PointsDatabase>(context = context, name = POINTS_DATABASE_FILE)
-    .setDriver(BundledSQLiteDriver())
-    .setQueryCoroutineContext(Dispatchers.IO)
-    .build()
+/**
+ * Builds [PointsDatabase] on each phone. Room writes its body at build time, for Android and for the
+ * iPhone; nothing calls it but Room.
+ */
+expect object PointsDatabaseConstructor : RoomDatabaseConstructor<PointsDatabase> {
+    override fun initialize(): PointsDatabase
+}

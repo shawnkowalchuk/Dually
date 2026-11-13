@@ -218,7 +218,7 @@ class ExportRoundTripTest {
         }
         val points = mutableListOf<RawPoint>()
 
-        val back = good("﻿$reordered\n\n", points)
+        val back = good("$reordered\n\n", points)
 
         assertEquals(everyKindOfTrip, back.trips)
         assertEquals(sentReports, back.sentReports)
@@ -270,7 +270,7 @@ class ExportRoundTripTest {
     }
 
     /**
-     * The export against the tables themselves, as Room exports them to `app/schemas` (the
+     * The export against the tables themselves, as Room exports them to `shared/schemas` (the
      * tests run with the `app` folder as their working directory). Whoever adds a column to
      * `trips`, `sent_reports` or `raw_points` meets this test: the column has to be carried by
      * the export, under a new format version, or it is lost by every export and import.
@@ -278,7 +278,8 @@ class ExportRoundTripTest {
     @Test
     fun `the file carries every column of the three tables that means something in it`() {
         fun columns(database: String, version: Int, table: String): Set<String> {
-            val file = File("schemas/com.shawnkowalchuk.milo.data.$database/$version.json")
+            val file =
+                File("../shared/schemas/com.shawnkowalchuk.milo.data.$database/$version.json")
             val entities =
                 Json
                     .parseToJsonElement(file.readText())

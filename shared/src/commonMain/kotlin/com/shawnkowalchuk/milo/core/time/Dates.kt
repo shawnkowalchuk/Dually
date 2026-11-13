@@ -89,3 +89,15 @@ expect fun formatIsoDay(epochMs: Long, zone: ZoneId): String
 
 /** The time of the moment [epochMs] in [zone], as "07:05" on a 24-hour clock, in any language. */
 expect fun formatIsoTime(epochMs: Long, zone: ZoneId): String
+
+/**
+ * The day [epochDay] days after 1 January 1970, as stored in the database. A number beyond the
+ * calendar's reach (which nothing in Dually writes) gives its first or last day.
+ */
+expect fun dateOfEpochDay(epochDay: Long): LocalDate
+
+/** Days from 1 January 1970 to this day, as the database stores a day. */
+expect fun LocalDate.epochDay(): Long
+
+/** The month this day falls in. */
+expect fun LocalDate.yearMonth(): YearMonth

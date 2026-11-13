@@ -35,8 +35,12 @@ class StoredNamesTest {
 
     @Test
     fun `the main database still holds the tables it held`() {
-        val schema = File("schemas/com.shawnkowalchuk.milo.data.MiloDatabase/7.json").readText()
-        val points = File("schemas/com.shawnkowalchuk.milo.data.PointsDatabase/1.json").readText()
+        val schema = File(
+            "../shared/schemas/com.shawnkowalchuk.milo.data.MiloDatabase/7.json",
+        ).readText()
+        val points = File(
+            "../shared/schemas/com.shawnkowalchuk.milo.data.PointsDatabase/1.json",
+        ).readText()
 
         for (table in listOf("trips", "sent_reports", "event_log")) {
             assertTrue(table, schema.contains(""""tableName": "$table""""))

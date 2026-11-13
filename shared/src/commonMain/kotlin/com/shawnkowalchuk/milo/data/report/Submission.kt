@@ -1,8 +1,9 @@
 package com.shawnkowalchuk.milo.data.report
 
 import com.shawnkowalchuk.milo.core.report.ReportPeriod
+import com.shawnkowalchuk.milo.core.time.YearMonth
+import com.shawnkowalchuk.milo.core.time.epochDay
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
-import java.time.YearMonth
 
 // What the list of sent reports says about a period: whether it was sent before, which revision
 // the next report for it is, whether a month counts as submitted, what one more report for it
@@ -16,8 +17,8 @@ import java.time.YearMonth
  * month, and the month's report is not one for the range.
  */
 fun sentFor(period: ReportPeriod, sent: List<SentReport>): List<SentReport> {
-    val firstDay = period.firstDay.toEpochDay()
-    val lastDay = period.lastDay.toEpochDay()
+    val firstDay = period.firstDay.epochDay()
+    val lastDay = period.lastDay.epochDay()
     return sent
         .filter { it.kind == period.kind && it.firstDay == firstDay && it.lastDay == lastDay }
         .sortedWith(compareBy<SentReport> { it.revision }.thenBy { it.id })

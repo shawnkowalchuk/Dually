@@ -98,8 +98,16 @@ actual fun formatIsoTime(epochMs: Long, zone: ZoneId): String {
     return twoDigits(time.hour) + ":" + twoDigits(time.minute)
 }
 
-/** The month a day falls in. */
-fun LocalDate.yearMonth(): YearMonth = YearMonth(year, month.number)
+actual fun LocalDate.yearMonth(): YearMonth = YearMonth(year, month.number)
+
+/** 1 January of year -9999 and 31 December 9999: the calendar's reach on the iPhone here. */
+private const val FIRST_EPOCH_DAY = -4_371_587L
+private const val LAST_EPOCH_DAY = 2_932_896L
+
+actual fun dateOfEpochDay(epochDay: Long): LocalDate =
+    LocalDate.fromEpochDays(epochDay.coerceIn(FIRST_EPOCH_DAY, LAST_EPOCH_DAY))
+
+actual fun LocalDate.epochDay(): Long = toEpochDays()
 
 internal fun localDateTimeOf(epochMs: Long, zone: ZoneId) =
     Instant.fromEpochMilliseconds(epochMs).toLocalDateTime(zone.timeZone)

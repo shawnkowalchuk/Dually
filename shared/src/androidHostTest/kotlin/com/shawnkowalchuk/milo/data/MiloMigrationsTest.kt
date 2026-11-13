@@ -17,7 +17,7 @@ import org.junit.Test
 
 /**
  * The migrations of the main database, checked against the schema files Room exports to
- * `app/schemas` (the tests run with the `app` folder as their working directory).
+ * `shared/schemas` (the tests run with the `shared` folder as their working directory).
  *
  * No database is opened here: SQLite is not available to a plain JVM test. What is checked is
  * that the statements a step runs are exactly the difference between the two exported schemas,

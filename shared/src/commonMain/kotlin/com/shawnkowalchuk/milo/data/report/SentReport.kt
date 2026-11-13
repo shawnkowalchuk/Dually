@@ -4,10 +4,12 @@ import androidx.room3.ColumnInfo
 import androidx.room3.Entity
 import androidx.room3.PrimaryKey
 import com.shawnkowalchuk.milo.core.report.ReportPeriod
+import com.shawnkowalchuk.milo.core.time.LocalDate
+import com.shawnkowalchuk.milo.core.time.compareDates
+import com.shawnkowalchuk.milo.core.time.dateOfEpochDay
+import com.shawnkowalchuk.milo.core.time.yearMonth
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.tenthsOf
-import java.time.LocalDate
-import java.time.YearMonth
 
 /**
  * What kind of period a sent report covers. Stored by name, so a constant can be added but
@@ -101,10 +103,13 @@ val SentReport.period: ReportPeriod
     get() {
         val first = dayOf(firstDay)
         return when (kind) {
-            SentReportKind.MONTH -> ReportPeriod.Month(YearMonth.from(first))
-            SentReportKind.RANGE -> ReportPeriod.Range(first, maxOf(first, dayOf(lastDay)))
+            SentReportKind.MONTH -> ReportPeriod.Month(first.yearMonth())
+
+            SentReportKind.RANGE -> {
+                val last = dayOf(lastDay)
+                ReportPeriod.Range(first, if (compareDates(last, first) < 0) first else last)
+            }
         }
     }
 
-private fun dayOf(epochDay: Long): LocalDate =
-    LocalDate.ofEpochDay(epochDay.coerceIn(LocalDate.MIN.toEpochDay(), LocalDate.MAX.toEpochDay()))
+private fun dayOf(epochDay: Long): LocalDate = dateOfEpochDay(epochDay)

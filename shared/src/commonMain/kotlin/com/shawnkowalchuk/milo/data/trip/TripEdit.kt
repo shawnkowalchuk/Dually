@@ -4,8 +4,8 @@ import com.shawnkowalchuk.milo.core.schedule.TripCategory
 import com.shawnkowalchuk.milo.core.schedule.TripFiled
 import com.shawnkowalchuk.milo.core.schedule.WorkSchedule
 import com.shawnkowalchuk.milo.core.schedule.refileTrip
+import com.shawnkowalchuk.milo.core.time.ZoneId
 import com.shawnkowalchuk.milo.core.trip.TripStatus
-import java.time.ZoneId
 
 // What Shawn's own hand may do to the times, addresses and distance of a finished trip: edit
 // them, and put back what MilO recorded. (A trip he types in new is `TripAddedByHand.kt`.) Pure

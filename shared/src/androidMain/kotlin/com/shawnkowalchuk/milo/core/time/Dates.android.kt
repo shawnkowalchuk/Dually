@@ -60,3 +60,10 @@ actual fun formatIsoDay(epochMs: Long, zone: ZoneId): String =
 
 actual fun formatIsoTime(epochMs: Long, zone: ZoneId): String =
     ISO_TIME.format(Instant.ofEpochMilli(epochMs).atZone(zone))
+
+actual fun dateOfEpochDay(epochDay: Long): LocalDate =
+    LocalDate.ofEpochDay(epochDay.coerceIn(LocalDate.MIN.toEpochDay(), LocalDate.MAX.toEpochDay()))
+
+actual fun LocalDate.epochDay(): Long = toEpochDay()
+
+actual fun LocalDate.yearMonth(): YearMonth = YearMonth.from(this)

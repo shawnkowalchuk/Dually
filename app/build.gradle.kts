@@ -2,10 +2,8 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.androidx.room3)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.ksp)
 }
 
 // --- Signing ----------------------------------------------------------------------------------
@@ -143,13 +141,6 @@ val checkFirebaseSettings = tasks.register("checkFirebaseSettings") {
             )
         }
     }
-}
-
-room3 {
-    // Room writes the tables of each database version to app/schemas as JSON. The folder is
-    // committed: the phone holds real trips from phase 1 on, so every later change to a table
-    // needs a migration, and a migration is written against (and checked with) these files.
-    schemaDirectory("$projectDir/schemas")
 }
 
 android {
@@ -331,11 +322,10 @@ dependencies {
     // Renders @Preview functions inside Android Studio. Debug only, so it never ships.
     debugImplementation(libs.androidx.compose.ui.tooling)
 
-    // Storage (data/). Room generates its code with KSP; the bundled driver is the SQLite it
-    // runs on.
+    // Storage (data/). The databases, their tables and Room's generated code are in :shared
+    // since 2026-11-13 (phase 3c); the app reads and writes through them, on the same SQLite.
     implementation(libs.androidx.room3.runtime)
     implementation(libs.androidx.sqlite.bundled)
-    ksp(libs.androidx.room3.compiler)
     implementation(libs.androidx.datastore.preferences)
 
     // The report for the accountant (platform/report/): FileProvider lets the email app read
