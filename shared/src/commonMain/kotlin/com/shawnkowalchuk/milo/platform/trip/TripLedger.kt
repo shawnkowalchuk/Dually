@@ -1,6 +1,8 @@
 package com.shawnkowalchuk.milo.platform.trip
 
+import com.shawnkowalchuk.milo.core.io.IOException
 import com.shawnkowalchuk.milo.core.schedule.fileTrip
+import com.shawnkowalchuk.milo.core.time.ZoneId
 import com.shawnkowalchuk.milo.core.trip.ActiveTrip
 import com.shawnkowalchuk.milo.core.trip.ClosedTrip
 import com.shawnkowalchuk.milo.core.trip.Grace
@@ -25,8 +27,6 @@ import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.setDrivenOffTripId
 import com.shawnkowalchuk.milo.data.settings.setRunningTripCategory
 import com.shawnkowalchuk.milo.data.trip.TripRepository
-import java.io.IOException
-import java.time.ZoneId
 
 /**
  * The open trip as the controller holds it between events: its row, and how far it has got.
@@ -36,7 +36,7 @@ import java.time.ZoneId
  * settings file as well (`setDrivenOffTripId`), so that a restart knows it too.
  * @param vehicle the paired vehicle it is in, once known (`Trip.vehicleAddress`).
  */
-internal data class OpenTrip(
+data class OpenTrip(
     val id: Long,
     val startedAtMs: Long,
     val startedBy: TripStartCause,
@@ -51,10 +51,10 @@ internal data class OpenTrip(
  * @param lastRecordedAtMs wall-clock time of its newest stored fix, or of its start if it has
  * none: the trip's last sign of life.
  */
-internal data class StoredTrip(val trip: ActiveTrip, val lastRecordedAtMs: Long)
+data class StoredTrip(val trip: ActiveTrip, val lastRecordedAtMs: Long)
 
 /** One line for the event log. The controller adds the time. */
-internal data class LogLine(val category: EventCategory, val message: String)
+data class LogLine(val category: EventCategory, val message: String)
 
 /**
  * The ends of a wait that a trip starting at the parked place follows in the same step: the
@@ -76,7 +76,7 @@ private val WAIT_ENDS_IN_A_TRIP = setOf(WaitingEnd.MOVED, WaitingEnd.START_PRESS
  *
  * @param zone the phone's time zone, asked for only when a trip is closed.
  */
-internal class TripLedger(
+class TripLedger(
     private val trips: TripRepository,
     private val points: RawPointRepository,
     private val settings: SettingsStore,

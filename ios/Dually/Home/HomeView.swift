@@ -1,9 +1,9 @@
 import DuallyShared
 import SwiftUI
 
-// Home on the iPhone (phase 4a): the top line, the Start trip card and the two figures Android's
-// Home leads with, today's and this month's Business kilometres. Recording comes in phase 4b;
-// until then the card says so and does nothing.
+// Home on the iPhone: the top line, the trip card and the two figures Android's Home leads with,
+// today's and this month's Business kilometres (phase 4a). The trip card starts a trip, shows it
+// while it records, and ends it (phase 4b).
 struct HomeView: View {
     @StateObject private var model: HomeModel
     @Environment(\.scenePhase) private var scenePhase
@@ -16,7 +16,12 @@ struct HomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 TopLine(screen: "Home")
-                StartTripCard()
+                TripCard(model: model)
+                if model.location.authorization == .denied || model.location.authorization == .restricted {
+                    Text("Dually may not use the location. Allow it in the iPhone's Settings, Dually, Location, to record a trip.")
+                        .font(Typography.body(14))
+                        .foregroundStyle(Palette.amber)
+                }
                 HStack(spacing: 12) {
                     FigureTile(
                         label: "Today · Business",
@@ -74,18 +79,79 @@ private struct TopLine: View {
     }
 }
 
-/// The orange card Android's Home starts with. It records nothing yet (phase 4b).
-private struct StartTripCard: View {
+/// The orange card: Start trip while nothing records, the running trip and End while one does.
+private struct TripCard: View {
+    @ObservedObject var model: HomeModel
+
+    var body: some View {
+        if let trip = model.recording {
+            RecordingCard(trip: trip, distance: model.distanceText(trip)) {
+                Task { await model.end() }
+            }
+        } else {
+            Button {
+                Task { await model.start() }
+            } label: {
+                Tile(ground: Palette.accent) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Start trip")
+                                .font(Typography.display(26))
+                            Text("Recorded with GPS, even with the app in the background")
+                                .font(Typography.body(14))
+                        }
+                        Spacer()
+                        Image(systemName: "play.fill")
+                            .font(.system(size: 20, weight: .bold))
+                            .frame(width: 48, height: 48)
+                            .background(Palette.markLetter, in: Circle())
+                            .foregroundStyle(Palette.accent)
+                    }
+                    .foregroundStyle(Palette.markLetter)
+                }
+            }
+            .buttonStyle(.plain)
+        }
+    }
+}
+
+/// The trip as it records: how far, how long, and End.
+private struct RecordingCard: View {
+    let trip: RecordingNow
+    let distance: String
+    let onEnd: () -> Void
+
     var body: some View {
         Tile(ground: Palette.accent) {
-            Text("Start trip")
-                .font(Typography.display(26))
-                .foregroundStyle(Palette.markLetter)
-            Text("Recording comes in the next step of the iPhone app")
-                .font(Typography.body(14))
-                .foregroundStyle(Palette.markLetter)
+            Text("Recording")
+                .font(Typography.body(14, weight: .semibold))
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(distance)
+                    .font(Typography.figure(40))
+                Text("km")
+                    .font(Typography.body(16))
+            }
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                Text(elapsed(until: context.date))
+                    .font(Typography.figure(16))
+            }
+            Button(action: onEnd) {
+                Text("End trip")
+                    .font(Typography.body(17, weight: .bold))
+                    .frame(maxWidth: .infinity, minHeight: 48)
+                    .background(Palette.markLetter, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .foregroundStyle(Palette.text)
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 6)
         }
-        .accessibilityElement(children: .combine)
+        .foregroundStyle(Palette.markLetter)
+    }
+
+    /// The time since the trip started, "0:12:05".
+    private func elapsed(until now: Date) -> String {
+        let seconds = max(0, Int(now.timeIntervalSince1970) - Int(trip.startedAtMs / 1000))
+        return String(format: "%d:%02d:%02d", seconds / 3600, seconds / 60 % 60, seconds % 60)
     }
 }
 
