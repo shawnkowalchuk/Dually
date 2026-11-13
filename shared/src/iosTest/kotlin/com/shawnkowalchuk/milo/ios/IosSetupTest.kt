@@ -24,10 +24,7 @@ class IosSetupTest {
         connectHeardAtMs = connectHeardAtMs,
         disconnectHeardAtMs = disconnectHeardAtMs,
         nowMs = NOW,
-        // Toronto, not Edmonton: from 2026-11-01 Alberta stays at UTC-6, which Apple's time
-        // zone data knows and kotlinx-datetime's on the iPhone does not yet (FINDINGS_LOG,
-        // 2026-11-13). This test is about the rows, not that.
-        zone = testZone("America/Toronto"),
+        zone = testZone("America/Edmonton"),
         locale = testLocale("en-CA"),
     )
 
@@ -74,8 +71,8 @@ class IosSetupTest {
     fun `an automation is ready once it has run and says when`() {
         val done = screen()
         assertTrue(done.complete)
-        assertTrue(done.rows[3].sentence.startsWith("Working: it last ran today at 1:00"))
-        assertTrue(done.rows[4].sentence.startsWith("Working: it last ran Thu, Nov 12 at 2:00"))
+        assertTrue(done.rows[3].sentence.startsWith("Working: it last ran today at 12:00"))
+        assertTrue(done.rows[4].sentence.startsWith("Working: it last ran Thu, Nov 12 at 1:00"))
 
         val notYet = screen(disconnectHeardAtMs = null)
         assertFalse(notYet.complete)
@@ -98,7 +95,7 @@ class IosSetupTest {
         const val HOUR_MS = 3_600_000L
         const val DAY_MS = 24 * HOUR_MS
 
-        /** 2026-11-13 19:00 UTC: 14:00 in Toronto, a Friday. */
+        /** 2026-11-13 19:00 UTC: 13:00 in Edmonton (UTC-6 since 2026-11-01), a Friday. */
         const val NOW = 1_794_596_400_000L
     }
 }
