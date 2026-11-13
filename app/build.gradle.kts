@@ -170,11 +170,10 @@ android {
         // a newer one, and the only way past that is to uninstall, which deletes every trip.
         // Google Play takes a versionCode once, so a second bundle of the same version would need
         // a higher one too.
-        // Build 7 was the cloud backup's first test build on Google Play's internal testing
-        // track (2026-11-11). Build 8 (2026-11-12) is the next one, with main's 0.3.4 merged in:
-        // the Android Auto category and odometer, and the light look. Play takes a versionCode
-        // once: a release of main to Play before the backup joins it needs 9 or more.
-        versionCode = 8
+        // Build 7 and build 8 were the cloud backup's test builds on Google Play's internal testing
+        // track (2026-11-11 and -12). Build 9 (2026-11-12) is main with the backup merged in, for
+        // the same track; Play takes a versionCode once, so main goes on from 9.
+        versionCode = 9
         versionName = "0.3.4"
 
         // The Firebase settings (above), empty in a build without the file.

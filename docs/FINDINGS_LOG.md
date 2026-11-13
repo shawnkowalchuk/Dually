@@ -26,6 +26,20 @@
 
 ### 2026-11-12
 
+**`[CHANGE]` The online backup is in main (slice 1f), as build 9**
+Shawn: "than please merge to main", then overnight, "please do everything Autonomously". `app/cloud-backup` (slices 1b to 1f) merged into main, with what main gained meanwhile. Version 0.3.4, build 9, for Google Play's internal testing. The What's new list has its line ("Optional online backup").
+
+Deployed before the merge, from a clean copy of the code:
+- the functions: `unlockBackup` changed, `checkRefunds` now with `runDeletions`, `deleteMyAccount` new;
+- the rules: `backup/owner`, and listing an account's own folders.
+
+The callable functions answer `not-signed-in` to a call without a sign-in, as they should.
+
+Left for Shawn, because each is a declaration in his name, not a build step:
+- **Play Console's Data safety form,** before any production release: the answers are in `docs/play-data-safety.md`.
+- **The Play listing's two changed paragraphs,** already written into `marketing/google-play/listing.md` on his Mac.
+- **The account-deletion URL** in Play Console's Data safety section: `https://dually.top/delete-account`, live once the website deploys from main.
+
 **`[CHANGE]` Cloud backup, slice 1e: restore, one phone per account, deletion**
 Shawn, going to sleep: "please do everything Autonomously". Built as ADR-012 had planned, with three decisions made on the way:
 - **A restore is an import.** The online copy is written as an export file of format 3 without points and given to the existing import, minus its question (the tile asks its own). The safety copy, the settings, the Log line and the resume after a cut-off all come with it. Nothing new stores a trip.

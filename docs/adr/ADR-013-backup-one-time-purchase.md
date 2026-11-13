@@ -1,7 +1,7 @@
 # ADR-013: Cloud backup is unlocked by a one-time purchase of US$19.99; no ads
 
 Date: 2026-11-11
-Status: Accepted. Android built in slice 1d on the branch `app/cloud-backup` (2026-11-11); iPhone not built.
+Status: Accepted. Android built (slice 1d, 2026-11-11; deletion and release of a purchase in slice 1e, 2026-11-12), in main since 2026-11-12; iPhone not built (the App Store product `cloud_backup` exists, ADR-014).
 
 ## Context
 
