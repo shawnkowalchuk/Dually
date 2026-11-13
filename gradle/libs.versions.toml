@@ -131,6 +131,9 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 # the change to the tables shows up in the diff.
 androidx-room3 = { id = "androidx.room3", version.ref = "room" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+# The shared module of ADR-014 (phase 3) uses AGP's own plugin for its Android part. Its Kotlin
+# Multiplatform plugin comes with the Kotlin Gradle plugin already on the build's classpath.
+android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 # Generates the serializers for the @Serializable screen keys of the navigation back stack.
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

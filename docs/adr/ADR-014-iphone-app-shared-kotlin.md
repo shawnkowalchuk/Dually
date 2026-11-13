@@ -60,3 +60,8 @@ Dually has four surfaces on two platforms: Android's phone UI and Android Auto, 
 - Worse: the Mac's disk. Xcode and an iOS simulator take tens of GB. On 2026-11-12 the disk had about 140 GB free, which Shawn judged enough ("I don't think that should be a problem").
 - Locked into: Kotlin Multiplatform for the shared logic. It is Google's recommended way to share Kotlin with iOS, and Room, DataStore, coroutines and kotlinx.serialization all support it.
 - Unknown until tried: CarPlay's entitlement; the build time of the shared framework in Xcode; the iPhone version on Shawn's phone.
+
+## Progress
+
+- **2026-11-12, phase 3a: the trip rules moved.** `core/trip/` (23 files) and its tests (31 files, 326 tests) moved from `:app` to the new `:shared` module, package names unchanged. Two lines of the rules changed, both to drop a Java call the iOS build cannot make, with the same results: `Math.toRadians` became a multiplication by the same constant (`Haversine.kt`), and `lowercase(Locale.ROOT)` became `lowercase()`, which is locale-independent in Kotlin (`TripLabels.kt`). The tests moved from JUnit to kotlin.test; the random tests' `java.util.Random` became `SeededRandom`, an exact copy of its algorithm, so each seed still draws the same numbers and the same trips. Kotlin/Native allows no comma in a test's name, so 76 names lost theirs. The tests pass on Android and on the iOS simulator; CI runs the Android side. Next: `core/schedule`, `core/util`, the odometer, the report rules and the allowance, then the dates to kotlinx-datetime and BigDecimal replaced, then `data/` with Room.
+

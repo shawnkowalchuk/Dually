@@ -202,7 +202,7 @@ Before writing a feature, answer these. In an AI-assisted flow, **the assistant 
 Code isn't "done" until **all** are true:
 
 - [ ] Kotlin compiles with no warnings
-- [ ] `spotlessCheck`, `lintDebug` and `testDebugUnitTest` pass
+- [ ] `spotlessCheck`, `lintDebug`, `testDebugUnitTest` and `:shared:testAndroidHostTest` pass (and `:shared:iosSimulatorArm64Test` on the Mac when `shared/` changed)
 - [ ] No leftover debug logging (`println`, throwaway `Log.d`), no commented-out code
 - [ ] Errors handled; a failure that affects a trip is written to the event log
 - [ ] No secrets or keys in the diff
@@ -262,7 +262,7 @@ The bar: *would a bug here lose a trip, or put a wrong number on the report acco
 
 ## 14. CI/CD & releases
 
-- **CI on every PR** (GitHub Actions, one job): gitleaks scan, the check of the list of changes (`python3 tools/changes_page.py --check`, since 2026-10-08), then `./gradlew spotlessCheck lintDebug testDebugUnitTest assembleDebug` on JDK 17. Red build = no merge.
+- **CI on every PR** (GitHub Actions, one job): gitleaks scan, the check of the list of changes (`python3 tools/changes_page.py --check`, since 2026-10-08), then `./gradlew spotlessCheck lintDebug testDebugUnitTest :shared:testAndroidHostTest assembleDebug` (the shared module's tests since 2026-11-12) on JDK 17. Red build = no merge.
 - **A second workflow runs on push to `main` only.** It submits the dependency graph for Dependabot alerts (§12). It checks nothing and blocks nothing.
 - **A third workflow, `website.yml`, deploys the website** (since 2026-10-08, ADR-003): on push to `main` when `website/`, `firebase.json`, `.firebaserc` or the workflow changed, and by hand from the Actions tab. It uploads `website/` to Firebase Hosting's live site with the deploy key (§12). Plain files, no build; it checks nothing. The Firebase command-line tool it runs is pinned in the workflow, where Dependabot cannot see it, and is raised by hand.
 - **GitHub keeps that rule** (since 2026-10-09; until then it was kept by hand, because GitHub Free could not block merges while the repo was private). A branch protection rule on `main` requires the CI check, "Check, test and build" from GitHub Actions, before a merge. It holds for administrators too, so for Shawn; it also refuses a direct push, a force push and a deletion of `main`. A branch need not be up to date with `main` first. **The rule names the CI job:** if that job is ever renamed in `.github/workflows/ci.yml`, change the name in the rule in the same breath (Settings, Branches), or nothing can merge.
@@ -334,7 +334,7 @@ Do these *before* writing a single product feature. Left out on purpose (reasons
 - [ ] Dependabot enabled (weekly; minor and patch grouped, majors separate) — *config is in the first PR; it takes effect when that merges*
 - [x] Package structure (§3) scaffolded; `AppContainer` created by the `Application` class
 - [x] Design tokens + base component library started in `core/designsystem/` (§8)
-- [x] CI pipeline on PRs (gitleaks, then `spotlessCheck lintDebug testDebugUnitTest assembleDebug`)
+- [x] CI pipeline on PRs (gitleaks, then `spotlessCheck lintDebug testDebugUnitTest :shared:testAndroidHostTest assembleDebug`)
 - [x] Android Studio updated, SDK platform 37 installed, debug build installs on the POCO X5 — *installed over USB with adb on 2026-10-05; a sync and Run from Android Studio itself are still untried*
 - [x] All four docs created in the repo: STANDARDS, ARCHITECTURE, APP_ENCYCLOPEDIA, FINDINGS_LOG
 - [x] First ADR written: "ADR-001: Stack selection"

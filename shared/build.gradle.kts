@@ -1,0 +1,39 @@
+// The code both phones share (ADR-014, phase 3). Kotlin Multiplatform: the same rules compiled
+// for Android, where the app uses them, and for iOS, where the iPhone app will. It is moved here
+// from the app a package at a time, unchanged, with its tests; the first is the trip rules
+// (core/trip, 2026-11-12). Nothing here may use Android's or Java's own APIs: the iOS build
+// would not compile.
+plugins {
+    id("org.jetbrains.kotlin.multiplatform")
+    alias(libs.plugins.android.kotlin.multiplatform.library)
+}
+
+kotlin {
+    android {
+        namespace = "com.shawnkowalchuk.milo.shared"
+        compileSdk = 37
+        minSdk = 34
+        // The shared tests run on the computer, beside the app's own unit tests.
+        withHostTest {}
+    }
+    // iPhones, and the simulator on an Apple-silicon Mac. iOS 16 is the floor (ADR-014); it is
+    // set where the iPhone app is built, in Xcode.
+    iosArm64()
+    iosSimulatorArm64()
+
+    compilerOptions {
+        // As in the app: a compiler warning fails the build.
+        allWarningsAsErrors = true
+    }
+
+    sourceSets {
+        commonTest {
+            // The made-up GPS tracks the tests drive with, which the app's own tests use too
+            // (app/build.gradle.kts adds the same folder): one copy, two users.
+            kotlin.srcDir("src/testFixtures/kotlin")
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
+    }
+}

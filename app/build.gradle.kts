@@ -100,6 +100,10 @@ room3 {
 android {
     namespace = "com.shawnkowalchuk.milo"
 
+    // The made-up GPS tracks the trip tests drive with live beside the shared trip rules
+    // (shared/src/testFixtures); the app's own trip tests use the same file.
+    sourceSets.getByName("test").kotlin.directories += "../shared/src/testFixtures/kotlin"
+
     // 37 is not a preference: the current stable AndroidX libraries refuse to build against less.
     compileSdk = 37
 
@@ -247,6 +251,8 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
+    // The code both phones share (ADR-014, phase 3): the trip rules, since 2026-11-12.
+    implementation(project(":shared"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.foundation)
