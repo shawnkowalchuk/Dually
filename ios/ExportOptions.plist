@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+    How an archive of the iPhone app is sent to App Store Connect for TestFlight:
+    xcodebuild -exportArchive -archivePath ios/build/Dually.xcarchive
+        -exportOptionsPlist ios/ExportOptions.plist -exportPath ios/build/export
+        -allowProvisioningUpdates
+    Signed by the team of 2795748 Alberta Ltd. with Xcode's automatic signing, which uses the
+    account signed in to Xcode on the Mac. No key or password is kept here.
+-->
+<plist version="1.0">
+<dict>
+	<key>method</key>
+	<string>app-store-connect</string>
+	<key>destination</key>
+	<string>upload</string>
+	<key>teamID</key>
+	<string>3GA4CQ43F4</string>
+	<key>signingStyle</key>
+	<string>automatic</string>
+	<key>uploadSymbols</key>
+	<true/>
+	<key>testFlightInternalTestingOnly</key>
+	<false/>
+</dict>
+</plist>
