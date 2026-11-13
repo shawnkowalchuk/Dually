@@ -427,7 +427,7 @@ A broadcast or a callback names a device, and the receiver decides on the spot w
 - **The agent can reach nothing of the app.** Android runs it in a process it starts for the purpose when Dually is not running, where the `Application` object is a plain one; and, seen on an emulator, inside Dually's own process when Dually is alive. It therefore builds the two things it needs itself (the note store and, as a last resort, the crash file store), opens the databases with SQLite and not through Room, and leaves what it has to tell as a file, the way a crash does. It never touches the container.
 - **What a restore brought is put right at the next ordinary start, by what is true then.** `BackupAftermath` does not trust the restored settings about the truck: it asks Android which associations it holds on this phone, and one pure function, `truckOnArrival`, decides. The same function decides for an import. Its rule: the association on this phone decides, and a truck is never stored as paired because a file says it was.
 - **An export is written, and an import is read, one value at a time.** A year of raw points is some tens of megabytes as text (about a hundred since a trip stores a point every 2 seconds, 2026-10-09) and several times that as objects. The writer fetches the points a page at a time and writes each as it comes; the reader (`JsonScanner`) takes the document apart by its brackets and quotation marks alone and hands each trip, report and point to the JSON library singly. The trips, the sent reports and the settings of a file are held (a few thousand small values); the points never are.
-- **The file's form is its own, not the tables'.** `ExportFormat.kt` fixes the document and its version number; `ExportMapping.kt` stands between it and the entities, with every stored constant spelled out. A unit test holds the document against the column lists Room exports to `app/schemas`, so a column that is added to a table and not to the document fails the build.
+- **The file's form is its own, not the tables'.** `ExportFormat.kt` fixes the document and its version number; `ExportMapping.kt` stands between it and the entities, with every stored constant spelled out. A unit test holds the document against the column lists Room exports to `shared/schemas`, so a column that is added to a table and not to the document fails the build.
 - **An import is a sequence of steps that each can stop it, and only the first of them can be undone by doing nothing.** Check the whole file; ask; no trip in progress (asked three times, the last inside the transaction); a safety copy; then the main database in one transaction. Up to there a failure leaves the phone as it was. The settings and the points follow, each atomic by itself: the two databases are two files and cannot share a transaction. If the points fail, the points of the replaced trips are removed, so that the state is "trips whole, no tracks" and never "another trip's track".
 - **An import outlives the process that began it.** Nothing makes the two transactions one step, and the second takes seconds. So the first leaves a witness in its own database: a line of the event log, written in the transaction that replaces the trips, whose time and text a note in `no_backup/import/` holds from just before. A process start that finds the note asks the log for the line. Without it nothing was replaced, and nothing is touched. With it, `ImportResume` takes the steps after the trips again (each can be taken twice), or removes the raw points up to the note's trip id if Dually's copy of the file cannot be used. It never writes to the trips. A start that is itself ended over this is counted in the note, and after two the import is left as it is and said, so that it can never end every process that follows.
 - **A raw point without a stored trip does not stop an export.** The writer passes over a point whose trip is not among the closed trips of the file, and `DataExport` counts those points beforehand (one grouped query), so the file still says exactly what it holds. Otherwise two databases that had come apart could not be exported, and could not be imported over either, since every import begins with a safety copy.
@@ -637,7 +637,7 @@ below reads the same whichever module a package sits in. `:shared` is compiled f
 for iOS (`iosArm64`, `iosSimulatorArm64`); nothing in it may use Android's or Java's own APIs,
 or the iOS build fails. Moved so far: `core/trip/` (2026-11-12) and every other package of
 `core/` but the design system (2026-11-13): `allowance`, `clock`, `odometer`, `party`, `report`,
-`review`, `schedule`, `service` and `util`.
+`review`, `schedule`, `service` and `util`; and most of `data/` (2026-11-13, phase 3c, below).
 
 **Dates, languages and exact numbers in `:shared`** (since 2026-11-13). The rules count with
 dates, write words in the phone's language and do exact decimal sums, which on Android are
@@ -729,7 +729,18 @@ core/util/           # pure Kotlin helpers with unit tests: formatting of distan
                      #   stored time, the unit a distance is shown in (DistanceUnit:
                      #   kilometres or miles), and the one rule by which trips are added up
                      #   in either (tenthsOf, sumOfTenths), for the report and every screen
-data/                # the only layer that touches storage. The two Room databases, and one
+data/                # the only layer that touches storage. Since 2026-11-13 (phase 3c) most
+                     #   of it is in :shared: the two databases with their tables, access
+                     #   code and migrations (Room's code is generated there for Android
+                     #   and the iPhone; schemas in shared/schemas), the settings store and
+                     #   its keys (DataStore; Android opens the file in
+                     #   SettingsStore.android.kt), the repositories, the export format,
+                     #   its mapping, checks and writer, and the backup's documents, plan,
+                     #   start and restore. What reads or writes Android's own files and
+                     #   streams stays in :app: the crash, clock-anchor, sound, report,
+                     #   event-log and transfer files, the backup's ledger and account,
+                     #   the import's reader, the changelog source, and the two catch-ups
+                     #   that write crash records. The two Room databases, and one
                      #   sub-package per kind of data, each with its entity, DAO and repository:
                      #   trip/ (with the rule for which trips count, the totals by Business
                      #   and Personal, the changes Shawn can make to a closed trip, the rules
@@ -851,7 +862,7 @@ The Android entry points (`MiloApplication` and `MainActivity`) live in `app/`. 
 
 ## 6. Data model
 
-What phases 1 to 3 store so far is built and described here exactly. Later phases add to it, each change as a Room migration: the phone holds real trips from phase 1 on, so no table is ever dropped and rebuilt. The source of truth for the tables is the schema Room exports to `app/schemas/` at every build, one file per version; those files are committed.
+What phases 1 to 3 store so far is built and described here exactly. Later phases add to it, each change as a Room migration: the phone holds real trips from phase 1 on, so no table is ever dropped and rebuilt. The source of truth for the tables is the schema Room exports to `shared/schemas/` at every build, one file per version; those files are committed.
 
 **Migrations** are in `data/MiloMigrations.kt`, one step per version, handed to Room by `buildMiloDatabase`. A step only adds: a column, an index, or a whole new table. There is no destructive fallback: a version without a step makes the database fail to open, loudly. Room runs a step, checks the result against the tables the code declares and stores the new version number inside one transaction; if the step or the check fails, the whole transaction is rolled back and the file stays at its old version with every row (seen on an emulator, FINDINGS_LOG 2026-10-05). `MiloMigrationsTest` checks each step against the exported schema files: the statements it runs must be exactly what the newer file has more than the older one, and a new table must be made by the very statement Room would make it with. A database that is more than one version behind is taken through every step in order (version 1 to 2 to 3 was run on an emulator on 2026-10-06, later that day versions 1 and 2 each to version 4, and then versions 1, 2, 3 and 4 each to version 5). A migration runs the first time anything in Dually touches the database, which after an update can be before Dually is opened: Android starts an app that is not force-stopped to tell it that it was updated.
 

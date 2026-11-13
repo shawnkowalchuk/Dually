@@ -17,8 +17,18 @@ import org.junit.Test
  * that carries what it held.
  */
 class StoredNamesTest {
-    // Gradle runs the unit tests from the module's folder, app/.
-    private val sources = File("src/main/kotlin/com/shawnkowalchuk/milo")
+    // Gradle runs the unit tests from the module's folder, app/. Since phase 3 (ADR-014) much of
+    // the code that names stored things is in the shared module beside it.
+    private val roots =
+        listOf(
+            File("src/main/kotlin/com/shawnkowalchuk/milo"),
+            File("../shared/src/commonMain/kotlin/com/shawnkowalchuk/milo"),
+            File("../shared/src/androidMain/kotlin/com/shawnkowalchuk/milo"),
+        )
+
+    /** The source file at [path] under whichever module holds it. */
+    private fun source(path: String): File =
+        roots.map { File(it, path) }.firstOrNull { it.exists() } ?: File(roots.first(), path)
 
     @Test
     fun `the two databases, the settings file and the report folder keep their names`() {
@@ -53,8 +63,9 @@ class StoredNamesTest {
         val kinds = "string|int|long|boolean|float|double|stringSet"
         val written = Regex("""\b(?:$kinds)PreferencesKey\(\s*"([^"]+)"""")
         val keys =
-            sources
-                .walkTopDown()
+            roots
+                .asSequence()
+                .flatMap { it.walkTopDown() }
                 .filter { it.extension == "kt" }
                 .flatMap { file -> written.findAll(file.readText()).map { it.groupValues[1] } }
                 .toSet()
@@ -76,11 +87,11 @@ class StoredNamesTest {
             ),
             ConfirmedStep.entries.map { it.key },
         )
-        val review = File(sources, "data/settings/ReviewStorage.kt").readText()
+        val review = source("data/settings/ReviewStorage.kt").readText()
         for (key in listOf("review_five_trips", "review_hundred_trips", "review_report_sent")) {
             assertTrue(key, review.contains(""""$key""""))
         }
-        val schedule = File(sources, "data/settings/ScheduleStorage.kt").readText()
+        val schedule = source("data/settings/ScheduleStorage.kt").readText()
         for (day in listOf(
             "monday",
             "tuesday",
@@ -108,7 +119,7 @@ class StoredNamesTest {
                 "data/transfer/BackupNotes.kt" to """NOTES_FOLDER = "backup_notes"""",
             )
         for ((file, line) in folders) {
-            assertTrue("$file: $line", File(sources, file).readText().contains(line))
+            assertTrue("$file: $line", source(file).readText().contains(line))
         }
     }
 
@@ -128,7 +139,7 @@ class StoredNamesTest {
                     """NOTHING_RECORDED_CHANNEL_ID = "nothing_recorded"""",
             )
         for ((file, line) in ids) {
-            assertTrue("$file: $line", File(sources, file).readText().contains(line))
+            assertTrue("$file: $line", source(file).readText().contains(line))
         }
     }
 

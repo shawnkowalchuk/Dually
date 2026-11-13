@@ -114,6 +114,8 @@ androidx-credentials-play-services-auth = { module = "androidx.credentials:crede
 androidx-core = { module = "androidx.core:core", version.ref = "core" }
 
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+# The settings file's keys and values without Android: what :shared reads and writes them with.
+androidx-datastore-preferences-core = { module = "androidx.datastore:datastore-preferences-core", version.ref = "datastore" }
 
 # repeatOnLifecycle: the Android Auto screen follows the trip only while the car shows it. The
 # Car App Library alone would bring a much older lifecycle (2.2.0), which does not have it.

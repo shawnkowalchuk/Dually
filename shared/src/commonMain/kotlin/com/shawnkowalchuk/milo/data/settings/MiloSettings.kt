@@ -1,0 +1,217 @@
+package com.shawnkowalchuk.milo.data.settings
+
+import com.shawnkowalchuk.milo.core.allowance.DEFAULT_CENTS_PER_KM
+import com.shawnkowalchuk.milo.core.odometer.OdometerReading
+import com.shawnkowalchuk.milo.core.review.ReviewsStored
+import com.shawnkowalchuk.milo.core.schedule.DEFAULT_WORK_SCHEDULE
+import com.shawnkowalchuk.milo.core.schedule.WorkSchedule
+import com.shawnkowalchuk.milo.core.service.ServiceBook
+import com.shawnkowalchuk.milo.core.time.LocalDate
+import com.shawnkowalchuk.milo.core.time.YearMonth
+import com.shawnkowalchuk.milo.core.util.AppLook
+import com.shawnkowalchuk.milo.core.util.DistanceUnit
+
+/** ADR-002: a trip waits 2 minutes for the truck to reconnect before it is closed. */
+const val DEFAULT_GRACE_PERIOD_SECONDS = 120
+
+/** A trip shorter than 0.3 km is discarded, for example moving the truck around the yard. */
+const val DEFAULT_MINIMUM_TRIP_DISTANCE_METRES = 300
+
+/**
+ * A step of the setup checklist that MilO cannot read from the phone, so Shawn confirms it by
+ * hand. The checklist stores the time of each confirmation.
+ *
+ * @param key what the confirmation is stored under. It is written to the settings file, so it
+ * must never change, even if the constant is renamed.
+ */
+enum class ConfirmedStep(val key: String) {
+    /** HyperOS "Background autostart". Asked for only when the unofficial reading fails. */
+    XIAOMI_AUTOSTART("confirmed_xiaomi_autostart_at_ms"),
+
+    /** HyperOS per-app Battery saver set to "No restrictions". */
+    XIAOMI_BATTERY_SAVER("confirmed_xiaomi_battery_saver_at_ms"),
+
+    /** HyperOS "Other permissions": lock screen, background windows, permanent notification. */
+    XIAOMI_OTHER_PERMISSIONS("confirmed_xiaomi_other_permissions_at_ms"),
+
+    /** MilO locked in the recent apps, so the cleaners leave it alone. */
+    XIAOMI_RECENTS_LOCK("confirmed_xiaomi_recents_lock_at_ms"),
+}
+
+/**
+ * Everything the settings store holds, read in one piece.
+ *
+ * Fourteen fields are not settings Shawn chooses: [tripVehiclesFilled], [parkedTruck],
+ * [drivenOffTripId], [whatsNewSeenVersion], [greetingsShown], [partyOwedSinceMs], [reviews],
+ * [lastDrivingAlertAtMs], [reportHandOver], [reminderShown], [lastExport] and the last three;
+ * and one value inside [nothingRecorded] is not either. They are small pieces of state that must
+ * outlive the process, and the settings store is where such values live.
+ *
+ * @param truckAddress the Bluetooth address of the paired truck, or null before pairing. Since
+ * 2026-10-08 MilO knows several vehicles, and this is the first of them (`VehicleStorage.kt`).
+ * @param truckName the truck's name as the phone shows it, for display only.
+ * @param truckAssociationId the id of the companion device association, or null without one.
+ * @param moreVehicles the vehicles beside the first, in the order they were paired (since
+ * 2026-10-08; kept in `VehicleStorage.kt`). Read every vehicle through `trucks()`.
+ * @param tripVehiclesFilled true once the trips recorded before several vehicles have been
+ * given the first one (`data/trip/TripVehicleCatchUp`). Not a setting.
+ * @param gracePeriodSeconds how long a trip waits after the truck disconnects.
+ * @param minimumTripDistanceMetres trips shorter than this are discarded.
+ * @param distanceAdjustSteps Settings' distance adjustment, in half-percent steps from -10 to
+ * +10: what every new trip's distance is raised or lowered by (since 2026-10-14; kept in
+ * `DistanceAdjustStorage.kt`).
+ * @param parkedLimitSeconds how long a trip may go without real movement before it is closed
+ * where it last moved, even with the truck still connected.
+ * @param parkedTruck set while MilO is waiting beside the parked truck for it to move, with no
+ * trip open. Not a setting: see [ParkedTruck].
+ * @param drivenOffTripId the open trip that the parked truck's moving started, if one is open.
+ * Not a setting: see `readDrivenOffTripId`.
+ * @param soundEnabled whether the connect sound plays ([TripSound.CONNECT]; until 2026-10-08
+ * the only sound, then called the trip-start sound).
+ * @param customSoundUri the audio file Shawn chose for it, or null for a built-in sound. It
+ * names MilO's own copy of the file (`data/sound/OwnSoundStore`), never the file he picked.
+ * @param customSoundName what the file he picked was called, for display only. Null with no
+ * custom sound, and when the phone gave no name for the file.
+ * @param drivingOffSoundEnabled whether the trip-start sound plays, when the truck drives off
+ * ([TripSound.DRIVING_OFF], since 2026-10-08). On out of the box, like the connect sound.
+ * @param drivingOffSoundUri and [drivingOffSoundName] the same as [customSoundUri] and
+ * [customSoundName], for the trip-start sound. Read both sounds through `sound(which)`.
+ * @param connectBuiltIn the built-in sound chosen for the connect sound, for while it plays
+ * none of his own (since 2026-10-13; kept in `BuiltInSounds.kt`). Null while none was chosen,
+ * and for a stored one this build does not know: the chirp plays then, as it always did.
+ * @param drivingOffBuiltIn the same for the trip-start sound; null plays the chime.
+ * @param homeWidgetEnabled whether MilO's home-screen widget is offered (since 2026-10-07; kept
+ * in `WidgetStorage.kt`). Switched off, it cannot be added, and one on the home screen says so.
+ * @param firstRunStage how far the first start has got: the page that says what MilO does, then
+ * Setup with its Done button, then nothing (since 2026-10-08; kept in `OnboardingStorage.kt`).
+ * @param whatsNewSeenVersion the versionName whose list of changes this phone was last shown,
+ * or null if none ever was (since 2026-10-08; kept in `WhatsNewStorage.kt`). Not a setting.
+ * @param greetingsShown how many greetings this phone has been shown since the wave and the
+ * moonwalk take turns, or null if that was never stored (since 2026-10-10; kept in
+ * `GreetingStorage.kt`). Which greeting is next is worked out from it. Not a setting.
+ * @param partyOwedSinceMs when the newest trip started, on the day of MilO's one-year party,
+ * that the mascot's party has not been shown for, or null if nothing is owed (since 2026-10-10;
+ * kept in `PartyStorage.kt`). It counts on that day only. Not a setting.
+ * @param partyHeldOn the last day the party was held, on its date or on the day that made up
+ * for it, or null if none ever was (since 2026-10-14; kept in `PartyStorage.kt`). Not a setting.
+ * @param serviceBook the service book: what is looked after, how often, and what was done
+ * (since 2026-10-16; kept in `ServiceStorage.kt`).
+ * @param lastTripVehicle the address of the vehicle the last trip started in, or null (since
+ * 2026-10-16; kept in `LastVehicleStorage.kt`): the odometer check goes by it. Not a setting.
+ * @param runningTripCategory what Shawn chose on Home for the trip being recorded, or null
+ * (since 2026-10-16; kept in `RunningTripCategoryStorage.kt`). Not a setting.
+ * @param reportOptions what the report holds beyond the Business trips, as set on the Report
+ * screen (since 2026-10-16; kept in `ReportOptionsStorage.kt`).
+ * @param pointsKeptMonths the sent months whose GPS points Shawn chose to keep on the Report
+ * screen, so that their tile is not offered again (since 2026-10-14; kept in
+ * `PointsKeptStorage.kt`). Not a setting.
+ * @param reviews what MilO remembers about asking Google Play for its review card: where each
+ * of the three moments stands, and when it last went to Google Play for the card (since
+ * 2026-10-11; kept in `ReviewStorage.kt`, ADR-009). Not a setting.
+ * @param homeWidgetCentsPerKm the rate, in cents a kilometre, at which the widget prices the
+ * Business kilometres for reference (since 2026-10-07; kept in `WidgetStorage.kt`). 70¢ until
+ * Shawn sets another in Settings.
+ * @param distanceUnit the unit every distance is shown in: kilometres until Shawn picks miles
+ * (since 2026-10-07; kept in `UnitStorage.kt`). It changes no stored trip.
+ * @param look how the screens and the widget look: Dark until Shawn picks Light (since
+ * 2026-11-12; kept in `LookStorage.kt`).
+ * @param ownSounds every sound of his own he has added, the ones in use among them, for both
+ * sounds to choose from (since 2026-10-07; kept in `SoundListStorage.kt`).
+ * @param schedule the work schedule: which days are tracked, and each day's hours. A trip that
+ * starts inside it is saved as Business. It sorts a trip when the trip is finalised and never
+ * before, and it has no say in whether a trip starts. The driving alert reads it too, to keep
+ * quiet outside the work hours.
+ * @param ignoreTripsOutsideSchedule what becomes of a trip that started outside the schedule:
+ * false saves it as Personal, true has it stored as discarded when it is finalised.
+ * @param drivingAlertEnabled whether MilO sends a notification when the phone reports driving
+ * during the work hours with no trip being recorded and the truck not connected. The alert only
+ * notifies: a trip starts when the notification is tapped, never by itself.
+ * @param lastDrivingAlertAtMs when the driving alert was last posted, or null if it never was.
+ * No second alert is posted for a while after it, and that must hold when MilO's process was
+ * restarted in between.
+ * @param reportName Shawn's name as the report for the accountant prints it, or null while it
+ * is not set. A report cannot be made without it.
+ * @param reportCompany his company, for the report's heading, or null to leave the line out.
+ * @param reportVehicle a description of the vehicle, for the report's heading, or null to
+ * leave the line out.
+ * @param odometerReadings every reading of the truck's odometer Shawn typed in, oldest first,
+ * corrections too. MilO works the odometer out from them and the truck trips
+ * (`core/odometer/`); kept in `OdometerStorage.kt`.
+ * @param accountantEmail where the report is sent: the address the email app is opened with,
+ * or null while it is not set. MilO itself sends nothing.
+ * @param reportHandOver the report that was handed to the email app and not answered for
+ * yet, or null when no question is waiting. Not a setting either: see [ReportHandOver].
+ * @param reminderEnabled whether MilO reminds Shawn, with a notification, that last month's
+ * report has not been sent.
+ * @param reminderDay the day of the month from which it does so, 1 to 31. In a month with
+ * fewer days it is that month's last day.
+ * @param reminderShown the month the reminder was last shown for and the day it was shown on,
+ * or null if it never was. Not a setting: see [ReminderShown].
+ * @param lastExport when all of MilO's data was last written to an export file, or null if it
+ * never was. Not a setting: see [LastExport].
+ * @param nothingRecorded the "nothing recorded" check: whether MilO says, with a notification,
+ * that no trip has been recorded on a work day, from which time of day it looks, and the day
+ * it last said so. Three values in one, kept and written in `NothingRecordedStorage.kt`.
+ * @param autoStartHeldOffSinceMs the hold-off of ADR-002: when a trip was ended by hand with
+ * the truck still connected, or null when automatic start is not held off. The time is kept
+ * because two of the three things that release the hold-off are measured from it.
+ * @param lastProcessExitImportedAtMs the time of the newest process-exit record already copied
+ * into the event log, so the same record is not copied again at the next start.
+ * @param confirmedAtMs when Shawn confirmed each setup step that MilO cannot read. A step that
+ * is not in the map is not confirmed.
+ */
+data class MiloSettings(
+    val truckAddress: String? = null,
+    val truckName: String? = null,
+    val truckAssociationId: Int? = null,
+    val moreVehicles: List<StoredVehicle> = emptyList(),
+    val tripVehiclesFilled: Boolean = false,
+    val gracePeriodSeconds: Int = DEFAULT_GRACE_PERIOD_SECONDS,
+    val minimumTripDistanceMetres: Int = DEFAULT_MINIMUM_TRIP_DISTANCE_METRES,
+    val distanceAdjustSteps: Int = 0,
+    val parkedLimitSeconds: Int = DEFAULT_PARKED_LIMIT_SECONDS,
+    val parkedTruck: ParkedTruck? = null,
+    val drivenOffTripId: Long? = null,
+    val soundEnabled: Boolean = true,
+    val customSoundUri: String? = null,
+    val customSoundName: String? = null,
+    val drivingOffSoundEnabled: Boolean = true,
+    val drivingOffSoundUri: String? = null,
+    val drivingOffSoundName: String? = null,
+    val connectBuiltIn: BuiltInSound? = null,
+    val drivingOffBuiltIn: BuiltInSound? = null,
+    val ownSounds: List<OwnSound> = emptyList(),
+    val homeWidgetEnabled: Boolean = true,
+    val homeWidgetCentsPerKm: Int = DEFAULT_CENTS_PER_KM,
+    val firstRunStage: FirstRunStage = FirstRunStage.INTRO,
+    val whatsNewSeenVersion: String? = null,
+    val greetingsShown: Int? = null,
+    val partyOwedSinceMs: Long? = null,
+    val partyHeldOn: LocalDate? = null,
+    val pointsKeptMonths: Set<YearMonth> = emptySet(),
+    val reportOptions: ReportOptions = ReportOptions(),
+    val runningTripCategory: RunningTripCategory? = null,
+    val lastTripVehicle: String? = null,
+    val serviceBook: ServiceBook = ServiceBook(),
+    val reviews: ReviewsStored = ReviewsStored(),
+    val distanceUnit: DistanceUnit = DistanceUnit.KILOMETRES,
+    val look: AppLook = AppLook.DARK,
+    val schedule: WorkSchedule = DEFAULT_WORK_SCHEDULE,
+    val ignoreTripsOutsideSchedule: Boolean = false,
+    val drivingAlertEnabled: Boolean = true,
+    val lastDrivingAlertAtMs: Long? = null,
+    val reportName: String? = null,
+    val reportCompany: String? = null,
+    val reportVehicle: String? = null,
+    val odometerReadings: List<OdometerReading> = emptyList(),
+    val accountantEmail: String? = null,
+    val reportHandOver: ReportHandOver? = null,
+    val reminderEnabled: Boolean = true,
+    val reminderDay: Int = DEFAULT_REMINDER_DAY,
+    val reminderShown: ReminderShown? = null,
+    val lastExport: LastExport? = null,
+    val nothingRecorded: NothingRecordedStored = NothingRecordedStored(),
+    val autoStartHeldOffSinceMs: Long? = null,
+    val lastProcessExitImportedAtMs: Long = 0L,
+    val confirmedAtMs: Map<ConfirmedStep, Long> = emptyMap(),
+)

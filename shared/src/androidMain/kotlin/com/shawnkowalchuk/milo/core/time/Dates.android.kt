@@ -67,3 +67,37 @@ actual fun dateOfEpochDay(epochDay: Long): LocalDate =
 actual fun LocalDate.epochDay(): Long = toEpochDay()
 
 actual fun LocalDate.yearMonth(): YearMonth = YearMonth.from(this)
+
+actual fun yearMonthOfText(text: String): YearMonth? = try {
+    YearMonth.parse(text)
+} catch (notAMonth: java.time.format.DateTimeParseException) {
+    null
+}
+
+actual fun dateOfEpochDayOrNull(epochDay: Long): LocalDate? = epochDay
+    .takeIf { it in LocalDate.MIN.toEpochDay()..LocalDate.MAX.toEpochDay() }
+    ?.let(LocalDate::ofEpochDay)
+
+actual fun dateOfEpochDayExactly(epochDay: Long): LocalDate = LocalDate.ofEpochDay(epochDay)
+
+actual fun parseDate(text: String): LocalDate = LocalDate.parse(text)
+
+actual fun dateOfText(text: String): LocalDate? = try {
+    LocalDate.parse(text)
+} catch (notADay: java.time.DateTimeException) {
+    null
+}
+
+actual fun timeOfSecondOfDay(seconds: Long): LocalTime = LocalTime.ofSecondOfDay(seconds)
+
+actual fun LocalTime.hourOfDay(): Int = hour
+
+actual fun LocalTime.minuteOfHour(): Int = minute
+
+actual fun compareMonths(a: YearMonth, b: YearMonth): Int = a.compareTo(b)
+
+actual fun formatOffsetMoment(epochMs: Long, zone: ZoneId): String = Instant.ofEpochMilli(epochMs)
+    .atZone(zone)
+    .toOffsetDateTime()
+    .truncatedTo(ChronoUnit.SECONDS)
+    .toString()
