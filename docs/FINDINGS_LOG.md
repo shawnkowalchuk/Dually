@@ -26,6 +26,14 @@
 
 ### 2026-11-12
 
+**`[CHANGE]` Settings without drawers: tiles that open pages**
+Shawn: "it is to busy. to many drawers. for example i dont think we need the log". He was shown a mock-up (the Artifact "Dually Settings Redesign") and answered "do all of it". Nothing a setting does changed; only where it is. Three decisions in the build:
+- **Each page reuses the main screen's own tiles.** A composition local (`LocalSettingsOnPage`) tells `SettingsFold` and the new `SettingsAbout` to draw open, so the tiles are not drawn twice.
+- **The Log was not removed.** It is not on the bottom bar; the wrench there is Service, since 2026-10-16. It moved to the end of Setup instead, where a trip that did not start is looked into.
+- **The odometer stays on the main screen,** because its Adjust button is used in passing. Only its "About" drawer went.
+
+Three explanations left the app with their drawers: what the truck does, the driving alert's two sentences, and the odometer's. Five footer hint lines went too. Their strings are deleted.
+
 **`[CHANGE]` Units and Look moved to the top of Settings**
 Shawn: "can you move the units and light/darkmode to above truck and driving aler". The pair now stands first, above Truck and Driving alert; nothing else changed.
 

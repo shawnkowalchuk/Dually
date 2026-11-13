@@ -79,7 +79,6 @@ internal fun OdometerTileContent(
     var editing by rememberSaveable { mutableStateOf(false) }
     var typed by rememberSaveable { mutableStateOf("") }
     var refused by rememberSaveable { mutableStateOf(false) }
-    var aboutOpen by rememberSaveable { mutableStateOf(false) }
     Tile(
         modifier = Modifier.fillMaxWidth(),
         padding = TilePadding.EVEN,
@@ -167,18 +166,6 @@ internal fun OdometerTileContent(
                 onClick = { editing = true },
                 modifier = Modifier.fillMaxWidth(),
                 accent = figure == null,
-            )
-        }
-        QuietExpander(
-            label = stringResource(R.string.settings_about_odometer),
-            expanded = aboutOpen,
-            onToggle = { aboutOpen = !aboutOpen },
-        ) {
-            Note(
-                stringResource(
-                    R.string.settings_odometer_detail,
-                    stringResource(unitNameRes(shown.unit)),
-                ),
             )
         }
     }

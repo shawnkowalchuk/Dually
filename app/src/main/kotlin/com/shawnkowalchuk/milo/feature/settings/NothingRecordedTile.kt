@@ -62,7 +62,6 @@ internal fun NothingRecordedTileContent(
     // Whether the picker is open. It belongs to the screen, not to the settings; saved, so that
     // turning the phone does not close the picker.
     var picking by rememberSaveable { mutableStateOf(false) }
-    var aboutOpen by rememberSaveable { mutableStateOf(false) }
 
     val time = formatClockTime(shown.checkAt, locale, twentyFourHour)
     SettingsFold(
@@ -107,11 +106,7 @@ internal fun NothingRecordedTileContent(
                 status = RowStatus.PROBLEM,
             )
         }
-        QuietExpander(
-            label = stringResource(R.string.settings_about_check),
-            expanded = aboutOpen,
-            onToggle = { aboutOpen = !aboutOpen },
-        ) {
+        SettingsAbout(label = stringResource(R.string.settings_about_check)) {
             Note(stringResource(R.string.settings_nothing_recorded_detail))
             Note(stringResource(R.string.settings_nothing_recorded_time_detail))
         }

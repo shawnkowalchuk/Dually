@@ -34,7 +34,6 @@ internal fun ReportDetailsTile(
     actions: ReportDetailActions,
     rate: @Composable () -> Unit = {},
 ) {
-    var aboutOpen by rememberSaveable { mutableStateOf(false) }
     // The report cannot be sent without the name and the address: then the tile starts open.
     val unfinished =
         fields.name.isBlank() || fields.accountantEmail.isBlank() || fields.emailRefused
@@ -83,11 +82,7 @@ internal fun ReportDetailsTile(
             placeholder = stringResource(R.string.settings_report_email_example),
         )
         rate()
-        QuietExpander(
-            label = stringResource(R.string.settings_about_report),
-            expanded = aboutOpen,
-            onToggle = { aboutOpen = !aboutOpen },
-        ) {
+        SettingsAbout(label = stringResource(R.string.settings_about_report)) {
             Note(stringResource(R.string.settings_report_intro))
             NamedNote(
                 stringResource(R.string.settings_report_vehicle),

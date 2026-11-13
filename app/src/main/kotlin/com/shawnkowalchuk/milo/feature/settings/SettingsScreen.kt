@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -18,6 +19,7 @@ import com.shawnkowalchuk.milo.core.designsystem.component.StatusRow
 import com.shawnkowalchuk.milo.core.designsystem.component.Tile
 import com.shawnkowalchuk.milo.core.designsystem.component.TileColumn
 import com.shawnkowalchuk.milo.core.designsystem.component.TilePadding
+import com.shawnkowalchuk.milo.core.designsystem.component.TilePair
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
 import com.shawnkowalchuk.milo.core.util.AppLook
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
@@ -93,8 +95,10 @@ internal class ScheduleActions(
  * @param versionTile the version on this phone, which opens the What's new screen: the last
  * tile, handed in for the same reason (since 2026-10-08).
  * @param showCoffee false in the copy installed from Google Play, which shows no Buy me a coffee
- * tile: Google Play's payments policy does not allow a link that pays the developer outside it
+ * row: Google Play's payments policy does not allow a link that pays the developer outside it
  * (2026-10-09, ADR-004).
+ * @param page the page of Settings to show (since 2026-11-12), or null for the main screen.
+ * @param onOpenPage opens a page on top of the main screen.
  */
 @Composable
 fun SettingsScreen(
@@ -110,10 +114,12 @@ fun SettingsScreen(
     setupTile: @Composable () -> Unit,
     versionTile: @Composable () -> Unit,
     showCoffee: Boolean,
-    onOpenLog: () -> Unit,
     modifier: Modifier = Modifier,
+    page: SettingsPage? = null,
+    onOpenPage: (SettingsPage) -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
+    val widget by widgetViewModel.state.collectAsState()
 
     val actions =
         SettingsActions(
@@ -164,34 +170,46 @@ fun SettingsScreen(
         },
         versionTile = versionTile,
         showCoffee = showCoffee,
-        onOpenLog = onOpenLog,
+        page = page,
+        onOpenPage = onOpenPage,
+        widgetLine =
+            widget?.let {
+                val on = it.enabled
+                stringResource(
+                    if (on) R.string.settings_page_widget_on else R.string.settings_fold_off,
+                )
+            },
     )
 }
 
 /**
- * The screen's tiles, top to bottom in the design's order. The tiles the design does not draw
- * stand where they belong: Setup first, because it says whether a trip can start at all; the
- * daily check under the work schedule it goes by; and the tile for backup, export and import
- * last.
+ * The screen's tiles, top to bottom. Since 2026-11-12 (Shawn: "it is to busy. to many drawers",
+ * then "do all of it" on the mock-up) the main screen has no drawers: Setup; the settings that
+ * are changed in passing (Units and Look, the truck and the driving alert, the odometer); one
+ * tile for each [SettingsPage], which says what the page is set to and opens it; and a short
+ * list at the end. A page holds the tiles the main screen had for it, drawn open
+ * ([LocalSettingsOnPage]).
  *
- * @param setupTile the tile that opens Setup. It is shown whatever the settings file says:
- * the checklist does not come from it.
- * @param checkTile the tile of the daily check, handed in whole because it has a state of its
- * own.
+ * @param page the page to show, or null for the main screen.
+ * @param onOpenPage opens one of the pages on top of this screen.
+ * @param setupTile the tile that opens Setup, on the main screen. It is shown whatever the
+ * settings file says: the checklist does not come from it. Since 2026-11-12 the Log is opened
+ * from the Setup screen, not from here.
+ * @param checkTile the tile of the daily check, on the Work hours page, handed in whole because
+ * it has a state of its own.
  * @param odometerTile the truck's odometer, under the truck's tile, handed in whole for the
  * same reason.
- * @param widgetTile the home-screen widget's switch, after the sounds, handed in whole for the
- * same reason.
- * @param dataTile the tile for backup, export and import. It is handed in whole, because it
- * has a state of its own: it is shown also when the settings cannot be read, which is when a
- * copy of the trips is wanted most.
+ * @param widgetTile the home-screen widget's tile, the Widget page's, handed in whole too.
+ * @param widgetLine what the Widget tile of the main screen says the widget is set to.
+ * @param dataTile the tiles for backup, export, import and the GPS points: the Your data page's.
+ * They are shown also when the settings cannot be read, which is when a copy of the trips is
+ * wanted most.
  * @param versionTile the version on this phone, under everything, as GopherForms has it. Shown
  * whatever the settings file says: the version does not come from it.
- * @param showCoffee whether the Buy me a coffee tile stands above it: not in the copy from
+ * @param showCoffee whether the list at the end has Buy me a coffee: not in the copy from
  * Google Play ([SettingsScreen]).
  * @param rateRows the rate the Business kilometres are priced at, in the tile of the report's
  * details since 2026-10-16. Its state is the widget's.
- * @param onOpenLog opens the Log, from its tile under Support (since 2026-10-16), or null for none.
  */
 @Composable
 internal fun SettingsContent(
@@ -199,6 +217,8 @@ internal fun SettingsContent(
     actions: SettingsActions,
     onBack: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    page: SettingsPage? = null,
+    onOpenPage: (SettingsPage) -> Unit = {},
     setupTile: @Composable () -> Unit,
     checkTile: @Composable () -> Unit,
     odometerTile: @Composable () -> Unit,
@@ -207,19 +227,18 @@ internal fun SettingsContent(
     versionTile: @Composable () -> Unit,
     showCoffee: Boolean = true,
     rateRows: @Composable () -> Unit = {},
-    onOpenLog: (() -> Unit)? = null,
+    widgetLine: String? = null,
 ) {
-    val spacing = MiloTheme.spacing
     PinnedHeaderColumn(
         header = {
             AppHeader(
-                title = stringResource(R.string.settings_title),
+                title = stringResource(page?.titleRes ?: R.string.settings_title),
                 onBack = onBack,
             )
         },
         modifier = modifier.fillMaxSize(),
     ) {
-        setupTile()
+        if (page == null) setupTile()
         when (state) {
             SettingsUiState.Reading -> NoteTile { Note(stringResource(R.string.settings_reading)) }
 
@@ -240,42 +259,137 @@ internal fun SettingsContent(
                         )
                     }
                 }
-                // First of the settings (Shawn, 2026-11-12: "can you move the units and
-                // light/darkmode to above truck and driving aler"): how everything is shown.
-                UnitsAndLookTiles(
-                    state.distanceUnit,
-                    state.look,
-                    actions.onDistanceUnit,
-                    actions.onLook,
-                )
-                TruckAndAlertTiles(state, actions)
-                // Under the truck: it is the truck's.
-                odometerTile()
-                // Second, and not last: the Report screen sends Shawn here for his name and
-                // the accountant's address.
-                ReportDetailsTile(state.report, actions.report, rateRows)
-                // Under the report's own tile: it is the reminder to send that report.
-                ReminderTile(state, actions.reminder)
-                TripRulesTile(state, actions)
-                ScheduleTile(state, actions.schedule)
-                OutsideHoursTile(state, actions.schedule)
-                // Under the schedule: the check goes by its work days and their start.
-                checkTile()
-                SoundsTile(state, actions)
-                widgetTile()
+                if (page == null) {
+                    MainSettings(state, actions, odometerTile, onOpenPage, widgetLine)
+                } else {
+                    CompositionLocalProvider(LocalSettingsOnPage provides true) {
+                        when (page) {
+                            SettingsPage.WORK_HOURS -> {
+                                ScheduleTile(state, actions.schedule)
+                                OutsideHoursTile(state, actions.schedule)
+                                // The check goes by the work days and their start.
+                                checkTile()
+                            }
+
+                            SettingsPage.REPORT -> {
+                                ReportDetailsTile(state.report, actions.report, rateRows)
+                                ReminderTile(state, actions.reminder)
+                            }
+
+                            SettingsPage.TRIPS -> TripRulesTile(state, actions)
+
+                            SettingsPage.SOUNDS -> SoundsTile(state, actions)
+
+                            SettingsPage.WIDGET -> widgetTile()
+
+                            SettingsPage.DATA -> Unit
+                        }
+                    }
+                }
             }
         }
-        // Last: it is used a few times a year, and it is the one tile that can replace
-        // everything, so it is not among the settings that are changed in passing.
-        if (state != SettingsUiState.Reading) dataTile()
-        // Beside the version: none of them is a setting. Support first: it is the one a
-        // person with a problem is looking for, and the Log is what it asks for.
-        SupportTile()
-        onOpenLog?.let { LogLinkTile(it) }
-        ReviewLinkTile()
-        if (showCoffee) CoffeeTile()
-        versionTile()
+        if (page == SettingsPage.DATA && state != SettingsUiState.Reading) {
+            CompositionLocalProvider(LocalSettingsOnPage provides true) { dataTile() }
+        }
+        if (page == null) {
+            // Last on the main screen: it is used a few times a year, and its page holds the
+            // one tile that can replace everything.
+            if (state != SettingsUiState.Reading) {
+                SettingsLinkTile(
+                    title = stringResource(R.string.settings_page_data),
+                    line = stringResource(R.string.settings_page_data_line),
+                    onOpen = { onOpenPage(SettingsPage.DATA) },
+                )
+            }
+            // None of them is a setting. Support first: it is the one a person with a problem
+            // is looking for.
+            FooterLinks(
+                buildList {
+                    add { SupportRow() }
+                    add { ReviewRow() }
+                    if (showCoffee) add { CoffeeRow() }
+                },
+            )
+            versionTile()
+        }
     }
+}
+
+/**
+ * The main screen's settings, under Setup: the ones changed in passing, drawn whole, and one
+ * tile for each page that sums it up.
+ */
+@Composable
+private fun MainSettings(
+    state: SettingsUiState.Ready,
+    actions: SettingsActions,
+    odometerTile: @Composable () -> Unit,
+    onOpenPage: (SettingsPage) -> Unit,
+    widgetLine: String?,
+) {
+    // First of the settings (Shawn, 2026-11-12: "can you move the units and light/darkmode to
+    // above truck and driving aler"): how everything is shown.
+    UnitsAndLookTiles(state.distanceUnit, state.look, actions.onDistanceUnit, actions.onLook)
+    TruckAndAlertTiles(state, actions)
+    // Under the truck: it is the truck's.
+    odometerTile()
+    val days = state.schedule.count { it.tracked }
+    SettingsLinkTile(
+        title = stringResource(R.string.settings_page_work_hours),
+        line = weekSummary(days, shownWeeklyMinutes(state.schedule, null)),
+        second =
+            stringResource(
+                if (state.ignoreOutsideSchedule) {
+                    R.string.settings_page_work_hours_ignore
+                } else {
+                    R.string.settings_page_work_hours_personal
+                },
+            ),
+        onOpen = { onOpenPage(SettingsPage.WORK_HOURS) },
+    )
+    val report = state.report
+    SettingsLinkTile(
+        title = stringResource(R.string.settings_page_report),
+        line =
+            report.accountantEmail.ifBlank {
+                stringResource(R.string.settings_report_summary_missing)
+            },
+        second =
+            if (state.reminderEnabled) {
+                stringResource(reminderLineRes(state.reminderDay), state.reminderDay)
+            } else {
+                stringResource(R.string.settings_page_report_no_reminder)
+            },
+        onOpen = { onOpenPage(SettingsPage.REPORT) },
+    )
+    SettingsLinkTile(
+        title = stringResource(R.string.settings_page_trips),
+        line = tripRulesSummary(state),
+        onOpen = { onOpenPage(SettingsPage.TRIPS) },
+    )
+    val off = stringResource(R.string.settings_fold_off)
+    TilePair(
+        first = { half ->
+            SettingsLinkTile(
+                title = stringResource(R.string.settings_sounds_title),
+                line =
+                    TripSound.entries.map { which ->
+                        val sound = state.sound(which)
+                        if (sound.enabled) sound.inUseName() else off
+                    }.joinToString(" · "),
+                onOpen = { onOpenPage(SettingsPage.SOUNDS) },
+                modifier = half,
+            )
+        },
+        second = { half ->
+            SettingsLinkTile(
+                title = stringResource(R.string.settings_page_widget),
+                line = widgetLine ?: off,
+                onOpen = { onOpenPage(SettingsPage.WIDGET) },
+                modifier = half,
+            )
+        },
+    )
 }
 
 /** A tile for one thing the screen has to say in place of, or above, its settings. */

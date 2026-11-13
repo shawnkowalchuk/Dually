@@ -37,35 +37,18 @@ internal const val COFFEE_PAGE = "https://www.buymeacoffee.com/SeaWingman"
  * says so on the tile, with the address to type in elsewhere.
  */
 @Composable
-internal fun CoffeeTile(modifier: Modifier = Modifier) {
+internal fun CoffeeRow() {
     val context = LocalContext.current
     var noBrowser by rememberSaveable { mutableStateOf(false) }
-    Tile(
-        modifier = modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
-        press =
-            TilePress(
-                label = stringResource(R.string.settings_coffee_open),
-                onClick = { noBrowser = !context.openPage(COFFEE_PAGE) },
-            ),
-        gap = MiloTheme.spacing.extraSmall,
-    ) {
-        TileLinkLabel(stringResource(R.string.settings_coffee_label))
-        Text(
-            text = stringResource(R.string.settings_coffee_value),
-            style = MaterialTheme.typography.titleMedium,
-        )
-        Text(
-            text = stringResource(R.string.settings_coffee_hint),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        if (noBrowser) {
-            StatusRow(
-                label = stringResource(R.string.settings_coffee_no_browser),
-                status = RowStatus.PROBLEM,
-            )
-        }
-    }
+    FooterLink(
+        label = stringResource(R.string.settings_coffee_label),
+        pressLabel = stringResource(R.string.settings_coffee_open),
+        onClick = {
+            noBrowser = !context.openPage(COFFEE_PAGE)
+        },
+        value = null,
+        problem = stringResource(R.string.settings_coffee_no_browser).takeIf { noBrowser },
+    )
 }
 
 /**

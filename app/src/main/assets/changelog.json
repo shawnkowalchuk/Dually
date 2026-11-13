@@ -5,6 +5,11 @@
       "date": null,
       "changes": [
         {
+          "kind": "improved",
+          "title": "A tidier Settings screen",
+          "body": "Settings has no more drawers. Units and Look come first. Work hours, the report, the trip rules, sounds, the widget and your data each have one tile that shows how they are set, and a tap opens their own page with everything laid out. The Log is now at the end of the Setup screen."
+        },
+        {
           "kind": "new",
           "title": "A light look",
           "body": "Settings has a new Look choice under Units: Dark or Light. Light gives every screen and the home-screen widget a cream page with white cards and dark words, and keeps the orange trip card, the logo and the odometer wheels as they are. Dark stays the default."

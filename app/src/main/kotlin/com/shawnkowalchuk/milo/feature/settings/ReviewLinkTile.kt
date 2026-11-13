@@ -41,39 +41,20 @@ internal fun playWebPage(packageName: String): String =
  * every copy; the coffee tile is not shown in the copy from Google Play (ADR-004).
  */
 @Composable
-internal fun ReviewLinkTile(modifier: Modifier = Modifier) {
+internal fun ReviewRow() {
     val context = LocalContext.current
     var noStore by rememberSaveable { mutableStateOf(false) }
-    Tile(
-        modifier = modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
-        press =
-            TilePress(
-                label = stringResource(R.string.settings_review_open),
-                onClick = {
-                    noStore =
-                        !context.open(playStorePage(context.packageName)) &&
-                        !context.open(playWebPage(context.packageName))
-                },
-            ),
-        gap = MiloTheme.spacing.extraSmall,
-    ) {
-        TileLinkLabel(stringResource(R.string.settings_review_label))
-        Text(
-            text = stringResource(R.string.settings_review_value),
-            style = MaterialTheme.typography.titleMedium,
-        )
-        Text(
-            text = stringResource(R.string.settings_review_hint),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        if (noStore) {
-            StatusRow(
-                label = stringResource(R.string.settings_review_no_store),
-                status = RowStatus.PROBLEM,
-            )
-        }
-    }
+    FooterLink(
+        label = stringResource(R.string.settings_review_label),
+        pressLabel = stringResource(R.string.settings_review_open),
+        onClick = {
+            noStore =
+                !context.open(playStorePage(context.packageName)) &&
+                !context.open(playWebPage(context.packageName))
+        },
+        value = null,
+        problem = stringResource(R.string.settings_review_no_store).takeIf { noStore },
+    )
 }
 
 /**
