@@ -50,8 +50,9 @@ The recurring pain: deps go stale, then updating them is a nightmare. Prevent it
 ## Secrets & passwords — never hardcoded
 
 - Never write a password, API key, token, or secret into code, a script, or anything committed to git. Ever. (It lives in git history forever.)
-- Dually has no backend, no API keys and no sign-in. The app's only secrets are the signing keystore and its passwords. They live outside the repository and are **prompted for or read at build time** from a git-ignored file, never committed.
-- The website (`website/`, dually.top) has one secret of its own since 2026-10-08: the Firebase Hosting deploy key, kept only in GitHub's Actions secrets (ADR-003). It is never downloaded into the repository. The website is not one of the app's two surfaces; the app gets no Firebase.
+- The app's secrets are the signing keystore and its passwords, and the four Firebase values of the optional online backup. They live outside the repository and are **prompted for or read at build time**, never committed.
+- **The optional online backup** (ADR-012, ADR-013) is the app's only backend: Firebase project `dually-trip-tracker` (Sign in with Google, Cloud Firestore in Montréal, Cloud Functions for the purchase check). Its four values (project id, app id, API key, web client id) are in `~/keys/dually-firebase.properties`, beside the signing key, outside the repository and never committed; **a release build without that file stops**, and a debug build without it (CI, Dependabot) simply has no backup to offer. The security rules and the functions live in `firebase/`: the functions deploy from there on the Mac and the rules are published by hand (`firebase/README.md`), never from CI. With the backup off, the app connects to nothing.
+- The website (`website/`, dually.top) has one secret of its own since 2026-10-08: the Firebase Hosting deploy key, kept only in GitHub's Actions secrets (ADR-003). It is never downloaded into the repository. The website is not one of the app's two surfaces, and its Firebase project (`milotriplog`) is not the app's.
 - If a secret is ever added (an API key, a token), it follows the same rule and gets an ADR first.
 - If a required secret is missing, fail loudly. (STANDARDS §12.)
 

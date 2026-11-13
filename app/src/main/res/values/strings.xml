@@ -309,7 +309,7 @@
         the privacy policy (website/privacy.html).
     -->
     <string name="setup_disclosure_title">Dually uses your location</string>
-    <string name="setup_disclosure_text">Dually collects your phone\'s location to record the route and distance of each trip, including the trips that start by themselves when the phone connects to your vehicle, even when the app is closed or not in use.\n\nYour location stays on this phone. Dually has no account and no server, and shares it with no one. To show where a trip started and ended, Dually hands those two positions to your phone\'s own address lookup, which on most phones is Google\'s.\n\nOn the next screen, choose \"Allow all the time\".</string>
+    <string name="setup_disclosure_text">Dually collects your phone\'s location to record the route and distance of each trip, including the trips that start by themselves when the phone connects to your vehicle, even when the app is closed or not in use.\n\nYour location stays on this phone, and Dually shares it with no one. To show where a trip started and ended, Dually hands those two positions to your phone\'s own address lookup, which on most phones is Google\'s. Only if you buy the optional online backup are those two positions, never the route, copied to Dually\'s server in Canada.\n\nOn the next screen, choose \"Allow all the time\".</string>
     <string name="setup_disclosure_continue">Continue</string>
     <string name="setup_disclosure_not_now">Not now</string>
     <string name="setup_fix_notifications">The trip notification, and the warning when a trip could not start, need this.</string>
