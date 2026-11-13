@@ -13,6 +13,8 @@
 	<string>Dually uses your location to record each trip, including trips that start by themselves when your iPhone connects to your vehicle, even when the app is closed. Your trips stay on this iPhone; only a trip's start and end are sent to Apple, to find their street addresses.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>Dually uses motion to notice when you drive during your work hours with no trip being recorded, and reminds you to start one. Motion data stays on this iPhone.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>UIBackgroundModes</key>

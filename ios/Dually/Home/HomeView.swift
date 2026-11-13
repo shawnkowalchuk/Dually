@@ -58,7 +58,7 @@ struct HomeView: View {
         .onChange(of: scenePhase) { phase in
             if phase == .active {
                 setup.refresh()
-                Task { await model.refresh() }
+                Task { await model.cameToFront() }
             }
         }
     }

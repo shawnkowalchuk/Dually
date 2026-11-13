@@ -14,6 +14,8 @@ final class TripSession: ObservableObject {
     let location = LocationRecorder()
     /// The driving alert (phase 4d, third part).
     let drivingWatch: DrivingWatch
+    /// The trip on the Lock Screen and in the Dynamic Island (phase 4e), iOS 16.1 and later.
+    private let liveTrip: AnyObject?
 
     /// The trip being recorded, or nil.
     @Published private(set) var recording: RecordingNow?
@@ -21,6 +23,11 @@ final class TripSession: ObservableObject {
 
     private init() {
         drivingWatch = DrivingWatch(core: core)
+        if #available(iOS 16.1, *) {
+            liveTrip = LiveTrip()
+        } else {
+            liveTrip = nil
+        }
         location.onFix = { [weak self] fix in
             Task { await self?.add(fix) }
         }
@@ -39,6 +46,12 @@ final class TripSession: ObservableObject {
         }
     }
 
+    /// Dually came to the front: a trip that started in the background gets its Live Activity.
+    func cameToFront() async {
+        if #available(iOS 16.1, *) { (liveTrip as? LiveTrip)?.cameToFront() }
+        await refresh()
+    }
+
     /// Reads the trip being recorded again, as of now.
     func refresh() async {
         await apply { try await self.core.recorder.now() }
@@ -55,6 +68,11 @@ final class TripSession: ObservableObject {
 
     func end() async {
         await apply { try await self.core.recorder.end() }
+    }
+
+    /// End trip on the Live Activity.
+    func endFromLiveActivity() async {
+        await apply { try await self.core.recorder.endFromLiveActivity() }
     }
 
     /// The Shortcuts automation says the vehicle connected.
@@ -91,6 +109,10 @@ final class TripSession: ObservableObject {
         }
         // A trip has begun, however it began: the alert's "tap to start one" is no longer true.
         if recording != nil { drivingWatch.withdraw() }
+        if #available(iOS 16.1, *) {
+            let distance = recording.map { core.distanceText(metres: $0.metres) } ?? ""
+            (liveTrip as? LiveTrip)?.show(recording, distance: distance)
+        }
         // TODO(debt): the wait beside a parked truck runs the GPS as a trip does, for up to 72
         //  hours. See docs/FINDINGS_LOG.md (2026-11-13, phase 4d, first part).
         if core.recorder.wantsGps {

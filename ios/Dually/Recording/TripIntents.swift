@@ -24,6 +24,14 @@ struct StartTripIntent: AppIntent {
     }
 }
 
+// From iOS 17 the two actions are Live Activity intents too: one an automation runs may start or
+// end the trip's Live Activity (phase 4e) with Dually in the background.
+@available(iOS 17.0, *)
+extension StartTripIntent: LiveActivityIntent {}
+
+@available(iOS 17.0, *)
+extension EndTripIntent: LiveActivityIntent {}
+
 struct EndTripIntent: AppIntent {
     static let title: LocalizedStringResource = "End a trip"
     static let description = IntentDescription(
