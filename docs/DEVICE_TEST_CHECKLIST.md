@@ -1968,6 +1968,17 @@ Unit tests only.
 | AC-4 | With an odometer reading typed in Settings, look at the Business row before and during a drive. | "Today … · Nov. … · Odo …" on one line, no scroll arrows, no dollars; the Odo figure is Home's, and goes up by one about every kilometre while driving. | not run |
 | AC-5 | Compare the Odo figure with the truck's dashboard. | Close to it; if it is out, a reading typed in Settings puts it right. | not run |
 
+## The light look (2026-11-12)
+
+| # | Do this | Expect | Result |
+|---|---|---|---|
+| LT-1 | Settings, Look, Light. | Every screen turns light at once: a cream page, white tiles, dark words. The clock and battery at the top are dark. | not run |
+| LT-2 | Close Dually fully and open it again. | Still light; no dark screen flashes before Home (the dark splash is expected). | not run |
+| LT-3 | Start a trip by hand. | The orange trip card looks as on dark: the dark Recording and Business pills, the dark bin and Stop. | not run |
+| LT-4 | Read Trips, the Log, the Report screen and Setup in daylight, outdoors. | Everything reads; links and buttons in a deep orange. | not run |
+| LT-5 | Look at the home-screen widget, then switch back to Dark. | White widget on light, dark again on Dark, within a moment. | not run |
+| LT-6 | Send a report, so the mascot runs and slides on the Report screen, on Light. | He shows clearly; say if his smoke or brake-light glow look too faint. | not run |
+
 ## Later work packages
 
 Nothing waiting. A work package that adds behaviour only the phone can prove adds its checks above.

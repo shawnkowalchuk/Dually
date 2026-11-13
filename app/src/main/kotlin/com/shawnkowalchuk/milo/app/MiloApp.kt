@@ -26,6 +26,7 @@ import com.shawnkowalchuk.milo.core.designsystem.component.MascotGreeting
 import com.shawnkowalchuk.milo.core.designsystem.component.MiloNavigationBar
 import com.shawnkowalchuk.milo.core.designsystem.component.NavigationBarEntry
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
+import com.shawnkowalchuk.milo.core.util.AppLook
 import com.shawnkowalchuk.milo.data.settings.FirstRunStage
 import com.shawnkowalchuk.milo.feature.greeting.Greeting
 import com.shawnkowalchuk.milo.feature.greeting.GreetingViewModel
@@ -61,6 +62,7 @@ import java.time.YearMonth
  */
 @Composable
 fun MiloApp(
+    look: AppLook,
     container: AppContainer,
     reportToOpen: YearMonth?,
     onReportOpened: () -> Unit,
@@ -71,7 +73,7 @@ fun MiloApp(
     screenAsked: TopLevelDestination? = null,
     onScreenShown: () -> Unit = {},
 ) {
-    MiloTheme {
+    MiloTheme(look) {
         // MilO's clock, for the few components that show a day by themselves (the header's
         // date, the Log screen's "today"). Never the phone's own (ADR-006).
         CompositionLocalProvider(LocalMiloClock provides container.clock) {

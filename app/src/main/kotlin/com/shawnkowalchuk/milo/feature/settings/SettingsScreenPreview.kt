@@ -192,6 +192,7 @@ private fun SettingsPreview(@PreviewParameter(SettingsSamples::class) sample: Se
                         {},
                         {},
                         {},
+                        {},
                         { _, _ -> },
                         {},
                         {},

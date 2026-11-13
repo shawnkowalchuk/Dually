@@ -6,6 +6,7 @@ import com.shawnkowalchuk.milo.core.review.ReviewsStored
 import com.shawnkowalchuk.milo.core.schedule.DEFAULT_WORK_SCHEDULE
 import com.shawnkowalchuk.milo.core.schedule.WorkSchedule
 import com.shawnkowalchuk.milo.core.service.ServiceBook
+import com.shawnkowalchuk.milo.core.util.AppLook
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import java.time.LocalDate
 import java.time.YearMonth
@@ -112,6 +113,8 @@ enum class ConfirmedStep(val key: String) {
  * Shawn sets another in Settings.
  * @param distanceUnit the unit every distance is shown in: kilometres until Shawn picks miles
  * (since 2026-10-07; kept in `UnitStorage.kt`). It changes no stored trip.
+ * @param look how the screens and the widget look: Dark until Shawn picks Light (since
+ * 2026-11-12; kept in `LookStorage.kt`).
  * @param ownSounds every sound of his own he has added, the ones in use among them, for both
  * sounds to choose from (since 2026-10-07; kept in `SoundListStorage.kt`).
  * @param schedule the work schedule: which days are tracked, and each day's hours. A trip that
@@ -192,6 +195,7 @@ data class MiloSettings(
     val serviceBook: ServiceBook = ServiceBook(),
     val reviews: ReviewsStored = ReviewsStored(),
     val distanceUnit: DistanceUnit = DistanceUnit.KILOMETRES,
+    val look: AppLook = AppLook.DARK,
     val schedule: WorkSchedule = DEFAULT_WORK_SCHEDULE,
     val ignoreTripsOutsideSchedule: Boolean = false,
     val drivingAlertEnabled: Boolean = true,

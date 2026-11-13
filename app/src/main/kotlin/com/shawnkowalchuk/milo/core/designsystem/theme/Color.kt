@@ -2,6 +2,7 @@ package com.shawnkowalchuk.milo.core.designsystem.theme
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 
@@ -12,9 +13,12 @@ import androidx.compose.ui.graphics.Color
 //
 // The colours are the brand's since 2026-10-13, when the app became Dually (ADR-010): an orange
 // accent on a warm near-black, in place of the lime on a cool near-black the first design drew
-// (2026-10-06). The app still has one look, and it is dark: neither design has a light variant
-// for the screens, so there is no second scheme and the phone's light or dark setting changes
-// nothing (FINDINGS_LOG, 2026-10-06 and 2026-10-13).
+// (2026-10-06). Since 2026-11-12 there is a second, light set (Shawn: "is it possible to do a
+// light version?"), chosen in Settings ("Look: Dark / Light"), never by the phone's own setting.
+// It is the light page the brand already draws in the report for the accountant: Bone for the
+// page, white tiles, Asphalt words. Shawn approved it from a mock-up the same day. Dark stays the
+// default. The two sets are written at the end of this file, role for role, and ColorContrastTest
+// measures both.
 //
 // There are six exceptions, each explained where it is written:
 //   - the app's mark outside Compose: the launcher icon (res/drawable/ic_launcher_*.xml) and
@@ -102,6 +106,10 @@ private val AccentPressed = Amber
 // The light that runs along the line between the phone and the truck while the two are
 // connected: Bone at 85 percent.
 private val Glint = Color(0xD9FFF4E8)
+
+// Ember, the brand's darker orange (see above): on a light page it is what the accent darkens to
+// under a finger.
+private val Ember = Color(0xFFB33F0D)
 
 private val AttentionText = Amber
 private val AttentionSecondaryText = TextSecondary
@@ -346,6 +354,11 @@ data class MiloWheelColors(val whole: FillAndText, val counting: FillAndText)
  * @param wheels the cells of a row of wheels: see [MiloWheelColors].
  * @param mark the app's mark: the accent's square and the dark of the letter on it. The
  * launcher icon and the widget's mark repeat the pair in XML (the top of this file says where).
+ * @param hero the accent tile (Home's trip card) and what is on it: the brand's Hi-Vis orange
+ * with dark words in both looks (since 2026-11-12). On the light look the accent of buttons and
+ * links is a deeper orange, which `Tile` puts back to this pair inside the accent tile.
+ * @param heroButton the dark round mark and the dark Stop button that stand on the accent tile,
+ * and their light icon: the same in both looks (since 2026-11-12).
  */
 @Immutable
 data class MiloColors(
@@ -368,6 +381,8 @@ data class MiloColors(
     val changeTags: MiloChangeTagColors,
     val wheels: MiloWheelColors,
     val mark: FillAndText,
+    val hero: FillAndText,
+    val heroButton: FillAndText,
 )
 
 internal val MiloExtraColors =
@@ -408,4 +423,202 @@ internal val MiloExtraColors =
                 counting = FillAndText(fill = Accent, text = Page),
             ),
         mark = FillAndText(fill = Accent, text = MarkLetter),
+        hero = FillAndText(fill = Accent, text = Page),
+        heroButton = FillAndText(fill = Page, text = TextMain),
+    )
+
+// ---- The light look (since 2026-11-12) ----------------------------------------------------------
+//
+// Role for role the same as the dark one above, with the brand's light page. Where a value is not
+// the brand's own it says what it was made for, as above. Hi-Vis Orange stays wherever it is a
+// fill with dark words on it (the trip card, the mark, the wheel that counts, the Trip and New
+// tags), because there it reads (6.0 to 1). As words on a light page it does not (3.1 to 1 on a
+// tile, 2.9 on the page), so buttons, links, the switch and the bar take a deeper orange there.
+
+// Bone is the page, as on the report's panels, and the tiles are white on it.
+private val LightPage = Color(0xFFFFF4E8)
+private val LightTile = Color(0xFFFFFFFF)
+private val LightText = Page
+
+// The accent of buttons and links on light: Hi-Vis Orange darkened until white words on it and
+// it as words on a tile, the page and a control all pass 4.5 to 1 (5.9, 5.4 and 4.7).
+private val LightAction = Color(0xFFB53A08)
+private val LightOnAction = Color(0xFFFFFFFF)
+
+// A control on a tile, the quietest fill, the inside of a field, and the brand's hairline.
+private val LightControl = Color(0xFFF1E4D5)
+private val LightQuietFill = Color(0xFFF7ECE0)
+private val LightFieldFill = Color(0xFFFFFAF4)
+private val LightHairline = Color(0xFFE3D3C0)
+
+// The brand's quieter words on a light ground (the report's), the Log's running text, and an
+// idle icon.
+private val LightTextSecondary = IdleIcon
+private val LightTextLog = Color(0xFF3B322B)
+private val LightIdleIcon = Color(0xFFA39282)
+
+// The outline that has to be seen: 4.0 to 1 on a tile, 3.7 on the page.
+private val LightRing = Color(0xFF8E7C6C)
+
+// What is waiting for the user: pale amber with dark amber words, a browner amber than the
+// accent so that the two are told apart at a glance (46.7 apart).
+private val LightAttentionFill = Color(0xFFFFEACB)
+private val LightAttentionText = Color(0xFF6A5200)
+
+// The light that runs along the line to the truck: on a light page a dark sheen, Asphalt at
+// 55 percent.
+private val LightGlint = Color(0x8C15120F)
+
+// What is wrong: a deep raspberry, for the reason the dark look's red is pink: a plain red
+// would be taken for the brand's Redline (51.5 apart) or for the deeper orange (42.5 apart).
+private val LightDangerFill = Color(0xFFFCE6E4)
+private val LightDangerText = Color(0xFF9E1F45)
+private val LightErrorTagFill = Color(0xFFFADBDC)
+private val LightErrorTagText = Color(0xFF8E1F27)
+private val LightBluetoothTagFill = Color(0xFFDFE7FF)
+private val LightBluetoothTagText = Color(0xFF24396B)
+private val LightAndroidAutoTagFill = Color(0xFFECE3FF)
+private val LightAndroidAutoTagText = Color(0xFF45307A)
+
+/** The chart's lines on a white tile: the same two hues, a step darker, to pass 3 to 1. */
+val MiloLightChartColors: ChartColors =
+    ChartColors(
+        series = listOf(Color(0xFFD9561A), Color(0xFF2F7FB5)),
+        grid = LightControl,
+        guide = LightRing,
+    )
+
+/** Material's roles on the light look: the same mapping as [MiloColorScheme]. */
+internal val MiloLightColorScheme: ColorScheme =
+    lightColorScheme(
+        primary = LightAction,
+        onPrimary = LightOnAction,
+        primaryContainer = LightAction,
+        onPrimaryContainer = LightOnAction,
+        // An action on the dark bar of a snackbar: the brand's own orange reads there.
+        inversePrimary = Accent,
+        secondary = LightText,
+        onSecondary = LightPage,
+        secondaryContainer = LightControl,
+        onSecondaryContainer = LightText,
+        tertiary = LightAttentionText,
+        onTertiary = LightAttentionFill,
+        tertiaryContainer = LightAttentionFill,
+        onTertiaryContainer = LightAttentionText,
+        background = LightPage,
+        onBackground = LightText,
+        surface = LightPage,
+        onSurface = LightText,
+        surfaceVariant = LightControl,
+        onSurfaceVariant = LightTextSecondary,
+        surfaceTint = LightTile,
+        inverseSurface = LightText,
+        inverseOnSurface = LightPage,
+        error = LightDangerText,
+        onError = LightOnAction,
+        errorContainer = LightDangerFill,
+        onErrorContainer = LightDangerText,
+        outline = LightRing,
+        outlineVariant = LightControl,
+        scrim = Scrim,
+        surfaceBright = LightTile,
+        surfaceDim = LightPage,
+        surfaceContainerLowest = LightFieldFill,
+        surfaceContainerLow = LightTile,
+        surfaceContainer = LightTile,
+        surfaceContainerHigh = LightTile,
+        surfaceContainerHighest = LightControl,
+        primaryFixed = Ember,
+        primaryFixedDim = LightAction,
+        onPrimaryFixed = LightOnAction,
+        onPrimaryFixedVariant = LightOnAction,
+        secondaryFixed = LightText,
+        secondaryFixedDim = LightTextLog,
+        onSecondaryFixed = LightPage,
+        onSecondaryFixedVariant = LightPage,
+        tertiaryFixed = LightAttentionText,
+        tertiaryFixedDim = LightTextSecondary,
+        onTertiaryFixed = LightAttentionFill,
+        onTertiaryFixedVariant = LightAttentionFill,
+    )
+
+/**
+ * The status dots on light. "Met" is the deeper orange: Hi-Vis Orange is 2.9 to 1 on the light
+ * page, under the 3 to 1 a dot needs. The marks on the dots are white.
+ */
+internal val MiloLightStatus =
+    MiloStatusColors(
+        ok = LightAction,
+        problem = LightDangerText,
+        toConfirm = LightRing,
+        unknown = LightTextSecondary,
+        onDot = LightOnAction,
+    )
+
+internal val MiloLightExtraColors =
+    MiloColors(
+        control = FillAndText(fill = LightControl, text = LightText),
+        quietFill = LightQuietFill,
+        fieldFill = LightFieldFill,
+        fieldBorder = LightRing,
+        idleOutline = LightHairline,
+        idleIcon = LightIdleIcon,
+        logText = LightTextLog,
+        accentPressed = Ember,
+        linkGlint = LightGlint,
+        attentionTile = FillAndText(fill = LightAttentionFill, text = LightAttentionText),
+        attentionSecondaryText = LightTextSecondary,
+        attentionButton = FillAndText(fill = LightAttentionText, text = LightAttentionFill),
+        danger = FillAndText(fill = LightDangerFill, text = LightDangerText),
+        chipSelected = FillAndText(fill = LightText, text = LightPage),
+        chip = FillAndText(fill = LightTile, text = LightText),
+        logTags =
+            MiloLogTagColors(
+                trip = FillAndText(fill = Accent, text = Page),
+                bluetooth = FillAndText(fill = LightBluetoothTagFill, text = LightBluetoothTagText),
+                androidAuto =
+                    FillAndText(fill = LightAndroidAutoTagFill, text = LightAndroidAutoTagText),
+                service = FillAndText(fill = LightControl, text = LightTextLog),
+                error = FillAndText(fill = LightErrorTagFill, text = LightErrorTagText),
+            ),
+        changeTags =
+            MiloChangeTagColors(
+                new = FillAndText(fill = Accent, text = Page),
+                improved = FillAndText(fill = LightBluetoothTagFill, text = LightBluetoothTagText),
+                fixed = FillAndText(fill = Amber, text = Page),
+                security = FillAndText(fill = LightErrorTagFill, text = LightErrorTagText),
+            ),
+        // The wheels stay dark windows with light digits, as on a dashboard, in both looks.
+        wheels =
+            MiloWheelColors(
+                whole = FillAndText(fill = Page, text = TextMain),
+                counting = FillAndText(fill = Accent, text = Page),
+            ),
+        mark = FillAndText(fill = Accent, text = MarkLetter),
+        hero = FillAndText(fill = Accent, text = Page),
+        heroButton = FillAndText(fill = Page, text = TextMain),
+    )
+
+/**
+ * One look's whole set of colours: Material's roles, the design's own, the status dots and the
+ * chart's lines. [MiloTheme] hands one of the two to everything it wraps.
+ */
+@Immutable
+data class MiloPalette(
+    val scheme: ColorScheme,
+    val colors: MiloColors,
+    val status: MiloStatusColors,
+    val chart: ChartColors,
+    val dark: Boolean,
+)
+
+internal val MiloDarkPalette =
+    MiloPalette(MiloColorScheme, MiloExtraColors, MiloStatus, MiloChartColors, dark = true)
+internal val MiloLightPalette =
+    MiloPalette(
+        MiloLightColorScheme,
+        MiloLightExtraColors,
+        MiloLightStatus,
+        MiloLightChartColors,
+        dark = false,
     )

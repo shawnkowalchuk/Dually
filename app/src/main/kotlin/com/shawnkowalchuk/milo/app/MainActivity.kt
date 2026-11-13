@@ -5,16 +5,26 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.shawnkowalchuk.milo.core.designsystem.theme.MiloSystemBarStyle
+import com.shawnkowalchuk.milo.core.designsystem.theme.miloSystemBarStyle
+import com.shawnkowalchuk.milo.core.util.AppLook
+import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.platform.nothingrecorded.homeAskedFor
 import com.shawnkowalchuk.milo.platform.odometer.settingsAskedFor
 import com.shawnkowalchuk.milo.platform.reminder.reportMonthToOpen
 import com.shawnkowalchuk.milo.platform.service.serviceAskedFor
 import com.shawnkowalchuk.milo.platform.trip.TripTrigger
+import java.io.IOException
 import java.time.YearMonth
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 /**
  * The only activity. It hosts the Compose UI, says when MilO has been opened or has come back
@@ -57,7 +67,7 @@ class MainActivity : ComponentActivity() {
         // Android 15 and later force apps to draw edge to edge; the phone this runs on
         // (Android 14) does not. Opting in here gives both the same layout, so what is tested on
         // the phone today does not shift after a system update.
-        enableEdgeToEdge(MiloSystemBarStyle, MiloSystemBarStyle)
+        enableEdgeToEdge(miloSystemBarStyle(AppLook.DARK), miloSystemBarStyle(AppLook.DARK))
 
         // Only for an activity that is being built for the first time. One that Android builds
         // again (the phone was turned, or MilO was put away and brought back) still carries the
@@ -72,7 +82,18 @@ class MainActivity : ComponentActivity() {
 
         val container = (application as MiloApplication).container
         setContent {
+            // The look chosen in Settings (since 2026-11-12). Until the settings file has
+            // answered, a moment after a cold start, nothing is drawn and the dark window of the
+            // launch stays: a light screen does not flash dark first.
+            val look by remember { lookOf(container.settingsStore.settings) }
+                .collectAsState(initial = null)
+            val shownLook = look ?: return@setContent
+            LaunchedEffect(shownLook) {
+                val bars = miloSystemBarStyle(shownLook)
+                enableEdgeToEdge(bars, bars)
+            }
             MiloApp(
+                look = shownLook,
                 container = container,
                 reportToOpen = reportToOpen,
                 onReportOpened = { reportToOpen = null },
@@ -85,6 +106,12 @@ class MainActivity : ComponentActivity() {
             )
         }
     }
+
+    /** The look, again each time it changes; Dark if the settings file cannot be read. */
+    private fun lookOf(settings: Flow<MiloSettings>): Flow<AppLook> = settings
+        .map { it.look }
+        .catch { failure -> if (failure is IOException) emit(AppLook.DARK) else throw failure }
+        .distinctUntilChanged()
 
     /** A notification was tapped while MilO's activity was already there. */
     override fun onNewIntent(intent: Intent) {

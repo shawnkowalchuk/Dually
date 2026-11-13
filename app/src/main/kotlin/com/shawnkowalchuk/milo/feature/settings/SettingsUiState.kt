@@ -2,6 +2,7 @@ package com.shawnkowalchuk.milo.feature.settings
 
 import com.shawnkowalchuk.milo.core.schedule.weekHours
 import com.shawnkowalchuk.milo.core.schedule.workDaysAgree
+import com.shawnkowalchuk.milo.core.util.AppLook
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.data.settings.GRACE_PERIOD_CHOICE
 import com.shawnkowalchuk.milo.data.settings.MINIMUM_TRIP_DISTANCE_CHOICE
@@ -104,6 +105,7 @@ sealed interface SettingsUiState {
      * @param parkedLimitSeconds how long a trip may stand still before it is ended.
      * @param distanceUnit the unit every distance is shown in: kilometres or miles. The
      * shortest trip that counts is stored in metres and only written in it.
+     * @param look the screens' look, dark or light (since 2026-11-12).
      * @param sounds the connect sound and the trip-start sound (since 2026-10-08): each one's
      * switch, and the sound it plays, which the "Sounds" tile names. Read one through [sound].
      * The sounds to choose from are on each sound's own screen (`soundListState`).
@@ -134,6 +136,7 @@ sealed interface SettingsUiState {
         val canRaiseMinimum: Boolean,
         val distanceAdjustSteps: Int,
         val distanceUnit: DistanceUnit,
+        val look: AppLook,
         val sounds: Map<TripSound, SoundChoice>,
         val schedule: List<ScheduleDay>,
         val week: ScheduleWeek,
@@ -181,6 +184,7 @@ fun settingsUiState(
     canRaiseMinimum = MINIMUM_TRIP_DISTANCE_CHOICE.canStepUp(settings.minimumTripDistanceMetres),
     distanceAdjustSteps = settings.distanceAdjustSteps,
     distanceUnit = settings.distanceUnit,
+    look = settings.look,
     sounds = TripSound.entries.associateWith { settings.sound(it) },
     schedule =
         DayOfWeek.entries.map { day ->
