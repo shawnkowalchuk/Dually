@@ -635,11 +635,33 @@ Multiplatform module the iPhone app will use too (ADR-014, phase 3). Code moves 
 `:shared` a package at a time, with its tests and with its package name unchanged, so the tree
 below reads the same whichever module a package sits in. `:shared` is compiled for Android and
 for iOS (`iosArm64`, `iosSimulatorArm64`); nothing in it may use Android's or Java's own APIs,
-or the iOS build fails. Its tests are in `shared/src/commonTest` and run on both
-(`:shared:testAndroidHostTest`, `:shared:iosSimulatorArm64Test`). The made-up GPS tracks the
-trip tests drive with (`TrackBuilder.kt`) live in `shared/src/testFixtures`, a folder both
-`:shared`'s tests and `:app`'s unit tests compile, so there is one copy. Moved so far:
-`core/trip/`. Packages under `com.shawnkowalchuk.milo`:
+or the iOS build fails. Moved so far: `core/trip/` (2026-11-12) and every other package of
+`core/` but the design system (2026-11-13): `allowance`, `clock`, `odometer`, `party`, `report`,
+`review`, `schedule`, `service` and `util`.
+
+**Dates, languages and exact numbers in `:shared`** (since 2026-11-13). The rules count with
+dates, write words in the phone's language and do exact decimal sums, which on Android are
+java.time, java.util.Locale and java.math.BigDecimal, none of which an iPhone has. `:shared`
+declares its own `LocalDate`, `LocalTime`, `YearMonth`, `ZoneId`, `DayOfWeek`, `Month`
+(`core/time/`), `Locale` and `formatText` (`core/text/`, Java's `String.format`), `BigDecimal`
+(`core/number/`) and a lock, `Monitor` (`core/sync/`, Java's `synchronized`), each an `expect`
+declaration with two answers. In `shared/src/androidMain` the type **is** Java's own (`actual
+typealias`), so the app passes and receives the same objects it always did and not one of its
+call sites changed. In `shared/src/iosMain` it is kotlinx-datetime's, Apple's formatter and
+Apple's exact decimals. Where a function was all java.time (`TimeSpan`, `TimeFormat`, most of
+`DistanceFormat`, the allowance's per-mile rate, the work-hours end), the function itself is
+`expect`, its Android body is the old one word for word, and its iPhone body does the same with
+the iPhone's tools.
+
+**Tests of `:shared`.** `shared/src/commonTest` runs on both Android's side and the iPhone
+simulator (`:shared:testAndroidHostTest`, `:shared:iosSimulatorArm64Test`): the trip rules'
+tests, and `SharedCalendarTest` and `SharedWordsTest`, which check that the two answers of the
+date, word and number pieces agree. The tests of the packages moved on 2026-11-13 are in
+`shared/src/androidHostTest`: they were written with JUnit and java.time and run on Android's
+side only, unchanged. Two helpers are compiled by both `:shared`'s tests and `:app`'s, so there is
+one copy: the made-up GPS tracks of the trip tests (`TrackBuilder.kt`) and the phone whose date is
+set by hand (`JumpingPhone.kt`), in `shared/src/testFixtures`. Packages under
+`com.shawnkowalchuk.milo`:
 
 ```
 app/                 # MiloApplication, the AppContainer (with ReportObjects, TransferObjects,
@@ -674,7 +696,8 @@ core/trip/           # the trip rules: state machine, point filter, distance, tr
                      #   and the parked rule with its watch on a parked truck.
                      #   Pure Kotlin, no Android imports, unit tested (ADR-002). In
                      #   :shared since 2026-11-12 (shared/src/commonMain), tested on
-                     #   Android and iOS
+                     #   Android and iOS. The other core/ packages below, but the design
+                     #   system, followed on 2026-11-13
 core/schedule/       # the work schedule and the rule that makes a closed trip Business or
                      #   Personal, at its close and again when its times are changed by hand.
                      #   Pure Kotlin, no Android imports, unit tested. Never used by
