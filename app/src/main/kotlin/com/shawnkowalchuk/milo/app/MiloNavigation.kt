@@ -277,6 +277,8 @@ private fun SettingsEntry(
             viewModel(factory = odometerViewModelFactory(container)),
         widgetViewModel =
             viewModel(factory = homeWidgetViewModelFactory(container)),
+        cloudViewModel =
+            viewModel(factory = cloudBackupViewModelFactory(container)),
         onChangeTruck = { backStack.openOnTop(PairingKey) },
         onOpenSounds = { backStack.openOnTop(SoundListKey(it)) },
         onBack = onBack,

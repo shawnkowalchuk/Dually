@@ -88,3 +88,47 @@ jobs:
           path: app/build/reports/
           if-no-files-found: ignore
           retention-days: 7
+
+  rules:
+    name: Cloud backup's security rules
+    # The rules of the cloud backup (firebase/firestore.rules, ADR-012) on Firebase's Firestore
+    # emulator. Nothing here reaches the real project: the emulator runs as "demo-dually", and
+    # the job is given no secret.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: firebase
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          # @firebase/rules-unit-testing 6 asks for Node 24.12 or later.
+          node-version: "24"
+
+      # The emulator runs on Java, and firebase-tools refuses anything before 21.
+      - name: Set up JDK 21
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      # Exactly what package-lock.json names, nothing newer.
+      - name: Install the test tools
+        run: npm ci --no-audit --no-fund
+
+      - name: Test the rules and the purchase check
+        run: npm test
+
+      # The Cloud Functions themselves (firebase/functions), with exactly the packages they are
+      # deployed with: loading them proves every import is found. Their logic is tested above.
+      - name: Load the Cloud Functions
+        working-directory: firebase/functions
+        run: |
+          npm ci --no-audit --no-fund
+          GCLOUD_PROJECT=demo-dually node -e "import('./index.js').then((m) => console.log(Object.keys(m).join(', ')))"

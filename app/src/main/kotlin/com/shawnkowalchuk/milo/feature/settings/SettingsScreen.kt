@@ -1,5 +1,6 @@
 package com.shawnkowalchuk.milo.feature.settings
 
+import android.content.Context
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -84,6 +85,8 @@ internal class ScheduleActions(
  * @param checkViewModel the daily check's tile has one of its own too.
  * @param odometerViewModel and so has the odometer's.
  * @param widgetViewModel and the home-screen widget's.
+ * @param cloudViewModel and the optional cloud backup's (ADR-012), shown above the tile for
+ * backup, export and import.
  * @param onChangeTruck opens the truck pairing screen. Navigation belongs to the app, not the
  * feature.
  * @param onOpenSounds opens the screen of one of the two sounds, where its sound is chosen
@@ -108,6 +111,7 @@ fun SettingsScreen(
     checkViewModel: NothingRecordedViewModel,
     odometerViewModel: OdometerViewModel,
     widgetViewModel: HomeWidgetViewModel,
+    cloudViewModel: CloudBackupViewModel<Context>,
     onChangeTruck: () -> Unit,
     onOpenSounds: (TripSound) -> Unit,
     onBack: (() -> Unit)?,
@@ -164,6 +168,7 @@ fun SettingsScreen(
         odometerTile = { OdometerTile(odometerViewModel) },
         widgetTile = { HomeWidgetTile(widgetViewModel) },
         rateRows = { RateRows(widgetViewModel) },
+        backupTile = { CloudBackupTile(cloudViewModel) },
         dataTile = {
             DataTile(dataViewModel)
             GpsPointsTile(pointsViewModel)
@@ -206,6 +211,8 @@ fun SettingsScreen(
  * wanted most.
  * @param versionTile the version on this phone, under everything, as GopherForms has it. Shown
  * whatever the settings file says: the version does not come from it.
+ * @param backupTile the Online backup tile, under Units and Look on the main screen (since
+ * 2026-11-12; on the Your data page before), handed in whole because it has a state of its own.
  * @param showCoffee whether the list at the end has Buy me a coffee: not in the copy from
  * Google Play ([SettingsScreen]).
  * @param rateRows the rate the Business kilometres are priced at, in the tile of the report's
@@ -225,6 +232,7 @@ internal fun SettingsContent(
     widgetTile: @Composable () -> Unit,
     dataTile: @Composable () -> Unit,
     versionTile: @Composable () -> Unit,
+    backupTile: @Composable () -> Unit = {},
     showCoffee: Boolean = true,
     rateRows: @Composable () -> Unit = {},
     widgetLine: String? = null,
@@ -260,7 +268,7 @@ internal fun SettingsContent(
                     }
                 }
                 if (page == null) {
-                    MainSettings(state, actions, odometerTile, onOpenPage, widgetLine)
+                    MainSettings(state, actions, odometerTile, backupTile, onOpenPage, widgetLine)
                 } else {
                     CompositionLocalProvider(LocalSettingsOnPage provides true) {
                         when (page) {
@@ -324,12 +332,16 @@ private fun MainSettings(
     state: SettingsUiState.Ready,
     actions: SettingsActions,
     odometerTile: @Composable () -> Unit,
+    backupTile: @Composable () -> Unit,
     onOpenPage: (SettingsPage) -> Unit,
     widgetLine: String?,
 ) {
     // First of the settings (Shawn, 2026-11-12: "can you move the units and light/darkmode to
     // above truck and driving aler"): how everything is shown.
     UnitsAndLookTiles(state.distanceUnit, state.look, actions.onDistanceUnit, actions.onLook)
+    // The optional online backup, out in the open on the first screen of Settings (Shawn,
+    // 2026-11-12: "the backup shouldnt be hidden").
+    backupTile()
     TruckAndAlertTiles(state, actions)
     // Under the truck: it is the truck's.
     odometerTile()

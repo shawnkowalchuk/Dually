@@ -25,6 +25,11 @@ keystore.properties
 # under the names Firebase and Google Cloud give such files, must never be committed.
 *firebase-adminsdk*.json
 service-account*.json
+# The app's Firebase settings (ADR-012) live in ~/keys/dually-firebase.properties. The files
+# Firebase's console hands out for the same values are kept out too, should one be copied in.
+dually-firebase.properties
+google-services.json
+GoogleService-Info.plist
 
 # --- Android Studio --------------------------------------------------------------------------
 # Everything under .idea is per-machine state, except the folders below. Those hold settings
@@ -65,3 +70,8 @@ firebase-debug.*.log
 # --- Python scripts (tools/) --------------------------------------------------------------------
 # What Python leaves beside a script when one of them reads another.
 __pycache__/
+
+# --- The cloud backup's security rules and their tests (firebase/, ADR-012) -------------------
+firebase/**/node_modules/
+firestore-debug.log
+ui-debug.log

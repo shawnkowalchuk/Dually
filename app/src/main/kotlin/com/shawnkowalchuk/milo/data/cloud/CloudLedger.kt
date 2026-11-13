@@ -12,7 +12,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 /** The folder of the ledger, inside the app's never-backed-up files. */
-private const val CLOUD_FOLDER = "cloud"
+internal const val CLOUD_FOLDER = "cloud"
 
 private const val LEDGER_FILE = "uploaded.json"
 

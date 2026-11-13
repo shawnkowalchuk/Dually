@@ -1,0 +1,57 @@
+rules_version = '2';
+
+// The security rules of Dually's cloud backup (ADR-012, ADR-013). This file is the source:
+// what runs on the project "dually-trip-tracker" must be this file, word for word
+// (firebase/README.md says how it is published). Their tests are in firebase/test/.
+//
+// What they allow, and nothing else (Firestore refuses whatever no rule allows):
+//   - users/{uid}/trips/{id}, users/{uid}/backup/sentReports, users/{uid}/backup/settings:
+//     the account {uid} reads and removes its own documents at any time, and writes them only
+//     while it holds the unlock. Each document is one field, "json", a string the app wrote:
+//     the same JSON as the export file (data/cloud/CloudDocuments.kt).
+//   - unlocks/{uid}: the one-time purchase (ADR-013). The account reads its own; nobody
+//     writes one from an app. Only the purchase check on the server (functions/unlock.js) or
+//     the console does.
+//   - purchases/ and deletions/: the purchase check's own records. No app reads or writes them.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedInAs(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function unlocked(uid) {
+      return exists(/databases/$(database)/documents/unlocks/$(uid));
+    }
+
+    // A trip's id is a whole number; the backup's two other documents have fixed names.
+    function knownPath(folder, name) {
+      return (folder == 'trips' && name.matches('^[1-9][0-9]{0,18}$'))
+        || (folder == 'backup' && name in ['sentReports', 'settings', 'owner']);
+    }
+
+    // One field, a string, under 500,000 characters: Firestore's limit for a document is
+    // 1 MiB, and a year of sent reports is a few kilobytes.
+    function wellFormed() {
+      let data = request.resource.data;
+      return data.keys().hasOnly(['json'])
+        && data.json is string
+        && data.json.size() <= 500000;
+    }
+
+    match /unlocks/{uid} {
+      allow read: if signedInAs(uid);
+      allow write: if false;
+    }
+
+    match /users/{uid}/{folder}/{name} {
+      allow get: if signedInAs(uid) && knownPath(folder, name);
+      // A restore reads the whole of one folder at once (since 2026-11-12).
+      allow list: if signedInAs(uid) && folder in ['trips', 'backup'];
+      allow delete: if signedInAs(uid) && knownPath(folder, name);
+      allow create, update: if signedInAs(uid)
+        && knownPath(folder, name)
+        && unlocked(uid)
+        && wellFormed();
+    }
+  }
+}

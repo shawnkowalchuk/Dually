@@ -29,6 +29,11 @@
         running process: SQLite builds the -shm file again from the -wal file when a database
         is opened, and the .lck file is Room's own lock. Neither holds data.
       - files/profileInstalled     written by Android's profile installer about this install.
+      - shared_prefs/              (since 2026-11-12) Dually keeps nothing of its own there;
+                                   the libraries of the online backup do: Firebase's sign-in.
+                                   Restored on a new phone beside an account file that is not
+                                   (no_backup/), it would leave the phone half signed in. The
+                                   online backup is signed in to again on a new phone.
 
     The raw GPS points (databases/points.db) are the one difference between the two cases:
 
@@ -60,6 +65,7 @@
         <exclude domain="database" path="milo.db-shm" />
         <exclude domain="database" path="milo.db.lck" />
         <exclude domain="file" path="profileInstalled" />
+        <exclude domain="sharedpref" path="." />
     </cloud-backup>
     <device-transfer>
         <exclude domain="database" path="points.db-shm" />
@@ -67,5 +73,6 @@
         <exclude domain="database" path="milo.db-shm" />
         <exclude domain="database" path="milo.db.lck" />
         <exclude domain="file" path="profileInstalled" />
+        <exclude domain="sharedpref" path="." />
     </device-transfer>
 </data-extraction-rules>

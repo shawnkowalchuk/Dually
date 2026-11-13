@@ -30,6 +30,10 @@
       {
         "source": "/private-mileage-tracker",
         "destination": "/private-mileage-tracker.html"
+      },
+      {
+        "source": "/delete-account",
+        "destination": "/delete-account.html"
       }
     ],
     "headers": [
