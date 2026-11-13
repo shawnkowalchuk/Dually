@@ -89,3 +89,49 @@ expect fun formatIsoDay(epochMs: Long, zone: ZoneId): String
 
 /** The time of the moment [epochMs] in [zone], as "07:05" on a 24-hour clock, in any language. */
 expect fun formatIsoTime(epochMs: Long, zone: ZoneId): String
+
+/**
+ * The day [epochDay] days after 1 January 1970, as stored in the database. A number beyond the
+ * calendar's reach (which nothing in Dually writes) gives its first or last day.
+ */
+expect fun dateOfEpochDay(epochDay: Long): LocalDate
+
+/** Days from 1 January 1970 to this day, as the database stores a day. */
+expect fun LocalDate.epochDay(): Long
+
+/** The month this day falls in. */
+expect fun LocalDate.yearMonth(): YearMonth
+
+/** The month written in [text] as "2026-11", or null when it is not one. */
+expect fun yearMonthOfText(text: String): YearMonth?
+
+/** The day [epochDay] days after 1 January 1970, or null for a number that is no day. */
+expect fun dateOfEpochDayOrNull(epochDay: Long): LocalDate?
+
+/** The day [epochDay] days after 1 January 1970; an exception for a number that is no day. */
+expect fun dateOfEpochDayExactly(epochDay: Long): LocalDate
+
+/** The day written in [text] as "2026-11-13"; an exception for text that is not one. */
+expect fun parseDate(text: String): LocalDate
+
+/** The day written in [text] as "2026-11-13", or null for text that is not one. */
+expect fun dateOfText(text: String): LocalDate?
+
+/** The time [seconds] seconds after midnight. */
+expect fun timeOfSecondOfDay(seconds: Long): LocalTime
+
+/** The hour of this time, 0 to 23. */
+expect fun LocalTime.hourOfDay(): Int
+
+/** The minute of this time's hour, 0 to 59. */
+expect fun LocalTime.minuteOfHour(): Int
+
+/** Below zero when [a] comes before [b], zero for the same month, above zero after. */
+expect fun compareMonths(a: YearMonth, b: YearMonth): Int
+
+/**
+ * The moment [epochMs] in [zone], to the second, with the zone's offset, as java.time's
+ * OffsetDateTime writes it: "2026-11-13T07:05:12-07:00", and "2026-11-13T07:05-07:00" when the
+ * seconds are zero. The export file records when it was written this way.
+ */
+expect fun formatOffsetMoment(epochMs: Long, zone: ZoneId): String

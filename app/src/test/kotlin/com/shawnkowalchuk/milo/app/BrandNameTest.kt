@@ -101,12 +101,22 @@ class BrandNameTest {
     fun `no text the code writes holds the old name`() {
         val found = mutableListOf<String>()
         var read = 0
-        for (file in sources.walkTopDown().filter { it.extension == "kt" }.sortedBy { it.path }) {
+        // The app's code, and since phase 3 (ADR-014) the shared module's beside it.
+        val roots =
+            listOf(sources) +
+                listOf("commonMain", "androidMain", "iosMain").map {
+                    File("../shared/src/$it/kotlin")
+                }
+        val files =
+            roots.flatMap { root ->
+                root.walkTopDown().filter { it.extension == "kt" }.map { root to it }.toList()
+            }.sortedBy { it.second.path }
+        for ((root, file) in files) {
             for ((line, text) in writtenTextsOf(file)) {
                 read++
                 if (!oldName.containsMatchIn(text)) continue
                 if (namesOfTheCode.none { it.matches(text) }) {
-                    found += "${file.relativeTo(sources)}:$line: \"$text\""
+                    found += "${file.relativeTo(root)}:$line: \"$text\""
                 }
             }
         }

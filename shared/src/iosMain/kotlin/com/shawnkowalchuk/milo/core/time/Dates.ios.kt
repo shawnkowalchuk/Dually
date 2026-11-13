@@ -6,6 +6,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil as calendarDaysUntil
 import kotlinx.datetime.minus
 import kotlinx.datetime.number
+import kotlinx.datetime.offsetAt
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
@@ -98,8 +99,16 @@ actual fun formatIsoTime(epochMs: Long, zone: ZoneId): String {
     return twoDigits(time.hour) + ":" + twoDigits(time.minute)
 }
 
-/** The month a day falls in. */
-fun LocalDate.yearMonth(): YearMonth = YearMonth(year, month.number)
+actual fun LocalDate.yearMonth(): YearMonth = YearMonth(year, month.number)
+
+/** 1 January of year -9999 and 31 December 9999: the calendar's reach on the iPhone here. */
+private const val FIRST_EPOCH_DAY = -4_371_587L
+private const val LAST_EPOCH_DAY = 2_932_896L
+
+actual fun dateOfEpochDay(epochDay: Long): LocalDate =
+    LocalDate.fromEpochDays(epochDay.coerceIn(FIRST_EPOCH_DAY, LAST_EPOCH_DAY))
+
+actual fun LocalDate.epochDay(): Long = toEpochDays()
 
 internal fun localDateTimeOf(epochMs: Long, zone: ZoneId) =
     Instant.fromEpochMilliseconds(epochMs).toLocalDateTime(zone.timeZone)
@@ -109,3 +118,56 @@ internal fun isoDay(date: LocalDate): String =
         twoDigits(date.day)
 
 internal fun twoDigits(value: Int): String = value.toString().padStart(2, '0')
+
+private val MONTH_TEXT = Regex("""([+-]?\d{4,9})-(\d{2})""")
+
+actual fun yearMonthOfText(text: String): YearMonth? {
+    val match = MONTH_TEXT.matchEntire(text) ?: return null
+    val month = match.groupValues[2].toInt()
+    return if (month in 1..MONTHS) YearMonth(match.groupValues[1].toInt(), month) else null
+}
+
+actual fun dateOfEpochDayOrNull(epochDay: Long): LocalDate? =
+    if (epochDay in FIRST_EPOCH_DAY..LAST_EPOCH_DAY) LocalDate.fromEpochDays(epochDay) else null
+
+actual fun dateOfEpochDayExactly(epochDay: Long): LocalDate = LocalDate.fromEpochDays(epochDay)
+
+actual fun parseDate(text: String): LocalDate = LocalDate.parse(text)
+
+actual fun dateOfText(text: String): LocalDate? = try {
+    LocalDate.parse(text)
+} catch (notADay: IllegalArgumentException) {
+    null
+}
+
+actual fun timeOfSecondOfDay(seconds: Long): LocalTime = LocalTime.fromSecondOfDay(seconds.toInt())
+
+actual fun LocalTime.hourOfDay(): Int = hour
+
+actual fun LocalTime.minuteOfHour(): Int = minute
+
+actual fun compareMonths(a: YearMonth, b: YearMonth): Int =
+    compareValuesBy(a, b, { it.year }, { it.monthNumber })
+
+private const val SECONDS_PER_MINUTE = 60
+private const val SECONDS_PER_HOUR = 3600
+
+actual fun formatOffsetMoment(epochMs: Long, zone: ZoneId): String {
+    val instant = Instant.fromEpochMilliseconds(epochMs)
+    val at = instant.toLocalDateTime(zone.timeZone)
+    val time = twoDigits(at.hour) + ":" + twoDigits(at.minute) +
+        if (at.second != 0) ":" + twoDigits(at.second) else ""
+    val offsetSeconds = zone.timeZone.offsetAt(instant).totalSeconds
+    val offset =
+        if (offsetSeconds == 0) {
+            "Z"
+        } else {
+            val sign = if (offsetSeconds < 0) "-" else "+"
+            val total = kotlin.math.abs(offsetSeconds)
+            val seconds = total % SECONDS_PER_MINUTE
+            sign + twoDigits(total / SECONDS_PER_HOUR) + ":" +
+                twoDigits(total % SECONDS_PER_HOUR / SECONDS_PER_MINUTE) +
+                if (seconds != 0) ":" + twoDigits(seconds) else ""
+        }
+    return isoDay(at.date) + "T" + time + offset
+}

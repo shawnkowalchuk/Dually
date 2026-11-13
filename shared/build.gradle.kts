@@ -8,6 +8,9 @@ plugins {
     alias(libs.plugins.android.kotlin.multiplatform.library)
     // The service book and, later, the export format are written with kotlinx.serialization.
     alias(libs.plugins.kotlin.serialization)
+    // The two databases (phase 3c): Room 3 writes their code at build time, for each phone.
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.androidx.room3)
 }
 
 kotlin {
@@ -35,6 +38,13 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.coroutines.core)
+            // The databases: Room 3 on SQLite bundled with the app, the same on both phones.
+            api(libs.androidx.room3.runtime)
+            implementation(libs.androidx.sqlite.bundled)
+            // The settings file (DataStore): its keys and values are read and written here; the
+            // file itself is opened on each phone.
+            api(libs.androidx.datastore.preferences.core)
         }
         commonTest {
             // The made-up GPS tracks the tests drive with, which the app's own tests use too
@@ -42,11 +52,30 @@ kotlin {
             kotlin.srcDir("src/testFixtures/kotlin")
             dependencies {
                 implementation(kotlin("test"))
+                implementation(libs.kotlinx.coroutines.test)
             }
+        }
+        // Android's settings file is opened with Android's Context (SettingsStore.android.kt).
+        androidMain.dependencies {
+            implementation(libs.androidx.datastore.preferences)
         }
         // The iPhone's dates. On Android the shared date types are java.time's own (core/time).
         iosMain.dependencies {
             implementation(libs.kotlinx.datetime)
         }
     }
+}
+
+room3 {
+    // Room writes the tables of each database version here as JSON (it was app/schemas until
+    // the databases moved, 2026-11-13). The folder is committed: the phone holds real trips, so
+    // every later change to a table needs a migration, written against and checked with these.
+    schemaDirectory("$projectDir/schemas")
+}
+
+dependencies {
+    // Room's code for each phone the databases are compiled for.
+    add("kspAndroid", libs.androidx.room3.compiler)
+    add("kspIosArm64", libs.androidx.room3.compiler)
+    add("kspIosSimulatorArm64", libs.androidx.room3.compiler)
 }

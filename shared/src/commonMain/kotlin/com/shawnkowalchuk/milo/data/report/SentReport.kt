@@ -1,0 +1,115 @@
+package com.shawnkowalchuk.milo.data.report
+
+import androidx.room3.ColumnInfo
+import androidx.room3.Entity
+import androidx.room3.PrimaryKey
+import com.shawnkowalchuk.milo.core.report.ReportPeriod
+import com.shawnkowalchuk.milo.core.time.LocalDate
+import com.shawnkowalchuk.milo.core.time.compareDates
+import com.shawnkowalchuk.milo.core.time.dateOfEpochDay
+import com.shawnkowalchuk.milo.core.time.yearMonth
+import com.shawnkowalchuk.milo.core.util.DistanceUnit
+import com.shawnkowalchuk.milo.core.util.tenthsOf
+
+/**
+ * What kind of period a sent report covers. Stored by name, so a constant can be added but
+ * never renamed without a migration.
+ */
+enum class SentReportKind {
+    /** A whole calendar month. Only this kind marks a month as submitted. */
+    MONTH,
+
+    /** A run of days Shawn chose. It is listed, and marks no month, whatever days it covers. */
+    RANGE,
+}
+
+/**
+ * One report Shawn has said he sent: a line of the list of sent reports, and, for a report of a
+ * whole month, what makes that month "submitted".
+ *
+ * A row is written when he answers "I sent it" after coming back from the email app, or
+ * presses "Mark as sent" on the Report screen and says yes to its question, and at no other
+ * moment: Android cannot tell an app whether an email was sent, so MilO takes his word.
+ * A row is never changed afterwards. It is a record of what was sent, with the figures the
+ * report had then, which later edits of the trips do not reach. It leaves the table in one way
+ * only: he removes it himself on the Report screen, because it was recorded by mistake.
+ *
+ * @param firstDay the first day of the period, as days since 1970-01-01 (a calendar day, not a
+ * moment in time, so no time zone can move it). Read it with `LocalDate.ofEpochDay`, or in
+ * SQLite with `date(firstDay * 86400, 'unixepoch')`.
+ * @param lastDay the last day of the period, on the same terms. It is inside the period. For a
+ * [SentReportKind.MONTH] the two are the first and the last day of that month.
+ * @param sentAtMs when the email app was opened with the report, wall-clock milliseconds since
+ * 1970: the moment the report left MilO, which is the day he says he sent it, however much
+ * later he answers the question. For a report that was marked as sent by hand, the moment it
+ * was marked.
+ * @param tripCount how many Business trips the report listed.
+ * @param distanceMetres the total the report printed, in metres like every stored distance. It
+ * is a whole number of tenths of [distanceUnit], because the report adds up the figures it
+ * prints. Read it back with [printedTenths], never by rounding it in another unit.
+ * @param revision 0 for the first report sent for this kind and these days, 1 for the first
+ * that replaced it, and so on.
+ * @param distanceUnit the unit the report was printed in (since 2026-10-07, database version
+ * 6). The row is a record of what the report said, so it keeps the unit the report said it in:
+ * a report sent in kilometres is listed in kilometres for good, whatever MilO is set to later,
+ * and "changed since the report was sent" is judged in this unit. Stored by name, so a constant
+ * can be added but never renamed without a migration. Every row from before that version is in
+ * kilometres, which is what the column's default says.
+ */
+@Entity(tableName = "sent_reports")
+data class SentReport(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val kind: SentReportKind,
+    val firstDay: Long,
+    val lastDay: Long,
+    val sentAtMs: Long,
+    val tripCount: Int,
+    val distanceMetres: Double,
+    val revision: Int,
+    @ColumnInfo(defaultValue = "'KILOMETRES'")
+    val distanceUnit: DistanceUnit = DistanceUnit.KILOMETRES,
+)
+
+/**
+ * The total the report printed, in tenths of the unit it was printed in ([SentReport.distanceUnit]):
+ * the figure itself, exactly, because [SentReport.distanceMetres] was made from it.
+ */
+val SentReport.printedTenths: Long get() = tenthsOf(distanceMetres, distanceUnit)
+
+/**
+ * A report that was removed from the list, and what the list still holds for its period.
+ *
+ * @param leftForPeriod the reports of the same kind and days that are still there, in any
+ * order. Empty means the removed one was the period's only report.
+ */
+data class RemovedReport(val report: SentReport, val leftForPeriod: List<SentReport>)
+
+/** The kind of row a report for this period is stored as. */
+val ReportPeriod.kind: SentReportKind
+    get() = when (this) {
+        is ReportPeriod.Month -> SentReportKind.MONTH
+        is ReportPeriod.Range -> SentReportKind.RANGE
+    }
+
+/**
+ * The period the row was sent for.
+ *
+ * Every row is written from a [ReportPeriod], so its two days are in order and are real days.
+ * A row that is not (which nothing in MilO can write) is still read, as the nearest period
+ * that makes sense: this runs while a screen is drawn, and must not be what ends the process
+ * the trip service runs in.
+ */
+val SentReport.period: ReportPeriod
+    get() {
+        val first = dayOf(firstDay)
+        return when (kind) {
+            SentReportKind.MONTH -> ReportPeriod.Month(first.yearMonth())
+
+            SentReportKind.RANGE -> {
+                val last = dayOf(lastDay)
+                ReportPeriod.Range(first, if (compareDates(last, first) < 0) first else last)
+            }
+        }
+    }
+
+private fun dayOf(epochDay: Long): LocalDate = dateOfEpochDay(epochDay)

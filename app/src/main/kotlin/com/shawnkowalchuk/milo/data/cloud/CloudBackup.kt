@@ -1,8 +1,8 @@
 package com.shawnkowalchuk.milo.data.cloud
 
+import com.shawnkowalchuk.milo.core.io.IOException
 import com.shawnkowalchuk.milo.data.settings.TransferredSettings
 import com.shawnkowalchuk.milo.data.transfer.MainRows
-import java.io.IOException
 
 /**
  * How many writes and removals go to the cloud together. Firestore takes at most 500 in one

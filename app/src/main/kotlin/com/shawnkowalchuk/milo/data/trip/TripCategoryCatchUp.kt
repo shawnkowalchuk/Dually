@@ -1,13 +1,13 @@
 package com.shawnkowalchuk.milo.data.trip
 
 import com.shawnkowalchuk.milo.core.schedule.classifyTrip
+import com.shawnkowalchuk.milo.core.time.ZoneId
 import com.shawnkowalchuk.milo.core.trip.TripStatus
 import com.shawnkowalchuk.milo.data.crash.CrashFileStore
 import com.shawnkowalchuk.milo.data.crash.CrashRecord
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
-import java.time.ZoneId
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel

@@ -72,15 +72,23 @@ class WallClockReadersTest {
             "com/shawnkowalchuk/milo/platform/trip/TripNotifications.kt" to 1,
         )
 
-    private val sources = File("src/main/kotlin")
+    /** The app's code, and since phase 3 (ADR-014) the shared module's beside it. */
+    private val sources =
+        listOf(
+            File("src/main/kotlin"),
+            File("../shared/src/commonMain/kotlin"),
+            File("../shared/src/androidMain/kotlin"),
+            File("../shared/src/iosMain/kotlin"),
+        )
 
     @Test
     fun `only MilO's own clock reads the phone's wall clock`() {
         val readers =
-            sources.walkTopDown()
-                .filter { it.isFile && it.extension == "kt" }
-                .flatMap { file ->
-                    val path = file.relativeTo(sources).invariantSeparatorsPath
+            sources.asSequence()
+                .flatMap { root -> root.walkTopDown().map { root to it } }
+                .filter { (_, file) -> file.isFile && file.extension == "kt" }
+                .flatMap { (root, file) ->
+                    val path = file.relativeTo(root).invariantSeparatorsPath
                     readingLinesOf(file.readText()).map { line -> "$path:$line" }
                 }
                 .toList()
@@ -104,14 +112,15 @@ class WallClockReadersTest {
         // The allow-list above also lets three files use a date that something else stamped.
         // None of them may ask the phone for the time itself.
         val askers =
-            sources.walkTopDown()
-                .filter { it.isFile && it.extension == "kt" }
-                .filter { file ->
+            sources.asSequence()
+                .flatMap { root -> root.walkTopDown().map { root to it } }
+                .filter { (_, file) -> file.isFile && file.extension == "kt" }
+                .filter { (_, file) ->
                     codeLinesOf(file.readText()).any { line ->
                         asksThePhone.any { it.containsMatchIn(line) }
                     }
                 }
-                .map { it.relativeTo(sources).invariantSeparatorsPath }
+                .map { (root, file) -> file.relativeTo(root).invariantSeparatorsPath }
                 .toList()
 
         assertEquals(listOf("com/shawnkowalchuk/milo/platform/clock/PhoneClock.kt"), askers)
@@ -121,7 +130,7 @@ class WallClockReadersTest {
     fun `the app's root hands MilO's clock to the screens that show a day by themselves`() {
         // `LocalMiloClock` has a fixed moment as its default, for previews. A root that did
         // not provide the real clock would show that day in every header.
-        val root = File(sources, "com/shawnkowalchuk/milo/app/MiloApp.kt").readText()
+        val root = File(sources.first(), "com/shawnkowalchuk/milo/app/MiloApp.kt").readText()
 
         assertTrue(root.contains("LocalMiloClock provides container.clock"))
     }

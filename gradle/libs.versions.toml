@@ -114,6 +114,8 @@ androidx-credentials-play-services-auth = { module = "androidx.credentials:crede
 androidx-core = { module = "androidx.core:core", version.ref = "core" }
 
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+# The settings file's keys and values without Android: what :shared reads and writes them with.
+androidx-datastore-preferences-core = { module = "androidx.datastore:datastore-preferences-core", version.ref = "datastore" }
 
 # repeatOnLifecycle: the Android Auto screen follows the trip only while the car shows it. The
 # Car App Library alone would bring a much older lifecycle (2.2.0), which does not have it.
@@ -164,7 +166,7 @@ junit = { module = "junit:junit", version.ref = "junit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-# Writes each database's schema to app/schemas as JSON, so a later version can be migrated to and
+# Writes each database's schema to shared/schemas as JSON, so a later version can be migrated to and
 # the change to the tables shows up in the diff.
 androidx-room3 = { id = "androidx.room3", version.ref = "room" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
