@@ -16,6 +16,7 @@ import com.shawnkowalchuk.milo.data.buildPointsDatabase
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.point.RawPointRepository
 import com.shawnkowalchuk.milo.data.settings.buildSettingsStore
+import com.shawnkowalchuk.milo.data.trip.TripCorrections
 import com.shawnkowalchuk.milo.data.trip.TripRepository
 import com.shawnkowalchuk.milo.data.trip.categoryTotals
 import com.shawnkowalchuk.milo.platform.trip.TripLedger
@@ -39,6 +40,8 @@ class DuallyCore private constructor(
     private val database: MiloDatabase,
     /** Start, End and the GPS fixes of a trip recorded on the iPhone (phase 4b). */
     val recorder: IosTripRecorder,
+    /** The Trips screen's months and changes (phase 4c). */
+    val trips: IosTrips,
 ) {
     /**
      * Today's and this month's Business kilometres, in the phone's time zone and language.
@@ -82,9 +85,10 @@ class DuallyCore private constructor(
             val settings = buildSettingsStore()
             val eventLog = EventLogRepository(database.eventLogDao())
             val clock = ::nowMs
+            val tripRepository = TripRepository(database.tripDao())
             val ledger =
                 TripLedger(
-                    TripRepository(database.tripDao()),
+                    tripRepository,
                     RawPointRepository(points.rawPointDao()),
                     settings,
                     zone = ::systemZoneId,
@@ -96,7 +100,16 @@ class DuallyCore private constructor(
                     TripRuleSettings(settings, eventLog, clock),
                     clock,
                 )
-            return DuallyCore(database, recorder)
+            val trips =
+                IosTrips(
+                    tripRepository,
+                    TripCorrections(tripRepository, eventLog, clock),
+                    eventLog,
+                    zone = ::systemZoneId,
+                    locale = ::phoneLocale,
+                    clock = clock,
+                )
+            return DuallyCore(database, recorder, trips)
         }
     }
 }

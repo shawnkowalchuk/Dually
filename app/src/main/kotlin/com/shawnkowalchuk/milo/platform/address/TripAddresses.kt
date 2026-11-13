@@ -18,21 +18,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * Where the trip in progress started, as far as it is known. Held in memory only: the trip's
- * row has no position until the trip closes.
- *
- * @param latitude and [longitude] are the position the address belongs to. The trip rules can
- * still replace a trip's first fix in its first seconds, and the address is then asked for
- * again.
- */
-data class OpenTripStart(
-    val tripId: Long,
-    val latitude: Double,
-    val longitude: Double,
-    val place: TripPlace,
-)
-
-/**
  * Finds the start and end address of each trip and stores them on its row.
  *
  * **It only watches.** It reads the trip controller's published state and the stored trips, and
@@ -215,14 +200,15 @@ class TripAddresses(
         if (known == TripPlace.LeftBlank) return PlaceOutcome.LeftBlankByHand
         if (latitude == null || longitude == null) return PlaceOutcome.NoPosition
         val remembered = mutableOpenTripStart.value
+        val rememberedPlace = remembered?.place
         if (forStartOf != null &&
             remembered != null &&
             remembered.tripId == forStartOf.id &&
             remembered.latitude == latitude &&
             remembered.longitude == longitude &&
-            remembered.place is TripPlace.Known
+            rememberedPlace is TripPlace.Known
         ) {
-            return PlaceOutcome.Found(remembered.place.address)
+            return PlaceOutcome.Found(rememberedPlace.address)
         }
         return ask(latitude, longitude)
     }

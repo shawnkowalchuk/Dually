@@ -1,6 +1,12 @@
 package com.shawnkowalchuk.milo.feature.trips
 
 import com.shawnkowalchuk.milo.core.schedule.TripCategory
+import com.shawnkowalchuk.milo.core.time.LocalDate
+import com.shawnkowalchuk.milo.core.time.YearMonth
+import com.shawnkowalchuk.milo.core.time.ZoneId
+import com.shawnkowalchuk.milo.core.time.compareDates
+import com.shawnkowalchuk.milo.core.time.compareMonths
+import com.shawnkowalchuk.milo.core.time.monthsLater
 import com.shawnkowalchuk.milo.core.trip.TripStatus
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.localDateOf
@@ -21,9 +27,6 @@ import com.shawnkowalchuk.milo.platform.address.OpenTripStart
 import com.shawnkowalchuk.milo.platform.address.TripPlace
 import com.shawnkowalchuk.milo.platform.address.endPlace
 import com.shawnkowalchuk.milo.platform.address.startPlace
-import java.time.LocalDate
-import java.time.YearMonth
-import java.time.ZoneId
 
 // What the Trips screen makes of one month's trips: which month may be shown, what is counted,
 // and how the trips are grouped. Pure functions, so they are tested without a phone.
@@ -156,10 +159,11 @@ data class MonthSummary(
  * past [current]: a month that has not begun has no trips to show.
  */
 fun stepMonth(shown: YearMonth, months: Long, current: YearMonth): YearMonth =
-    minOf(shown.plusMonths(months), current)
+    earlierOf(shown.monthsLater(months), current)
 
 /** Whether there is a later month to step to. */
-fun canStepForward(shown: YearMonth, current: YearMonth): Boolean = shown < current
+fun canStepForward(shown: YearMonth, current: YearMonth): Boolean =
+    compareMonths(shown, current) < 0
 
 /**
  * The month shown after a trip was saved on the edit screen: the month the trip is in now,
@@ -168,7 +172,16 @@ fun canStepForward(shown: YearMonth, current: YearMonth): Boolean = shown < curr
  * saved. Never past [current], like every other way of choosing a month.
  */
 fun monthOfSavedTrip(startedAtMs: Long, zone: ZoneId, current: YearMonth): YearMonth =
-    minOf(monthOf(startedAtMs, zone), current)
+    earlierOf(monthOf(startedAtMs, zone), current)
+
+/** The earlier of two months, [a] when they are the same: what `minOf` gave on Android. */
+private fun earlierOf(a: YearMonth, b: YearMonth): YearMonth = if (compareMonths(a, b) <=
+    0
+) {
+    a
+} else {
+    b
+}
 
 /**
  * Sums and groups the trips of one month.
@@ -238,7 +251,7 @@ fun monthSummary(
                         businessTenths = dayTotals.business.tenths,
                         personal = dayTotals.personal,
                     )
-                }.sortedByDescending { it.date },
+                }.sortedWith { a, b -> compareDates(b.date, a.date) },
         hiddenLeftOut = if (showLeftOut) 0 else leftOut.size,
         unit = unit,
     )

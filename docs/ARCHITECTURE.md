@@ -783,7 +783,9 @@ platform/trip/       # TripController, TripService, GPS recording, notifications
                      #   beside a parked truck. Since 2026-11-13 (phase 4b) the ledger,
                      #   TripParking, TripRuleSettings, FencePlace and the ledger's log
                      #   words (TripLedgerText) are in :shared, package unchanged, because
-                     #   the iPhone records trips with them too
+                     #   the iPhone records trips with them too. Likewise since phase 4c
+                     #   the month view (feature/trips/TripMonth.kt) and the place helper
+                     #   (platform/address/AddressRetry.kt, OpenTripStart.kt)
 platform/party/      # the one-year party between the trip service and Home (2026-10-10):
                      #   asked at a trip's first sound whether today is the day, it says
                      #   who plays the pop and stores what Home owes. It reads when the

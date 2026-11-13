@@ -106,3 +106,7 @@ private val TIME_WITH_SECONDS: DateTimeFormatter = DateTimeFormatter.ofPattern("
 
 actual fun formatTimeWithSeconds(epochMs: Long, zone: ZoneId): String =
     TIME_WITH_SECONDS.format(Instant.ofEpochMilli(epochMs).atZone(zone))
+
+actual fun YearMonth.monthsLater(months: Long): YearMonth = plusMonths(months)
+
+actual fun yearMonthOf(year: Int, month: Int): YearMonth = YearMonth.of(year, month)
