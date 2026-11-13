@@ -1,7 +1,7 @@
 # ADR-015: How the iPhone starts a trip
 
 Date: 2026-11-11
-Status: Proposed. To be proven by real drives with Shawn's iPhone in his truck before the iPhone app is released. Not built.
+Status: Proposed. Shawn's choices of 2026-11-13 are below ("Shawn's choices"). To be proven by real drives with Shawn's iPhone in his truck before the iPhone app is released. Not built.
 
 ## Context
 
@@ -27,6 +27,15 @@ Three layers, from the one that starts the trip to the ones that catch what it m
 Once a trip is open, the shared rules decide its end, its parked time and its distance (ADR-014). Disconnecting the truck ends a trip the same way on both phones.
 
 **How it is proven.** A series of real drives with Shawn's iPhone, as the Android trips were proven: each start and end logged with the layer that caught it, and the time from engine on to the first fix. The release waits until layer 1 starts every trip of a working week and layer 2 catches a trip with the automation switched off. The results go into FINDINGS_LOG and the iPhone's device checks, and this record becomes Accepted, with what was learned, or is changed.
+
+## Shawn's choices (2026-11-13)
+
+Asked the four open questions of this record, Shawn chose:
+
+- **The trigger: the user picks it in setup,** CarPlay connecting or the truck's Bluetooth connecting, over Bluetooth only or CarPlay only. CarPlay suits a truck that has it, as his does; Bluetooth works in any truck.
+- **Setup walks the user through making the automation,** and checks that it fires, over leaving it optional or skipping it.
+- **Driving noticed with no trip open: the same as Android.** With the truck's Bluetooth or CarPlay connected, the trip starts by itself, from where the truck was parked; without it, the "Driving? Start a trip" alert. Asked with it whether a trip's distance starts at the parked place when the drive-off sound comes about 30 seconds into a drive: it does, on Android and so on the iPhone (APP_ENCYCLOPEDIA, "Waiting beside the parked truck": the trip-start sound waits for a fix that shows the truck away at 15 km/h or more, and the trip's first point is the parked place).
+- **The Live Activity on the Lock Screen and in the Dynamic Island at launch,** with the kilometres and a Stop button: the iPhone's form of Android's trip notification.
 
 ## Consequences
 

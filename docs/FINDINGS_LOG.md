@@ -26,6 +26,12 @@
 
 ### 2026-11-13
 
+**`[DECISION]` How the iPhone starts a trip: Shawn's four answers** (ADR-015, still Proposed)
+The trigger is the user's pick in setup (CarPlay or the truck's Bluetooth, through a Shortcuts automation); setup walks them through it and checks it; driving noticed with no trip is handled as on Android; the Live Activity is in at launch. He also asked why the drive-off sound comes about 30 seconds into a drive while the distance is right: by design, the sound waits for proof the truck has left (15 km/h and away from the parked place), and the trip starts at the parked place.
+
+**`[CHANGE]` Build 11 (0.3.5) for internal testing: the shared module's phone check**
+`versionCode` 11 and version 0.3.5, undated, with one line in What's new: the backup's wording (Google's Firebase in Montréal). It holds phase 3 whole (#128, #132, #133). ADR-014 asks for a release check on the phone before phase 3 is called done; this is the build for it, installed from Google Play's internal testing so that Play can keep updating the phone.
+
 **`[CHANGE]` Phase 3c: the databases, the settings and the export format move to the shared module** (ADR-014, "Progress")
 Shawn: "finish phase 3". 70 files of `data/` moved to `:shared` with `git mv`, package names unchanged; nothing the app does changes, so there is no line in the list of changes.
 - **The databases:** `milo.db` (version 7) and `points.db` (version 1) keep their file names and versions. Room 3's code is generated in `:shared` for Android and the iPhone (`kspAndroid`, `kspIosArm64`, `kspIosSimulatorArm64`, and `@ConstructedBy` on each database); `:app` no longer runs Room's generator at all. The schemas moved to `shared/schemas`, `MiloMigrationsTest` with them. `buildMiloDatabase` and `buildPointsDatabase` take Android's `Context`, so they are in `shared/src/androidMain`, unchanged.
