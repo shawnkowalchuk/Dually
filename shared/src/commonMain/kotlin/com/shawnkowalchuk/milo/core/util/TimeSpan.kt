@@ -1,9 +1,8 @@
 package com.shawnkowalchuk.milo.core.util
 
-import java.time.Instant
-import java.time.LocalDate
-import java.time.YearMonth
-import java.time.ZoneId
+import com.shawnkowalchuk.milo.core.time.LocalDate
+import com.shawnkowalchuk.milo.core.time.YearMonth
+import com.shawnkowalchuk.milo.core.time.ZoneId
 
 /**
  * A span of stored time: from [fromMs] up to, but not including, [untilMs]. Both are wall-clock
@@ -23,20 +22,14 @@ data class TimeSpan(val fromMs: Long, val untilMs: Long)
  * shorter than its days suggest. `atStartOfDay` also copes with a zone whose clocks jump over
  * midnight itself.
  */
-fun monthSpan(month: YearMonth, zone: ZoneId): TimeSpan = TimeSpan(
-    fromMs = month.atDay(1).atStartOfDay(zone).toInstant().toEpochMilli(),
-    untilMs = month.plusMonths(1).atDay(1).atStartOfDay(zone).toInstant().toEpochMilli(),
-)
+expect fun monthSpan(month: YearMonth, zone: ZoneId): TimeSpan
 
 /**
  * The span of time a calendar day covers in [zone]: from local midnight to the next local
  * midnight. A day on which the clocks change is an hour shorter or longer than 24 hours, which
  * is why the end is worked out from the next day and not by adding 24 hours.
  */
-fun daySpan(day: LocalDate, zone: ZoneId): TimeSpan = TimeSpan(
-    fromMs = day.atStartOfDay(zone).toInstant().toEpochMilli(),
-    untilMs = day.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli(),
-)
+expect fun daySpan(day: LocalDate, zone: ZoneId): TimeSpan
 
 /**
  * The span of time a run of calendar days covers in [zone]: from local midnight of [first] to
@@ -46,17 +39,10 @@ fun daySpan(day: LocalDate, zone: ZoneId): TimeSpan = TimeSpan(
  * Worked out from the day after [last] and not by counting hours, like [daySpan], so a run of
  * days in which the clocks change is as long as it really was.
  */
-fun daysSpan(first: LocalDate, last: LocalDate, zone: ZoneId): TimeSpan {
-    require(!last.isBefore(first)) { "The days end ($last) before they start ($first)" }
-    return TimeSpan(
-        fromMs = first.atStartOfDay(zone).toInstant().toEpochMilli(),
-        untilMs = last.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli(),
-    )
-}
+expect fun daysSpan(first: LocalDate, last: LocalDate, zone: ZoneId): TimeSpan
 
 /** The calendar day a stored time falls on in [zone]. */
-fun localDateOf(epochMs: Long, zone: ZoneId): LocalDate =
-    Instant.ofEpochMilli(epochMs).atZone(zone).toLocalDate()
+expect fun localDateOf(epochMs: Long, zone: ZoneId): LocalDate
 
 /** The calendar month a stored time falls in, in [zone]. */
-fun monthOf(epochMs: Long, zone: ZoneId): YearMonth = YearMonth.from(localDateOf(epochMs, zone))
+expect fun monthOf(epochMs: Long, zone: ZoneId): YearMonth

@@ -35,5 +35,9 @@ kotlin {
                 implementation(kotlin("test"))
             }
         }
+        // The iPhone's dates. On Android the shared date types are java.time's own (core/time).
+        iosMain.dependencies {
+            implementation(libs.kotlinx.datetime)
+        }
     }
 }
