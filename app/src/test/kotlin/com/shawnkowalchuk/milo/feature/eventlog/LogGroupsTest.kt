@@ -27,6 +27,7 @@ class LogGroupsTest {
             EventCategory.LOCATION to null,
             EventCategory.DRIVING to null,
             EventCategory.REPORT to null,
+            EventCategory.CLOUD to null,
         )
 
     @Test

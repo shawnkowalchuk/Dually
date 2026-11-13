@@ -75,4 +75,10 @@ enum class EventCategory {
      * so no earlier build can meet a row that holds it.
      */
     REPORT,
+
+    /**
+     * The optional cloud backup (ADR-012): each upload, with how many documents it sent and
+     * removed, and why one stopped. Never the account's email or a trip's content.
+     */
+    CLOUD,
 }

@@ -14,13 +14,21 @@ const val CLOUD_BATCH = 400
 class CloudUnreachableException(message: String, cause: Throwable? = null) :
     IOException(message, cause)
 
+/**
+ * The cloud refused the batch, and sending it again will not change that: the account does not
+ * hold the unlock (ADR-013), or is no longer signed in. Nothing of that batch was stored.
+ */
+class CloudRefusedException(message: String, cause: Throwable? = null) :
+    IOException(message, cause)
+
 /** Where the backup's documents go. Firestore in the app; a stand-in in the tests. */
 interface CloudStore {
     /**
      * Writes [documents] and removes [removals] in [account]'s folder, all or nothing.
      * Together they are at most [CLOUD_BATCH]. Removing a path that holds nothing is no error.
      *
-     * @throws CloudUnreachableException if the batch was not stored.
+     * @throws CloudUnreachableException if the batch was not stored, and may be later.
+     * @throws CloudRefusedException if the cloud said no to it.
      */
     suspend fun apply(account: String, documents: List<CloudDocument>, removals: List<String>)
 }

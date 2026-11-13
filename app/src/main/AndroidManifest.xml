@@ -67,10 +67,36 @@
     <!--
         Lets the address lookup ask whether the phone is online before it asks the geocoder,
         so that a trip which ended somewhere without signal does not use up its lookup attempts
-        on failures. Granted at install, with no dialog. MilO still has no INTERNET permission
-        and opens no connection itself: the lookup is done by the phone's own geocoder service.
+        on failures. Granted at install, with no dialog. The lookup itself is done by the
+        phone's own geocoder service, not by Dually.
     -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!--
+        The optional cloud backup (ADR-012), and nothing else: signing in to it, and from slice
+        1c the upload. Granted at install, with no dialog. Firebase's library declares it too and
+        the build merges the two; it is written out because Dually had none before. Dually opens
+        no connection while the backup is off: Firebase is started only once the user signs in
+        (platform/cloud/CloudFirebase.kt), and its automatic start is removed below.
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!--
+        Three permissions the sign-in's libraries declare for what Dually does not use, taken
+        out so the permission list stays what the app needs. Fingerprint and biometric come with
+        Credential Manager (androidx.biometric), for passkeys; READ_GSERVICES with Firebase's
+        reCAPTCHA library, for sign-in by email or phone number. Dually signs in with a Google
+        account only (ADR-012).
+    -->
+    <uses-permission
+        android:name="android.permission.USE_BIOMETRIC"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.USE_FINGERPRINT"
+        tools:node="remove" />
+    <uses-permission
+        android:name="com.google.android.providers.gsf.permission.READ_GSERVICES"
+        tools:node="remove" />
 
     <!--
         MilO is useless without GPS, but saying so here only decides which devices Google Play
@@ -387,6 +413,15 @@
             </intent-filter>
         </receiver>
 
+        <!--
+            Firebase's automatic start at every launch of the app, taken out: Dually starts
+            Firebase itself, and only once the cloud backup is on (ADR-012). With the backup off,
+            no Firebase code runs.
+        -->
+        <provider
+            android:name="com.google.firebase.provider.FirebaseInitProvider"
+            android:authorities="${applicationId}.firebaseinitprovider"
+            tools:node="remove" />
     </application>
 
 </manifest>

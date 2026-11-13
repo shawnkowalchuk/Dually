@@ -52,6 +52,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
@@ -294,14 +295,14 @@ class AppContainer(context: Context, private val trustedClock: TrustedClock) {
         )
     }
 
-    // Nine parts of this container, each in a class of its own because this file is at its
+    // Ten parts of this container, each in a class of its own because this file is at its
     // size limit: the report for the accountant with the monthly reminder to send it; Android's
     // backup with the export and import of all data; the watch on Android Auto outside trips;
     // the daily check that a work day has a trip; the home-screen widget; the version with its
     // list of changes; what MilO's clock does beside telling the time; the one-year party;
-    // Google Play's review card; and the mascot's run when a report has been sent. None of the
-    // last eight can touch a trip; the widget's buttons reach the trip controller as any
-    // button does.
+    // Google Play's review card; the mascot's run when a report has been sent; and the optional
+    // cloud backup. None of the last nine can touch a trip; the widget's buttons reach the
+    // trip controller as any button does.
     val reports: ReportObjects by lazy { ReportObjects(appContext, this) }
     val transfer: TransferObjects by lazy {
         val main = miloDatabase.mainTransferDao()
@@ -315,6 +316,10 @@ class AppContainer(context: Context, private val trustedClock: TrustedClock) {
     val party: PartyObjects by lazy { PartyObjects(appContext, this) }
     val review: ReviewObjects by lazy { ReviewObjects(appContext, this) }
     val sentRun: SentRunObjects by lazy { SentRunObjects(appContext, this) }
+    val cloud: CloudObjects by lazy {
+        val changes = miloDatabase.invalidationTracker.createFlow("trips", "sent_reports")
+        CloudObjects(appContext, this, miloDatabase.mainTransferDao(), changes.map { })
+    }
 
     /**
      * Makes an audio file Shawn picked the connect sound or the trip-start sound, by copying it

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        The Cloud backup tile in Settings (ADR-012, ADR-013). It signs in to a Google account and
+        out again, unlocks the backup with the one-time purchase (slice 1d), and the uploads
+        follow by themselves (slice 1c). Restoring the trips comes later. Every
+        %1$s below is the account's email address.
+    -->
+    <string name="settings_cloud_title">Online backup</string>
+    <string name="settings_cloud_explained">Keep a copy of every trip online, on Dually\'s server in Canada, without its GPS points. One purchase, no subscription.</string>
+    <string name="settings_cloud_signed_in">Signed in as %1$s. Your trips upload by themselves after each change, when the phone is online. The Log has a line for each upload.</string>
+    <string name="settings_cloud_sign_out">Sign out</string>
+    <!-- The account is signed in but does not hold the one-time unlock (ADR-013). -->
+    <string name="settings_cloud_locked">Signed in as %1$s. Bought it already, on this phone or another? Restore it.</string>
+    <!-- %1$s is the price as Google Play shows it: US$19.99, CA$27.99. -->
+    <string name="settings_cloud_purchase">Purchase online backup</string>
+    <string name="settings_cloud_purchase_price">Purchase online backup · %1$s</string>
+    <string name="settings_cloud_on">On</string>
+    <string name="settings_cloud_restore">Restore purchase</string>
+    <string name="settings_cloud_unlocked">Backup unlocked. Your trips start uploading now.</string>
+    <string name="settings_cloud_pending">Payment pending. The backup unlocks when Google Play says it is paid; press Restore purchase then.</string>
+    <string name="settings_cloud_not_offered">Google Play cannot sell the backup on this phone right now.</string>
+    <string name="settings_cloud_other_account">That purchase belongs to another Dually backup account. Sign in with the Google account you used when you bought it.</string>
+    <string name="settings_cloud_refunded">That purchase was refunded, so it no longer unlocks the backup.</string>
+    <string name="settings_cloud_nothing_to_restore">No purchase of the backup was found in this phone\'s Google Play account.</string>
+    <string name="settings_cloud_unlock_failed">Unlocking did not work. If you paid, the purchase is kept: try Restore purchase. The Log says why.</string>
+    <string name="settings_cloud_no_account">This phone has no Google account to sign in with. Add one in the phone\'s settings, then try again.</string>
+    <string name="settings_cloud_play_not_ready">Google Play has not confirmed the purchase yet. It is kept: press Restore purchase again in a few minutes.</string>
+    <string name="settings_cloud_offline">Google could not be reached. Check the phone is online and try again.</string>
+    <string name="settings_cloud_failed">Signing in did not work. Try again; the Log says why.</string>
+    <string name="settings_cloud_unavailable">This copy of Dually was built without the cloud backup\'s settings.</string>
+    <!-- Since 2026-11-12 (slice 1e): one phone backs up to an account, restore, and deletion. -->
+    <plurals name="settings_cloud_other_phone">
+        <item quantity="one">Signed in as %1$s. Your online backup holds %2$d trip from another phone. Restore it here, or back up this phone instead.</item>
+        <item quantity="other">Signed in as %1$s. Your online backup holds %2$d trips from another phone. Restore them here, or back up this phone instead.</item>
+    </plurals>
+    <string name="settings_cloud_moved">Signed in as %1$s. Another phone backs up to this account now, so this phone stopped. Restore its trips here, or back up this phone instead.</string>
+    <string name="settings_cloud_restore_here">Restore my trips here</string>
+    <string name="settings_cloud_back_up_here">Back up this phone instead</string>
+    <string name="settings_cloud_delete">Delete my online backup and account</string>
+    <string name="settings_cloud_restore_title">Restore your trips here?</string>
+    <plurals name="settings_cloud_restore_text">
+        <item quantity="one">The trips on this phone are replaced with the %d trip in your online backup, without its GPS route. A safety copy of this phone\'s trips is made first, under Your data.</item>
+        <item quantity="other">The trips on this phone are replaced with the %d trips in your online backup, without their GPS routes. A safety copy of this phone\'s trips is made first, under Your data.</item>
+    </plurals>
+    <string name="settings_cloud_restore_confirm">Restore</string>
+    <string name="settings_cloud_back_up_here_title">Back up this phone instead?</string>
+    <plurals name="settings_cloud_back_up_here_text">
+        <item quantity="one">Your online backup is replaced with this phone\'s trips. The %d trip the other phone backed up is removed from it.</item>
+        <item quantity="other">Your online backup is replaced with this phone\'s trips. The %d trips the other phone backed up are removed from it.</item>
+    </plurals>
+    <string name="settings_cloud_back_up_here_confirm">Replace the backup</string>
+    <string name="settings_cloud_delete_title">Delete your online backup and account?</string>
+    <string name="settings_cloud_delete_text">Your trips are deleted from Dually\'s server, and your Dually account with them. The trips on this phone stay. Your purchase stays with your Google Play account: sign in again later and press Restore purchase.</string>
+    <string name="settings_cloud_delete_confirm">Delete</string>
+    <plurals name="settings_cloud_restored_trips">
+        <item quantity="one">%d trip restored from your online backup. This phone backs up from now on.</item>
+        <item quantity="other">%d trips restored from your online backup. This phone backs up from now on.</item>
+    </plurals>
+    <string name="settings_cloud_restored">Restored from your online backup.</string>
+    <string name="settings_cloud_trip_in_progress">Not while a trip is being recorded. End the trip, then restore.</string>
+    <string name="settings_cloud_restore_failed">The restore did not work; the trips on this phone were not changed. The Log says why.</string>
+    <string name="settings_cloud_backing_up_here">This phone backs up to your account now.</string>
+    <string name="settings_cloud_backup_offline">Your online backup could not be reached. Check the phone is online and try again.</string>
+    <string name="settings_cloud_delete_failed">Your account could not be deleted. Check the phone is online and try again.</string>
+    <string name="settings_cloud_deleted">Your online backup and account are deleted. The trips on this phone stay.</string>
+</resources>

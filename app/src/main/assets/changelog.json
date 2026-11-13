@@ -5,6 +5,11 @@
       "date": null,
       "changes": [
         {
+          "kind": "new",
+          "title": "Optional online backup",
+          "body": "Settings has a new Online backup tile. Buy it once (no subscription) and every trip is copied to Dually's server in Canada after each change, without its GPS route. On a new phone, sign in and press Restore my trips here. You can delete your online backup and account from the same tile at any time. Everything else in Dually stays free, with no ads."
+        },
+        {
           "kind": "improved",
           "title": "A tidier Settings screen",
           "body": "Settings has no more drawers. Units and Look come first. Work hours, the report, the trip rules, sounds, the widget and your data each have one tile that shows how they are set, and a tap opens their own page with everything laid out. The Log is now at the end of the Setup screen."

@@ -5,6 +5,7 @@
     are what the widget shows before MilO has drawn it, and in the list of widgets.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -15,9 +16,13 @@
     <!--
         The app's mark, and beside it what the widget has to say. The mark is the text's own
         drawable, at its start: decoration, which a screen reader is not told of.
+        The lint check ignored here asks for AppCompat's drawableStartCompat instead. AppCompat
+        is in the build only through Credential Manager (2026-11-11), and a widget is drawn by
+        the home screen, which cannot read AppCompat's attributes: there the plain one is right.
     -->
     <TextView
         android:id="@+id/widget_status"
+        tools:ignore="UseCompatTextViewDrawableXml"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:drawablePadding="8dp"

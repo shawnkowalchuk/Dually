@@ -1,7 +1,7 @@
 # ADR-013: Cloud backup is unlocked by a one-time purchase of US$19.99; no ads
 
 Date: 2026-11-11
-Status: Accepted. Not built (phase 0 of the iPhone and cloud backup plan).
+Status: Accepted. Android built (slice 1d, 2026-11-11; deletion and release of a purchase in slice 1e, 2026-11-12), in main since 2026-11-12; iPhone not built (the App Store product `cloud_backup` exists, ADR-014).
 
 ## Context
 
@@ -23,6 +23,15 @@ What weighs on the price:
 - **The purchase belongs to the account,** not to the phone or the store. A Cloud Function checks the purchase with the store that sold it (Google Play's Developer API; Apple's App Store Server API) and writes the unlock to the user's account. Firestore's security rules accept backup writes only from an account that holds the unlock (ADR-012). Someone who buys on Android and moves to an iPhone signs in and has backup there without paying again; Apple's rules allow that for a service bought elsewhere, as long as it can also be bought in the iPhone app.
 - **Refunds:** the stores' notifications (Google Play's real-time developer notifications, Apple's App Store Server Notifications) reach a Cloud Function that removes the unlock. A refunded user's phone keeps every trip; uploading stops, and the cloud copy is deleted after 30 days with a notice in the app. (Proposed in writing this record; Shawn, shown it: "this is good".)
 - **"Restore purchase"** is a button in the Cloud backup tile (Apple requires one).
+
+### Built on Android in slice 1d (2026-11-11)
+
+- **The product** is `cloud_backup`, a one-time product in Play Console.
+- **The tie to the account:** each purchase carries the SHA-256 of the Firebase account id as Google Play's "obfuscated account id". The app (`cloudAccountTag`) and the server (`accountTag`) compute it the same way, and a test on each side checks one shared value.
+- **The check:** the server (`firebase/functions/unlock.js`, the callable `unlockBackup` in Montréal) asks Google Play's Developer API about the purchase. It unlocks the account only for a paid purchase that carries that account's tag. It writes `unlocks/{uid}`, and records the purchase in `purchases/{SHA-256 of the token}`, so one purchase unlocks one account. Then it acknowledges the purchase, since Google Play refunds an unacknowledged one after three days. Doing it again is harmless: that is "Restore purchase".
+- **Refunds: changed from the notifications named above to a daily check** (`checkRefunds`, 04:00 Edmonton). It reads Google Play's list of voided purchases from the last 31 days, removes the unlock, and writes `deletions/{uid}` due 30 days after the refund. Polling needs no Pub/Sub topic and nothing that has to be reachable from outside, and a day's delay before uploads stop costs nothing. The deletion itself is built with account deletion in slice 1e.
+- **On the phone:** `unlocked` is kept in the account's file, so uploads run only for an unlocked account. A refusal from the server makes the app ask again, and an unlock that is gone stops uploads and offers the unlock again.
+- **The functions** run on Node 22, the newest runtime Cloud Functions offers today (support ends April 2027). They are deployed from the Mac with the Firebase CLI (`firebase/README.md`). Their service account is allowed in Play Console to view orders.
 - **Price per country:** US$19.99 is the base price in both stores; every other country's price is the stores' own conversion of it (Canada's included). Sales tax is collected by the stores where they are the seller; what 2795748 Alberta Ltd. reports is a question for the accountant before launch.
 - **Apple's Small Business Program** is joined before the first sale.
 

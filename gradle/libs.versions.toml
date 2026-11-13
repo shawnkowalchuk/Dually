@@ -21,6 +21,9 @@ ktlint = "1.8.0"
 
 # Libraries.
 activityCompose = "1.13.0"
+# Google Play Billing: the one-time purchase that unlocks the cloud backup, US$19.99 (ADR-013).
+# Google Play makes apps move to a newer major version every two years; Dependabot offers each.
+billing = "9.1.0"
 # The Car App Library: the Android Auto screen, and CarConnection, which tells the trip service
 # whether Android Auto is connected.
 # THE ONE EXCEPTION to "stable only", decided by Shawn on 2026-10-06 (ADR-001, "Exception"): a
@@ -39,7 +42,19 @@ composeBom = "2026.09.00"
 # and manifest name the class.
 core = "1.19.1"
 coroutines = "1.11.0"
+# Android's Credential Manager: the sheet that signs in with a Google account, for the optional
+# cloud backup (ADR-012). "credentials-play-services-auth" is what lets it reach Google accounts
+# on phones that do not have Credential Manager built in; both are released together.
+credentials = "1.6.0"
 datastore = "1.2.1"
+# The Firebase BoM pins every Firebase library below to versions tested together, as the Compose
+# BoM does: Authentication (slice 1b of the cloud backup, ADR-012) and Firestore (1c). Not
+# Functions: its client brings Google's old Instance ID and Cloud Messaging, so the one call to the
+# purchase check is made directly (platform/cloud/CloudUnlockCheck.kt). Never Analytics, Crashlytics, Messaging, Performance or Remote Config (ADR-012).
+firebaseBom = "35.2.0"
+# Google's "Sign in with Google" request for Credential Manager, which hands back the Google ID
+# token Firebase Authentication takes.
+googleId = "1.2.1"
 junit = "4.13.2"
 lifecycle = "2.11.0"
 # Navigation 3: the back stack of screens and the display that shows its top entry.
@@ -61,6 +76,9 @@ serializationJson = "1.11.0"
 # The SQLite build Room 3 runs on. It is compiled into the app, so the database engine is the
 # same on every Android version and does not change under the stored trips after a system update.
 sqlite = "2.7.1"
+# WorkManager: runs the cloud backup's upload when the phone has a network, retries it with
+# back-off, and once a day as a safety net (ADR-012). Nothing that starts a trip uses it.
+work = "2.12.0"
 
 [libraries]
 # AGP 9 compiles Kotlin itself and bundles an older Kotlin Gradle plugin. The root build script
@@ -87,6 +105,9 @@ androidx-compose-ui = { module = "androidx.compose.ui:ui" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
+androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
+
 androidx-core = { module = "androidx.core:core", version.ref = "core" }
 
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
@@ -110,6 +131,11 @@ androidx-room3-compiler = { module = "androidx.room3:room3-compiler", version.re
 androidx-room3-runtime = { module = "androidx.room3:room3-runtime", version.ref = "room" }
 androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
 
+# await() on a Google Play services Task, which is what Firebase answers with. Released with,
+# and pinned to, the coroutines library above.
+kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "coroutines" }
+androidx-work-runtime = { module = "androidx.work:work-runtime", version.ref = "work" }
+
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 # Tests only: a clock and a scheduler the test controls, for code that runs in coroutines.
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
@@ -119,7 +145,14 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 # The review library itself, without its Kotlin extensions ("review-ktx"): with those the release
 # build does not get through R8, because they name a class no library holds (ADR-009). What they
 # would save is some fifteen lines, which platform/review/PlayReviewCard.kt has instead.
+play-billing = { module = "com.android.billingclient:billing", version.ref = "billing" }
+
 play-review = { module = "com.google.android.play:review", version.ref = "playReview" }
+
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-auth = { module = "com.google.firebase:firebase-auth" }
+firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
+googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleId" }
 
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 
