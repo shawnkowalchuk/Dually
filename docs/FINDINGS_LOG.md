@@ -26,6 +26,13 @@
 
 ### 2026-11-13
 
+**`[CHANGE]` The iPhone app looks like Android's: pinned top line, floating bottom bar; Setup's "I've made it"** (APP_ENCYCLOPEDIA, iPhone app)
+Shawn, during 4e: "the app need to be more matching the andorids interface. pinned header and footer. the settings", and "when setting the automation start trip end trip you should havfe a check to say complete after. also if you the phone can check if it is setup correctly that would also be a plus".
+- **Reused from Android's design, not new:** `PinnedScreen` is Android's `PinnedHeaderColumn` (the top line stays, the tiles scroll; Shawn's rule of 2026-10-19), `BottomBar` is `MiloNavigationBar` (a tile of corner 22 floating 18 from the sides, 64 high, icons only, the showing screen's in the accent), and Home's top line has no screen name, Shawn's rule of 2026-10-09. iOS's own tab bar is gone; the app switches screens under the bar itself (`DuallyApp`), so a screen is drawn afresh when it is chosen, as Android's are.
+- **"I've made it"** (`SetupRow.confirmButton`, `SetupAction.CONFIRM_START_MADE`/`CONFIRM_END_MADE`): the row is Ready on the user's word until the action's first run shows "Working: it last ran…". `[FINDING]` "Can the phone check it is set up correctly": iOS lets no app read the user's Shortcuts automations, so the first run of the action is the only proof there is, and the row says when it last ran. A test covers the word, the run and their order (`IosSetupTest`, 7).
+- **Settings** is phase 4g, not part of this.
+- Run on the simulator: Home without a title and with the bar, Home lit; Trips scrolled under its pinned top line; Setup's I've made it turned the row Ready and Home's warning went.
+
 **`[CHANGE]` Phase 4e: the trip on the Lock Screen and in the Dynamic Island** (ADR-015, "Built so far"; ARCHITECTURE, "The Live Activity's extension"; APP_ENCYCLOPEDIA, iPhone app)
 Shawn: "start 4e". The Live Activity he chose for launch: the iPhone's form of Android's trip notification, with its words, the kilometres, the time since the start, and End trip.
 - **A second target**, the widget extension `DuallyLiveActivity` (iOS 16.1+), added to `ios/Dually.xcodeproj` by hand: its synchronized folder, an exception set for its Info.plist, the embed phase, the dependency, two build configurations. It links no Kotlin; the app sends it text.

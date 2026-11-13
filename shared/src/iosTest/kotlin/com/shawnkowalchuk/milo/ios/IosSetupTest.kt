@@ -16,6 +16,8 @@ class IosSetupTest {
         vehicle: VehicleLink? = VehicleLink.BLUETOOTH,
         connectHeardAtMs: Long? = NOW - HOUR_MS,
         disconnectHeardAtMs: Long? = NOW - DAY_MS,
+        startMade: Boolean = false,
+        endMade: Boolean = false,
         motion: Permission = Permission.ALLOWED,
         notifications: Permission = Permission.ALLOWED,
     ) = setupScreen(
@@ -25,6 +27,8 @@ class IosSetupTest {
         vehicle = vehicle,
         connectHeardAtMs = connectHeardAtMs,
         disconnectHeardAtMs = disconnectHeardAtMs,
+        startMade = startMade,
+        endMade = endMade,
         motion = motion,
         notifications = notifications,
         nowMs = NOW,
@@ -88,13 +92,42 @@ class IosSetupTest {
 
     @Test
     fun `the steps name the vehicle's own trigger and Dually's action`() {
-        val bluetooth = screen(vehicle = VehicleLink.BLUETOOTH).rows[3].steps
+        val bluetooth = screen(
+            vehicle = VehicleLink.BLUETOOTH,
+            connectHeardAtMs = null,
+        ).rows[3].steps
         assertTrue(bluetooth.any { "Is Connected" in it })
         assertTrue(bluetooth.last().contains("Start a trip"))
 
-        val carPlayEnd = screen(vehicle = VehicleLink.CARPLAY).rows[4].steps
+        val carPlayEnd = screen(
+            vehicle = VehicleLink.CARPLAY,
+            disconnectHeardAtMs = null,
+        ).rows[4].steps
         assertTrue(carPlayEnd.any { "Disconnects only" in it })
         assertTrue(carPlayEnd.last().contains("End a trip"))
+    }
+
+    @Test
+    fun `I've made it makes an automation row ready on the user's word until it runs`() {
+        val notMade = screen(connectHeardAtMs = null, disconnectHeardAtMs = null)
+        assertEquals(SetupAction.CONFIRM_START_MADE, notMade.rows[3].confirmAction)
+        assertEquals(SetupAction.CONFIRM_END_MADE, notMade.rows[4].confirmAction)
+        assertFalse(notMade.complete)
+
+        val made =
+            screen(
+                connectHeardAtMs = null,
+                disconnectHeardAtMs = null,
+                startMade = true,
+                endMade = true,
+            )
+        assertTrue(made.complete)
+        assertTrue(made.rows[3].sentence.startsWith("Made, by your word."))
+        assertEquals(null, made.rows[3].confirmButton)
+
+        // Once it has run, that is what the row says.
+        val ran = screen(disconnectHeardAtMs = null, startMade = true)
+        assertTrue(ran.rows[3].sentence.startsWith("Working: it last ran"))
     }
 
     @Test

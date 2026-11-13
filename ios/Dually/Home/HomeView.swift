@@ -17,40 +17,34 @@ struct HomeView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
-                TopLine(screen: "Home")
-                if let screen = setup.screen, !screen.complete {
-                    SetupWarning(screen: screen, open: openSetup)
-                }
-                TripCard(model: model)
-                if model.location.authorization == .denied || model.location.authorization == .restricted {
-                    Text("Dually may not use the location. Allow it in the iPhone's Settings, Dually, Location, to record a trip.")
-                        .font(Typography.body(14))
-                        .foregroundStyle(Palette.amber)
-                }
-                HStack(spacing: 12) {
-                    FigureTile(
-                        label: "Today · Business",
-                        value: model.figures?.todayBusiness,
-                        note: model.figures.map { tripCount(Int($0.todayTrips)) }
-                    )
-                    FigureTile(
-                        label: model.figures?.monthName ?? " ",
-                        value: model.figures?.monthBusiness,
-                        note: "Business"
-                    )
-                }
-                if let failure = model.failure ?? model.recordingFailure {
-                    Text(failure)
-                        .font(Typography.body(14))
-                        .foregroundStyle(Palette.amber)
-                }
+        PinnedScreen(title: nil) {
+            if let screen = setup.screen, !screen.complete {
+                SetupWarning(screen: screen, open: openSetup)
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 24)
+            TripCard(model: model)
+            if model.location.authorization == .denied || model.location.authorization == .restricted {
+                Text("Dually may not use the location. Allow it in the iPhone's Settings, Dually, Location, to record a trip.")
+                    .font(Typography.body(14))
+                    .foregroundStyle(Palette.amber)
+            }
+            HStack(spacing: 12) {
+                FigureTile(
+                    label: "Today · Business",
+                    value: model.figures?.todayBusiness,
+                    note: model.figures.map { tripCount(Int($0.todayTrips)) }
+                )
+                FigureTile(
+                    label: model.figures?.monthName ?? " ",
+                    value: model.figures?.monthBusiness,
+                    note: "Business"
+                )
+            }
+            if let failure = model.failure ?? model.recordingFailure {
+                Text(failure)
+                    .font(Typography.body(14))
+                    .foregroundStyle(Palette.amber)
+            }
         }
-        .background(Palette.page.ignoresSafeArea())
         .task {
             setup.refresh()
             await model.refresh()

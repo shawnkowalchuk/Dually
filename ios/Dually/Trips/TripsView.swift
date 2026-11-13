@@ -14,43 +14,38 @@ struct TripsView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
-                MonthHeader(model: model)
-                if let month = model.month {
-                    MonthTotals(month: month)
-                    if let live = month.inProgress {
-                        TripRow(trip: live, recording: true)
-                    }
-                    ForEach(month.days, id: \.title) { day in
-                        DaySection(day: day) { chosen = $0 }
-                    }
-                    if month.days.isEmpty && month.inProgress == nil {
-                        Text("No trips this month.")
-                            .font(Typography.body(15))
-                            .foregroundStyle(Palette.textSecondary)
-                            .padding(.top, 8)
-                    }
-                    Toggle(isOn: $model.showLeftOut) {
-                        Text(month.hiddenLeftOut > 0 && !model.showLeftOut
-                             ? "Show deleted and discarded (\(month.hiddenLeftOut))"
-                             : "Show deleted and discarded")
-                            .font(Typography.body(15))
-                            .foregroundStyle(Palette.text)
-                    }
-                    .tint(Palette.accent)
-                    .padding(.top, 4)
+        PinnedScreen(title: "Trips") {
+            MonthHeader(model: model)
+            if let month = model.month {
+                MonthTotals(month: month)
+                if let live = month.inProgress {
+                    TripRow(trip: live, recording: true)
                 }
-                if let failure = model.failure {
-                    Text(failure)
-                        .font(Typography.body(14))
-                        .foregroundStyle(Palette.amber)
+                ForEach(month.days, id: \.title) { day in
+                    DaySection(day: day) { chosen = $0 }
                 }
+                if month.days.isEmpty && month.inProgress == nil {
+                    Text("No trips this month.")
+                        .font(Typography.body(15))
+                        .foregroundStyle(Palette.textSecondary)
+                        .padding(.top, 8)
+                }
+                Toggle(isOn: $model.showLeftOut) {
+                    Text(month.hiddenLeftOut > 0 && !model.showLeftOut
+                         ? "Show deleted and discarded (\(month.hiddenLeftOut))"
+                         : "Show deleted and discarded")
+                        .font(Typography.body(15))
+                        .foregroundStyle(Palette.text)
+                }
+                .tint(Palette.accent)
+                .padding(.top, 4)
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 24)
+            if let failure = model.failure {
+                Text(failure)
+                    .font(Typography.body(14))
+                    .foregroundStyle(Palette.amber)
+            }
         }
-        .background(Palette.page.ignoresSafeArea())
         .task {
             model.lookUpAddresses()
             // Again every few seconds while the screen is up: an address found, a trip ended
@@ -84,7 +79,6 @@ private struct MonthHeader: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            TopLine(screen: "Trips")
             HStack {
                 Text(model.month?.title ?? " ")
                     .font(Typography.display(26))

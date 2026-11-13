@@ -39,8 +39,11 @@ final class SetupModel: ObservableObject {
         }
     }
 
+    /// A new vehicle link needs automations of its own: the user's word for the old ones goes.
     func choose(_ link: VehicleLink) {
         defaults.set(link.name, forKey: Self.vehicleKey)
+        defaults.removeObject(forKey: Self.startMadeKey)
+        defaults.removeObject(forKey: Self.endMadeKey)
         refresh()
     }
 
@@ -63,6 +66,8 @@ final class SetupModel: ObservableObject {
             precise: location.precise,
             alwaysAsked: defaults.bool(forKey: Self.alwaysAskedKey),
             vehicle: vehicle,
+            startMade: defaults.bool(forKey: Self.startMadeKey),
+            endMade: defaults.bool(forKey: Self.endMadeKey),
             motion: Self.motionPermission(),
             notifications: notifications
         )
@@ -80,6 +85,12 @@ final class SetupModel: ObservableObject {
             open(UIApplication.openSettingsURLString)
         case SetupAction.openShortcuts:
             open("shortcuts://")
+        case SetupAction.confirmStartMade:
+            defaults.set(true, forKey: Self.startMadeKey)
+            refresh()
+        case SetupAction.confirmEndMade:
+            defaults.set(true, forKey: Self.endMadeKey)
+            refresh()
         case SetupAction.askMotion:
             // Any read of the history makes iOS ask; the answer arrives with the result.
             CMMotionActivityManager().queryActivityStarting(from: Date(), to: Date(), to: .main) { _, _ in
@@ -125,6 +136,9 @@ final class SetupModel: ObservableObject {
         default: return .off
         }
     }
+
+    private static let startMadeKey = "automation_start_made"
+    private static let endMadeKey = "automation_end_made"
 
     /// Where the vehicle chosen in Setup is kept; the driving alert reads it too.
     static let vehicleKey = "vehicle_link"

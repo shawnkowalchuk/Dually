@@ -60,6 +60,8 @@ class DuallyCore private constructor(
         precise: Boolean,
         alwaysAsked: Boolean,
         vehicle: VehicleLink?,
+        startMade: Boolean,
+        endMade: Boolean,
         motion: Permission,
         notifications: Permission,
     ): SetupScreen = setupScreen(
@@ -69,6 +71,8 @@ class DuallyCore private constructor(
         vehicle = vehicle,
         connectHeardAtMs = automations.connectHeardAtMs,
         disconnectHeardAtMs = automations.disconnectHeardAtMs,
+        startMade = startMade,
+        endMade = endMade,
         motion = motion,
         notifications = notifications,
         nowMs = nowMs(),

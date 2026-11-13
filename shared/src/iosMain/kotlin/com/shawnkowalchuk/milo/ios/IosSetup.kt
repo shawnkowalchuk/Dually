@@ -41,11 +41,19 @@ enum class SetupAction {
     CHOOSE_VEHICLE,
     ASK_MOTION,
     ASK_NOTIFICATIONS,
+
+    /** The user says the Start a trip automation is made. */
+    CONFIRM_START_MADE,
+
+    /** The user says the End a trip automation is made. */
+    CONFIRM_END_MADE,
 }
 
 /**
  * One requirement. [steps] are numbered instructions, empty for most rows. [required] rows are
  * what trips starting and ending with the vehicle need; the others are for the driving alert.
+ * [confirmButton] is a second button by which the user says a step Dually cannot see is done,
+ * as Android's Setup asks "confirm you set this" for what it cannot read.
  */
 data class SetupRow(
     val title: String,
@@ -55,6 +63,8 @@ data class SetupRow(
     val button: String?,
     val action: SetupAction?,
     val required: Boolean = true,
+    val confirmButton: String? = null,
+    val confirmAction: SetupAction? = null,
 )
 
 /** The screen: how many rows are ready, and the rows in order. */
@@ -75,6 +85,8 @@ data class SetupScreen(val ready: Int, val rows: List<SetupRow>) {
  *   once; after it, only the Settings app can change the answer.
  * @param connectHeardAtMs when the automation last ran Start a trip, or null if it never has:
  *   the check that the automation works. [disconnectHeardAtMs] is the same for End a trip.
+ * @param startMade and [endMade]: the user said, with "I've made it", that the automation is
+ *   made. Dually cannot see it until it runs.
  * @param motion and [notifications] are for the driving alert (phase 4d, third part).
  */
 fun setupScreen(
@@ -84,6 +96,8 @@ fun setupScreen(
     vehicle: VehicleLink?,
     connectHeardAtMs: Long?,
     disconnectHeardAtMs: Long?,
+    startMade: Boolean,
+    endMade: Boolean,
     motion: Permission,
     notifications: Permission,
     nowMs: Long,
@@ -102,8 +116,13 @@ fun setupScreen(
             locationRow(location, alwaysAsked),
             preciseRow(location, precise),
             vehicleRow(vehicle),
-            automationRow(vehicle, connects = true, connectHeardAtMs?.let(::heardText)),
-            automationRow(vehicle, connects = false, disconnectHeardAtMs?.let(::heardText)),
+            automationRow(vehicle, connects = true, connectHeardAtMs?.let(::heardText), startMade),
+            automationRow(
+                vehicle,
+                connects = false,
+                disconnectHeardAtMs?.let(::heardText),
+                endMade,
+            ),
             motionRow(motion),
             notificationsRow(notifications),
         )
@@ -212,10 +231,17 @@ private fun vehicleRow(vehicle: VehicleLink?): SetupRow {
 }
 
 /**
- * The automation that runs Start a trip ([connects]) or End a trip. It is ready once it has run:
- * Dually cannot see the user's automations, only that its action was run.
+ * The automation that runs Start a trip ([connects]) or End a trip. Dually cannot see the user's
+ * automations, only that its action ran: that ([heard]) is the proof, "Working: it last ran…".
+ * Until then the user can say it is made ([made]), and the row is ready on their word, as
+ * Android's Setup takes the user's word for what it cannot read.
  */
-private fun automationRow(vehicle: VehicleLink?, connects: Boolean, heard: String?): SetupRow {
+private fun automationRow(
+    vehicle: VehicleLink?,
+    connects: Boolean,
+    heard: String?,
+    made: Boolean,
+): SetupRow {
     val action = if (connects) "Start a trip" else "End a trip"
     val title = "Automation: $action"
     if (vehicle == null) return row(title, SetupState.WAITING, "Choose your vehicle above first.")
@@ -226,18 +252,41 @@ private fun automationRow(vehicle: VehicleLink?, connects: Boolean, heard: Strin
             connects -> "turn the vehicle on, so your iPhone connects to it"
             else -> "turn the vehicle off, so your iPhone disconnects"
         }
-    val sentence =
-        heard ?: "Make it in the Shortcuts app with these steps. To test it, $test: this row " +
-            "turns ready when it runs."
-    val state = if (heard != null) SetupState.READY else SetupState.NEEDS_YOU
-    return SetupRow(
-        title,
-        state,
-        sentence,
-        automationSteps(vehicle, connects, action),
-        "Open Shortcuts",
-        SetupAction.OPEN_SHORTCUTS,
-    )
+    return when {
+        heard != null ->
+            SetupRow(
+                title,
+                SetupState.READY,
+                heard,
+                emptyList(),
+                "Open Shortcuts",
+                SetupAction.OPEN_SHORTCUTS,
+            )
+
+        made ->
+            SetupRow(
+                title,
+                SetupState.READY,
+                "Made, by your word. To check it, $test: this row then says when it last ran.",
+                emptyList(),
+                "Open Shortcuts",
+                SetupAction.OPEN_SHORTCUTS,
+            )
+
+        else ->
+            SetupRow(
+                title,
+                SetupState.NEEDS_YOU,
+                "Make it in the Shortcuts app with these steps, then tap I've made it. To test " +
+                    "it, $test: this row then says when it last ran.",
+                automationSteps(vehicle, connects, action),
+                "Open Shortcuts",
+                SetupAction.OPEN_SHORTCUTS,
+                confirmButton = "I've made it",
+                confirmAction =
+                    if (connects) SetupAction.CONFIRM_START_MADE else SetupAction.CONFIRM_END_MADE,
+            )
+    }
 }
 
 private fun automationSteps(vehicle: VehicleLink, connects: Boolean, action: String): List<String> {
