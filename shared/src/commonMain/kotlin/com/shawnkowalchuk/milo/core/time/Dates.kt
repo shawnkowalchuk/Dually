@@ -138,3 +138,9 @@ expect fun formatOffsetMoment(epochMs: Long, zone: ZoneId): String
 
 /** The time of the moment [epochMs] in [zone] with its seconds, "07:05:09", for the event log. */
 expect fun formatTimeWithSeconds(epochMs: Long, zone: ZoneId): String
+
+/** The month [months] after this one (before it, if negative). */
+expect fun YearMonth.monthsLater(months: Long): YearMonth
+
+/** The month [year]-[month] (1 to 12). */
+expect fun yearMonthOf(year: Int, month: Int): YearMonth

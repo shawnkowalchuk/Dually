@@ -26,6 +26,13 @@
 
 ### 2026-11-13
 
+**`[CHANGE]` Phase 4c: the Trips screen on the iPhone** (ADR-014; APP_ENCYCLOPEDIA, iPhone app)
+Shawn: "yes start 4c". A tab bar (Home, Trips); a month at a time with its totals and days; a sheet per trip to mark it Business or Personal, label it, delete, restore or count it.
+- **Moved to `:shared`, packages unchanged:** `feature/trips/TripMonth.kt` (the month view, `monthSummary`, and its month stepping), `platform/address/AddressRetry.kt` (`TripPlace`, `startPlace`, `endPlace`), and `OpenTripStart`, taken out of `TripAddresses.kt`. Two java.time uses gave way to shared ones: `minOf` and `<` on months (`compareMonths`; `monthsLater` added, `plusMonths` on Android) and days sorted newest first (`compareDates`). One smart cast in `TripAddresses` needed a local value, because `OpenTripStart.place` is now in another module.
+- **Not moved: the address lookup** (`TripAddresses`). It watches Android's trip state and writes crash files of Android's; it moves in a step of its own. Until then an iPhone trip says "Addresses not looked up yet", never Android's "looking up the address…", which would wait for ever.
+- **`[FINDING]` The month's "1 trip" sat on the Business card after the trip was marked Personal:** it was the month's count. Each card now has its own (`businessCount`, `personalCount`), as Android's do.
+- **Proven on the simulator:** the 2.2 km trip listed under Today; labelled "Site visit" (and then offered it as a choice); marked Personal (Business 0.0 km, Personal 2.2 km); deleted after the question; listed with "Show deleted and discarded (1)"; restored.
+
 **`[CHANGE]` Phase 4b: a trip recorded by hand on the iPhone** (ADR-014; APP_ENCYCLOPEDIA, iPhone app)
 Shawn: "yes start 4b". Start and End on the iPhone's Home, GPS through Core Location with the app in the background, and the trip opened, measured, closed and sorted by the shared code.
 - **The trip ledger moved to `:shared`** (`TripLedger`, `TripParking`, `TripRuleSettings`, `FencePlace`, and the seven log texts the ledger writes, now `TripLedgerText.kt`), package unchanged, `internal` made public because `:app` is now another module. Two Java pieces gave way to shared ones that are the same on Android: `java.io.IOException` (`core/io`) and the log's "HH:mm:ss" (`formatTimeWithSeconds`, java.time's formatter on Android). `@Volatile` is Kotlin's common one. Android's worker, controller and service are unchanged.

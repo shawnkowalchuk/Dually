@@ -176,3 +176,13 @@ actual fun formatTimeWithSeconds(epochMs: Long, zone: ZoneId): String {
     val time = localDateTimeOf(epochMs, zone)
     return "${twoDigits(time.hour)}:${twoDigits(time.minute)}:${twoDigits(time.second)}"
 }
+
+actual fun YearMonth.monthsLater(months: Long): YearMonth {
+    val index = year.toLong() * MONTHS + (monthNumber - 1) + months
+    return YearMonth(
+        index.floorDiv(MONTHS.toLong()).toInt(),
+        index.mod(MONTHS.toLong()).toInt() + 1,
+    )
+}
+
+actual fun yearMonthOf(year: Int, month: Int): YearMonth = YearMonth(year, month)

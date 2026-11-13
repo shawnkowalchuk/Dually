@@ -10,8 +10,14 @@ struct DuallyApp: App {
 
     var body: some Scene {
         WindowGroup {
-            HomeView(core: core)
-                .preferredColorScheme(.dark)
+            TabView {
+                HomeView(core: core)
+                    .tabItem { Label("Home", systemImage: "house.fill") }
+                TripsView(core: core)
+                    .tabItem { Label("Trips", systemImage: "list.bullet") }
+            }
+            .tint(Palette.accent)
+            .preferredColorScheme(.dark)
         }
     }
 }

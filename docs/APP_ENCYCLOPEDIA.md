@@ -110,7 +110,7 @@ Each line gives the phase the brief put the capability in, and the states of its
 - [Units: kilometres or miles](#units-kilometres-or-miles) — not in the brief; Shawn's request of 2026-10-07. Built, not yet proven on the phone (unit tests and an emulator; the Android Auto screen has run nowhere)
 - [Service](#service) — not in the brief; Shawn's request of 2026-10-16. Built, not yet proven on the phone (unit tests, and an emulator: the screen, Home's tile, the notification at a trip's end and its tap)
 - [Settings](#settings) — phases 1 to 4. Built, not yet proven on the phone
-- [iPhone app](#iphone-app) — Shawn's request of 2026-11-11 (ADR-014, ADR-015). Being built: phases 4a and 4b (Home's figures; a trip recorded by hand with GPS in the background), on the simulator only
+- [iPhone app](#iphone-app) — Shawn's request of 2026-11-11 (ADR-014, ADR-015). Being built: phases 4a to 4c (Home's figures; a trip recorded by hand with GPS in the background; the Trips screen), on the simulator only
 - [Website](#website) — not in the brief; Shawn's request of 2026-10-08. Built, live at milotriplog.top since 2026-10-08, as "MilO Trip Log" since that evening; rebranded as "Dually Trip Tracker" for dually.top on 2026-10-13 by a change of its own, which is not live (the entry is that change's to bring up to date)
 - [Design system](#design-system) — every phase. Built, not yet proven on the phone (the "Bento" look of 2026-10-06 was drawn on an emulator only)
 
@@ -2554,14 +2554,15 @@ Who reads and writes: the trip controller reads the grace period, the parked lim
 
 ## iPhone app
 
-**Status:** Being built (ADR-014, phase 4). Phase 4a, 2026-11-13: the app opens on the iPhone simulator. Phase 4b, the same day: a trip is recorded by hand, proven on the simulator with a made-up drive. Not yet on an iPhone, not on TestFlight, not in the App Store.
+**Status:** Being built (ADR-014, phase 4). Phase 4a, 2026-11-13: the app opens on the iPhone simulator. Phase 4b, the same day: a trip is recorded by hand, proven on the simulator with a made-up drive. Phase 4c, the same day: the Trips screen. Not yet on an iPhone, not on TestFlight, not in the App Store.
 
 **What it does (phase 4a)**
 - Opens on Home, in Dually's dark look: the top line (the mark, "Dually" and the date, then "Home"), the orange Start trip card, and two figures, today's Business kilometres with the number of trips, and this month's Business kilometres.
 - The figures come from the shared code (`DuallyCore.homeFigures`), from the iPhone's own copy of the database, so they are worked out and written exactly as Android's Home writes them. They are read again whenever the app comes back to the front.
 - **Recording by hand (phase 4b).** The orange card's Start trip opens a trip. The first time, iOS asks for the location ("Allow While Using App" is enough: the trip goes on recording with the app in the background, under iOS's blue location pill). While it records the card shows the kilometres so far, written as Android writes them, the time since the start, and End trip. End closes the trip; the shared code measures it, sorts it into Business or Personal by the work hours (Android's defaults until the iPhone has Settings) and Home's figures count it. A trip still open when the app is closed is picked up when it opens again, and its GPS starts again.
 - **The same rules as Android:** the trip is opened, its fixes stored and counted, closed and sorted by the very Kotlin that does it on Android (the trip rules, and since phase 4b the trip ledger, both in `:shared`).
-- **Not yet:** the truck (no trip starts by itself: phase 4d), the parked rule's close beside a parked truck, a list of trips, Settings; distances are in kilometres only; the iPhone tells the time by its own clock, not Dually's (ADR-006).
+- **Trips (phase 4c).** A tab bar at the foot: Home and Trips. Trips shows one month, with arrows to the months before (and after, up to this one): its Business kilometres and trip count on the orange card, Personal beside it, then each day ("Today · Fri, Nov 13", its Business kilometres) with its trips, newest first: the times, the places, the label, Business or Personal, and the kilometres. "Show deleted and discarded" adds the trips left out, with how many there are. A trip opens a sheet: Mark Business or Mark Personal, "What was it for?" with the labels used before (the one used where it ended first), and Delete (asked first, as on Android), Restore or Count it. A month and every change go through the same shared code as Android's Trips screen.
+- **Not yet:** the truck (no trip starts by itself: phase 4d), the parked rule's close beside a parked truck, addresses (a trip says "Addresses not looked up yet"), editing a trip's times or distance, adding a missed trip, Settings; distances are in kilometres only; the iPhone tells the time by its own clock, not Dually's (ADR-006).
 
 **Where it lives:** `ios/` (ARCHITECTURE §5, "The iPhone app"). Swift reaches the shared code through `shared/src/iosMain/.../ios/DuallyCore.kt`.
 
