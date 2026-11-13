@@ -26,6 +26,13 @@
 
 ### 2026-11-13
 
+**`[FIX]` TestFlight build 1 was refused by Apple; build 2 uploaded** (ARCHITECTURE, "Signing and TestFlight")
+Shawn: "no build showing in testflight", then Apple's email: "ITMS-90626: Invalid Siri Support - App Intent description '…' cannot contain 'iphone'", for both Shortcuts actions.
+- **`[FINDING]` "Upload succeeded" is not the end:** Apple processes a build after the upload, and a refusal there arrives only by email to the developer account's address (not the Gmail this session can read), while the build simply never appears in TestFlight.
+- **The fix:** the two descriptions say "your phone" (`ios/Dually/Recording/TripIntents.swift`), and a new build step before compiling, "Check the Shortcuts actions' words", fails the build if an App Intent title or description names an iPhone, iPad, iPod or Apple Watch. Tried: with "iPhone" put back, the build stopped with the error.
+- **Build 2** (version 0.1.0, all of 4a to 4d's three parts and Apple's time zone rules) uploaded at 17:15. The next is build 3.
+- **Not acted on:** the binary calls `statfs` and `fstatfs` (from the bundled SQLite or Kotlin's runtime), which Apple lists under "disk space" reasons; none of Apple's reasons fits a database checking its file system, and Apple's email did not mention it. If a refusal names `NSPrivacyAccessedAPICategoryDiskSpace`, the manifest gains it then.
+
 **`[CHANGE]` Phase 4d, third part: the driving alert on the iPhone** (ADR-015, "Built so far"; APP_ENCYCLOPEDIA, iPhone app)
 Shawn: "start 4d-3". Android's driving alert on the iPhone, with Android's rules and words: "You seem to be driving. No trip is being recorded. Tap to start one."
 - **Shared, not rebuilt:** `judgeDriving` and its reasons, the three spans of time, and the log wording moved to `:shared` (`platform/driving/DrivingAlertRules.kt`, `DrivingLogText.kt`), with `TruckReading` (`platform/bluetooth/TruckConnectionSource.kt`), all packages unchanged. Only the reading of Play services' events stayed in the app (`VehicleReports.kt`). Android's code and its eleven driving alert test files are unchanged.

@@ -5,11 +5,15 @@ import AppIntents
 // connection itself). The user makes the two automations in the Shortcuts app. Each action runs
 // in the background without opening Dually, and tells the trip rules what Android's Bluetooth
 // events tell them: a new link, or the vehicle gone.
+//
+// Apple refuses a build whose App Intent title or description names its devices: build 1 was
+// rejected (ITMS-90626) for "iPhone" in these two descriptions. The build step "Check the
+// Shortcuts actions' words" stops a build that says it again.
 
 struct StartTripIntent: AppIntent {
     static let title: LocalizedStringResource = "Start a trip"
     static let description = IntentDescription(
-        "Tells Dually your vehicle connected, for an automation that runs when your iPhone connects to its Bluetooth or to CarPlay. Dually starts recording a trip."
+        "Tells Dually your vehicle connected, for an automation that runs when your phone connects to its Bluetooth or to CarPlay. Dually starts recording a trip."
     )
     static let openAppWhenRun = false
 
@@ -23,7 +27,7 @@ struct StartTripIntent: AppIntent {
 struct EndTripIntent: AppIntent {
     static let title: LocalizedStringResource = "End a trip"
     static let description = IntentDescription(
-        "Tells Dually your vehicle disconnected, for an automation that runs when your iPhone disconnects from its Bluetooth or from CarPlay. The trip ends after a short wait, in case the vehicle connects again."
+        "Tells Dually your vehicle disconnected, for an automation that runs when your phone disconnects from its Bluetooth or from CarPlay. The trip ends after a short wait, in case the vehicle connects again."
     )
     static let openAppWhenRun = false
 
