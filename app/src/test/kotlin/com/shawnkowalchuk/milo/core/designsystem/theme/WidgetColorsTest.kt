@@ -20,6 +20,7 @@ class WidgetColorsTest {
         assertTrue("Not found: ${file.absolutePath}", file.isFile)
         val xml = file.readText()
         val scheme = MiloColorScheme
+        val light = MiloLightColorScheme
         val roles =
             mapOf(
                 "milo_widget_tile" to scheme.surfaceContainer,
@@ -28,6 +29,12 @@ class WidgetColorsTest {
                 "milo_widget_accent" to scheme.primary,
                 "milo_widget_on_accent" to scheme.onPrimary,
                 "milo_widget_control" to scheme.secondaryContainer,
+                // The light look's (since 2026-11-12). The Start button keeps the dark look's
+                // Hi-Vis Orange with dark words in both looks, as the trip card does.
+                "milo_widget_light_tile" to light.surfaceContainer,
+                "milo_widget_light_text" to light.onSurface,
+                "milo_widget_light_text_secondary" to light.onSurfaceVariant,
+                "milo_widget_light_control" to light.secondaryContainer,
             )
 
         for ((name, role) in roles) {

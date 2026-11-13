@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
+import com.shawnkowalchuk.milo.core.util.AppLook
 
 // Spacing, shapes and the extra text styles are the same wherever they are asked for, so a
 // default is safe and lets a component be previewed on its own.
@@ -25,24 +26,37 @@ private val LocalMiloStatusColors =
     staticCompositionLocalOf<MiloStatusColors> {
         error("No MiloTheme found. Wrap the screen or preview in MiloTheme { }.")
     }
+private val LocalMiloChartColors =
+    staticCompositionLocalOf<ChartColors> {
+        error("No MiloTheme found. Wrap the screen or preview in MiloTheme { }.")
+    }
+
+/** The palette of [look]. */
+fun miloPalette(look: AppLook): MiloPalette =
+    if (look == AppLook.LIGHT) MiloLightPalette else MiloDarkPalette
 
 /**
  * The app's theme. Every screen and every preview is wrapped in it exactly once.
  *
- * **MilO has one look, and it is dark.** It does not follow the phone's light or dark setting:
- * the design the owner chose on 2026-10-06 ("Bento") is drawn dark and has no light variant, and
- * a light one made up here would be a second design nobody drew. Material You wallpaper colours
- * are not used either: the status dots have to mean the same thing on every screen, and a
- * wallpaper-derived palette can sit too close to any of them.
+ * **Two looks, chosen in Settings** (since 2026-11-12): dark, as the design the owner chose on
+ * 2026-10-06 and rebranded on 2026-10-13 draws it, and light, the brand's light page that the
+ * report already uses, approved from a mock-up. It does not follow the phone's light or dark
+ * setting (his choice). Material You wallpaper colours are not used either: the status dots
+ * have to mean the same thing on every screen, and a wallpaper-derived palette can sit too
+ * close to any of them.
+ *
+ * @param look the look chosen in Settings. Dark for a preview that names none.
  */
 @Composable
-fun MiloTheme(content: @Composable () -> Unit) {
+fun MiloTheme(look: AppLook = AppLook.DARK, content: @Composable () -> Unit) {
+    val palette = miloPalette(look)
     CompositionLocalProvider(
-        LocalMiloColors provides MiloExtraColors,
-        LocalMiloStatusColors provides MiloStatus,
+        LocalMiloColors provides palette.colors,
+        LocalMiloStatusColors provides palette.status,
+        LocalMiloChartColors provides palette.chart,
     ) {
         MaterialTheme(
-            colorScheme = MiloColorScheme,
+            colorScheme = palette.scheme,
             typography = MiloTypography,
             shapes = MiloMaterialShapes,
             content = content,
@@ -79,15 +93,25 @@ object MiloTheme {
         @Composable
         @ReadOnlyComposable
         get() = LocalMiloStatusColors.current
+
+    /** The chart's lines and grid, in the look in force (since 2026-11-12). */
+    val chartColors: ChartColors
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalMiloChartColors.current
 }
 
 /**
- * How Android's own two bars are drawn over MilO, at the top (clock, battery) and at the bottom
- * (the gesture line or the three buttons): see-through, with light icons, always.
+ * How Android's own two bars are drawn over Dually, at the top (clock, battery) and at the bottom
+ * (the gesture line or the three buttons): see-through, with icons that suit the look chosen in
+ * Settings, light icons on the dark look and dark ones on the light look.
  *
- * "Always" is the point. Left to itself Android picks the icons by the phone's light or dark
- * setting, and with the phone set to light it would draw dark icons on MilO's dark page, where
- * they cannot be seen. MilO is dark whatever the phone is set to, so its bars say so themselves.
- * `MainActivity` hands this to `enableEdgeToEdge` for both bars.
+ * Left to itself Android picks the icons by the phone's light or dark setting, which says
+ * nothing about Dually's look, so the bars are told. `MainActivity` hands this to
+ * `enableEdgeToEdge` for both bars, again whenever the look changes.
  */
-val MiloSystemBarStyle: SystemBarStyle = SystemBarStyle.dark(TRANSPARENT)
+fun miloSystemBarStyle(look: AppLook): SystemBarStyle = if (look == AppLook.LIGHT) {
+    SystemBarStyle.light(TRANSPARENT, TRANSPARENT)
+} else {
+    SystemBarStyle.dark(TRANSPARENT)
+}

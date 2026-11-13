@@ -9,6 +9,7 @@ import android.widget.RemoteViews
 import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.app.MainActivity
 import com.shawnkowalchuk.milo.core.designsystem.text.unitShortRes
+import com.shawnkowalchuk.milo.core.util.AppLook
 import com.shawnkowalchuk.milo.platform.car.CarAction
 import com.shawnkowalchuk.milo.platform.trip.TripTrigger
 import com.shawnkowalchuk.milo.platform.trip.tripServiceIntent
@@ -16,7 +17,28 @@ import com.shawnkowalchuk.milo.platform.trip.tripServiceIntent
 // The widget as Android draws it on the home screen: a layout of plain views (RemoteViews),
 // filled in from [HomeWidgetContent]. The home screen app draws it, not MilO, which is why it
 // is not made of the app's Compose components; its colours are the theme's, written in
-// res/values/colors.xml (kept equal by WidgetColorsTest).
+// res/values/colors.xml (kept equal by WidgetColorsTest). The layouts name the dark look's;
+// on the light look (since 2026-11-12) [WidgetLook] paints the tile, the quiet button and the
+// words over them as each drawing is made.
+
+/** The widget's colours in one look: its tile, its quiet button, and its two text colours. */
+private class WidgetLook(val tile: Int, val quiet: Int, val text: Int, val secondary: Int)
+
+private fun widgetLook(look: AppLook): WidgetLook = if (look == AppLook.LIGHT) {
+    WidgetLook(
+        R.drawable.widget_background_light,
+        R.drawable.widget_button_quiet_light,
+        R.color.milo_widget_light_text,
+        R.color.milo_widget_light_text_secondary,
+    )
+} else {
+    WidgetLook(
+        R.drawable.widget_background,
+        R.drawable.widget_button_quiet,
+        R.color.milo_widget_text,
+        R.color.milo_widget_text_secondary,
+    )
+}
 
 /** What the event log calls a press of the widget's buttons. */
 internal const val WIDGET_START_SOURCE = "home-screen widget Start button"
@@ -38,6 +60,14 @@ internal fun homeWidgetViews(
     nowMs: Long,
 ): RemoteViews {
     val views = RemoteViews(context.packageName, R.layout.widget_home)
+    val paint = widgetLook(content.look)
+    views.setInt(R.id.widget_root, "setBackgroundResource", paint.tile)
+    for (id in listOf(R.id.widget_status, R.id.widget_km)) {
+        views.setTextColor(id, context.getColor(paint.text))
+    }
+    for (id in listOf(R.id.widget_unit, R.id.widget_elapsed, R.id.widget_dollars)) {
+        views.setTextColor(id, context.getColor(paint.secondary))
+    }
     val screen = content.screen
     views.setTextViewText(R.id.widget_status, context.getString(screen.status.textRes))
 
@@ -63,11 +93,11 @@ internal fun homeWidgetViews(
     views.setInt(
         R.id.widget_button,
         "setBackgroundResource",
-        if (starting) R.drawable.widget_button_accent else R.drawable.widget_button_quiet,
+        if (starting) R.drawable.widget_button_accent else paint.quiet,
     )
     views.setTextColor(
         R.id.widget_button,
-        context.getColor(if (starting) R.color.milo_widget_on_accent else R.color.milo_widget_text),
+        context.getColor(if (starting) R.color.milo_widget_on_accent else paint.text),
     )
     views.setOnClickPendingIntent(
         R.id.widget_button,
@@ -78,8 +108,11 @@ internal fun homeWidgetViews(
 }
 
 /** What a widget on the home screen shows while the switch in Settings is off. */
-internal fun switchedOffViews(context: Context): RemoteViews =
+internal fun switchedOffViews(context: Context, look: AppLook): RemoteViews =
     RemoteViews(context.packageName, R.layout.widget_off).apply {
+        val paint = widgetLook(look)
+        setInt(R.id.widget_root, "setBackgroundResource", paint.tile)
+        setTextColor(R.id.widget_off_text, context.getColor(paint.secondary))
         setOnClickPendingIntent(R.id.widget_root, openApp(context))
     }
 

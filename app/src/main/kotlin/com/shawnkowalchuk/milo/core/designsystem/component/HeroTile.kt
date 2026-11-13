@@ -56,7 +56,7 @@ fun HeroActionTile(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val scheme = MaterialTheme.colorScheme
+    val mark = MiloTheme.colors.heroButton
     TileSurface(
         kind = TileKind.ACCENT,
         // No words of its own for the press: the title already names what it does.
@@ -79,7 +79,7 @@ fun HeroActionTile(
                 modifier =
                     Modifier.size(
                         RoundMarkSize,
-                    ).background(scheme.onPrimary, MiloTheme.shapes.pill),
+                    ).background(mark.fill, MiloTheme.shapes.pill),
                 contentAlignment = Alignment.Center,
             ) {
                 // The tile's words say what the press does.
@@ -87,7 +87,7 @@ fun HeroActionTile(
                     imageVector = icon,
                     contentDescription = null,
                     modifier = Modifier.size(RoundMarkIconSize),
-                    tint = scheme.primary,
+                    tint = MiloTheme.colors.hero.fill,
                 )
             }
         }
@@ -112,13 +112,13 @@ fun HeroIconButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val scheme = MaterialTheme.colorScheme
+    val button = MiloTheme.colors.heroButton
     Surface(
         onClick = onClick,
         modifier = modifier.semantics { role = Role.Button },
         shape = MiloTheme.shapes.mainButton,
-        color = scheme.onPrimary,
-        contentColor = scheme.onSurface,
+        color = button.fill,
+        contentColor = button.text,
     ) {
         Box(modifier = Modifier.size(HeroIconButtonSize), contentAlignment = Alignment.Center) {
             Icon(

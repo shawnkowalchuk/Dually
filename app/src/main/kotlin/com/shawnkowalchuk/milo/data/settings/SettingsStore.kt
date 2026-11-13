@@ -223,6 +223,7 @@ class SettingsStore(internal val dataStore: DataStore<Preferences>) {
             serviceBook = preferences.readServiceBook(),
             reviews = preferences.readReviews(),
             distanceUnit = preferences.readDistanceUnit(),
+            look = preferences.readLook(),
             schedule = preferences.readSchedule(),
             ignoreTripsOutsideSchedule =
                 preferences[IGNORE_TRIPS_OUTSIDE_SCHEDULE] ?: defaults.ignoreTripsOutsideSchedule,

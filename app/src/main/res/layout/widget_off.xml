@@ -10,6 +10,7 @@
     android:padding="14dp">
 
     <TextView
+        android:id="@+id/widget_off_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/widget_switched_off"

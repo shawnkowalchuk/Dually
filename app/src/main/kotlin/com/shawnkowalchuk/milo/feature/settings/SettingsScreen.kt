@@ -19,6 +19,7 @@ import com.shawnkowalchuk.milo.core.designsystem.component.Tile
 import com.shawnkowalchuk.milo.core.designsystem.component.TileColumn
 import com.shawnkowalchuk.milo.core.designsystem.component.TilePadding
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
+import com.shawnkowalchuk.milo.core.util.AppLook
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.data.settings.TripSound
 import java.time.DayOfWeek
@@ -31,6 +32,7 @@ internal class SettingsActions(
     val onMinimumDistanceStep: (longer: Boolean) -> Unit,
     val onDistanceAdjustStep: (up: Boolean) -> Unit,
     val onDistanceUnit: (DistanceUnit) -> Unit,
+    val onLook: (AppLook) -> Unit,
     val onSoundEnabled: (TripSound, Boolean) -> Unit,
     val onOpenSounds: (TripSound) -> Unit,
     val onDrivingAlertEnabled: (Boolean) -> Unit,
@@ -121,6 +123,7 @@ fun SettingsScreen(
             onMinimumDistanceStep = viewModel::onMinimumDistanceStep,
             onDistanceAdjustStep = viewModel::onDistanceAdjustStep,
             onDistanceUnit = viewModel::onDistanceUnit,
+            onLook = viewModel::onLook,
             onSoundEnabled = viewModel::onSoundEnabled,
             onOpenSounds = onOpenSounds,
             onDrivingAlertEnabled = viewModel::onDrivingAlertEnabled,
@@ -249,6 +252,8 @@ internal fun SettingsContent(
                 // Under the trips' tile: it says how every distance is written, that tile's
                 // shortest trip included.
                 UnitsTile(state.distanceUnit, actions.onDistanceUnit)
+                // Beside the units: the other choice of how everything is shown.
+                LookTile(state.look, actions.onLook)
                 ScheduleTile(state, actions.schedule)
                 OutsideHoursTile(state, actions.schedule)
                 // Under the schedule: the check goes by its work days and their start.
