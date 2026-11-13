@@ -90,6 +90,7 @@ class IosTripRecorder internal constructor(
         // What was stored is picked up as it was, before the news: the trip is the connect's.
         pickUp()
         truck.connected = true
+        truck.connectHeardAtMs = clock()
         advance(AUTOMATION_CONNECTED, TripEvent.TruckLinkConnected(clock()))
         snapshot()
     }
@@ -101,6 +102,7 @@ class IosTripRecorder internal constructor(
     suspend fun truckDisconnected(): RecordingNow? = lock.withLock {
         pickUp()
         truck.connected = false
+        truck.disconnectHeardAtMs = clock()
         advance(AUTOMATION_DISCONNECTED, TripEvent.TruckConnection(false, clock()))
         snapshot()
     }
@@ -268,6 +270,12 @@ class IosTripRecorder internal constructor(
  */
 internal interface TruckBelief {
     var connected: Boolean
+
+    /** When the automation last ran Start a trip, or null if it never has: Setup's check. */
+    var connectHeardAtMs: Long?
+
+    /** When the automation last ran End a trip, or null if it never has. */
+    var disconnectHeardAtMs: Long?
 }
 
 /** [TruckBelief] in the app's own defaults (NSUserDefaults). */
@@ -278,8 +286,21 @@ internal class StoredTruckBelief : TruckBelief {
         get() = defaults.boolForKey(KEY)
         set(value) = defaults.setBool(value, KEY)
 
+    override var connectHeardAtMs: Long?
+        get() = timeAt(CONNECT_HEARD_KEY)
+        set(value) = defaults.setDouble(value?.toDouble() ?: 0.0, CONNECT_HEARD_KEY)
+
+    override var disconnectHeardAtMs: Long?
+        get() = timeAt(DISCONNECT_HEARD_KEY)
+        set(value) = defaults.setDouble(value?.toDouble() ?: 0.0, DISCONNECT_HEARD_KEY)
+
+    /** A stored time; 0, what the defaults give for a key never set, is none. */
+    private fun timeAt(key: String): Long? = defaults.doubleForKey(key).toLong().takeIf { it > 0 }
+
     private companion object {
         const val KEY = "truck_connected_by_automation"
+        const val CONNECT_HEARD_KEY = "automation_connect_heard_at_ms"
+        const val DISCONNECT_HEARD_KEY = "automation_disconnect_heard_at_ms"
     }
 }
 

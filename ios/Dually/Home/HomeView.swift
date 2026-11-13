@@ -6,16 +6,23 @@ import SwiftUI
 // while it records, and ends it (phase 4b).
 struct HomeView: View {
     @StateObject private var model: HomeModel
+    @ObservedObject var setup: SetupModel
+    let openSetup: () -> Void
     @Environment(\.scenePhase) private var scenePhase
 
-    init(session: TripSession) {
+    init(session: TripSession, setup: SetupModel, openSetup: @escaping () -> Void) {
         _model = StateObject(wrappedValue: HomeModel(session: session))
+        self.setup = setup
+        self.openSetup = openSetup
     }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 TopLine(screen: "Home")
+                if let screen = setup.screen, !screen.complete {
+                    SetupWarning(screen: screen, open: openSetup)
+                }
                 TripCard(model: model)
                 if model.location.authorization == .denied || model.location.authorization == .restricted {
                     Text("Dually may not use the location. Allow it in the iPhone's Settings, Dually, Location, to record a trip.")
@@ -44,9 +51,15 @@ struct HomeView: View {
             .padding(.bottom, 24)
         }
         .background(Palette.page.ignoresSafeArea())
-        .task { await model.refresh() }
+        .task {
+            setup.refresh()
+            await model.refresh()
+        }
         .onChange(of: scenePhase) { phase in
-            if phase == .active { Task { await model.refresh() } }
+            if phase == .active {
+                setup.refresh()
+                Task { await model.refresh() }
+            }
         }
     }
 
@@ -155,5 +168,24 @@ private struct FigureTile: View {
                 .foregroundStyle(Palette.textSecondary)
         }
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// Home's warning while Setup is not complete, as Android's: trips will not start by themselves.
+private struct SetupWarning: View {
+    let screen: SetupScreen
+    let open: () -> Void
+
+    var body: some View {
+        Tile {
+            Text("Setup: \(screen.ready) of \(screen.total) ready")
+                .font(Typography.body(17, weight: .semibold))
+                .foregroundStyle(Palette.amber)
+            Text("Until it is finished, trips don't start by themselves: only with Start trip.")
+                .font(Typography.body(15))
+                .foregroundStyle(Palette.textSecondary)
+            WideButton(title: "Open Setup", filled: false, action: open)
+                .padding(.top, 6)
+        }
     }
 }

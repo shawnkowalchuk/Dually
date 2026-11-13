@@ -9,6 +9,8 @@ import Foundation
 final class LocationRecorder: NSObject, ObservableObject {
     /// Whether the user has let Dually use the location at all.
     @Published private(set) var authorization: CLAuthorizationStatus
+    /// Whether iOS gives Dually exact positions, not rough ones (Precise Location).
+    @Published private(set) var precise: Bool
 
     /// Each usable fix, as soon as Core Location has it.
     var onFix: ((Fix) -> Void)?
@@ -18,6 +20,7 @@ final class LocationRecorder: NSObject, ObservableObject {
 
     override init() {
         authorization = manager.authorizationStatus
+        precise = manager.accuracyAuthorization == .fullAccuracy
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
@@ -36,6 +39,17 @@ final class LocationRecorder: NSObject, ObservableObject {
             return
         }
         beginUpdates()
+    }
+
+    /// Asks for the location while Dually is in use: iOS's first question.
+    func askWhenInUse() {
+        manager.requestWhenInUseAuthorization()
+    }
+
+    /// Asks iOS to let Dually use the location Always. iOS shows this question once; after
+    /// it, only the Settings app can change the answer (Setup, phase 4d).
+    func askAlways() {
+        manager.requestAlwaysAuthorization()
     }
 
     func stop() {
@@ -61,8 +75,10 @@ final class LocationRecorder: NSObject, ObservableObject {
 extension LocationRecorder: CLLocationManagerDelegate {
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         let status = manager.authorizationStatus
+        let precise = manager.accuracyAuthorization == .fullAccuracy
         Task { @MainActor in
             self.authorization = status
+            self.precise = precise
             self.beginUpdates()
         }
     }

@@ -7,18 +7,31 @@ import SwiftUI
 struct DuallyApp: App {
     /// The trip being recorded and the shared code's door, one for the whole app (phase 4d).
     private let session = TripSession.shared
+    @StateObject private var setup = SetupModel(session: TripSession.shared)
+    @State private var tab = AppTab.home
 
     var body: some Scene {
         WindowGroup {
-            TabView {
-                HomeView(session: session)
+            TabView(selection: $tab) {
+                HomeView(session: session, setup: setup) { tab = .setup }
                     .tabItem { Label("Home", systemImage: "house.fill") }
+                    .tag(AppTab.home)
                 TripsView(core: session.core)
                     .tabItem { Label("Trips", systemImage: "list.bullet") }
+                    .tag(AppTab.trips)
+                SetupView(model: setup)
+                    .tabItem { Label("Setup", systemImage: "checklist") }
+                    .tag(AppTab.setup)
             }
             .tint(Palette.accent)
             .preferredColorScheme(.dark)
             .task { await session.appStarted() }
         }
     }
+}
+
+/// The tabs at the foot. Setup is one of them until the iPhone has its Settings (phase 4g),
+/// where Android opens it from.
+enum AppTab: Hashable {
+    case home, trips, setup
 }
