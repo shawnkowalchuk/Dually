@@ -66,6 +66,7 @@
 			buildConfigurationList = D0A100000000000000000111 /* Build configuration list for PBXNativeTarget "Dually" */;
 			buildPhases = (
 				D0A100000000000000000121 /* Build the shared Kotlin code */,
+				D0A100000000000000000122 /* Check the Shortcuts actions' words */,
 				D0A100000000000000000131 /* Sources */,
 				D0A1000000000000000000E1 /* Frameworks */,
 				D0A100000000000000000141 /* Resources */,
@@ -146,6 +147,25 @@
 			shellPath = /bin/sh;
 			shellScript = "# The shared Kotlin code (the repository's shared/ module, ADR-014) is built by Gradle as the\n# DuallyShared framework, for the device or simulator Xcode is building for.\nif [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  exit 0\nfi\nset -e\ncd \"$SRCROOT/..\"\nexport JAVA_HOME=\"$(/usr/libexec/java_home -v 17)\"\n./gradlew :shared:embedAndSignAppleFrameworkForXcode\n";
 		};
+		D0A100000000000000000122 /* Check the Shortcuts actions' words */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Check the Shortcuts actions' words";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Apple refuses a build whose Shortcuts actions name its devices in their titles or\n# descriptions (ITMS-90626; build 1 was refused for \"iPhone\"). This stops such a build here.\nif grep -rnE --include='*.swift' -A3 'IntentDescription\\(|: LocalizedStringResource = ' \"$SRCROOT/Dually\" | grep -iE 'iphone|ipad|ipod|apple watch'; then\n  echo \"error: a Shortcuts action's title or description names an Apple device, which Apple refuses (ITMS-90626)\"\n  exit 1\nfi\n";
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -220,7 +240,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 3GA4CQ43F4;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Dually/Info.plist;
@@ -255,7 +275,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 3GA4CQ43F4;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Dually/Info.plist;

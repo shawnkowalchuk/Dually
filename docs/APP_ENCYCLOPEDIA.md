@@ -2554,7 +2554,7 @@ Who reads and writes: the trip controller reads the grace period, the parked lim
 
 ## iPhone app
 
-**Status:** Being built (ADR-014, phase 4). Phase 4a, 2026-11-13: the app opens on the iPhone simulator. Phase 4b, the same day: a trip is recorded by hand, proven on the simulator with a made-up drive. Phase 4c, the same day: the Trips screen. The same day again: each trip's addresses, and the first part of phase 4d: the Shortcuts actions that start and end a trip when the vehicle connects and disconnects, and its second part: the Setup screen that walks the user through making them. **On TestFlight since 2026-11-13:** version 0.1.0, build 1, uploaded from Shawn's Mac for his own iPhone. Not in the App Store.
+**Status:** Being built (ADR-014, phase 4). Phase 4a, 2026-11-13: the app opens on the iPhone simulator. Phase 4b, the same day: a trip is recorded by hand, proven on the simulator with a made-up drive. Phase 4c, the same day: the Trips screen. The same day again: each trip's addresses, and the first part of phase 4d: the Shortcuts actions that start and end a trip when the vehicle connects and disconnects, and its second part: the Setup screen that walks the user through making them. **On TestFlight since 2026-11-13:** version 0.1.0, build 2 (phases 4a to 4d), uploaded from Shawn's Mac for his own iPhone. Build 1 was refused by Apple's processing (FINDINGS_LOG). Not in the App Store.
 
 **What it does (phase 4a)**
 - Opens on Home, in Dually's dark look: the top line (the mark, "Dually" and the date, then "Home"), the orange Start trip card, and two figures, today's Business kilometres with the number of trips, and this month's Business kilometres.

@@ -652,7 +652,7 @@ xcodebuild -exportArchive -archivePath ios/build/Dually.xcarchive \
   -allowProvisioningUpdates
 ```
 
-The build number (`CURRENT_PROJECT_VERSION`) goes up by one for each upload; App Store Connect refuses a number it has seen. `ios/Dually/PrivacyInfo.xcprivacy` is Apple's privacy manifest (no tracking, no data collected, and the reasons for the defaults, file dates and time-since-boot it reads), and `Info.plist` says the app uses no encryption beyond Apple's own (`ITSAppUsesNonExemptEncryption` false), so no export paperwork is asked for each build.
+The build number (`CURRENT_PROJECT_VERSION`) goes up by one for each upload; App Store Connect refuses a number it has seen. An upload that says "Upload succeeded" can still be refused while Apple processes it: the refusal comes by email to the account holder, and the build never shows in TestFlight. A build step, "Check the Shortcuts actions' words", stops a build whose App Intent titles or descriptions name an Apple device, the reason build 1 was refused. `ios/Dually/PrivacyInfo.xcprivacy` is Apple's privacy manifest (no tracking, no data collected, and the reasons for the defaults, file dates and time-since-boot it reads), and `Info.plist` says the app uses no encryption beyond Apple's own (`ITSAppUsesNonExemptEncryption` false), so no export paperwork is asked for each build.
 
 **Dates, languages and exact numbers in `:shared`** (since 2026-11-13). The rules count with
 dates, write words in the phone's language and do exact decimal sums, which on Android are
