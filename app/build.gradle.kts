@@ -170,12 +170,12 @@ android {
         // a newer one, and the only way past that is to uninstall, which deletes every trip.
         // Google Play takes a versionCode once, so a second bundle of the same version would need
         // a higher one too.
-        // Build 7 is the cloud backup's test build on Google Play's internal testing track
-        // (2026-11-11, Shawn's choice): Play Console makes the backup's product only once a build
-        // with the billing library is uploaded. Its name stays 0.3.3 until the backup's release
-        // (slice 1f) writes its line in the list of changes.
-        versionCode = 7
-        versionName = "0.3.3"
+        // Build 7 was the cloud backup's first test build on Google Play's internal testing
+        // track (2026-11-11). Build 8 (2026-11-12) is the next one, with main's 0.3.4 merged in:
+        // the Android Auto category and odometer, and the light look. Play takes a versionCode
+        // once: a release of main to Play before the backup joins it needs 9 or more.
+        versionCode = 8
+        versionName = "0.3.4"
 
         // The Firebase settings (above), empty in a build without the file.
         buildConfigField("String", "FIREBASE_PROJECT_ID", firebaseValue("projectId"))

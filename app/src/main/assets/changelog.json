@@ -1,6 +1,27 @@
 {
   "releases": [
     {
+      "version": "0.3.4",
+      "date": null,
+      "changes": [
+        {
+          "kind": "new",
+          "title": "A light look",
+          "body": "Settings has a new Look choice under Units: Dark or Light. Light gives every screen and the home-screen widget a cream page with white cards and dark words, and keeps the orange trip card, the logo and the odometer wheels as they are. Dark stays the default."
+        },
+        {
+          "kind": "new",
+          "title": "Business or Personal on the Android Auto screen",
+          "body": "While a trip records, the car screen says whether it will be saved as Business or Personal, and a second button, Make Personal or Make Business, switches it, just like the pill on Home's trip card."
+        },
+        {
+          "kind": "new",
+          "title": "The odometer on the Android Auto screen",
+          "body": "The car screen's Business line now ends with the odometer as Dually works it out, counting up as you drive, so you can check it against the dashboard. To keep it on one line, the month is shortened and the dollars are left out there; Home still shows them."
+        }
+      ]
+    },
+    {
       "version": "0.3.3",
       "date": "2026-11-06",
       "changes": [

@@ -4,6 +4,8 @@ import androidx.compose.ui.graphics.Color
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
 /**
  * Every text colour of the theme against every fill it is written on, held to the contrast the
@@ -17,10 +19,12 @@ import org.junit.Test
  * warm accent puts at risk: that what is waiting (amber) and what is wrong (red) could be
  * taken for the accent, or the error red for the brand's own red, which is for gauges.
  */
-class ColorContrastTest {
-    private val scheme = MiloColorScheme
-    private val colors = MiloExtraColors
-    private val status = MiloStatus
+@RunWith(Parameterized::class)
+class ColorContrastTest(private val look: String, private val palette: MiloPalette) {
+    // Since 2026-11-12 every test runs twice: on the dark look and on the light one.
+    private val scheme = palette.scheme
+    private val colors = palette.colors
+    private val status = palette.status
 
     /** Every fill that text or a mark is put on, by the name used in a failure message. */
     private val fills =
@@ -176,29 +180,57 @@ class ColorContrastTest {
     @Test
     fun `the letter of the app's mark stands out from its square, and the square from the page`() {
         assertReadable("the mark's letter", colors.mark.text, colors.mark.fill, MARK)
-        assertReadable("the mark's square on the page", colors.mark.fill, scheme.background, MARK)
         assertReadable(
             "the mark's square on a tile",
             colors.mark.fill,
             scheme.surfaceContainer,
             MARK,
         )
+        if (palette.dark) {
+            assertReadable(
+                "the mark's square on the page",
+                colors.mark.fill,
+                scheme.background,
+                MARK,
+            )
+        } else {
+            // Hi-Vis Orange cannot stand 3 to 1 out from any light ground but white: on the
+            // light page it is 2.9 to 1. The guidelines exempt a logo (WCAG 1.4.11), and the
+            // letter on it, which is what is read, is held above. The brand's orange is kept.
+            assertTrue(contrast(colors.mark.fill, scheme.background) > 2.8)
+        }
     }
 
     @Test
     fun `white words are never put on the accent`() {
-        // The brand's own rule: white on this orange is too faint for words, so every pair that
-        // has the accent as its fill has the page's dark as its words.
-        assertFalse(contrast(Color.White, scheme.primary) >= TEXT)
-        val onAccent =
+        // The brand's own rule: white on Hi-Vis Orange is too faint for words, so every pair
+        // that has it as its fill has the dark of the dark page as its words. On the light look
+        // the accent of buttons and links is a deeper orange, which is not Hi-Vis Orange and
+        // takes white words; the Hi-Vis fills (the trip card, the tags, the wheel) are as dark.
+        val hiVis = colors.hero.fill
+        val asphalt = MiloColorScheme.background
+        assertFalse(contrast(Color.White, hiVis) >= TEXT)
+        val onHiVis =
             listOf(
-                scheme.onPrimary,
-                scheme.onPrimaryContainer,
+                colors.hero.text,
                 colors.logTags.trip.text,
                 colors.changeTags.new.text,
                 colors.wheels.counting.text,
             )
-        onAccent.forEach { assertTrue(it == scheme.background) }
+        onHiVis.forEach { assertTrue(it == asphalt) }
+        listOf(colors.logTags.trip.fill, colors.changeTags.new.fill, colors.wheels.counting.fill)
+            .forEach { assertTrue(it == hiVis) }
+        if (palette.dark) {
+            assertTrue(scheme.primary == hiVis)
+            assertTrue(scheme.onPrimary == asphalt && scheme.onPrimaryContainer == asphalt)
+        } else {
+            assertReadable(
+                "white words on the light look's accent",
+                scheme.onPrimary,
+                scheme.primary,
+                TEXT,
+            )
+        }
     }
 
     @Test
@@ -270,7 +302,12 @@ class ColorContrastTest {
         assertTrue("$name are %.1f apart, and need $APART".format(apart), apart >= APART)
     }
 
-    private companion object {
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "{0}")
+        fun looks(): List<Array<Any>> =
+            listOf(arrayOf("dark", MiloDarkPalette), arrayOf("light", MiloLightPalette))
+
         /** What text needs. The guidelines let large text off with less; MilO does not. */
         const val TEXT = 4.5
 

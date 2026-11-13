@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The widget's tile on the light look: the light tile colour, with Android's widget corners. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/milo_widget_light_tile" />
+    <corners android:radius="@android:dimen/system_app_widget_background_radius" />
+</shape>
