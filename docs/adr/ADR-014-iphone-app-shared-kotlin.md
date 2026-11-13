@@ -32,11 +32,12 @@ The rule this protects: logic lives once, so surfaces cannot drift (CLAUDE.md, A
 - **Bundle ID `top.dually.triptracker`,** the same as Android's application ID.
 - **The look is Dually's design written again in SwiftUI:** the same colour tokens, corners and spacing, and the same typefaces (Archivo and IBM Plex Mono, bundled with their licences). One list of tokens, `ios/Dually/DesignSystem/`, mirrors `core/designsystem/`; a value changed in one is changed in the other in the same pull request. The phone screens follow iPhone conventions where Android's differ (back swipe, tab bar, sheets), not a copy of Android's.
 - **Not chosen: Compose Multiplatform** for the iPhone screens. It would share the screens too, but it does not look or behave like an iPhone app, and Shawn asked for native.
-- **iOS version:** the lowest version supported is the one on Shawn's iPhone, as on Android, where nothing older than the one phone can be tested (FINDINGS_LOG, 2026-10-07). Confirmed when phase 4 starts.
+- **iOS version: iOS 16 and later** (decided 2026-11-12). Shawn: "I think we should go back as far back as we can and make it Most compatible and reasonable." iOS 16 is as far back as the app can go without losing a part of it: CarPlay's Driving Task category, the App Intents that a Shortcuts automation runs to start a trip (ADR-015), and the Live Activity on the Lock Screen all need iOS 16 (the Live Activity 16.1; on 16.0 it is left out). iOS 16 runs on the iPhone 8 and later. Until 2026-11-12 this record said the version on Shawn's iPhone, as on Android.
 - **iPhone surfaces:** the phone screens, **CarPlay**, a Home Screen widget (WidgetKit) like Android's, and a Live Activity on the Lock Screen while a trip records.
 
 ### CarPlay
 
+- **Granted 2026-11-12** (Shawn: "Apple granted the permission for CarPlay"): Dually's App ID `top.dually.triptracker` shows "CarPlay Driving Task App" as Assigned under Capability Requests in the developer account.
 - CarPlay needs an **entitlement Apple grants on request**. Dually most likely fits Apple's **Driving Task** category (apps that help with a task done while driving, with simple templates only). The request is sent early, in phase 0, because Apple's answer can take weeks and the launch waits on it.
 - Driving Task apps get a small set of templates: a trip being recorded, start and stop, today's trips. The same scope as the Android Auto screen, whose rules come from the same shared code.
 - If Apple refuses the entitlement, the iPhone app launches without CarPlay, and the request is made again with Apple's reasons answered. Recorded as a risk, not built around.
@@ -56,6 +57,6 @@ Dually has four surfaces on two platforms: Android's phone UI and Android Auto, 
 - Better: the move in phase 3 also lets the rules run in tests without Android at all.
 - Worse: phase 3 is a large change with nothing new to see. It touches most of `core/` and `data/`, and every date in the rules moves to kotlinx-datetime. It needs its own branch, the full suite and a release check on the phone.
 - Worse: two UI codebases and two design-token lists to keep alike, and a second toolchain (Xcode, Swift, Apple's signing and App Store review).
-- Worse: the Mac's disk. Xcode and an iOS simulator take tens of GB on a disk that runs nearly full; space is checked before phase 4.
+- Worse: the Mac's disk. Xcode and an iOS simulator take tens of GB. On 2026-11-12 the disk had about 140 GB free, which Shawn judged enough ("I don't think that should be a problem").
 - Locked into: Kotlin Multiplatform for the shared logic. It is Google's recommended way to share Kotlin with iOS, and Room, DataStore, coroutines and kotlinx.serialization all support it.
 - Unknown until tried: CarPlay's entitlement; the build time of the shared framework in Xcode; the iPhone version on Shawn's phone.
