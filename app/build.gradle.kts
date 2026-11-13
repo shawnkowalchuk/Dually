@@ -172,8 +172,9 @@ android {
         // a higher one too.
         // Build 7 and build 8 were the cloud backup's test builds on Google Play's internal testing
         // track (2026-11-11 and -12). Build 9 (2026-11-12) is main with the backup merged in, for
-        // the same track; Play takes a versionCode once, so main goes on from 9.
-        versionCode = 9
+        // the same track; Play takes a versionCode once, so main goes on from 9. Build 10
+        // (2026-11-13) is 0.3.4 for production, rebuilt with the version dated.
+        versionCode = 10
         versionName = "0.3.4"
 
         // The Firebase settings (above), empty in a build without the file.

@@ -24,6 +24,11 @@
 
 ## Log
 
+### 2026-11-13
+
+**`[CHANGE]` 0.3.4 dated for its production release, as build 10**
+Shawn: "make the 0.3.4 production release". The version is dated 2026-11-13 and `versionCode` goes to 10: build 9's bundle (internal testing) was built with the version undated, so its What's new would call 0.3.4 unreleased, and Play takes a build number once. Released from main before phase 3a (#128) merges, so the release holds no code that has not had its phone check. Saved in Play Console the same day and sent with this release: the Data safety answers of `docs/play-data-safety.md`, with the deletion page, and the full description of `marketing/google-play/listing.md`. Not run before production: build 9's restore, one-phone-per-account and delete flows on the phone (DEVICE_TEST_CHECKLIST).
+
 ### 2026-11-12
 
 **`[CHANGE]` The online backup is in main (slice 1f), as build 9**
