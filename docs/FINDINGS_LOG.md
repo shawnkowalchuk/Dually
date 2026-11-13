@@ -26,6 +26,14 @@
 
 ### 2026-11-12
 
+**`[CHANGE]` Cloud backup, slice 1e: restore, one phone per account, deletion**
+Shawn, going to sleep: "please do everything Autonomously". Built as ADR-012 had planned, with three decisions made on the way:
+- **A restore is an import.** The online copy is written as an export file of format 3 without points and given to the existing import, minus its question (the tile asks its own). The safety copy, the settings, the Log line and the resume after a cut-off all come with it. Nothing new stores a trip.
+- **Ownership is a document, not a field on the unlock,** so the rules need only one more allowed path (`backup/owner`). Builds 7 and 8 never wrote it. A phone that uploaded to the account before is let carry on: its ledger shows it, so Shawn's own phone will not be asked when build 9 arrives.
+- **Deleting an account releases its purchase, rather than forgetting it.** A new sign-in after a deletion gets a new Firebase id, and the purchase is tagged with the old one's hash. Without the release, the user who paid could never use it again. The token, which only the Google Play account that paid can produce, is what proves it is theirs.
+
+Not built in 1e: Google's "G" mark (no Sign in with Google button is left, so none is needed), and any way to merge two phones' trips (backup, not sync, by Shawn's choice).
+
 **`[CHANGE]` The welcome page says Dually is free, and what the one purchase is**
 Shawn: "should we have it specify first off that it is free and the paid version is for purchasing of online backup only?". On the backup's branch, because main has no backup to name: the welcome page's orange card ends "Free, with every feature and no ads. The only purchase is the optional online backup." The privacy card stops saying "no account and no server". Still to match in slice 1f: the Google Play description ("Dually is free.", "no account, no server and no ads") and the privacy page; the App Store description is not written yet.
 

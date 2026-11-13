@@ -46,11 +46,21 @@ fun unlockAnswer(code: Int, body: String): CloudUnlockResult {
         }
     return when {
         error?.message == "other-account" -> CloudUnlockResult.OtherAccount
+
         error?.message == "pending" -> CloudUnlockResult.Pending
+
         error?.message == "refunded" -> CloudUnlockResult.Refunded
+
+        // The check itself answered: it is Google Play behind it that did not (2026-11-12, when
+        // the check's access to Play had not come into force yet).
+        error?.message == "play-unreachable" -> CloudUnlockResult.PlayNotReady
+
         error?.status in setOf("UNAVAILABLE", "DEADLINE_EXCEEDED") -> CloudUnlockResult.Offline
+
         error == null && code >= 500 -> CloudUnlockResult.Offline
+
         error == null -> CloudUnlockResult.Failed("Purchase check: HTTP $code")
+
         else -> CloudUnlockResult.Failed("Purchase check: ${error.status}, ${error.message}")
     }
 }

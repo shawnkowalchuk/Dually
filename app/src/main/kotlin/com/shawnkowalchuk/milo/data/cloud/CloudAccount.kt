@@ -25,9 +25,17 @@ private const val ACCOUNT_FILE_BEING_WRITTEN = "account.json.new"
  * @param email what the Settings tile shows, so the user sees which Google account it is.
  * @param unlocked whether the account held the one-time unlock when the app last looked
  * (ADR-013). Uploads run only while it does; the server's rules decide in the end.
+ * @param backingUp whether this phone is the one backing up to the account (since 2026-11-12,
+ * `cloudStart`): true when it is, false while it waits for Restore here or Back up this phone,
+ * and null before it has looked (a file written by builds 7 and 8).
  */
 @Serializable
-data class CloudAccount(val id: String, val email: String, val unlocked: Boolean = false)
+data class CloudAccount(
+    val id: String,
+    val email: String,
+    val unlocked: Boolean = false,
+    val backingUp: Boolean? = null,
+)
 
 /**
  * What a purchase carries to Google Play as its "obfuscated account id": the SHA-256 of the

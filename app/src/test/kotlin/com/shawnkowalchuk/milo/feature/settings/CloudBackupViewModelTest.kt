@@ -1,7 +1,9 @@
 package com.shawnkowalchuk.milo.feature.settings
 
 import com.shawnkowalchuk.milo.data.cloud.CloudAccount
+import com.shawnkowalchuk.milo.data.cloud.CloudRestoreResult
 import com.shawnkowalchuk.milo.data.cloud.CloudSignInResult
+import com.shawnkowalchuk.milo.data.cloud.CloudStartResult
 import com.shawnkowalchuk.milo.data.cloud.CloudUnlockResult
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
@@ -41,6 +43,13 @@ class CloudBackupViewModelTest {
     private var unlockAnswer: CloudUnlockResult = CloudUnlockResult.Unlocked
     private var restoreAnswer: CloudUnlockResult = CloudUnlockResult.Unlocked
 
+    /** How the backup stands, and what a restore, a take-over and a deletion come to. */
+    private var standing: CloudStartResult = CloudStartResult.BackingUp
+    private var restoreTripsAnswer: CloudRestoreResult = CloudRestoreResult.Restored(12)
+    private var backUpHereAnswer = true
+    private var deleteAnswer = true
+    private var deletions = 0
+
     /** What Google's sheet answers next. Completed by the test, so it can look while it is open. */
     private var answer = CompletableDeferred<CloudSignInResult>()
 
@@ -63,6 +72,13 @@ class CloudBackupViewModelTest {
             },
             unlock = { unlockAnswer },
             restore = { restoreAnswer },
+            startBackup = { standing },
+            restoreTrips = { restoreTripsAnswer },
+            backUpHere = { backUpHereAnswer },
+            deleteAccount = {
+                deletions++
+                deleteAnswer
+            },
             eventLog = EventLogRepository(log),
             clock = { 1_000L },
         ).also { runCurrent() }
@@ -253,5 +269,101 @@ class CloudBackupViewModelTest {
         runCurrent()
 
         assertNull(tile.state.value.note)
+    }
+
+    @Test
+    fun `an account that holds the unlock is told how the backup stands when the tile opens`() =
+        runTest {
+            stored = account.copy(unlocked = true)
+            standing = CloudStartResult.Choose(trips = 12)
+
+            assertEquals(CloudStartResult.Choose(12), viewModel().state.value.standing)
+        }
+
+    @Test
+    fun `Restore my trips here brings them back, says how many, and backs up from here`() =
+        runTest {
+            stored = account.copy(unlocked = true)
+            standing = CloudStartResult.Choose(trips = 12)
+            val tile = viewModel()
+
+            tile.onRestoreTrips()
+            runCurrent()
+
+            assertEquals(CloudNote.RESTORED, tile.state.value.note)
+            assertEquals(12, tile.state.value.restoredTrips)
+            assertEquals(CloudStartResult.BackingUp, tile.state.value.standing)
+        }
+
+    @Test
+    fun `each way a restore does not happen has its note, and nothing else changes`() = runTest {
+        stored = account.copy(unlocked = true)
+        standing = CloudStartResult.Choose(trips = 12)
+        val tile = viewModel()
+        val cases =
+            listOf(
+                CloudRestoreResult.TripInProgress to CloudNote.TRIP_IN_PROGRESS,
+                CloudRestoreResult.Offline to CloudNote.BACKUP_OFFLINE,
+                CloudRestoreResult.Failed("Import refused") to CloudNote.RESTORE_FAILED,
+            )
+        for ((result, note) in cases) {
+            restoreTripsAnswer = result
+            tile.onRestoreTrips()
+            runCurrent()
+
+            assertEquals(note, tile.state.value.note)
+            assertEquals(CloudStartResult.Choose(12), tile.state.value.standing)
+        }
+    }
+
+    @Test
+    fun `Back up this phone instead takes the backup over, or says it could not`() = runTest {
+        stored = account.copy(unlocked = true)
+        standing = CloudStartResult.Moved(trips = 3)
+        val tile = viewModel()
+
+        backUpHereAnswer = false
+        tile.onBackUpHere()
+        runCurrent()
+        assertEquals(CloudNote.BACKUP_OFFLINE, tile.state.value.note)
+        assertEquals(CloudStartResult.Moved(3), tile.state.value.standing)
+
+        backUpHereAnswer = true
+        tile.onBackUpHere()
+        runCurrent()
+        assertEquals(CloudNote.BACKING_UP_HERE, tile.state.value.note)
+        assertEquals(CloudStartResult.BackingUp, tile.state.value.standing)
+    }
+
+    @Test
+    fun `deleting the account forgets it here, and a failed one changes nothing`() = runTest {
+        stored = account.copy(unlocked = true)
+        val tile = viewModel()
+
+        deleteAnswer = false
+        tile.onDeleteAccount(Unit)
+        runCurrent()
+        assertEquals(CloudNote.DELETE_FAILED, tile.state.value.note)
+        assertEquals(true, tile.state.value.account?.unlocked)
+
+        deleteAnswer = true
+        tile.onDeleteAccount(Unit)
+        runCurrent()
+        assertEquals(CloudNote.DELETED, tile.state.value.note)
+        assertNull(tile.state.value.account)
+        assertEquals(2, deletions)
+    }
+
+    @Test
+    fun `a locked account is offered no restore and no take-over`() = runTest {
+        stored = account
+        val tile = viewModel()
+
+        tile.onRestoreTrips()
+        tile.onBackUpHere()
+        runCurrent()
+
+        assertNull(tile.state.value.note)
+        assertNull(tile.state.value.standing)
     }
 }

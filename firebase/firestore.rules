@@ -26,7 +26,7 @@ service cloud.firestore {
     // A trip's id is a whole number; the backup's two other documents have fixed names.
     function knownPath(folder, name) {
       return (folder == 'trips' && name.matches('^[1-9][0-9]{0,18}$'))
-        || (folder == 'backup' && name in ['sentReports', 'settings']);
+        || (folder == 'backup' && name in ['sentReports', 'settings', 'owner']);
     }
 
     // One field, a string, under 500,000 characters: Firestore's limit for a document is
@@ -44,7 +44,9 @@ service cloud.firestore {
     }
 
     match /users/{uid}/{folder}/{name} {
-      allow read: if signedInAs(uid) && knownPath(folder, name);
+      allow get: if signedInAs(uid) && knownPath(folder, name);
+      // A restore reads the whole of one folder at once (since 2026-11-12).
+      allow list: if signedInAs(uid) && folder in ['trips', 'backup'];
       allow delete: if signedInAs(uid) && knownPath(folder, name);
       allow create, update: if signedInAs(uid)
         && knownPath(folder, name)

@@ -8,8 +8,10 @@ import { deleteApp, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import {
   accountTag,
+  deleteAccount,
   KEPT_AFTER_REFUND_MS,
   revokeRefunded,
+  runDeletions,
   unlock,
 } from '../functions/unlock.js';
 
@@ -69,6 +71,7 @@ beforeEach(async () => {
       await Promise.all(all.docs.map((d) => d.ref.delete()));
     }),
   );
+  await Promise.all([OWNER, OTHER].map((uid) => db.recursiveDelete(db.doc(`users/${uid}`))));
 });
 
 after(async () => {
@@ -172,5 +175,73 @@ describe('a refund', () => {
       await rejection(unlock({ uid: OWNER, token: TOKEN, play, db, now: 6 })),
       'failed-precondition/refunded',
     );
+  });
+});
+
+/** A backup of three trips and the two backup documents, as the app writes them. */
+async function backupOf(uid) {
+  for (const path of ['trips/1', 'trips/2', 'trips/3', 'backup/sentReports', 'backup/settings']) {
+    await db.doc(`users/${uid}/${path}`).set({ json: '{}' });
+  }
+}
+
+describe('deleting an account', () => {
+  test('deletes its backup, its unlock and any deletion waiting, and releases its purchase', async () => {
+    const play = fakePlay({ [TOKEN]: paidBy(OWNER) });
+    await unlock({ uid: OWNER, token: TOKEN, play, db, now: 5 });
+    await backupOf(OWNER);
+    await backupOf(OTHER);
+    await db.doc(`deletions/${OWNER}`).set({ dueAt: 1 });
+
+    assert.equal(await deleteAccount({ uid: OWNER, db, auth: null, now: 9 }), 5);
+
+    assert.equal((await db.collection(`users/${OWNER}/trips`).get()).size, 0);
+    assert.ok(!(await exists(`users/${OWNER}/backup/settings`)));
+    assert.ok(!(await exists(`unlocks/${OWNER}`)));
+    assert.ok(!(await exists(`deletions/${OWNER}`)));
+    // Another account's backup is not touched.
+    assert.equal((await db.collection(`users/${OTHER}/trips`).get()).size, 3);
+    const purchases = await db.collection('purchases').get();
+    assert.equal(purchases.docs[0].get('released'), true);
+    assert.equal(purchases.docs[0].get('uid'), null);
+  });
+
+  test('lets the Google Play account that paid restore the purchase to a new account', async () => {
+    const play = fakePlay({ [TOKEN]: paidBy(OWNER, { acknowledgementState: 1 }) });
+    await unlock({ uid: OWNER, token: TOKEN, play, db, now: 5 });
+    await deleteAccount({ uid: OWNER, db, auth: null, now: 9 });
+
+    assert.deepEqual(await unlock({ uid: OTHER, token: TOKEN, play, db, now: 10 }), {
+      unlocked: true,
+    });
+    assert.ok(await exists(`unlocks/${OTHER}`));
+    // And it is that account's from then on: the first one cannot take it back.
+    assert.equal(
+      await rejection(unlock({ uid: OWNER, token: TOKEN, play, db, now: 11 })),
+      'permission-denied/other-account',
+    );
+  });
+
+  test('of an account that never bought anything deletes its backup and nothing else', async () => {
+    await backupOf(OWNER);
+
+    assert.equal(await deleteAccount({ uid: OWNER, db, auth: null, now: 9 }), 5);
+    assert.equal((await db.collection('purchases').get()).size, 0);
+  });
+});
+
+describe('the daily deletions', () => {
+  test('delete the backups whose time has come, and only those', async () => {
+    await backupOf(OWNER);
+    await backupOf(OTHER);
+    await db.doc(`deletions/${OWNER}`).set({ dueAt: 1000 });
+    await db.doc(`deletions/${OTHER}`).set({ dueAt: 5000 });
+
+    assert.equal(await runDeletions({ db, now: 2000 }), 1);
+
+    assert.equal((await db.collection(`users/${OWNER}/trips`).get()).size, 0);
+    assert.ok(!(await exists(`deletions/${OWNER}`)));
+    assert.equal((await db.collection(`users/${OTHER}/trips`).get()).size, 3);
+    assert.ok(await exists(`deletions/${OTHER}`));
   });
 });

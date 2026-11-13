@@ -16,6 +16,10 @@ import kotlinx.coroutines.withContext
 
 /** The purchase check's name on the server (firebase/functions/index.js). */
 private const val UNLOCK_FUNCTION = "unlockBackup"
+private const val DELETE_FUNCTION = "deleteMyAccount"
+
+/** A callable function's request with no data. */
+private const val EMPTY_CALL = "{\"data\":{}}"
 
 private const val CONNECT_TIMEOUT_MS = 15_000
 
@@ -44,6 +48,41 @@ class CloudUnlockCheck(private val firebase: CloudFirebase) : CloudUnlockServer 
                 return CloudUnlockResult.Failed("ID token: ${failed.javaClass.simpleName}")
             } ?: return CloudUnlockResult.Failed("ID token: none")
         return withContext(Dispatchers.IO) { call(idToken, token) }
+    }
+
+    /**
+     * "Delete my online backup and account" (since 2026-11-12): the server deletes the backup,
+     * the unlock and the sign-in account, and releases the purchase (`deleteMyAccount`).
+     *
+     * @return true when the server says it is done; false when it could not be reached or
+     * refused, and nothing may be taken as deleted.
+     */
+    suspend fun deleteAccount(): Boolean {
+        val user = firebase.auth().currentUser ?: return false
+        val idToken =
+            try {
+                user.getIdToken(false).await().token
+            } catch (failed: FirebaseException) {
+                null
+            } ?: return false
+        return withContext(Dispatchers.IO) {
+            val connection =
+                URL(firebase.functionUrl(DELETE_FUNCTION)).openConnection() as HttpURLConnection
+            try {
+                connection.requestMethod = "POST"
+                connection.doOutput = true
+                connection.connectTimeout = CONNECT_TIMEOUT_MS
+                connection.readTimeout = READ_TIMEOUT_MS
+                connection.setRequestProperty("Content-Type", "application/json")
+                connection.setRequestProperty("Authorization", "Bearer $idToken")
+                connection.outputStream.use { it.write(EMPTY_CALL.toByteArray(Charsets.UTF_8)) }
+                connection.responseCode in 200..299
+            } catch (offline: IOException) {
+                false
+            } finally {
+                connection.disconnect()
+            }
+        }
     }
 
     private fun call(idToken: String, token: String): CloudUnlockResult {

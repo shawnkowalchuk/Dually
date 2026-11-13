@@ -60,14 +60,19 @@ export async function unlock({ uid, token, play, db, now }) {
   const purchase = await play.getProduct(token);
   if (purchase.purchaseState === 2) throw new UnlockError('failed-precondition', 'pending');
   if (purchase.purchaseState !== 0) throw new UnlockError('failed-precondition', 'not-purchased');
-  if (purchase.obfuscatedExternalAccountId !== accountTag(uid)) {
-    throw new UnlockError('permission-denied', 'other-account');
-  }
+  const boughtHere = purchase.obfuscatedExternalAccountId === accountTag(uid);
   const tokenHash = sha256(token);
   await db.runTransaction(async (transaction) => {
     const kept = db.doc(`purchases/${tokenHash}`);
     const known = await transaction.get(kept);
-    if (known.exists && known.get('uid') !== uid) {
+    // A purchase whose account was deleted is released (deleteAccount): whoever holds its
+    // token, which only the Google Play account that paid for it has, may take it to a new
+    // account. Otherwise it unlocks the account it was bought for, and only that one.
+    const released = known.exists && known.get('released') === true;
+    if (!boughtHere && !released) {
+      throw new UnlockError('permission-denied', 'other-account');
+    }
+    if (known.exists && !released && known.get('uid') !== uid) {
       throw new UnlockError('permission-denied', 'other-account');
     }
     if (known.exists && known.get('refunded') === true) {
@@ -77,6 +82,7 @@ export async function unlock({ uid, token, play, db, now }) {
       uid,
       orderId: purchase.orderId ?? null,
       refunded: false,
+      released: false,
       at: now,
     });
     transaction.set(db.doc(`unlocks/${uid}`), {
@@ -116,4 +122,59 @@ export async function revokeRefunded({ play, db, sinceMs }) {
     if (changed) revoked++;
   }
   return revoked;
+}
+
+/**
+ * Deletes an account at its own request (since 2026-11-12, ADR-012: both stores ask for a
+ * deletion in the app): every document of its backup, its unlock and any deletion waiting for
+ * it, and then the sign-in account itself. Its purchase is released, not forgotten, so that the
+ * Google Play account that paid for it can restore it to a new account later (`unlock`).
+ *
+ * @param auth the Firebase Authentication admin, or null to leave the sign-in alone (tests).
+ * @returns how many documents of the backup were deleted.
+ */
+export async function deleteAccount({ uid, db, auth, now }) {
+  const backup = await countDocuments(db, `users/${uid}`);
+  await db.recursiveDelete(db.doc(`users/${uid}`));
+  const bought = await db.collection('purchases').where('uid', '==', uid).get();
+  const batch = db.batch();
+  for (const purchase of bought.docs) {
+    batch.update(purchase.ref, { uid: null, released: true, releasedAt: now });
+  }
+  batch.delete(db.doc(`unlocks/${uid}`));
+  batch.delete(db.doc(`deletions/${uid}`));
+  await batch.commit();
+  if (auth) {
+    try {
+      await auth.deleteUser(uid);
+    } catch (error) {
+      if (error?.code !== 'auth/user-not-found') throw error;
+    }
+  }
+  return backup;
+}
+
+/**
+ * Deletes the backups whose time has come: those of refunded purchases, 30 days after the
+ * refund (`revokeRefunded` writes `deletions/{uid}`). Run once a day, after the refunds. An
+ * account that bought the backup again in the meantime has no deletion left (`unlock`).
+ *
+ * @returns how many backups were deleted.
+ */
+export async function runDeletions({ db, now }) {
+  const due = await db.collection('deletions').where('dueAt', '<=', now).get();
+  for (const deletion of due.docs) {
+    await db.recursiveDelete(db.doc(`users/${deletion.id}`));
+    await deletion.ref.delete();
+  }
+  return due.size;
+}
+
+/** How many documents an account's backup holds, all folders together. */
+async function countDocuments(db, path) {
+  let count = 0;
+  for (const folder of await db.doc(path).listCollections()) {
+    count += (await folder.count().get()).data().count;
+  }
+  return count;
 }

@@ -2,6 +2,8 @@ package com.shawnkowalchuk.milo.platform.cloud
 
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.FirebaseFirestoreException.Code
+import com.google.firebase.firestore.Source
+import com.shawnkowalchuk.milo.data.cloud.CLOUD_TRIPS
 import com.shawnkowalchuk.milo.data.cloud.CloudDocument
 import com.shawnkowalchuk.milo.data.cloud.CloudRefusedException
 import com.shawnkowalchuk.milo.data.cloud.CloudStore
@@ -39,6 +41,41 @@ class FirestoreCloudStore(private val firebase: CloudFirebase) : CloudStore {
         }
         try {
             withTimeout(BATCH_TIMEOUT_MS) { batch.commit().await() }
+        } catch (slow: TimeoutCancellationException) {
+            throw CloudUnreachableException("No answer in ${BATCH_TIMEOUT_MS / 1_000} s", slow)
+        } catch (failed: FirebaseFirestoreException) {
+            val message = "Firestore ${failed.code}"
+            throw when (failed.code) {
+                Code.PERMISSION_DENIED, Code.UNAUTHENTICATED ->
+                    CloudRefusedException(message, failed)
+
+                else -> CloudUnreachableException(message, failed)
+            }
+        }
+    }
+
+    /**
+     * Every document of the account's backup, by its path under the account's folder: the
+     * trips, and the backup folder's documents (the sent reports, the settings, the owner).
+     * Read from the server, never from a cache, for a restore and before each upload.
+     *
+     * @throws CloudUnreachableException or [CloudRefusedException], as [apply] does.
+     */
+    suspend fun readAll(account: String): Map<String, String> {
+        val firestore = firebase.firestore()
+        return try {
+            withTimeout(BATCH_TIMEOUT_MS) {
+                listOf(CLOUD_TRIPS, "backup").flatMap { folder ->
+                    firestore
+                        .collection("users/$account/$folder")
+                        .get(Source.SERVER)
+                        .await()
+                        .documents
+                        .mapNotNull { document ->
+                            document.getString(JSON_FIELD)?.let { "$folder/${document.id}" to it }
+                        }
+                }.toMap()
+            }
         } catch (slow: TimeoutCancellationException) {
             throw CloudUnreachableException("No answer in ${BATCH_TIMEOUT_MS / 1_000} s", slow)
         } catch (failed: FirebaseFirestoreException) {

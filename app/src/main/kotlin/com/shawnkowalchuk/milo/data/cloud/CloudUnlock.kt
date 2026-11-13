@@ -45,6 +45,13 @@ sealed interface CloudUnlockResult {
     /** The purchase check could not be reached. Paid purchases are kept: try again. */
     data object Offline : CloudUnlockResult
 
+    /**
+     * The purchase check was reached, and Google Play would not answer it (since 2026-11-12):
+     * the check's access to Play's orders is not in force yet, or Play is down. The purchase is
+     * kept; Restore purchase later.
+     */
+    data object PlayNotReady : CloudUnlockResult
+
     /** Anything else, for the log: the kind of failure, never a token. */
     data class Failed(val cause: String) : CloudUnlockResult
 }

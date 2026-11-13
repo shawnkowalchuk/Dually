@@ -2261,6 +2261,23 @@ Android only: `SystemClock.elapsedRealtime`, `Settings.Global.BOOT_COUNT` and th
 
 ## Cloud backup
 
+**Slice 1e, 2026-11-12 (built, unit and emulator-server tested, not yet on the phone): restore, one phone per account, deletion.** Shawn asked for it while he slept: "please do everything Autonomously".
+- **One phone backs up to an account.** The backup's `backup/owner` document names the install that backs up to it, a random number kept in `no_backup/cloud/install.txt` (`CloudInstall`). Before each upload, and when the tile opens, the phone reads the whole backup and decides (`cloudStart`, `CloudObjects.look`):
+  - **its own:** it uploads;
+  - **another phone named, while this one was backing up:** it stops and says so ("Another phone backs up to this account now");
+  - **another phone named, or another phone's trips with nobody named:** the tile asks.
+  - A phone that filled the backup in builds 7 and 8, before the owner document existed, carries on without being asked: its ledger shows its own uploads.
+- **Restore my trips here.** The tile asks first ("A safety copy of this phone's trips is made first"). The backup is read whole, written as an export file of format 3 without points (`cloudRestoreExport`), and handed to the import that reads a picked file (`DataTransfer.restoreFromBackup`): checked, safety copy, replace, settings, Log line. Then the ledger is set to what the backup holds (`cloudLedgerOf`), so nothing is sent twice, and this phone takes the backup over. Not while a trip is being recorded.
+- **Back up this phone instead.** It is asked first. The ledger is set to what the backup holds, this phone is named, and its next upload replaces the other phone's documents with its own.
+- **Delete my online backup and account.** It is asked first, then the server function `deleteMyAccount`:
+  - deletes `users/{uid}`, the unlock, any waiting deletion and the sign-in account;
+  - **releases the purchase** (`released: true`, no account id): the Google Play account that paid can restore it to a new account later (`unlock` accepts a released purchase whatever account it was bought for);
+  - this phone then forgets the account and the ledger. The trips on the phone stay.
+- **30 days after a refund** the daily job (`checkRefunds`, 04:00 Edmonton) also runs `runDeletions`, which deletes the backups whose time has come.
+- **"Google Play has not confirmed the purchase yet"** replaces "Google could not be reached" when the purchase check was reached but Play did not answer it (`play-unreachable` → `CloudUnlockResult.PlayNotReady`), as on 2026-11-12 before the check's Play access came into force.
+- **Android's own backup no longer takes `shared_prefs/`** (`data_extraction_rules.xml`): Dually keeps nothing there, and Firebase's sign-in restored on a new phone without the account file would leave it half signed in.
+- **Rules:** `backup/owner` may be written like the other two backup documents, and an account may **list** its own `trips` and `backup` folders (a restore reads them whole). Tests: 24 on the emulator (`firebase/test/`); app: `CloudStartTest`, `CloudRestoreTest` (a backup written, turned back into a file and read by the real import's reader gives the same trips), `CloudCallableTest`, `CloudBackupViewModelTest` (18).
+
 **On the main Settings screen as "Online backup", since 2026-11-12 (built, not yet on the phone).** Shawn: "the backup shouldnt be hidden. also it should probably state something like purchase online backup". The tile was the "Cloud backup" fold on the Your data page. It now stands open under Units and Look (`CloudBackupTile`, `backupTile` of `SettingsContent`).
 - **Not bought:** one sentence says what it is ("Keep a copy of every trip online, on Dually's server in Canada, without its GPS points. One purchase, no subscription."). Under it are **Purchase online backup · (Google Play's price)** and **Restore purchase**. The price is asked before anyone signs in.
 - **Sign-in comes first, inside the purchase.** Either button opens Google's account sheet first where nobody is signed in (`CloudBackupViewModel.onPurchase`, `onRestore`). An account that turns out to hold the unlock already is not asked to pay again. There is no separate "Sign in with Google" button any more, so the debt about Google's "G" mark on it is gone.
