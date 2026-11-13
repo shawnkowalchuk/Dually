@@ -28,7 +28,7 @@ enum class CloudNote {
 }
 
 /**
- * The Cloud backup tile.
+ * The Online backup tile (named Cloud backup until 2026-11-12).
  *
  * @param available false in a build without the Firebase settings: then the tile says so and
  * offers nothing.
@@ -82,43 +82,19 @@ class CloudBackupViewModel<H>(
         }
     }
 
-    /** "Sign in with Google". */
-    fun onSignIn(host: H) {
-        val shown = state.value
-        if (!shown.available || !shown.read || shown.working || shown.account != null) return
-        work {
-            val result = signIn(host)
-            if (result is CloudSignInResult.Failed) {
-                eventLog.add(
-                    clock(),
-                    EventCategory.ERROR,
-                    "Cloud backup sign-in failed. ${result.cause}",
-                )
-            }
-            mutableState.update {
-                it.copy(
-                    account = (result as? CloudSignInResult.SignedIn)?.account,
-                    note =
-                        when (result) {
-                            is CloudSignInResult.SignedIn, CloudSignInResult.Cancelled -> null
-                            CloudSignInResult.NoGoogleAccount -> CloudNote.NO_GOOGLE_ACCOUNT
-                            CloudSignInResult.Offline -> CloudNote.OFFLINE
-                            is CloudSignInResult.Failed -> CloudNote.SIGN_IN_FAILED
-                        },
-                )
-            }
-            askPriceIfLocked()
-        }
+    /**
+     * "Purchase online backup" (since 2026-11-12, Shawn: "it should probably state something
+     * like purchase online backup"): signs in with Google first where no account is, then shows
+     * Google Play's purchase sheet. An account that turns out to hold the unlock already is not
+     * asked to pay again.
+     */
+    fun onPurchase(host: H) {
+        if (readyToBuy()) work { if (signedIn(host) && locked()) unlocked(unlock(host)) }
     }
 
-    /** "Unlock", with the price on it. */
-    fun onUnlock(host: H) {
-        if (lockedAndIdle()) work { unlocked(unlock(host)) }
-    }
-
-    /** "Restore purchase". */
-    fun onRestore() {
-        if (lockedAndIdle()) work { unlocked(restore()) }
+    /** "Restore purchase": signs in first where no account is, then looks for the purchase. */
+    fun onRestore(host: H) {
+        if (readyToBuy()) work { if (signedIn(host) && locked()) unlocked(restore()) }
     }
 
     /** "Sign out". */
@@ -131,9 +107,50 @@ class CloudBackupViewModel<H>(
         }
     }
 
-    private fun lockedAndIdle(): Boolean {
+    /** Whether a purchase or a restore may start: the backup is offered, read, idle and locked. */
+    private fun readyToBuy(): Boolean {
         val shown = state.value
-        return !shown.working && shown.account?.unlocked == false
+        return shown.available && shown.read && !shown.working && shown.account?.unlocked != true
+    }
+
+    private fun locked(): Boolean = state.value.account?.unlocked == false
+
+    /**
+     * True when an account is signed in, after Google's sign-in sheet if there was none. What
+     * a sign-in that did not happen came to is said in the tile's note.
+     */
+    private suspend fun signedIn(host: H): Boolean {
+        if (state.value.account != null) return true
+        val result = signIn(host)
+        if (result is CloudSignInResult.Failed) {
+            eventLog.add(
+                clock(),
+                EventCategory.ERROR,
+                "Cloud backup sign-in failed. ${result.cause}",
+            )
+        }
+        val account = (result as? CloudSignInResult.SignedIn)?.account
+        mutableState.update {
+            it.copy(
+                account = account,
+                note =
+                    when (result) {
+                        // An account that holds the unlock already: nothing to buy.
+                        is CloudSignInResult.SignedIn ->
+                            CloudNote.UNLOCKED.takeIf { account?.unlocked == true }
+
+                        CloudSignInResult.Cancelled -> null
+
+                        CloudSignInResult.NoGoogleAccount -> CloudNote.NO_GOOGLE_ACCOUNT
+
+                        CloudSignInResult.Offline -> CloudNote.OFFLINE
+
+                        is CloudSignInResult.Failed -> CloudNote.SIGN_IN_FAILED
+                    },
+            )
+        }
+        askPriceIfLocked()
+        return account != null
     }
 
     private fun unlocked(result: CloudUnlockResult) {
@@ -161,9 +178,12 @@ class CloudBackupViewModel<H>(
         }
     }
 
-    /** Asks Google Play for the price, for an account that does not hold the unlock. */
+    /**
+     * Asks Google Play for the price, for the Purchase button: before anyone is signed in too,
+     * since 2026-11-12, because the button shows it then.
+     */
     private suspend fun askPriceIfLocked() {
-        if (state.value.account?.unlocked == false && state.value.price == null) {
+        if (state.value.account?.unlocked != true && state.value.price == null) {
             val asked = price()
             mutableState.update { it.copy(price = asked) }
         }

@@ -60,6 +60,7 @@ fun SetupScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     onDone: (() -> Unit)? = null,
+    logTile: (@Composable () -> Unit)? = null,
 ) {
     val rows by viewModel.rows.collectAsState()
     val activity = LocalActivity.current
@@ -122,6 +123,7 @@ fun SetupScreen(
         onBack = onBack,
         modifier = modifier,
         onDone = onDone,
+        logTile = logTile,
     )
 }
 
@@ -154,6 +156,10 @@ fun SetupLinkTile(viewModel: SetupViewModel, onOpenSetup: () -> Unit) {
  *
  * During the first start, "Done, go to Settings" stays at the bottom of the screen while the
  * rows scroll (2026-10-09, [PinnedHeaderColumn]).
+ *
+ * @param logTile the way into the Log, under the rows (since 2026-11-12: it stood at the end of
+ * Settings before, and Setup is where a trip that did not start is looked into). The app hands
+ * it in, because a feature never imports another one; null for none.
  */
 @Composable
 private fun SetupContent(
@@ -162,6 +168,7 @@ private fun SetupContent(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     onDone: (() -> Unit)? = null,
+    logTile: (@Composable () -> Unit)? = null,
 ) {
     val spacing = MiloTheme.spacing
     val header: @Composable () -> Unit = {
@@ -173,6 +180,7 @@ private fun SetupContent(
         } else {
             ChecklistGroups(rows, actions)
         }
+        logTile?.invoke()
     }
     if (onDone == null) {
         PinnedHeaderColumn(header = header, modifier = modifier.fillMaxSize(), content = tiles)

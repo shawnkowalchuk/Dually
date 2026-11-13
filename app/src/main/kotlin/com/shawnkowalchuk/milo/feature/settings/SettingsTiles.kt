@@ -41,18 +41,13 @@ import java.util.Locale
 // every tile of the screen is made of: its label, a note, and a note with a name.
 
 /**
- * The truck's tile and the driving alert's, side by side, and under the two the line that
- * opens what they are for.
- *
- * The explanation stands under the pair and not inside a tile. The driving alert's tile is one
- * switch, pressed as a whole, so it can hold no second thing to press; and its two sentences
- * would make a half tile three times as high as drawn. That the alert never starts a trip by
- * itself is said there, because a switch about driving in an app that starts trips by itself
- * would otherwise be read as one more way a trip starts.
+ * The truck's tile and the driving alert's, side by side. Until 2026-11-12 a line under the two
+ * opened what they are for; it went with Settings' other drawers (Shawn: "to many drawers").
+ * The pairing screen says what the truck does, and the driving alert's own notification says
+ * that it never starts a trip by itself.
  */
 @Composable
 internal fun TruckAndAlertTiles(state: SettingsUiState.Ready, actions: SettingsActions) {
-    var aboutOpen by rememberSaveable { mutableStateOf(false) }
     TilePair(
         first = { half -> TruckTile(state, actions.onChangeTruck, half) },
         second = { half ->
@@ -65,25 +60,6 @@ internal fun TruckAndAlertTiles(state: SettingsUiState.Ready, actions: SettingsA
             )
         },
     )
-    QuietExpander(
-        label = stringResource(R.string.settings_about_pair),
-        expanded = aboutOpen,
-        onToggle = { aboutOpen = !aboutOpen },
-        // In from the edge, like a label that stands on the page.
-        modifier = Modifier.padding(horizontal = MiloTheme.spacing.extraSmall),
-    ) {
-        Note(
-            stringResource(
-                if (state.truckPaired) {
-                    R.string.settings_truck_detail
-                } else {
-                    R.string.pairing_no_truck_detail
-                },
-            ),
-        )
-        Note(stringResource(R.string.settings_driving_detail))
-        Note(stringResource(R.string.settings_driving_needs))
-    }
 }
 
 /**
@@ -138,30 +114,37 @@ private fun TruckTile(state: SettingsUiState.Ready, onChangeTruck: () -> Unit, m
     }
 }
 
-/** The three numbers the trip rules run with, each between a minus and a plus. */
+/**
+ * "Wait 2 min · shortest 0.3 km · adjust 0 %": the trip rules in one line, for their tile and for
+ * the tile of the main screen that opens their page.
+ */
 @Composable
-internal fun TripRulesTile(state: SettingsUiState.Ready, actions: SettingsActions) {
+internal fun tripRulesSummary(state: SettingsUiState.Ready): String {
     val locale = LocalConfiguration.current.locales[0]
-    var aboutOpen by rememberSaveable { mutableStateOf(false) }
-    val grace = stringResource(R.string.settings_grace_label)
-    val parked = stringResource(R.string.settings_parked_label)
-    val minimum = stringResource(R.string.settings_minimum_label)
-    val adjust = stringResource(R.string.settings_adjust_label)
     val shortest =
         stringResource(
             distanceRes(state.distanceUnit),
             formatShortDistance(state.minimumDistanceMetres.toDouble(), state.distanceUnit, locale),
         )
+    return stringResource(
+        R.string.settings_trips_summary,
+        formatMinutes(state.gracePeriodSeconds, locale),
+        shortest,
+        formatAdjustPercent(state.distanceAdjustSteps, locale),
+    )
+}
+
+/** The three numbers the trip rules run with, each between a minus and a plus. */
+@Composable
+internal fun TripRulesTile(state: SettingsUiState.Ready, actions: SettingsActions) {
+    val locale = LocalConfiguration.current.locales[0]
+    val grace = stringResource(R.string.settings_grace_label)
+    val parked = stringResource(R.string.settings_parked_label)
+    val minimum = stringResource(R.string.settings_minimum_label)
+    val adjust = stringResource(R.string.settings_adjust_label)
     SettingsFold(
         title = stringResource(R.string.settings_trips_label),
-        // "Wait 2 min · shortest 0.3 km · adjust 0 %"
-        summary =
-            stringResource(
-                R.string.settings_trips_summary,
-                formatMinutes(state.gracePeriodSeconds, locale),
-                shortest,
-                formatAdjustPercent(state.distanceAdjustSteps, locale),
-            ),
+        summary = tripRulesSummary(state),
         gap = MiloTheme.spacing.controlPadding,
     ) {
         StepperRow(
@@ -250,11 +233,7 @@ internal fun TripRulesTile(state: SettingsUiState.Ready, actions: SettingsAction
                     enabled = state.distanceAdjustSteps < MAX_ADJUST_STEPS,
                 ),
         )
-        QuietExpander(
-            label = stringResource(R.string.settings_about_trips),
-            expanded = aboutOpen,
-            onToggle = { aboutOpen = !aboutOpen },
-        ) {
+        SettingsAbout(label = stringResource(R.string.settings_about_trips)) {
             Note(stringResource(R.string.settings_applies_next_trip))
             NamedNote(grace, stringResource(R.string.settings_grace_detail))
             NamedNote(parked, stringResource(R.string.settings_parked_detail))

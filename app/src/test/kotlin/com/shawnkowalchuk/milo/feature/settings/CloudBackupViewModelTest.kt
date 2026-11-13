@@ -23,8 +23,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The Cloud backup tile: what it shows before and after a sign-in, each way a sign-in can end,
- * and a sign-out. Google's sheet is a stand-in that answers what the test says; the tile's
+ * The Online backup tile (the Cloud backup tile until 2026-11-12): what it shows before and
+ * after a sign-in, each way a sign-in can end, a purchase and a restore that sign in first, and a
+ * sign-out. Google's sheet is a stand-in that answers what the test says; the tile's
  * "activity" is [Unit].
  */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -77,7 +78,7 @@ class CloudBackupViewModelTest {
         stored = account
         val tile = viewModel(available = false)
 
-        tile.onSignIn(Unit)
+        tile.onPurchase(Unit)
         runCurrent()
 
         assertEquals(CloudBackupCardState(available = false), tile.state.value)
@@ -95,23 +96,48 @@ class CloudBackupViewModelTest {
     }
 
     @Test
-    fun `a sign-in shows the account, and a second press while the sheet is open does nothing`() =
+    fun `Purchase signs in first, then buys, and a second press meanwhile does nothing`() =
         runTest {
             val tile = viewModel()
 
-            tile.onSignIn(Unit)
+            tile.onPurchase(Unit)
             runCurrent()
             assertTrue(tile.state.value.working)
-            tile.onSignIn(Unit)
+            tile.onPurchase(Unit)
             runCurrent()
             answer.complete(CloudSignInResult.SignedIn(account))
             runCurrent()
 
             assertEquals(1, sheets)
-            assertEquals(account, tile.state.value.account)
+            assertEquals(account.copy(unlocked = true), tile.state.value.account)
+            assertEquals(CloudNote.UNLOCKED, tile.state.value.note)
             assertFalse(tile.state.value.working)
-            assertNull(tile.state.value.note)
         }
+
+    @Test
+    fun `an account that turns out to hold the unlock is not asked to pay again`() = runTest {
+        val tile = viewModel()
+        unlockAnswer = CloudUnlockResult.Failed("should not be asked")
+        answer = CompletableDeferred(CloudSignInResult.SignedIn(account.copy(unlocked = true)))
+
+        tile.onPurchase(Unit)
+        runCurrent()
+
+        assertEquals(true, tile.state.value.account?.unlocked)
+        assertEquals(CloudNote.UNLOCKED, tile.state.value.note)
+    }
+
+    @Test
+    fun `Restore with nobody signed in signs in, then restores`() = runTest {
+        val tile = viewModel()
+        answer = CompletableDeferred(CloudSignInResult.SignedIn(account))
+
+        tile.onRestore(Unit)
+        runCurrent()
+
+        assertEquals(1, sheets)
+        assertEquals(true, tile.state.value.account?.unlocked)
+    }
 
     @Test
     fun `each way a sign-in fails has its note, and closing the sheet has none`() = runTest {
@@ -125,7 +151,7 @@ class CloudBackupViewModelTest {
             )
         for ((result, note) in cases) {
             answer = CompletableDeferred(result)
-            tile.onSignIn(Unit)
+            tile.onPurchase(Unit)
             runCurrent()
 
             assertEquals(note, tile.state.value.note)
@@ -139,7 +165,7 @@ class CloudBackupViewModelTest {
         val tile = viewModel()
         answer = CompletableDeferred(CloudSignInResult.Failed("Firebase: refused"))
 
-        tile.onSignIn(Unit)
+        tile.onPurchase(Unit)
         runCurrent()
 
         val line = log.entries.single()
@@ -161,8 +187,9 @@ class CloudBackupViewModelTest {
     }
 
     @Test
-    fun `an account without the unlock is shown the price, and one that has it is not asked`() =
+    fun `the price is shown before a sign-in and when locked, never to one that has it`() =
         runTest {
+            assertEquals("US$19.99", viewModel().state.value.price)
             stored = account
             assertEquals("US$19.99", viewModel().state.value.price)
 
@@ -177,7 +204,7 @@ class CloudBackupViewModelTest {
         stored = account
         val tile = viewModel()
 
-        tile.onUnlock(Unit)
+        tile.onPurchase(Unit)
         runCurrent()
 
         assertEquals(true, tile.state.value.account?.unlocked)
@@ -203,12 +230,12 @@ class CloudBackupViewModelTest {
                 )
             for ((result, note) in cases) {
                 unlockAnswer = result
-                tile.onUnlock(Unit)
+                tile.onPurchase(Unit)
                 runCurrent()
                 assertEquals(note, tile.state.value.note)
 
                 restoreAnswer = result
-                tile.onRestore()
+                tile.onRestore(Unit)
                 runCurrent()
                 assertEquals(note, tile.state.value.note)
                 assertEquals(false, tile.state.value.account?.unlocked)
@@ -221,8 +248,8 @@ class CloudBackupViewModelTest {
         val tile = viewModel()
         unlockAnswer = CloudUnlockResult.Failed("should not be asked")
 
-        tile.onUnlock(Unit)
-        tile.onRestore()
+        tile.onPurchase(Unit)
+        tile.onRestore(Unit)
         runCurrent()
 
         assertNull(tile.state.value.note)
