@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.SystemClock
+import com.shawnkowalchuk.milo.core.util.AppLook
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.localDateOf
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
@@ -81,6 +82,10 @@ class HomeWidget(
     @Volatile
     private var enabled = true
 
+    /** The look as last read, for the drawing of a switched-off widget. */
+    @Volatile
+    private var look = AppLook.DARK
+
     /**
      * Applies the stored switch, then keeps every widget on the home screen in step with the
      * trip and this year's trips for the life of the process. Called once, at the start of it.
@@ -89,7 +94,7 @@ class HomeWidget(
         scope.launch {
             val stored =
                 try {
-                    settings.current().homeWidgetEnabled
+                    settings.current().also { look = it.look }.homeWidgetEnabled
                 } catch (unreadable: IOException) {
                     failed("reading the settings", unreadable)
                     true
@@ -118,9 +123,9 @@ class HomeWidget(
                         failed("reading this year's trips", failure)
                         null
                     }
-                val centsPerKm =
+                val stored =
                     try {
-                        settings.current().homeWidgetCentsPerKm
+                        settings.current()
                     } catch (unreadable: IOException) {
                         failed("reading the settings", unreadable)
                         null
@@ -129,11 +134,12 @@ class HomeWidget(
                     homeWidgetContent(
                         activity.value,
                         yearTrips,
-                        centsPerKm,
+                        stored?.homeWidgetCentsPerKm,
                         clock(),
                         zone(),
                         locale(),
                         shownUnit.value,
+                        stored?.look ?: look,
                     ),
                 )
             } finally {
@@ -154,7 +160,7 @@ class HomeWidget(
         enabled = on
         if (!on) {
             val shown = manager.getAppWidgetIds(provider)
-            if (shown.isNotEmpty()) manager.updateAppWidget(shown, switchedOffViews(context))
+            if (shown.isNotEmpty()) manager.updateAppWidget(shown, switchedOffViews(context, look))
         }
         val state =
             if (on) {
@@ -188,16 +194,16 @@ class HomeWidget(
         combine(
             activity,
             yearTrips(),
-            centsPerKm(),
+            stored(),
             shownUnit,
             months(),
-        ) { now, year, rate, unit, _ ->
-            homeWidgetContent(now, year, rate, clock(), zone(), locale(), unit)
+        ) { now, year, (rate, shownLook), unit, _ ->
+            homeWidgetContent(now, year, rate, clock(), zone(), locale(), unit, shownLook)
         }.distinctUntilChanged()
             .collectLatest { content ->
                 val before = drawn
                 if (before != null && before.screen.differsOnlyInTripFigures(content.screen) &&
-                    before.dollars == content.dollars
+                    before.dollars == content.dollars && before.look == content.look
                 ) {
                     // collectLatest cancels this wait when newer figures arrive: the gap holds.
                     delay(drawnAtMs + FIGURES_MIN_GAP_MS - SystemClock.elapsedRealtime())
@@ -232,14 +238,19 @@ class HomeWidget(
                 }
         }
 
-    /** The rate set in Settings, or null once the settings file has turned out to be unreadable. */
-    private fun centsPerKm(): Flow<Int?> = settings.settings
-        .map<MiloSettings, Int?> { it.homeWidgetCentsPerKm }
-        .distinctUntilChanged()
+    /**
+     * The rate set in Settings, or null once the settings file has turned out to be unreadable,
+     * and the look (since 2026-11-12), which then stays as it was last read.
+     */
+    private fun stored(): Flow<Pair<Int?, AppLook>> = settings.settings
+        .map<MiloSettings, Pair<Int?, AppLook>> {
+            look = it.look
+            it.homeWidgetCentsPerKm to it.look
+        }.distinctUntilChanged()
         .catch { unreadable ->
             if (unreadable !is IOException) throw unreadable
             failed("reading the settings", unreadable)
-            emit(null)
+            emit(null to look)
         }
 
     /** Draws [content] on every widget on the home screen, if there is one and it is on. */

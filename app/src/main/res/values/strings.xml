@@ -1136,4 +1136,16 @@
     <string name="car_business_month">%1$s %2$s</string>
     <string name="car_business_month_dollars">%1$s %2$s, %3$s</string>
     <string name="car_business_unknown">Not available</string>
+    <!--
+        The odometer at the end of the Business row (since 2026-11-12): "Odo 102,684 km". Short
+        on purpose, and with it the month is named short and the dollars are left out, so that
+        the row stays one line: "Today 17.9 km · Nov. 412.3 km · Odo 102,684 km".
+    -->
+    <string name="car_odometer">Odo %1$s</string>
+    <!--
+        The second button while a trip is recorded (since 2026-11-12): it switches what the trip
+        will be saved as, as Home's Business/Personal pill does. It names what a press makes it.
+    -->
+    <string name="car_make_personal">Make Personal</string>
+    <string name="car_make_business">Make Business</string>
 </resources>

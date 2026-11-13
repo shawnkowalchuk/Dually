@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.shawnkowalchuk.milo.core.designsystem.theme.MiloColorScheme
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
 
 /** The small icon the design draws before some tile labels. */
@@ -101,6 +102,27 @@ internal fun TileSurface(
     kind: TileKind,
     press: TilePress?,
     modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    if (kind == TileKind.ACCENT) {
+        // The accent tile is the brand's Hi-Vis orange with dark words, the same in both looks.
+        // On the light look the accent of buttons and links is a deeper orange and the tiles
+        // and words are light, so inside this tile Material's roles are the dark look's: the
+        // live dot, the Business pill, the bin and the Stop button are then drawn exactly as on
+        // the dark look (since 2026-11-12).
+        MaterialTheme(colorScheme = MiloColorScheme) {
+            PlainTileSurface(kind, press, modifier, content)
+        }
+    } else {
+        PlainTileSurface(kind, press, modifier, content)
+    }
+}
+
+@Composable
+private fun PlainTileSurface(
+    kind: TileKind,
+    press: TilePress?,
+    modifier: Modifier,
     content: @Composable () -> Unit,
 ) {
     val attention = MiloTheme.colors.attentionTile

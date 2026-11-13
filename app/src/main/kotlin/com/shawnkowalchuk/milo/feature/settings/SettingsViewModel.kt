@@ -6,6 +6,7 @@ import com.shawnkowalchuk.milo.core.schedule.WorkSchedule
 import com.shawnkowalchuk.milo.core.schedule.withEndOn
 import com.shawnkowalchuk.milo.core.schedule.withStartOn
 import com.shawnkowalchuk.milo.core.trip.MAX_ADJUST_STEPS
+import com.shawnkowalchuk.milo.core.util.AppLook
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
@@ -21,6 +22,7 @@ import com.shawnkowalchuk.milo.data.settings.isEmailAddress
 import com.shawnkowalchuk.milo.data.settings.reportTextOrNull
 import com.shawnkowalchuk.milo.data.settings.setDistanceAdjustSteps
 import com.shawnkowalchuk.milo.data.settings.setDistanceUnit
+import com.shawnkowalchuk.milo.data.settings.setLook
 import com.shawnkowalchuk.milo.data.settings.setParkedLimitSeconds
 import com.shawnkowalchuk.milo.data.settings.setSoundEnabled
 import java.io.IOException
@@ -146,6 +148,8 @@ class SettingsViewModel(
 
     /** Kilometres or miles. Every surface follows the settings, so it shows at once. */
     fun onDistanceUnit(unit: DistanceUnit) = change { settings.setDistanceUnit(unit) }
+
+    fun onLook(look: AppLook) = change { settings.setLook(look) }
 
     fun onSoundEnabled(which: TripSound, enabled: Boolean) = change {
         settings.setSoundEnabled(which, enabled)

@@ -68,4 +68,12 @@
     <color name="milo_widget_accent">#FF5A12</color>
     <color name="milo_widget_on_accent">#15120F</color>
     <color name="milo_widget_control">#2E2721</color>
+    <!--
+        The same on the light look (since 2026-11-12): the light tile, its two text colours and
+        the light control fill. The accent button is the same orange in both looks.
+    -->
+    <color name="milo_widget_light_tile">#FFFFFF</color>
+    <color name="milo_widget_light_text">#15120F</color>
+    <color name="milo_widget_light_text_secondary">#6B5A4C</color>
+    <color name="milo_widget_light_control">#F1E4D5</color>
 </resources>

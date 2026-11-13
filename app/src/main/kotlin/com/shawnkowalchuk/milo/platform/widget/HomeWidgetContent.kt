@@ -3,6 +3,7 @@ package com.shawnkowalchuk.milo.platform.widget
 import com.shawnkowalchuk.milo.core.allowance.allowanceCents
 import com.shawnkowalchuk.milo.core.allowance.formatCentsPerKm
 import com.shawnkowalchuk.milo.core.allowance.formatWholeDollars
+import com.shawnkowalchuk.milo.core.util.AppLook
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.TimeSpan
 import com.shawnkowalchuk.milo.core.util.daysSpan
@@ -51,11 +52,13 @@ data class WidgetDollars(
  * the one button. The car's Business row is not shown on the widget, which has its dollars.
  * @param tripStartedAtMs when the open trip started, for the running clock; null with no trip.
  * @param dollars null while this year's trips or the rate have not been read, or could not be.
+ * @param look the look chosen in Settings (since 2026-11-12): the widget follows the app.
  */
 data class HomeWidgetContent(
     val screen: CarScreenContent,
     val tripStartedAtMs: Long?,
     val dollars: WidgetDollars?,
+    val look: AppLook = AppLook.DARK,
 )
 
 /**
@@ -75,7 +78,9 @@ fun homeWidgetContent(
     zone: ZoneId,
     locale: Locale,
     unit: DistanceUnit,
+    look: AppLook = AppLook.DARK,
 ): HomeWidgetContent = HomeWidgetContent(
+    look = look,
     screen =
         carScreenContent(
             activity,

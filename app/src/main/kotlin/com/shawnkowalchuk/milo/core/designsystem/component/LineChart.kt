@@ -31,7 +31,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
-import com.shawnkowalchuk.milo.core.designsystem.theme.MiloChartColors
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
 import kotlin.math.floor
 import kotlin.math.log10
@@ -94,7 +93,7 @@ fun chartStep(max: Double): Double {
 
 /**
  * A chart of a few lines over the same points (since 2026-10-16, the Trips screen's graph of a
- * year's months): a legend over it, the lines in [MiloChartColors] in their fixed order, each
+ * year's months): a legend over it, the lines in `MiloTheme.chartColors` in their fixed order, each
  * named at its end as well, so that no line is told apart by its colour alone; a quiet grid on
  * round figures from zero; and under each point its short label. One scale only.
  *
@@ -117,7 +116,8 @@ fun LineChart(
     spokenSummary: String,
     modifier: Modifier = Modifier,
 ) {
-    val colors = MiloChartColors.series
+    val chart = MiloTheme.chartColors
+    val colors = chart.series
     Column(modifier = modifier.fillMaxWidth()) {
         Legend(lines.mapIndexed { index, line -> line.name to colors[index] })
         val measurer = rememberTextMeasurer()
@@ -151,12 +151,12 @@ fun LineChart(
                     points = labels.size,
                     scaleTop = top,
                 )
-            drawGrid(plot, measurer, labelStyle, formatValue)
+            drawGrid(plot, measurer, labelStyle, formatValue, chart.grid)
             drawLabels(plot, labels, measurer, labelStyle)
             selected?.let { index ->
                 val x = plot.x(index)
                 drawLine(
-                    MiloChartColors.guide,
+                    chart.guide,
                     Offset(x, plot.top),
                     Offset(x, plot.bottom),
                     HairLine.toPx(),
@@ -214,11 +214,12 @@ private fun DrawScope.drawGrid(
     measurer: TextMeasurer,
     style: TextStyle,
     formatValue: (Double) -> String,
+    grid: Color,
 ) {
     for (step in 0..GRID_STEPS) {
         val value = plot.scaleTop * step / GRID_STEPS
         val y = plot.y(value)
-        drawLine(MiloChartColors.grid, Offset(plot.left, y), Offset(plot.right, y), HairLine.toPx())
+        drawLine(grid, Offset(plot.left, y), Offset(plot.right, y), HairLine.toPx())
         val text = measurer.measure(formatValue(value), style)
         drawText(text, topLeft = Offset(0f, y - text.size.height / 2f))
     }
