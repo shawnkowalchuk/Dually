@@ -24,7 +24,7 @@
     <string name="onboarding_report_text">From the 1st, Dually reminds you to send last month\'s report. It opens your email app with the PDF attached, and you press send.</string>
 
     <string name="onboarding_privacy_title">Your trips stay on this phone</string>
-    <string name="onboarding_privacy_text">Nothing leaves it except files you send or save yourself, your own Android backup and, only if you buy the optional online backup, a copy of your trips on Dually\'s server in Canada.</string>
+    <string name="onboarding_privacy_text">Nothing leaves it except files you send or save yourself, your own Android backup and, only if you buy the optional online backup, a copy of your trips in Google\'s Firebase, in Montréal, Canada.</string>
 
     <string name="onboarding_next_title">Next</string>
     <string name="onboarding_next_text">Setup asks for the permissions Dually needs and pairs your truck. Then Settings, for your work hours, your name and the accountant\'s email address.</string>

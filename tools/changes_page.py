@@ -170,7 +170,6 @@ PAGE_TEMPLATE = """<!doctype html>
         <a href="/changes" aria-current="page">What's new</a>
         <a href="/privacy">Privacy</a>
         <a href="mailto:support@dually.top?subject=Dually%20Trip%20Tracker%20support">Support</a>
-        <a href="https://github.com/shawnkowalchuk/Dually">GitHub</a>
         <a class="cta" href="/#install">Install</a>
       </nav>
     </header>
@@ -179,7 +178,7 @@ PAGE_TEMPLATE = """<!doctype html>
       <section class="tile">
         <h1 class="page-title">What's new</h1>
         <p>Every version of Dually and what changed in it, newest first. The same list is in the app, under Settings, Version.</p>
-        <p class="secondary">The newest released version is the <a href="https://github.com/shawnkowalchuk/Dually/releases/latest">latest download on GitHub</a>. To update, install it over the one you have: your trips stay.</p>
+        <p class="secondary"><a href="https://play.google.com/store/apps/details?id=top.dually.triptracker">Dually on Google Play</a> has the newest released version, and keeps itself up to date.</p>
       </section>
 
 {releases}
@@ -187,9 +186,15 @@ PAGE_TEMPLATE = """<!doctype html>
 
     <footer>
       <p>Owned and operated by 2795748 Alberta Ltd.</p>
-      <p>© 2026 Shawn Kowalchuk. All rights reserved.</p>
-      <p><a href="/privacy">Privacy</a> · <a href="/delete-account">Delete your online backup</a> · <a href="mailto:support@dually.top?subject=Dually%20Trip%20Tracker%20support">Support</a> · <a href="https://github.com/shawnkowalchuk/Dually">Source on GitHub</a> · <a href="https://www.buymeacoffee.com/SeaWingman">Buy me a coffee</a> · The typefaces are <a href="/fonts/Archivo-OFL.txt">Archivo</a> and <a href="/fonts/IBMPlexMono-OFL.txt">IBM Plex Mono</a>, each under the SIL Open Font License 1.1.</p>
+      <p>© 2026 2795748 Alberta Ltd. All rights reserved.</p>
+      <p><a href="/privacy">Privacy</a> · <a href="/delete-account">Delete your online backup</a> · <a href="mailto:support@dually.top?subject=Dually%20Trip%20Tracker%20support">Support</a> · <a href="https://www.buymeacoffee.com/SeaWingman">Buy me a coffee</a> · The typefaces are <a href="/fonts/Archivo-OFL.txt">Archivo</a> and <a href="/fonts/IBMPlexMono-OFL.txt">IBM Plex Mono</a>, each under the SIL Open Font License 1.1.</p>
     </footer>
+  </div>
+  <div class="dock">
+    <div class="dock-inner">
+      <p><strong>Free on your phone.</strong> <span class="dock-more">Online backup is one payment, never a subscription.</span></p>
+      <a class="cta" href="https://play.google.com/store/apps/details?id=top.dually.triptracker">Get it on Google Play</a>
+    </div>
   </div>
 </body>
 </html>

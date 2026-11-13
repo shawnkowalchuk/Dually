@@ -28,7 +28,6 @@
         <a href="/changes">What's new</a>
         <a href="/privacy" aria-current="page">Privacy</a>
         <a href="mailto:support@dually.top?subject=Dually%20Trip%20Tracker%20support">Support</a>
-        <a href="https://github.com/shawnkowalchuk/Dually">GitHub</a>
         <a class="cta" href="/#install">Install</a>
       </nav>
     </header>
@@ -36,11 +35,11 @@
     <main>
       <article class="tile policy split">
         <h1>Privacy policy</h1>
-        <p class="secondary">For the Dually Trip Tracker app (Dually for short) for Android, its optional online backup, and this website, dually.top. In effect since 8 October 2026, last changed 12 November 2026.</p>
+        <p class="secondary">For the Dually Trip Tracker app (Dually for short) for Android, its optional online backup, and this website, dually.top. In effect since 8 October 2026, last changed 13 November 2026.</p>
 
         <h2>The short version</h2>
         <p>Dually is private by default. It needs no account and has no ads and no analytics, and your trips are kept on your phone. Dually comes with its optional online backup off, and with it off the app connects to nothing of its own. Your trips leave the phone only in the ways listed below, each of which you start or switch on yourself, or Android does for you.</p>
-        <p>The one way that reaches Dually's own server is the optional online backup. Only if you buy it and sign in with Google is a copy of your trips, without their GPS points, kept on Dually's server in Canada (Google Firebase, in Montréal). You can delete that copy, and the account, at any time.</p>
+        <p>The one way your trips reach anything of Dually's is the optional online backup. Only if you buy it and sign in with Google is a copy of your trips, without their GPS points, kept in Google's Firebase, in its Montréal data centre in Canada. You can delete that copy, and the account, at any time.</p>
 
         <h2>What the app keeps, on your phone</h2>
         <ul>
@@ -54,7 +53,7 @@
         <ul>
           <li><strong>Files you send or save yourself.</strong> The monthly report (a PDF and a CSV with your trips, their addresses and your details) is handed to your email app addressed to your accountant, and you press send. An export file holds all your data and is saved where you choose. The event log can be shared as a text file from the Log screen; it includes the names and Bluetooth addresses of your paired devices and any address you typed in.</li>
           <li><strong>Your own Android backup.</strong> If Google backup is switched on for your phone, Android copies Dually's trips, sent reports, settings and event log to your Google account, and back to a phone you set up with it. The GPS points along each trip go only to a new phone in a phone-to-phone transfer, not to the cloud. This is Android's backup, under your Google account; Dually does not run it.</li>
-          <li><strong>The optional online backup, only if you buy it.</strong> A copy of your trips, without their GPS points, on Dually's server in Canada. What it holds, where it is kept and how to delete it are in the next section.</li>
+          <li><strong>The optional online backup, only if you buy it.</strong> A copy of your trips, without their GPS points, in Google's Firebase, in its Montréal data centre in Canada. What it holds, where it is kept and how to delete it are in the next section.</li>
           <li><strong>Address lookup.</strong> To turn a trip's start and end into street addresses, Dually hands those two positions to your phone's own address-lookup service (Android's Geocoder). On most phones that service is Google's and works over the internet, under Google's terms.</li>
           <li><strong>The online backup's price.</strong> To show the price on the Online backup tile in Settings, Dually asks the Google Play app on your phone for it, before anything is bought. Nothing of yours goes with the question.</li>
           <li><strong>The Buy me a coffee tile.</strong> The tile in Settings opens buymeacoffee.com in your browser. Dually sends nothing with it; what you do on that page is between you and Buy Me a Coffee, under its own privacy policy. A copy of Dually installed from Google Play has no such tile.</li>
@@ -64,12 +63,12 @@
         <p>Nothing else leaves the phone. Dually does not sell your data, does not share it with anyone, and does not use it for advertising.</p>
 
         <h2>The optional online backup</h2>
-        <p>The online backup is the one thing Dually sells: one purchase, for the life of the app, with no subscription. It is off until you buy it. Buying it signs you in with your Google account, and from then on every change to your trips is copied to Dually's server by itself, when the phone is online. Your phone stays the original: the backup is a copy for a new or a lost phone, not a second place to keep your trips.</p>
+        <p>The online backup is the one thing Dually sells: one purchase, for the life of the app, with no subscription. It is off until you buy it. Buying it signs you in with your Google account, and from then on every change to your trips is copied to the backup by itself, when the phone is online. Your phone stays the original: the backup is a copy for a new or a lost phone, not a second place to keep your trips.</p>
         <ul>
           <li><strong>What is uploaded:</strong> every trip once it has ended: its date, start and end times, start and end addresses and positions, distance, which paired vehicle it was in, whether it is Business or Personal, its label, and whether it was added or changed by hand, discarded or deleted (a trip you delete is kept marked as deleted, as it is on the phone, so that it can be brought back). Also a line for each report recorded as sent (its period, when it was sent, how many trips and how far), and the settings that mean the same on another phone: your truck's Bluetooth name and address, your work hours, the trip rules and the reminder, and the details the report prints (your name, company, vehicle and your accountant's email address).</li>
           <li><strong>What is never uploaded:</strong> the GPS points along each trip, the trip still being recorded, the event log, crash files, the sounds you added, and the odometer readings.</li>
           <li><strong>Your account:</strong> the email address of the Google account you sign in with, and the account's id, so that each backup belongs to one account.</li>
-          <li><strong>Your purchase:</strong> Google Play handles the payment, under its own terms; Dually never sees your card or your bank details. Google Play tells Dually's server that the purchase is paid and which backup account it was made for, and the server keeps a record of it, so that one purchase unlocks one account and a refund is noticed.</li>
+          <li><strong>Your purchase:</strong> Google Play handles the payment, under its own terms; Dually never sees your card or your bank details. Google Play tells Dually's purchase check, which runs in Firebase in Montréal, that the purchase is paid and which backup account it was made for, and the backup keeps a record of it, so that one purchase unlocks one account and a refund is noticed.</li>
           <li><strong>Where it is kept:</strong> your trips, sent reports and settings, and the record of your purchase, are in Google Cloud Firestore, in Google's Montréal region, in Canada. The sign-in itself (your email address and the account's id) is held by Firebase Authentication, a Google service whose location cannot be chosen and may be outside Canada.</li>
           <li><strong>Who handles it:</strong> Google, through Firebase, as Dually's processor: it stores and serves the data on Dually's behalf, under Firebase's data processing terms, and not for its own purposes. The data is encrypted on its way and where it is stored. It is not end-to-end encrypted: Dually's operator can reach it through Firebase's console, and does so only to help you when you ask, or where the law requires it.</li>
           <li><strong>How long it is kept:</strong> until you delete it. Signing out stops the uploads and leaves the copy as it is, and uninstalling Dually does not delete it either. If your purchase is refunded, uploads stop and the copy is deleted 30 days after the refund; the trips on your phone stay.</li>
@@ -97,15 +96,21 @@
         <p>dually.top is a set of static pages served by Firebase Hosting, a Google service. Like any web server, it receives what your browser sends with each request, including your IP address, and Google keeps standard server logs. The site sets no cookies, runs no scripts, has no analytics, and loads nothing from other sites. The download button leads to GitHub, where GitHub's privacy statement applies, and the Buy me a coffee links lead to buymeacoffee.com, where its own applies.</p>
 
         <h2>Changes and questions</h2>
-        <p>If this policy changes, the new version is posted here with a new date, and its history is public in the project's repository on <a href="https://github.com/shawnkowalchuk/Dually">GitHub</a>. Questions can be raised there, or sent to <a href="mailto:support@dually.top?subject=Dually%20Trip%20Tracker%20support">support@dually.top</a>.</p>
+        <p>If this policy changes, the new version is posted here with a new date. Questions can be sent to <a href="mailto:support@dually.top?subject=Dually%20Trip%20Tracker%20support">support@dually.top</a>.</p>
       </article>
     </main>
 
     <footer>
       <p>Owned and operated by 2795748 Alberta Ltd.</p>
-      <p>© 2026 Shawn Kowalchuk. All rights reserved.</p>
-      <p><a href="/">Home</a> · <a href="/delete-account">Delete your online backup</a> · <a href="mailto:support@dually.top?subject=Dually%20Trip%20Tracker%20support">Support</a> · <a href="https://github.com/shawnkowalchuk/Dually">Source on GitHub</a> · <a href="https://www.buymeacoffee.com/SeaWingman">Buy me a coffee</a> · The typefaces are <a href="/fonts/Archivo-OFL.txt">Archivo</a> and <a href="/fonts/IBMPlexMono-OFL.txt">IBM Plex Mono</a>, each under the SIL Open Font License 1.1.</p>
+      <p>© 2026 2795748 Alberta Ltd. All rights reserved.</p>
+      <p><a href="/">Home</a> · <a href="/delete-account">Delete your online backup</a> · <a href="mailto:support@dually.top?subject=Dually%20Trip%20Tracker%20support">Support</a> · <a href="https://www.buymeacoffee.com/SeaWingman">Buy me a coffee</a> · The typefaces are <a href="/fonts/Archivo-OFL.txt">Archivo</a> and <a href="/fonts/IBMPlexMono-OFL.txt">IBM Plex Mono</a>, each under the SIL Open Font License 1.1.</p>
     </footer>
+  </div>
+  <div class="dock">
+    <div class="dock-inner">
+      <p><strong>Free on your phone.</strong> <span class="dock-more">Online backup is one payment, never a subscription.</span></p>
+      <a class="cta" href="https://play.google.com/store/apps/details?id=top.dually.triptracker">Get it on Google Play</a>
+    </div>
   </div>
 </body>
 </html>

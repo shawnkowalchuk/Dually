@@ -7,7 +7,7 @@
         {
           "kind": "new",
           "title": "Optional online backup",
-          "body": "Settings has a new Online backup tile. Buy it once (no subscription) and every trip is copied to Dually's server in Canada after each change, without its GPS route. On a new phone, sign in and press Restore my trips here. You can delete your online backup and account from the same tile at any time. Everything else in Dually stays free, with no ads."
+          "body": "Settings has a new Online backup tile. Buy it once (no subscription) and every trip is copied to Google's Firebase, in its Montréal data centre in Canada, after each change, without its GPS route. On a new phone, sign in and press Restore my trips here. You can delete your online backup and account from the same tile at any time. Everything else in Dually stays free, with no ads."
         },
         {
           "kind": "improved",
