@@ -16,6 +16,8 @@ class IosSetupTest {
         vehicle: VehicleLink? = VehicleLink.BLUETOOTH,
         connectHeardAtMs: Long? = NOW - HOUR_MS,
         disconnectHeardAtMs: Long? = NOW - DAY_MS,
+        motion: Permission = Permission.ALLOWED,
+        notifications: Permission = Permission.ALLOWED,
     ) = setupScreen(
         location = location,
         precise = precise,
@@ -23,6 +25,8 @@ class IosSetupTest {
         vehicle = vehicle,
         connectHeardAtMs = connectHeardAtMs,
         disconnectHeardAtMs = disconnectHeardAtMs,
+        motion = motion,
+        notifications = notifications,
         nowMs = NOW,
         zone = testZone("America/Edmonton"),
         locale = testLocale("en-CA"),
@@ -38,9 +42,11 @@ class IosSetupTest {
                 vehicle = null,
                 connectHeardAtMs = null,
                 disconnectHeardAtMs = null,
+                motion = Permission.NOT_ASKED,
+                notifications = Permission.NOT_ASKED,
             )
         assertEquals(0, first.ready)
-        assertEquals(5, first.total)
+        assertEquals(7, first.total)
         assertEquals(SetupAction.ASK_LOCATION, first.rows[0].action)
         assertEquals(SetupState.WAITING, first.rows[1].state)
         assertEquals(SetupAction.CHOOSE_VEHICLE, first.rows[2].action)
@@ -76,7 +82,7 @@ class IosSetupTest {
 
         val notYet = screen(disconnectHeardAtMs = null)
         assertFalse(notYet.complete)
-        assertEquals(4, notYet.ready)
+        assertEquals(6, notYet.ready)
         assertEquals(SetupAction.OPEN_SHORTCUTS, notYet.rows[4].action)
     }
 
@@ -89,6 +95,16 @@ class IosSetupTest {
         val carPlayEnd = screen(vehicle = VehicleLink.CARPLAY).rows[4].steps
         assertTrue(carPlayEnd.any { "Disconnects only" in it })
         assertTrue(carPlayEnd.last().contains("End a trip"))
+    }
+
+    @Test
+    fun `the driving alert's rows are asked for but do not hold trips back`() {
+        val noAlert = screen(motion = Permission.NOT_ASKED, notifications = Permission.OFF)
+        assertTrue(noAlert.complete)
+        assertEquals(5, noAlert.ready)
+        assertEquals(SetupAction.ASK_MOTION, noAlert.rows[5].action)
+        assertEquals(SetupAction.OPEN_SETTINGS, noAlert.rows[6].action)
+        assertFalse(noAlert.rows[5].required)
     }
 
     private companion object {

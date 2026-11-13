@@ -16,6 +16,9 @@ import com.shawnkowalchuk.milo.core.util.usesTwelveHourClock
 /** What iOS lets Dually do with the location. */
 enum class LocationAccess { NOT_ASKED, WHILE_USING, ALWAYS, OFF }
 
+/** Whether iOS lets Dually use something it asks for once: motion, notifications. */
+enum class Permission { NOT_ASKED, ALLOWED, OFF }
+
 /** How the iPhone connects to the vehicle, as the user chose: what the automations watch. */
 enum class VehicleLink { CARPLAY, BLUETOOTH }
 
@@ -30,9 +33,20 @@ enum class SetupState {
 }
 
 /** What a row's button does. Swift carries it out. */
-enum class SetupAction { ASK_LOCATION, ASK_ALWAYS, OPEN_SETTINGS, OPEN_SHORTCUTS, CHOOSE_VEHICLE }
+enum class SetupAction {
+    ASK_LOCATION,
+    ASK_ALWAYS,
+    OPEN_SETTINGS,
+    OPEN_SHORTCUTS,
+    CHOOSE_VEHICLE,
+    ASK_MOTION,
+    ASK_NOTIFICATIONS,
+}
 
-/** One requirement. [steps] are numbered instructions, empty for most rows. */
+/**
+ * One requirement. [steps] are numbered instructions, empty for most rows. [required] rows are
+ * what trips starting and ending with the vehicle need; the others are for the driving alert.
+ */
 data class SetupRow(
     val title: String,
     val state: SetupState,
@@ -40,14 +54,18 @@ data class SetupRow(
     val steps: List<String>,
     val button: String?,
     val action: SetupAction?,
+    val required: Boolean = true,
 )
 
 /** The screen: how many rows are ready, and the rows in order. */
 data class SetupScreen(val ready: Int, val rows: List<SetupRow>) {
     val total: Int get() = rows.size
 
-    /** Every row ready: trips can start and end with the vehicle, with Dually closed. */
-    val complete: Boolean get() = ready == total
+    /**
+     * Every required row ready: trips start and end with the vehicle, with Dually closed. The
+     * rows for the driving alert do not count here, and Home warns only about these.
+     */
+    val complete: Boolean get() = rows.filter { it.required }.all { it.state == SetupState.READY }
 }
 
 /**
@@ -57,6 +75,7 @@ data class SetupScreen(val ready: Int, val rows: List<SetupRow>) {
  *   once; after it, only the Settings app can change the answer.
  * @param connectHeardAtMs when the automation last ran Start a trip, or null if it never has:
  *   the check that the automation works. [disconnectHeardAtMs] is the same for End a trip.
+ * @param motion and [notifications] are for the driving alert (phase 4d, third part).
  */
 fun setupScreen(
     location: LocationAccess,
@@ -65,6 +84,8 @@ fun setupScreen(
     vehicle: VehicleLink?,
     connectHeardAtMs: Long?,
     disconnectHeardAtMs: Long?,
+    motion: Permission,
+    notifications: Permission,
     nowMs: Long,
     zone: ZoneId,
     locale: Locale,
@@ -83,6 +104,8 @@ fun setupScreen(
             vehicleRow(vehicle),
             automationRow(vehicle, connects = true, connectHeardAtMs?.let(::heardText)),
             automationRow(vehicle, connects = false, disconnectHeardAtMs?.let(::heardText)),
+            motionRow(motion),
+            notificationsRow(notifications),
         )
     return SetupScreen(rows.count { it.state == SetupState.READY }, rows)
 }
@@ -243,10 +266,80 @@ private fun automationSteps(vehicle: VehicleLink, connects: Boolean, action: Str
         )
 }
 
+/**
+ * Motion & Fitness, which the driving alert reads to know the iPhone is in a vehicle, as
+ * Android's reads Physical activity. Without it trips still start with the vehicle.
+ */
+private fun motionRow(motion: Permission): SetupRow {
+    val title = "Motion & Fitness"
+    return when (motion) {
+        Permission.ALLOWED ->
+            row(
+                title,
+                SetupState.READY,
+                "On: Dually notices a drive with no trip being recorded.",
+                required = false,
+            )
+
+        Permission.NOT_ASKED ->
+            row(
+                title,
+                SetupState.NEEDS_YOU,
+                "For the driving alert: if you drive during your work hours and no trip is " +
+                    "being recorded, Dually reminds you to start one.",
+                "Allow motion",
+                SetupAction.ASK_MOTION,
+                required = false,
+            )
+
+        Permission.OFF ->
+            row(
+                title,
+                SetupState.NEEDS_YOU,
+                "Off, so a drive with no trip goes unnoticed. Turn on Motion & Fitness in " +
+                    "Settings.",
+                "Open Settings",
+                SetupAction.OPEN_SETTINGS,
+                required = false,
+            )
+    }
+}
+
+/** Notifications, which the driving alert is. */
+private fun notificationsRow(notifications: Permission): SetupRow {
+    val title = "Notifications"
+    return when (notifications) {
+        Permission.ALLOWED ->
+            row(title, SetupState.READY, "On: the driving alert can reach you.", required = false)
+
+        Permission.NOT_ASKED ->
+            row(
+                title,
+                SetupState.NEEDS_YOU,
+                "The driving alert is a notification: \"You seem to be driving. Tap to start a " +
+                    "trip.\"",
+                "Allow notifications",
+                SetupAction.ASK_NOTIFICATIONS,
+                required = false,
+            )
+
+        Permission.OFF ->
+            row(
+                title,
+                SetupState.NEEDS_YOU,
+                "Off, so the driving alert cannot reach you. Turn on Notifications in Settings.",
+                "Open Settings",
+                SetupAction.OPEN_SETTINGS,
+                required = false,
+            )
+    }
+}
+
 private fun row(
     title: String,
     state: SetupState,
     sentence: String,
     button: String? = null,
     action: SetupAction? = null,
-) = SetupRow(title, state, sentence, emptyList(), button, action)
+    required: Boolean = true,
+) = SetupRow(title, state, sentence, emptyList(), button, action, required)

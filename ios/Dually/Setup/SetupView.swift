@@ -37,14 +37,22 @@ struct SetupView: View {
 private struct ReadyTile: View {
     let screen: SetupScreen
 
+    private var words: String {
+        if !screen.complete {
+            return "Until the rows for trips are ready, a trip starts only with Start trip on Home."
+        }
+        if screen.ready < screen.total {
+            return "Trips start and end with your vehicle, even with Dually closed. The rows still open are for the driving alert."
+        }
+        return "Trips start and end with your vehicle, even with Dually closed."
+    }
+
     var body: some View {
         Tile(ground: screen.complete ? Palette.tile : Palette.accent) {
             Text("\(screen.ready) of \(screen.total) ready")
                 .font(Typography.display(24))
                 .foregroundStyle(screen.complete ? Palette.text : Palette.markLetter)
-            Text(screen.complete
-                 ? "Trips start and end with your vehicle, even with Dually closed."
-                 : "Until every row is ready, a trip starts only with Start trip on Home.")
+            Text(words)
                 .font(Typography.body(15))
                 .foregroundStyle(screen.complete ? Palette.textSecondary : Palette.markLetter)
         }

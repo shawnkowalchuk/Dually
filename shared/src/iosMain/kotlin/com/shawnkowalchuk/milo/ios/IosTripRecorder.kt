@@ -64,10 +64,33 @@ class IosTripRecorder internal constructor(
         private set
 
     /** Start pressed: opens a trip, unless one is open already. */
-    suspend fun start(): RecordingNow? = lock.withLock {
+    suspend fun start(): RecordingNow? = startByHand("Start pressed in the app")
+
+    /** A tap on the driving alert (phase 4d, third part): a trip started by hand, as on Android. */
+    suspend fun startFromAlert(): RecordingNow? = startByHand("tap on the driving alert")
+
+    private suspend fun startByHand(source: String): RecordingNow? = lock.withLock {
         val atMs = clock()
-        advance("Start pressed in the app", TripEvent.ManualStart(truck.connected, atMs))
+        advance(source, TripEvent.ManualStart(truck.connected, atMs))
         snapshot()
+    }
+
+    /**
+     * What the driving alert reads of the recording, taken under the same lock as everything
+     * else: whether a trip is open, what the last automation said about the truck, and whether
+     * the rules are watching a parked truck for its drive-off.
+     */
+    internal suspend fun drivingFacts(): DrivingFacts = lock.withLock {
+        pickUp()
+        checkIfDue()
+        snapshot()
+        val parked = known?.parked
+        DrivingFacts(
+            tripOpen = ledger.open != null,
+            truckBelievedConnected = truck.connected,
+            watchingParkedTruck = known?.waitingToMove == true,
+            parkedNoLongerWatched = parked != null && !parked.watching && known?.trip == null,
+        )
     }
 
     /**
@@ -262,6 +285,14 @@ class IosTripRecorder internal constructor(
         )
     }
 }
+
+/** See [IosTripRecorder.drivingFacts]. */
+internal data class DrivingFacts(
+    val tripOpen: Boolean,
+    val truckBelievedConnected: Boolean,
+    val watchingParkedTruck: Boolean,
+    val parkedNoLongerWatched: Boolean,
+)
 
 /**
  * What the last Shortcuts automation said about the truck (ADR-015): the iPhone cannot read a

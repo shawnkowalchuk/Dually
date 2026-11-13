@@ -13,7 +13,7 @@ private const val MILLIS_PER_SECOND = 1000L
 private const val MILLIS_PER_MINUTE = 60_000L
 
 /** "watching for driving (process start)", or why not. */
-internal fun watchText(watch: DrivingWatch, source: String): String = when {
+fun watchText(watch: DrivingWatch, source: String): String = when {
     !watch.alertEnabled ->
         "Driving alert: not watching for driving ($source): it is switched off in Settings"
 
@@ -25,7 +25,7 @@ internal fun watchText(watch: DrivingWatch, source: String): String = when {
 }
 
 /** The line for a request the phone did not carry out. The reason goes in the detail. */
-internal fun watchFailedText(watch: DrivingWatch, source: String): String = if (watch.wanted) {
+fun watchFailedText(watch: DrivingWatch, source: String): String = if (watch.wanted) {
     "Driving alert: the phone did not agree to report driving ($source). No alert can be shown"
 } else {
     "Driving alert: the phone did not agree to stop reporting driving ($source). " +
@@ -84,16 +84,13 @@ private fun DrivingVerdict.inWords(): String = when (this) {
  * @param seen false if the alert was posted while notifications are off for MilO, or for this
  * kind of notification, so that nobody saw it.
  */
-internal fun judgedText(
-    reports: List<VehicleReport>,
-    verdict: DrivingVerdict,
-    seen: Boolean,
-): String = buildString {
-    append("Driving detection: ${reportsText(reports)}. ${verdict.inWords()}")
-    if (verdict.step == DrivingAlertStep.SHOW && !seen) {
-        append(". Notifications are off for Dually or for the driving alert, so nobody saw it")
+fun judgedText(reports: List<VehicleReport>, verdict: DrivingVerdict, seen: Boolean): String =
+    buildString {
+        append("Driving detection: ${reportsText(reports)}. ${verdict.inWords()}")
+        if (verdict.step == DrivingAlertStep.SHOW && !seen) {
+            append(". Notifications are off for Dually or for the driving alert, so nobody saw it")
+        }
     }
-}
 
 /**
  * Everything the decision went by, one fact to a line, for the detail of the log line. All of
@@ -104,11 +101,7 @@ internal fun judgedText(
  * @param notes what went wrong on the way, said first: the settings could not be read and the
  * defaults were used, or the time of the alert could not be stored.
  */
-internal fun momentText(
-    moment: DrivingMoment,
-    truckEvidence: String,
-    notes: List<String>,
-): String {
+fun momentText(moment: DrivingMoment, truckEvidence: String, notes: List<String>): String {
     val startedNow = classifyTrip(moment.nowMs, endedAtMs = null, moment.schedule, moment.zone)
     val hours = classificationText(startedNow, moment.nowMs, moment.schedule, moment.zone)
     val truck =

@@ -1,21 +1,10 @@
 package com.shawnkowalchuk.milo.ios
 
-import com.shawnkowalchuk.milo.core.time.systemZoneId
 import com.shawnkowalchuk.milo.core.trip.TRACK_START_WALL_CLOCK_MS
-import com.shawnkowalchuk.milo.core.trip.TrackPoint
 import com.shawnkowalchuk.milo.core.trip.TripStartCause
 import com.shawnkowalchuk.milo.core.trip.TripStatus
 import com.shawnkowalchuk.milo.core.trip.driveNorth
 import com.shawnkowalchuk.milo.core.trip.fixAt
-import com.shawnkowalchuk.milo.data.buildMiloDatabase
-import com.shawnkowalchuk.milo.data.buildPointsDatabase
-import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
-import com.shawnkowalchuk.milo.data.point.RawPointRepository
-import com.shawnkowalchuk.milo.data.settings.buildSettingsStore
-import com.shawnkowalchuk.milo.data.trip.TripRepository
-import com.shawnkowalchuk.milo.platform.trip.TripLedger
-import com.shawnkowalchuk.milo.platform.trip.TripRuleSettings
-import kotlin.random.Random
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -25,7 +14,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
-import okio.FileSystem
 
 /**
  * The iPhone's trip recorder with the truck as the Shortcuts automation reports it (phase 4d,
@@ -33,17 +21,10 @@ import okio.FileSystem
  * commonTest; this checks that the iPhone hands them the events Android's worker does.
  */
 class IosTripRecorderTest {
-    private val folder =
-        (FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "recorder-${Random.nextLong()}").also {
-            FileSystem.SYSTEM.createDirectories(it)
-        }
-    private val world = World(folder.toString())
+    private val world = RecorderWorld()
 
     @AfterTest
-    fun cleanUp() {
-        world.close()
-        FileSystem.SYSTEM.deleteRecursively(folder)
-    }
+    fun cleanUp() = world.close()
 
     @Test
     fun `the automation's connect starts a trip and its disconnect ends it after the grace`() =
@@ -141,59 +122,6 @@ class IosTripRecorderTest {
             val next = assertNotNull(world.drive(recorder, drivingOff))
             assertNotEquals(first.tripId, next.tripId)
         }
-
-    private class World(folder: String) {
-        private val database = buildMiloDatabase(folder)
-        private val points = buildPointsDatabase(folder)
-        private val settings = buildSettingsStore(folder)
-        private val log = EventLogRepository(database.eventLogDao())
-        val trips = TripRepository(database.tripDao())
-        var nowMs = TRACK_START_WALL_CLOCK_MS
-        private val truck =
-            object : TruckBelief {
-                override var connected = false
-                override var connectHeardAtMs: Long? = null
-                override var disconnectHeardAtMs: Long? = null
-            }
-
-        fun truckBelief(connected: Boolean) {
-            truck.connected = connected
-        }
-
-        fun recorder(): IosTripRecorder = IosTripRecorder(
-            TripLedger(
-                trips,
-                RawPointRepository(points.rawPointDao()),
-                settings,
-                zone = ::systemZoneId,
-            ),
-            log,
-            TripRuleSettings(settings, log) { nowMs },
-            truck,
-        ) { nowMs }
-
-        suspend fun drive(recorder: IosTripRecorder, track: List<TrackPoint>): RecordingNow? {
-            var last: RecordingNow? = null
-            for (fix in track) {
-                nowMs = fix.wallClockMs
-                last =
-                    recorder.addFix(
-                        fix.wallClockMs,
-                        fix.elapsedRealtimeMs,
-                        fix.latitude,
-                        fix.longitude,
-                        fix.accuracyMetres,
-                        fix.speedMetresPerSecond,
-                    )
-            }
-            return last
-        }
-
-        fun close() {
-            database.close()
-            points.close()
-        }
-    }
 
     private companion object {
         const val GRACE_SECONDS = 120
