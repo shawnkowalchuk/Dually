@@ -1,9 +1,5 @@
 package com.shawnkowalchuk.milo.core.report
 
-import com.shawnkowalchuk.milo.feature.report.PeriodKind
-import com.shawnkowalchuk.milo.feature.report.canStepForward
-import com.shawnkowalchuk.milo.feature.report.openingChoice
-import com.shawnkowalchuk.milo.feature.report.steppedMonth
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.Locale
@@ -16,22 +12,6 @@ import org.junit.Test
 /** The year-end summary (2026-10-16): the period, its months, and its page. */
 class ReportYearSummaryTest {
     private val today = LocalDate.of(2026, 10, 16)
-
-    @Test
-    fun `a whole year is 1 January to 31 December, and steps a year at a time`() {
-        val year = openingChoice(YearMonth.of(2026, 10), today).copy(kind = PeriodKind.YEAR)
-
-        assertEquals(
-            ReportPeriod.Range(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31)),
-            year.period,
-        )
-        assertEquals(2026, year.period.wholeYear)
-        assertFalse(year.canStepForward(today))
-        val last = year.steppedMonth(-1, today)
-        assertEquals(PeriodKind.YEAR, last.kind)
-        assertEquals(2025, last.period.wholeYear)
-        assertTrue(last.canStepForward(today))
-    }
 
     @Test
     fun `only a whole calendar year is one`() {

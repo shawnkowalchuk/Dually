@@ -15,8 +15,8 @@ expect class LocalTime
 /** A month of a year: November 2026. Its text is "2026-11". */
 expect class YearMonth
 
-/** A time zone: "America/Edmonton". */
-expect class ZoneId
+/** A time zone: "America/Edmonton". Abstract, as java.time's is. */
+expect abstract class ZoneId
 
 /** The days of the week, Monday first. */
 expect enum class DayOfWeek {

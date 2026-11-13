@@ -1,6 +1,6 @@
 package com.shawnkowalchuk.milo.core.service
 
-import java.time.ZoneId
+import com.shawnkowalchuk.milo.core.time.ZoneId
 
 // The service reminders (since 2026-10-16; Shawn chose "Notification + Home tile"): which items
 // want his eye, and which of them the notification has not told him of yet.

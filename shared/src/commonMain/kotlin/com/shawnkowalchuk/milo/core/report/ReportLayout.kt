@@ -1,6 +1,7 @@
 package com.shawnkowalchuk.milo.core.report
 
-import java.util.Locale
+import com.shawnkowalchuk.milo.core.text.Locale
+import com.shawnkowalchuk.milo.core.text.formatText
 
 // The first of the two passes that make the PDF: where everything goes, and on which page.
 // Android's PdfDocument only records what is drawn and cannot go back to a page it has
@@ -146,7 +147,7 @@ private fun footer(
 ): List<PageItem> {
     val style = ReportTextStyle.FOOTER
     val quiet = ReportInk.QUIET
-    val page = String.format(locale, report.words.page, number, count)
+    val page = formatText(locale, report.words.page, number, count)
     val textX = CONTENT_LEFT + FOOTER_MARK_SIZE + FOOTER_MARK_GAP
     val room = CONTENT_RIGHT - textX - measure.width(page, style) - FOOTER_GAP
     // The mark's middle is level with the middle of the words' capitals.

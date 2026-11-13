@@ -1,10 +1,12 @@
 package com.shawnkowalchuk.milo.core.report
 
+import com.shawnkowalchuk.milo.core.text.Locale
+import com.shawnkowalchuk.milo.core.text.formatText
+import com.shawnkowalchuk.milo.core.time.YearMonth
+import com.shawnkowalchuk.milo.core.time.dateOf
+import com.shawnkowalchuk.milo.core.time.yearNumber
+import com.shawnkowalchuk.milo.core.util.formatFullMonthName
 import com.shawnkowalchuk.milo.core.util.formatTenths
-import java.time.Month
-import java.time.YearMonth
-import java.time.format.TextStyle
-import java.util.Locale
 
 // The year-end summary (since 2026-10-16, step 3 of Shawn's report options): a report for a
 // whole calendar year opens with a page of its months, Business and Personal, before its trips.
@@ -30,11 +32,11 @@ private const val SUMMARY_INSET = 8f
  */
 val ReportPeriod.wholeYear: Int?
     get() {
-        val year = firstDay.year
+        val year = firstDay.yearNumber()
         val whole =
             this is ReportPeriod.Range &&
-                firstDay == java.time.LocalDate.of(year, Month.JANUARY, 1) &&
-                lastDay == java.time.LocalDate.of(year, Month.DECEMBER, 31)
+                firstDay == dateOf(year, 1, 1) &&
+                lastDay == dateOf(year, 12, 31)
         return year.takeIf { whole }
     }
 
@@ -72,13 +74,13 @@ fun printedYearSummary(
 ): PrintedYearSummary {
     fun figure(tenths: Long?) = tenths?.let { formatTenths(it, locale) } ?: notYet
     return PrintedYearSummary(
-        title = String.format(locale, title, year),
+        title = formatText(locale, title, year),
         businessTitle = words.business,
         personalTitle = words.personal,
         rows =
             months.map {
                 Triple(
-                    it.month.month.getDisplayName(TextStyle.FULL, locale),
+                    formatFullMonthName(it.month, locale),
                     figure(it.businessTenths),
                     figure(it.personalTenths),
                 )

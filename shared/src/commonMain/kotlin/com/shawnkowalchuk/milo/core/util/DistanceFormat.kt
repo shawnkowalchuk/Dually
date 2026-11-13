@@ -1,24 +1,7 @@
 package com.shawnkowalchuk.milo.core.util
 
-import java.math.BigDecimal
-import java.math.RoundingMode
-import java.util.Locale
-
-// How a stored distance becomes a figure Shawn or the accountant reads, and how such figures
-// are added up. One rule for every screen and for the report, so that no two of them can show
-// a different total for the same trips.
-//
-// Since 2026-10-07 the rule holds in either unit ([DistanceUnit]): a trip is rounded once to a
-// tenth of the unit it is shown in, from its stored metres, and a total is the sum of those
-// rounded figures. So a month's total in miles is the sum of the miles printed for its trips.
-// It is not its kilometre total converted, and it must not be: the column would not add up.
-
-private const val METRES_PER_TENTH_OF_A_KILOMETRE = 100.0
-
-/** Two decimals: what a short distance in miles is written with ([formatShortDistance]). */
-private const val HUNDREDTHS = 2
-
-private const val TENTHS_PER_WHOLE = 10L
+import com.shawnkowalchuk.milo.core.number.BigDecimal
+import com.shawnkowalchuk.milo.core.text.Locale
 
 /**
  * A distance as it is printed in [unit]: whole tenths of it, 12 349 m being 123 tenths of a
@@ -36,20 +19,7 @@ private const val TENTHS_PER_WHOLE = 10L
  * distance like that means the stored trip is corrupt, and a mileage claim should fail loudly
  * rather than print a plausible-looking figure.
  */
-fun tenthsOf(metres: Double, unit: DistanceUnit): Long {
-    require(metres.isFinite() && metres >= 0.0) {
-        "A distance must be a finite, non-negative number of metres, but was $metres"
-    }
-    return when (unit) {
-        DistanceUnit.KILOMETRES -> Math.round(metres / METRES_PER_TENTH_OF_A_KILOMETRE)
-
-        DistanceUnit.MILES ->
-            BigDecimal
-                .valueOf(metres)
-                .divide(unit.metresPerTenth, 0, RoundingMode.HALF_UP)
-                .longValueExact()
-    }
-}
+expect fun tenthsOf(metres: Double, unit: DistanceUnit): Long
 
 /**
  * What a number of trips add up to, in tenths of [unit]: **the sum of the figures that are
@@ -81,17 +51,13 @@ fun sumOfTenths(metres: Iterable<Double>, unit: DistanceUnit): Long =
  * PDF pass the phone's locale, while a file meant for a spreadsheet (the CSV) needs
  * [Locale.ROOT] so the separator is always a dot. Each caller has to make that choice.
  */
-fun formatTenths(tenths: Long, locale: Locale): String =
-    String.format(locale, "%.1f", BigDecimal.valueOf(tenths, 1))
+expect fun formatTenths(tenths: Long, locale: Locale): String
 
 /**
  * The same distance in metres, the unit every stored distance has. Exact: handed back to
  * [tenthsOf] in the same [unit], it gives [tenths] again.
  */
-fun metresOfTenths(tenths: Long, unit: DistanceUnit): Double = when (unit) {
-    DistanceUnit.KILOMETRES -> tenths * METRES_PER_TENTH_OF_A_KILOMETRE
-    DistanceUnit.MILES -> BigDecimal.valueOf(tenths).multiply(unit.metresPerTenth).toDouble()
-}
+expect fun metresOfTenths(tenths: Long, unit: DistanceUnit): Double
 
 /**
  * Turns one distance stored in metres into the figure shown for it in [unit], with one
@@ -115,42 +81,23 @@ fun formatDistance(metres: Double, unit: DistanceUnit, locale: Locale): String =
  * Nothing is added up from this figure, and no trip is judged by it: the setting is stored and
  * compared in metres.
  */
-fun formatShortDistance(metres: Double, unit: DistanceUnit, locale: Locale): String = when (unit) {
-    DistanceUnit.KILOMETRES -> formatDistance(metres, unit, locale)
-
-    DistanceUnit.MILES -> {
-        require(metres.isFinite() && metres >= 0.0) {
-            "A distance must be a finite, non-negative number of metres, but was $metres"
-        }
-        val miles =
-            BigDecimal
-                .valueOf(metres)
-                .divide(unit.metresPerUnit, HUNDREDTHS, RoundingMode.HALF_UP)
-        String.format(locale, "%.${HUNDREDTHS}f", miles)
-    }
-}
+expect fun formatShortDistance(metres: Double, unit: DistanceUnit, locale: Locale): String
 
 /**
  * A distance typed in [unit] as metres, the unit it is stored in: 12.3 km is 12 300 m, and
  * 12.3 mi is 19 794.9312 m. Worked out in decimal arithmetic and turned into a binary fraction
  * once, at the end, so that what was typed is what [tenthsOf] reads back.
  */
-fun metresOf(typed: BigDecimal, unit: DistanceUnit): Double =
-    typed.multiply(unit.metresPerUnit).toDouble()
+expect fun metresOf(typed: BigDecimal, unit: DistanceUnit): Double
 
 /**
  * A whole number of [from] as whole tenths of [to]: an odometer reading typed in one unit, for
  * showing in the other. In the same unit it is the reading itself, times ten, exactly.
  */
-fun tenthsOfWhole(whole: Long, from: DistanceUnit, to: DistanceUnit): Long = if (from == to) {
-    Math.multiplyExact(whole, TENTHS_PER_WHOLE)
-} else {
-    tenthsOf(metresOf(BigDecimal.valueOf(whole), from), to)
-}
+expect fun tenthsOfWhole(whole: Long, from: DistanceUnit, to: DistanceUnit): Long
 
 /**
  * A length in metres as whole units of [unit], rounded down: what a limit that is kept in
  * metres is called when a sentence names it in the unit on screen ("more than 1242 mi").
  */
-fun wholeUnitsBelow(metres: Double, unit: DistanceUnit): Long =
-    BigDecimal.valueOf(metres).divide(unit.metresPerUnit, 0, RoundingMode.DOWN).longValueExact()
+expect fun wholeUnitsBelow(metres: Double, unit: DistanceUnit): Long

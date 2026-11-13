@@ -1,6 +1,7 @@
 package com.shawnkowalchuk.milo.core.report
 
-import java.util.Locale
+import com.shawnkowalchuk.milo.core.text.Locale
+import com.shawnkowalchuk.milo.core.text.formatText
 
 // What a report is called outside MilO: the subject of the email it is sent with, and the name
 // of the file that is attached. Pure Kotlin.
@@ -34,8 +35,8 @@ fun reportSubject(
     locale: Locale,
 ): String {
     val periodWords = periodInWords(period, locale, words.periodRange)
-    val subject = String.format(locale, words.subject, periodWords, name)
-    return if (revision > 0) String.format(locale, words.revision, subject, revision) else subject
+    val subject = formatText(locale, words.subject, periodWords, name)
+    return if (revision > 0) formatText(locale, words.revision, subject, revision) else subject
 }
 
 /**

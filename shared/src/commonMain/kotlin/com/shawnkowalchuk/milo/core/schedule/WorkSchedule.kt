@@ -1,16 +1,18 @@
 package com.shawnkowalchuk.milo.core.schedule
 
-import java.time.DayOfWeek
-import java.time.LocalTime
-import java.time.temporal.ChronoUnit
+import com.shawnkowalchuk.milo.core.time.DayOfWeek
+import com.shawnkowalchuk.milo.core.time.LocalTime
+import com.shawnkowalchuk.milo.core.time.compareTimes
+import com.shawnkowalchuk.milo.core.time.isWholeMinute
+import com.shawnkowalchuk.milo.core.time.timeOf
 
 // The work schedule: for each day of the week, whether trips on it can be Business and between
 // which two times. Pure Kotlin, so the rules are tested without a phone. The schedule only ever
 // sorts a trip that has already been recorded; it has no say in whether a trip starts.
 
 /** The brief's default hours: 08:00 to 16:30, Monday to Friday. */
-val DEFAULT_WORK_START: LocalTime = LocalTime.of(8, 0)
-val DEFAULT_WORK_END: LocalTime = LocalTime.of(16, 30)
+val DEFAULT_WORK_START: LocalTime = timeOf(8, 0)
+val DEFAULT_WORK_END: LocalTime = timeOf(16, 30)
 
 /**
  * Whether [start] and [end] can be the hours of one day: both on a whole minute, and the end
@@ -19,9 +21,7 @@ val DEFAULT_WORK_END: LocalTime = LocalTime.of(16, 30)
  * day, so the latest possible end is 23:59.
  */
 fun areValidHours(start: LocalTime, end: LocalTime): Boolean =
-    end > start && start.isWholeMinute() && end.isWholeMinute()
-
-private fun LocalTime.isWholeMinute(): Boolean = this == truncatedTo(ChronoUnit.MINUTES)
+    compareTimes(end, start) > 0 && start.isWholeMinute() && end.isWholeMinute()
 
 /**
  * The work hours of one day of the week.

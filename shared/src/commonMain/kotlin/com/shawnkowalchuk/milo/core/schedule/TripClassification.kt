@@ -1,7 +1,6 @@
 package com.shawnkowalchuk.milo.core.schedule
 
-import java.time.Instant
-import java.time.ZoneId
+import com.shawnkowalchuk.milo.core.time.ZoneId
 
 // Business or Personal, from when a trip started. Pure functions: the same rule sorts a trip
 // when it is finalised and catches up the trips recorded before there was a schedule.
@@ -55,16 +54,7 @@ fun classifyTrip(
  * hours make that trip Business ([classifyTrip]); null for a trip they make Personal. Past this
  * moment a Business trip has run past the schedule.
  */
-fun workHoursEndMs(startedAtMs: Long, schedule: WorkSchedule, zone: ZoneId): Long? {
-    val start = Instant.ofEpochMilli(startedAtMs).atZone(zone)
-    val hours = schedule.on(start.dayOfWeek)
-    val timeOfDay = start.toLocalTime()
-    val insideHours = hours.tracked && timeOfDay >= hours.start && timeOfDay < hours.end
-    if (!insideHours) return null
-    // If the clocks jump over the end time itself, java.time moves it on by the length of the
-    // jump; if the end time happens twice, it takes the first.
-    return start.toLocalDate().atTime(hours.end).atZone(zone).toInstant().toEpochMilli()
-}
+expect fun workHoursEndMs(startedAtMs: Long, schedule: WorkSchedule, zone: ZoneId): Long?
 
 /**
  * Whether a finished trip is asked about with the work-hours notification (since 2026-11-03;

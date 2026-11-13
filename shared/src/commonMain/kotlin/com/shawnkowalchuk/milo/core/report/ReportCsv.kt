@@ -1,10 +1,11 @@
 package com.shawnkowalchuk.milo.core.report
 
+import com.shawnkowalchuk.milo.core.text.Locale
+import com.shawnkowalchuk.milo.core.text.rootLocale
+import com.shawnkowalchuk.milo.core.time.ZoneId
+import com.shawnkowalchuk.milo.core.time.formatIsoDay
+import com.shawnkowalchuk.milo.core.time.formatIsoTime
 import com.shawnkowalchuk.milo.core.util.formatTenths
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 // The CSV export: the trips of a report, one row each, for a spreadsheet. Pure Kotlin.
 
@@ -42,8 +43,6 @@ data class CsvWords(
 // A spreadsheet has to read these the same way whatever language the phone is set to, so the
 // date is written year first, the times on a 24-hour clock, and the distance with a dot, in
 // kilometres and in miles alike.
-private val CSV_DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ROOT)
-private val CSV_TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT)
 
 /** Lines end the way the CSV standard (RFC 4180) says, which every spreadsheet reads. */
 private const val LINE_END = "\r\n"
@@ -81,16 +80,16 @@ fun reportCsv(report: MileageReport, words: CsvWords): String {
     val rows =
         report.days.flatMap { it.trips }.map { trip ->
             listOf(
-                CSV_DATE.format(trip.startedAtMs.at(report.zone)),
-                CSV_TIME.format(trip.startedAtMs.at(report.zone)),
-                trip.endedAtMs?.let { CSV_TIME.format(it.at(report.zone)) }.orEmpty(),
+                formatIsoDay(trip.startedAtMs, report.zone),
+                formatIsoTime(trip.startedAtMs, report.zone),
+                trip.endedAtMs?.let { formatIsoTime(it, report.zone) }.orEmpty(),
                 trip.from.orEmpty(),
                 trip.to.orEmpty(),
                 trip.label.orEmpty(),
                 trip.vehicle.orEmpty(),
                 (if (trip.personal) words.personal else words.business)
                     .takeIf { report.listsPersonal },
-                formatTenths(trip.tenths(report.unit), Locale.ROOT),
+                formatTenths(trip.tenths(report.unit), rootLocale),
                 trip.odometer?.start?.value?.toString().orEmpty().takeIf {
                     report.showsTripOdometer
                 },
@@ -106,8 +105,6 @@ fun reportCsv(report: MileageReport, words: CsvWords): String {
         row.joinToString(separator = ",", postfix = LINE_END, transform = ::csvCell)
     }
 }
-
-private fun Long.at(zone: ZoneId) = Instant.ofEpochMilli(this).atZone(zone)
 
 /**
  * One cell as it is written. A cell that holds a comma, a quotation mark or a line break is put

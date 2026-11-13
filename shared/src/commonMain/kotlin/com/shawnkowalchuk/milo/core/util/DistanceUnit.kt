@@ -1,6 +1,8 @@
 package com.shawnkowalchuk.milo.core.util
 
-import java.math.BigDecimal
+import com.shawnkowalchuk.milo.core.number.BigDecimal
+import com.shawnkowalchuk.milo.core.number.decimalOf
+import com.shawnkowalchuk.milo.core.number.movedPointLeft
 
 /**
  * The unit a distance is shown in: Shawn's choice in Settings (2026-10-07, "add the ability in
@@ -16,10 +18,10 @@ import java.math.BigDecimal
  * definition.
  */
 enum class DistanceUnit(val metresPerUnit: BigDecimal) {
-    KILOMETRES(BigDecimal("1000")),
-    MILES(BigDecimal("1609.344")),
+    KILOMETRES(decimalOf("1000")),
+    MILES(decimalOf("1609.344")),
     ;
 
     /** How many metres a tenth of it is: what a printed figure counts in. */
-    val metresPerTenth: BigDecimal get() = metresPerUnit.movePointLeft(1)
+    val metresPerTenth: BigDecimal get() = metresPerUnit.movedPointLeft(1)
 }

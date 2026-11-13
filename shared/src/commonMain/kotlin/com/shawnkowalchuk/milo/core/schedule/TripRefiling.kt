@@ -1,6 +1,6 @@
 package com.shawnkowalchuk.milo.core.schedule
 
-import java.time.ZoneId
+import com.shawnkowalchuk.milo.core.time.ZoneId
 
 // What becomes of Business or Personal, and of "ran past schedule", when Shawn changes a closed
 // trip's times by hand or types a missed trip in. A pure function, so that the form can show

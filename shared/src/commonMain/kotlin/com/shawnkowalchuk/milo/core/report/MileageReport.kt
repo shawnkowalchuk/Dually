@@ -1,12 +1,13 @@
 package com.shawnkowalchuk.milo.core.report
 
 import com.shawnkowalchuk.milo.core.odometer.OdometerSpan
+import com.shawnkowalchuk.milo.core.time.LocalDate
+import com.shawnkowalchuk.milo.core.time.ZoneId
+import com.shawnkowalchuk.milo.core.time.compareDates
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.localDateOf
 import com.shawnkowalchuk.milo.core.util.sumOfTenths
 import com.shawnkowalchuk.milo.core.util.tenthsOf
-import java.time.LocalDate
-import java.time.ZoneId
 import kotlin.math.roundToInt
 
 // The report for the accountant as plain values: who it is from, what it covers, and its trips
@@ -181,6 +182,6 @@ fun reportDays(trips: List<ReportTrip>, zone: ZoneId): List<ReportDay> = trips
     .sortedBy { it.startedAtMs }
     .groupBy { localDateOf(it.startedAtMs, zone) }
     .map { (date, ofDay) -> ReportDay(date, ofDay) }
-    .sortedBy { it.date }
+    .sortedWith { a, b -> compareDates(a.date, b.date) }
 
 private const val PERCENT = 100

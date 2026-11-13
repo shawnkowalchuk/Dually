@@ -1,8 +1,12 @@
 package com.shawnkowalchuk.milo.core.party
 
+import com.shawnkowalchuk.milo.core.time.LocalDate
+import com.shawnkowalchuk.milo.core.time.ZoneId
+import com.shawnkowalchuk.milo.core.time.addDays
+import com.shawnkowalchuk.milo.core.time.addYears
+import com.shawnkowalchuk.milo.core.time.compareDates
+import com.shawnkowalchuk.milo.core.time.yearNumber
 import com.shawnkowalchuk.milo.core.util.localDateOf
-import java.time.LocalDate
-import java.time.ZoneId
 
 // The day of MilO's party (Shawn, 2026-10-10: "a one year use animation. After the person has
 // used the app for a year this one will come up that day every time he starts a trip"; "the
@@ -58,7 +62,7 @@ fun firstRecordedStartMs(trips: List<TripStart>): Long? = trips
 fun isPartyDay(firstRecordedStartMs: Long?, nowMs: Long, zone: ZoneId): Boolean {
     if (firstRecordedStartMs == null) return false
     val today = localDateOf(nowMs, zone)
-    return dateOfParty(localDateOf(firstRecordedStartMs, zone), today.year) == today
+    return dateOfParty(localDateOf(firstRecordedStartMs, zone), today.yearNumber()) == today
 }
 
 /**
@@ -94,12 +98,12 @@ fun partyDateToday(
     val today = localDateOf(nowMs, zone)
     if (isPartyDay(firstRecordedStartMs, nowMs, zone)) return today
     // A date late in December is made up early in January: last year's date is looked at too.
-    return listOf(today.year, today.year - 1)
+    return listOf(today.yearNumber(), today.yearNumber() - 1)
         .mapNotNull { year -> dateOfParty(first, year) }
         .firstOrNull { date ->
-            today > date &&
-                today <= date.plusDays(MAKE_UP_DAYS) &&
-                (lastHeldOn == null || lastHeldOn !in date..today.minusDays(1))
+            compareDates(today, date) > 0 &&
+                compareDates(today, date.addDays(MAKE_UP_DAYS)) <= 0 &&
+                (lastHeldOn == null || !lastHeldOn.isWithin(date, today.addDays(-1)))
         }
 }
 
@@ -108,6 +112,10 @@ fun partyDateToday(
  * 28 February for a 29 February in a year that has none.
  */
 private fun dateOfParty(first: LocalDate, year: Int): LocalDate? {
-    val years = year - first.year
-    return if (years >= 1) first.plusYears(years.toLong()) else null
+    val years = year - first.yearNumber()
+    return if (years >= 1) first.addYears(years.toLong()) else null
 }
+
+/** True when this day is [first], [last] or a day between them. */
+private fun LocalDate.isWithin(first: LocalDate, last: LocalDate): Boolean =
+    compareDates(this, first) >= 0 && compareDates(this, last) <= 0

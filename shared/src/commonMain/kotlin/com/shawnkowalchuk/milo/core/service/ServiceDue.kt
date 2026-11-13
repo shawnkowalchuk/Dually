@@ -1,9 +1,10 @@
 package com.shawnkowalchuk.milo.core.service
 
+import com.shawnkowalchuk.milo.core.time.LocalDate
+import com.shawnkowalchuk.milo.core.time.ZoneId
+import com.shawnkowalchuk.milo.core.time.addMonths
+import com.shawnkowalchuk.milo.core.time.daysUntil
 import com.shawnkowalchuk.milo.core.util.localDateOf
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.temporal.ChronoUnit
 
 /** How near an item's next service is. */
 enum class DueState { OK, SOON, DUE }
@@ -45,9 +46,9 @@ fun serviceDue(item: ServiceItem, odometerKm: Long?, nowMs: Long, zone: ZoneId):
             null
         }
     val dueOn = item.everyMonths?.let {
-        localDateOf(item.lastDoneAtMs, zone).plusMonths(it.toLong())
+        localDateOf(item.lastDoneAtMs, zone).addMonths(it.toLong())
     }
-    val daysLeft = dueOn?.let { ChronoUnit.DAYS.between(localDateOf(nowMs, zone), it) }
+    val daysLeft = dueOn?.let { localDateOf(nowMs, zone).daysUntil(it) }
     val soonKm = maxOf(SOON_KM, (item.everyKm ?: 0).toLong() / SOON_SHARE)
     val state =
         when {

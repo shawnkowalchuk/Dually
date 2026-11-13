@@ -1,13 +1,14 @@
 package com.shawnkowalchuk.milo.core.odometer
 
+import com.shawnkowalchuk.milo.core.text.Locale
+import com.shawnkowalchuk.milo.core.text.formatText
+import com.shawnkowalchuk.milo.core.time.LocalDate
+import com.shawnkowalchuk.milo.core.time.ZoneId
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.daysSpan
 import com.shawnkowalchuk.milo.core.util.localDateOf
 import com.shawnkowalchuk.milo.core.util.sumOfTenths
 import com.shawnkowalchuk.milo.core.util.tenthsOfWhole
-import java.time.LocalDate
-import java.time.ZoneId
-import java.util.Locale
 import kotlin.math.max
 import kotlin.math.min
 
@@ -151,7 +152,7 @@ fun odometerAt(
     val tenths = sumOfTenths(between.map { it.metres }, unit)
     val signed = if (atMs >= closest.atMs) tenths else -tenths
     val readingTenths = tenthsOfWhole(closest.value, from = closest.unit, to = unit)
-    val whole = Math.floorDiv(readingTenths + signed + HALF_IN_TENTHS, TENTHS_PER_WHOLE)
+    val whole = (readingTenths + signed + HALF_IN_TENTHS).floorDiv(TENTHS_PER_WHOLE)
     return OdometerFigure(
         value = whole.coerceAtLeast(0),
         unit = unit,
@@ -209,7 +210,7 @@ fun parseOdometer(typed: String): Long? {
 }
 
 /** A whole number with the thousands grouped as [locale] groups them: "123,456". */
-fun formatOdometer(value: Long, locale: Locale): String = String.format(locale, "%,d", value)
+fun formatOdometer(value: Long, locale: Locale): String = formatText(locale, "%,d", value)
 
 private fun tripsBetween(aMs: Long, bMs: Long, trips: List<DrivenTrip>): List<DrivenTrip> {
     val from = min(aMs, bMs)

@@ -1,7 +1,7 @@
 package com.shawnkowalchuk.milo.core.util
 
-import java.time.ZoneId
-import java.util.Locale
+import com.shawnkowalchuk.milo.core.text.Locale
+import com.shawnkowalchuk.milo.core.time.ZoneId
 
 /**
  * A trip's start and end as two times of day, written the short way: where both are followed

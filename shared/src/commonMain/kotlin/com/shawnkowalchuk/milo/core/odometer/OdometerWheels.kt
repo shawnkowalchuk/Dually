@@ -1,5 +1,7 @@
 package com.shawnkowalchuk.milo.core.odometer
 
+import com.shawnkowalchuk.milo.core.number.asDouble
+import com.shawnkowalchuk.milo.core.number.multiplyExact
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.tenthsOf
 import com.shawnkowalchuk.milo.core.util.tenthsOfWhole
@@ -85,13 +87,13 @@ fun OdometerFigure.inTenths(): Long {
     return when {
         wholeOf(after) == value -> after
         before >= 0 && wholeOf(before) == value -> before
-        else -> Math.multiplyExact(value, TENTHS_PER_WHOLE)
+        else -> multiplyExact(value, TENTHS_PER_WHOLE)
     }
 }
 
 /** Tenths as [odometerAt] rounds them to the whole number it shows: half a unit goes upwards. */
 private fun wholeOf(tenths: Long): Long =
-    Math.floorDiv(tenths + HALF_IN_TENTHS, TENTHS_PER_WHOLE).coerceAtLeast(0)
+    (tenths + HALF_IN_TENTHS).floorDiv(TENTHS_PER_WHOLE).coerceAtLeast(0)
 
 /**
  * How far a trip of [tripMetres] so far is past the tenth it is printed as, in tenths of
@@ -104,6 +106,6 @@ private fun wholeOf(tenths: Long): Long =
  * which grows evenly with the distance.
  */
 fun pastItsTenth(tripMetres: Double, unit: DistanceUnit): Double {
-    val exact = tripMetres / unit.metresPerTenth.toDouble()
+    val exact = tripMetres / unit.metresPerTenth.asDouble()
     return (exact - tenthsOf(tripMetres, unit)).coerceIn(-HALF_A_TENTH, HALF_A_TENTH)
 }

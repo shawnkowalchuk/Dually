@@ -1,26 +1,11 @@
 package com.shawnkowalchuk.milo.core.util
 
-import java.time.DayOfWeek
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.YearMonth
-import java.time.ZoneId
-import java.time.chrono.IsoChronology
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeFormatterBuilder
-import java.time.format.FormatStyle
-import java.time.format.TextStyle
-import java.util.Locale
-
-/**
- * A plain 24-hour time, for a phone that is set to 24 hours in a language that writes AM and PM.
- * It is how Android itself writes the time on such a phone.
- */
-private const val TWENTY_FOUR_HOUR_PATTERN = "HH:mm"
-
-/** And the other way round: a phone set to AM and PM in a language that writes 24 hours. */
-private const val TWELVE_HOUR_PATTERN = "h:mm a"
+import com.shawnkowalchuk.milo.core.text.Locale
+import com.shawnkowalchuk.milo.core.time.DayOfWeek
+import com.shawnkowalchuk.milo.core.time.LocalDate
+import com.shawnkowalchuk.milo.core.time.LocalTime
+import com.shawnkowalchuk.milo.core.time.YearMonth
+import com.shawnkowalchuk.milo.core.time.ZoneId
 
 /**
  * Turns a stored time (wall-clock milliseconds since 1970) into the time of day shown to the
@@ -36,8 +21,12 @@ private const val TWELVE_HOUR_PATTERN = "h:mm a"
  * "8:14 a.m.", so that MilO's times read like the phone's own clock; the language decides how
  * either is spelled.
  */
-fun formatTimeOfDay(epochMs: Long, zone: ZoneId, locale: Locale, twentyFourHour: Boolean): String =
-    timeOfDayFormat(locale, twentyFourHour).withZone(zone).format(Instant.ofEpochMilli(epochMs))
+expect fun formatTimeOfDay(
+    epochMs: Long,
+    zone: ZoneId,
+    locale: Locale,
+    twentyFourHour: Boolean,
+): String
 
 /**
  * A time of day that belongs to no date, such as the start of a work day, in the same form as
@@ -46,51 +35,16 @@ fun formatTimeOfDay(epochMs: Long, zone: ZoneId, locale: Locale, twentyFourHour:
  * @param twentyFourHour as for [formatTimeOfDay]. The time picker's dial is drawn by the same
  * switch, so a time is never entered on a dial that disagrees with the time printed beside it.
  */
-fun formatClockTime(time: LocalTime, locale: Locale, twentyFourHour: Boolean): String =
-    timeOfDayFormat(locale, twentyFourHour).format(time)
-
-/**
- * The language's own short form wherever it already has the clock the phone is set to, as it
- * does on a phone whose 24-hour switch follows the language. Only where the two disagree is a
- * plain pattern used in its place.
- */
-private fun timeOfDayFormat(locale: Locale, twentyFourHour: Boolean): DateTimeFormatter = when {
-    usesTwelveHourClock(locale) != twentyFourHour ->
-        DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)
-
-    twentyFourHour -> DateTimeFormatter.ofPattern(TWENTY_FOUR_HOUR_PATTERN, locale)
-
-    else -> DateTimeFormatter.ofPattern(TWELVE_HOUR_PATTERN, locale)
-}
+expect fun formatClockTime(time: LocalTime, locale: Locale, twentyFourHour: Boolean): String
 
 /**
  * Whether [locale] itself writes a short time of day on a 12-hour clock. It says what the
  * language does, not what the phone is set to: [formatTimeOfDay] is told that by its caller.
  */
-internal fun usesTwelveHourClock(locale: Locale): Boolean {
-    val pattern =
-        DateTimeFormatterBuilder.getLocalizedDateTimePattern(
-            null,
-            FormatStyle.SHORT,
-            IsoChronology.INSTANCE,
-            locale,
-        )
-    // In a date and time pattern "h" and "K" are the hours that run to 12, "H" and "k" the ones
-    // that run to 24. The hour letter is asked, not the AM or PM marker: some languages mark
-    // the half of the day with another letter. Text between single quotes is written out as it
-    // is (the "h" of French "8 h 14") and is left aside.
-    return pattern.split('\'').filterIndexed { index, _ -> index % 2 == 0 }.any { part ->
-        part.any { it == 'h' || it == 'K' }
-    }
-}
+internal expect fun usesTwelveHourClock(locale: Locale): Boolean
 
 /** A day of the week by its full name: "Monday". */
-fun formatDayOfWeek(day: DayOfWeek, locale: Locale): String =
-    day.getDisplayName(TextStyle.FULL, locale)
-
-/** The event log's time format: fixed, sortable, and exact to the second. */
-private val LOG_TIME: DateTimeFormatter =
-    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
+expect fun formatDayOfWeek(day: DayOfWeek, locale: Locale): String
 
 /**
  * Turns a stored time into the form the event log shows: "2026-10-05 08:14:03", in [zone].
@@ -99,48 +53,51 @@ private val LOG_TIME: DateTimeFormatter =
  * start: its lines are compared with each other and with the truck's clock, to the second, so
  * the date and the 24-hour time are always written out in full.
  */
-fun formatLogTime(epochMs: Long, zone: ZoneId): String =
-    LOG_TIME.withZone(zone).format(Instant.ofEpochMilli(epochMs))
+expect fun formatLogTime(epochMs: Long, zone: ZoneId): String
 
 /**
  * A month as a heading: "October 2026". "LLLL" is the month's name standing alone, which in
  * some languages is spelled differently from the name inside a date.
  */
-fun formatMonthAndYear(month: YearMonth, locale: Locale): String =
-    DateTimeFormatter.ofPattern("LLLL yyyy", locale).format(month)
+expect fun formatMonthAndYear(month: YearMonth, locale: Locale): String
 
 /**
  * A month by its name alone, for a place where the year goes without saying because the month
  * is this one or the last: "October".
  */
-fun formatMonthName(month: YearMonth, locale: Locale): String =
-    DateTimeFormatter.ofPattern("LLLL", locale).format(month)
+expect fun formatMonthName(month: YearMonth, locale: Locale): String
 
 /**
  * Today as the short line under the app's name: "Tue, Oct 6". The names of the weekday and the
  * month are the language's own short ones; their order is the design's, in every language.
  */
-fun formatShortDay(date: LocalDate, locale: Locale): String =
-    DateTimeFormatter.ofPattern("EEE, MMM d", locale).format(date)
+expect fun formatShortDay(date: LocalDate, locale: Locale): String
 
 /** A day as a heading, in the long form of the user's language: "Monday, 5 October 2026". */
-fun formatDay(date: LocalDate, locale: Locale): String =
-    DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale).format(date)
+expect fun formatDay(date: LocalDate, locale: Locale): String
 
 /**
  * A day in the medium form of the user's language, with its year: "5 Oct 2026". For a place
  * too narrow for the long form, where the year still has to be said: the two days of a date
  * range.
  */
-fun formatMediumDay(date: LocalDate, locale: Locale): String =
-    DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale).format(date)
+expect fun formatMediumDay(date: LocalDate, locale: Locale): String
 
 /**
  * A stored time as a date only, in the medium form of the user's language: "5 Oct 2026". Used
  * where the day matters and the time of day does not, such as the day a setting was confirmed.
  */
-fun formatDate(epochMs: Long, zone: ZoneId, locale: Locale): String = DateTimeFormatter
-    .ofLocalizedDate(FormatStyle.MEDIUM)
-    .withLocale(locale)
-    .withZone(zone)
-    .format(Instant.ofEpochMilli(epochMs))
+expect fun formatDate(epochMs: Long, zone: ZoneId, locale: Locale): String
+
+/**
+ * A day written out in [locale]'s long form, the way the report dates what it says:
+ * "November 13, 2026" in English.
+ */
+expect fun formatLongDay(date: LocalDate, locale: Locale): String
+
+/**
+ * The full name of [month]'s month in [locale], as a month is named inside a sentence or a
+ * table: "November". (formatMonthName gives the form that stands alone, which some languages
+ * spell differently.)
+ */
+expect fun formatFullMonthName(month: YearMonth, locale: Locale): String

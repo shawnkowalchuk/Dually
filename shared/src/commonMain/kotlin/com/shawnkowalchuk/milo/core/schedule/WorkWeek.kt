@@ -1,7 +1,8 @@
 package com.shawnkowalchuk.milo.core.schedule
 
-import java.time.DayOfWeek
-import java.time.LocalTime
+import com.shawnkowalchuk.milo.core.time.DayOfWeek
+import com.shawnkowalchuk.milo.core.time.LocalTime
+import com.shawnkowalchuk.milo.core.time.secondsIntoDay
 
 // The work schedule read as one work week: what its work days have in common, and the change
 // that gives every day the same hours. The schedule itself still keeps hours for each day
@@ -33,7 +34,7 @@ fun WorkSchedule.workDaysAgree(): Boolean {
 fun WorkSchedule.weeklyMinutes(): Int = workDays().sumOf { minutesOf(on(it)) }
 
 private fun minutesOf(hours: DayHours): Int =
-    (hours.end.toSecondOfDay() - hours.start.toSecondOfDay()) / SECONDS_PER_MINUTE
+    (hours.end.secondsIntoDay() - hours.start.secondsIntoDay()) / SECONDS_PER_MINUTE
 
 /**
  * This schedule with [start] and [end] on all seven days, or null for hours that

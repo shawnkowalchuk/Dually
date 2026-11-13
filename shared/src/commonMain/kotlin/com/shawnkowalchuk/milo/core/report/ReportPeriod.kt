@@ -1,14 +1,17 @@
 package com.shawnkowalchuk.milo.core.report
 
+import com.shawnkowalchuk.milo.core.text.Locale
+import com.shawnkowalchuk.milo.core.text.formatText
+import com.shawnkowalchuk.milo.core.time.LocalDate
+import com.shawnkowalchuk.milo.core.time.YearMonth
+import com.shawnkowalchuk.milo.core.time.ZoneId
+import com.shawnkowalchuk.milo.core.time.compareDates
+import com.shawnkowalchuk.milo.core.time.firstDay
+import com.shawnkowalchuk.milo.core.time.lastDay
 import com.shawnkowalchuk.milo.core.util.TimeSpan
 import com.shawnkowalchuk.milo.core.util.daysSpan
+import com.shawnkowalchuk.milo.core.util.formatLongDay
 import com.shawnkowalchuk.milo.core.util.formatMonthAndYear
-import java.time.LocalDate
-import java.time.YearMonth
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
-import java.util.Locale
 
 /**
  * What a report covers: a whole calendar month, or a run of days Shawn chose.
@@ -25,15 +28,15 @@ sealed interface ReportPeriod {
 
     /** A whole calendar month. */
     data class Month(val month: YearMonth) : ReportPeriod {
-        override val firstDay: LocalDate get() = month.atDay(1)
-        override val lastDay: LocalDate get() = month.atEndOfMonth()
+        override val firstDay: LocalDate get() = month.firstDay()
+        override val lastDay: LocalDate get() = month.lastDay()
     }
 
     /** From [firstDay] to [lastDay], both included. One day is a range too. */
     data class Range(override val firstDay: LocalDate, override val lastDay: LocalDate) :
         ReportPeriod {
         init {
-            require(!lastDay.isBefore(firstDay)) {
+            require(compareDates(lastDay, firstDay) >= 0) {
                 "A date range cannot end ($lastDay) before it starts ($firstDay)"
             }
         }
@@ -60,12 +63,11 @@ fun periodInWords(period: ReportPeriod, locale: Locale, rangeWords: String): Str
         is ReportPeriod.Month -> formatMonthAndYear(period.month, locale)
 
         is ReportPeriod.Range -> {
-            val day = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale)
-            val first = day.format(period.firstDay)
+            val first = formatLongDay(period.firstDay, locale)
             if (period.firstDay == period.lastDay) {
                 first
             } else {
-                String.format(locale, rangeWords, first, day.format(period.lastDay))
+                formatText(locale, rangeWords, first, formatLongDay(period.lastDay, locale))
             }
         }
     }

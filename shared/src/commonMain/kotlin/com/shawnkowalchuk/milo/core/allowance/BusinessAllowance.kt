@@ -1,9 +1,9 @@
 package com.shawnkowalchuk.milo.core.allowance
 
+import com.shawnkowalchuk.milo.core.number.BigDecimal
+import com.shawnkowalchuk.milo.core.text.Locale
+import com.shawnkowalchuk.milo.core.text.formatText
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
-import java.math.BigDecimal
-import java.math.RoundingMode
-import java.util.Locale
 
 // What the business kilometres would be worth at a rate per kilometre, for reference only
 // (Shawn's request of 2026-10-07, for the home-screen widget). The report for the accountant
@@ -24,8 +24,11 @@ const val MIN_CENTS_PER_KM = 1
 const val MAX_CENTS_PER_KM = 500
 
 private const val TENTHS_PER_KM = 10L
+
 private const val HALF_A_CENT_IN_TENTH_CENTS = 5L
+
 private const val CENTS_PER_DOLLAR = 100L
+
 private const val HALF_A_DOLLAR_IN_CENTS = 50L
 
 /** A rate is in whole cents: two digits after the decimal mark. */
@@ -74,22 +77,14 @@ fun parseCentsPerKm(typed: String): Int? {
  * priced at it: the rate stays a rate per kilometre, as the CRA sets its own, and the dollars
  * are always [allowanceCents] of kilometres, so choosing miles cannot move them by a cent.
  */
-fun centsPerMileOf(centsPerKm: Int): Int {
-    val kilometresPerMile =
-        DistanceUnit.MILES.metresPerUnit.divide(DistanceUnit.KILOMETRES.metresPerUnit)
-    return BigDecimal(centsPerKm)
-        .multiply(kilometresPerMile)
-        .setScale(0, RoundingMode.HALF_UP)
-        .intValueExact()
-}
+expect fun centsPerMileOf(centsPerKm: Int): Int
 
 /**
  * A rate as dollars with two decimals, with the decimal mark of [locale]: "$0.70". The rate per
  * kilometre, and what it comes to per mile ([centsPerMileOf]), are both written with it.
  */
-fun formatCentsPerKm(centsPerKm: Int, locale: Locale): String =
-    "$" + String.format(locale, "%.2f", BigDecimal.valueOf(centsPerKm.toLong(), CENT_DIGITS))
+expect fun formatCentsPerKm(centsPerKm: Int, locale: Locale): String
 
 /** Whole dollars with the thousands grouped as [locale] groups them, rounded: "$1,234". */
 fun formatWholeDollars(cents: Long, locale: Locale): String =
-    "$" + String.format(locale, "%,d", (cents + HALF_A_DOLLAR_IN_CENTS) / CENTS_PER_DOLLAR)
+    "$" + formatText(locale, "%,d", (cents + HALF_A_DOLLAR_IN_CENTS) / CENTS_PER_DOLLAR)

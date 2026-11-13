@@ -1,6 +1,7 @@
 package com.shawnkowalchuk.milo.core.util
 
-import java.util.Locale
+import com.shawnkowalchuk.milo.core.text.Locale
+import com.shawnkowalchuk.milo.core.text.formatText
 
 private const val MS_PER_MINUTE = 60_000L
 private const val MINUTES_PER_HOUR = 60L
@@ -38,8 +39,8 @@ fun wholeHoursAndMinutes(durationMs: Long): HoursAndMinutes {
 fun formatMinutes(seconds: Int, locale: Locale): String {
     require(seconds >= 0) { "A length of time cannot be negative, but was $seconds s" }
     return if (seconds % SECONDS_PER_MINUTE == 0) {
-        String.format(locale, "%d", seconds / SECONDS_PER_MINUTE)
+        formatText(locale, "%d", seconds / SECONDS_PER_MINUTE)
     } else {
-        String.format(locale, "%.1f", seconds / SECONDS_PER_MINUTE.toDouble())
+        formatText(locale, "%.1f", seconds / SECONDS_PER_MINUTE.toDouble())
     }
 }

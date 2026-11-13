@@ -1,7 +1,7 @@
 package com.shawnkowalchuk.milo.core.review
 
+import com.shawnkowalchuk.milo.core.time.ZoneId
 import com.shawnkowalchuk.milo.core.util.localDateOf
-import java.time.ZoneId
 
 // When MilO asks Google Play to show its review card (2026-10-11, ADR-009). Shawn: "three google
 // play prompts for a review. one after 5 trips recoreded, 100 trips recorded and after

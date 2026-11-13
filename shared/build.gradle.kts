@@ -6,6 +6,8 @@
 plugins {
     id("org.jetbrains.kotlin.multiplatform")
     alias(libs.plugins.android.kotlin.multiplatform.library)
+    // The service book and, later, the export format are written with kotlinx.serialization.
+    alias(libs.plugins.kotlin.serialization)
 }
 
 kotlin {
@@ -24,9 +26,16 @@ kotlin {
     compilerOptions {
         // As in the app: a compiler warning fails the build.
         allWarningsAsErrors = true
+        // The shared date, language and number types are `expect` classes whose Android side is
+        // java.time's own (core/time, core/text, core/number). Kotlin calls such classes Beta and
+        // warns about each unless this flag says the module means to use them (KT-61573).
+        freeCompilerArgs.add("-Xexpect-actual-classes")
     }
 
     sourceSets {
+        commonMain.dependencies {
+            implementation(libs.kotlinx.serialization.json)
+        }
         commonTest {
             // The made-up GPS tracks the tests drive with, which the app's own tests use too
             // (app/build.gradle.kts adds the same folder): one copy, two users.

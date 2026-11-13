@@ -3,16 +3,16 @@ package com.shawnkowalchuk.milo.core.report
 import com.shawnkowalchuk.milo.core.odometer.OdometerFigure
 import com.shawnkowalchuk.milo.core.odometer.OdometerSpan
 import com.shawnkowalchuk.milo.core.odometer.formatOdometer
+import com.shawnkowalchuk.milo.core.text.Locale
+import com.shawnkowalchuk.milo.core.text.formatText
+import com.shawnkowalchuk.milo.core.time.LocalDate
+import com.shawnkowalchuk.milo.core.time.ZoneId
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.formatDay
+import com.shawnkowalchuk.milo.core.util.formatLongDay
 import com.shawnkowalchuk.milo.core.util.formatMediumDay
 import com.shawnkowalchuk.milo.core.util.formatTenths
 import com.shawnkowalchuk.milo.core.util.formatTimeOfDay
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
-import java.util.Locale
 
 // Every word and figure of the PDF, worked out before anything is measured or drawn. Pure
 // Kotlin: the words come in as plain strings, which the caller reads from the string resources.
@@ -176,14 +176,17 @@ data class PrintedReport(
 /** Turns [report] into the words and figures that are printed. */
 fun printedReport(report: MileageReport, words: ReportWords, format: ReportFormat): PrintedReport {
     val locale = format.locale
-    val longDate = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale)
     val period = periodInWords(report.period, locale, words.periodRange)
     val sender = report.sender
     val totalKm = formatTenths(report.totalTenths, locale)
     return PrintedReport(
         words = words,
         period = period,
-        generated = String.format(locale, words.generatedOn, longDate.format(report.generatedOn)),
+        generated = formatText(
+            locale,
+            words.generatedOn,
+            formatLongDay(report.generatedOn, locale),
+        ),
         business = PrintedTally(words.business, totalKm, words.tripCount),
         personal =
             PrintedTally(
@@ -210,10 +213,10 @@ fun printedReport(report: MileageReport, words: ReportWords, format: ReportForma
                 if (report.listsPersonal) words.personalListed else words.businessOnly,
                 report.businessSharePercent
                     ?.takeIf { report.showsBusinessShare }
-                    ?.let { String.format(locale, words.businessShare, it) },
+                    ?.let { formatText(locale, words.businessShare, it) },
                 report.revision?.let {
-                    val replaced = longDate.format(it.replacesSentOn)
-                    String.format(locale, words.revisionNote, it.number, replaced)
+                    val replaced = formatLongDay(it.replacesSentOn, locale)
+                    formatText(locale, words.revisionNote, it.number, replaced)
                 },
                 words.odometerNote.takeIf { report.odometers.any { it.span.anyEstimated } },
             ),
@@ -222,11 +225,11 @@ fun printedReport(report: MileageReport, words: ReportWords, format: ReportForma
                 it.printed(report.zone, report.unit, words, format, report.severalVehicles)
             },
         emptyNote = words.noTrips.takeIf { report.days.isEmpty() },
-        totalLabel = String.format(locale, words.total, period),
+        totalLabel = formatText(locale, words.total, period),
         totalKm = totalKm,
         tripCount = words.tripCount,
         legend = words.legend.takeIf { report.markedCount > 0 },
-        footer = String.format(locale, words.footer, sender.name, period),
+        footer = formatText(locale, words.footer, sender.name, period),
         yearSummary =
             report.months?.let { months ->
                 report.period.wholeYear?.let { year ->
@@ -254,7 +257,7 @@ private fun ReportDay.printed(
     val heading = formatDay(date, format.locale)
     return PrintedDay(
         heading = heading,
-        continuedHeading = String.format(format.locale, words.dayContinued, heading),
+        continuedHeading = formatText(format.locale, words.dayContinued, heading),
         rows =
             trips.map { trip ->
                 PrintedRow(
@@ -294,20 +297,20 @@ private fun OdometerFigure.printed(
 ): Pair<String, String> {
     val figure = formatOdometer(value, locale)
     val written = if (estimated) words.odometerEstimated else words.odometerKm
-    val label = String.format(locale, words.odometerOn, formatMediumDay(day, locale))
+    val label = formatText(locale, words.odometerOn, formatMediumDay(day, locale))
     val named = if (vehicle ==
         null
     ) {
         label
     } else {
-        String.format(locale, words.odometerOfVehicle, vehicle, label)
+        formatText(locale, words.odometerOfVehicle, vehicle, label)
     }
-    return named to String.format(locale, written, figure)
+    return named to formatText(locale, written, figure)
 }
 
 /** "Odometer 120,345 → 120,357 km", with "est." where Dually worked a figure out. */
 private fun tripOdometerText(span: OdometerSpan, words: ReportWords, locale: Locale): String =
-    String.format(
+    formatText(
         locale,
         if (span.anyEstimated) words.tripOdometerEstimated else words.tripOdometer,
         formatOdometer(span.start.value, locale),
