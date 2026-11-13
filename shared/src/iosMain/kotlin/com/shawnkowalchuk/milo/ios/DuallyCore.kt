@@ -48,6 +48,8 @@ class DuallyCore private constructor(
     val trips: IosTrips,
     private val addresses: TripAddresses,
     private val automations: TruckBelief,
+    /** The driving alert (phase 4d, third part). */
+    val drivingAlert: IosDrivingAlert,
 ) {
     /**
      * The Setup screen (phase 4d, second part) for what iOS reports, with the check that each
@@ -58,6 +60,8 @@ class DuallyCore private constructor(
         precise: Boolean,
         alwaysAsked: Boolean,
         vehicle: VehicleLink?,
+        motion: Permission,
+        notifications: Permission,
     ): SetupScreen = setupScreen(
         location = location,
         precise = precise,
@@ -65,6 +69,8 @@ class DuallyCore private constructor(
         vehicle = vehicle,
         connectHeardAtMs = automations.connectHeardAtMs,
         disconnectHeardAtMs = automations.disconnectHeardAtMs,
+        motion = motion,
+        notifications = notifications,
         nowMs = nowMs(),
         zone = systemZoneId(),
         locale = phoneLocale(),
@@ -175,7 +181,17 @@ class DuallyCore private constructor(
                     clock = clock,
                     openTripStart = { addresses.openTripStart.value },
                 )
-            return DuallyCore(database, recorder, trips, addresses, truck)
+            val drivingAlert =
+                IosDrivingAlert(
+                    recorder = recorder,
+                    trips = tripRepository,
+                    settings = settings,
+                    eventLog = eventLog,
+                    memory = StoredMotionMemory(),
+                    zone = ::systemZoneId,
+                    clock = clock,
+                )
+            return DuallyCore(database, recorder, trips, addresses, truck, drivingAlert)
         }
     }
 }

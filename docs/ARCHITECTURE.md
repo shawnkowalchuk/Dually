@@ -805,7 +805,10 @@ platform/trip/       # TripController, TripService, GPS recording, notifications
                      #   (platform/address/AddressRetry.kt, OpenTripStart.kt), and since
                      #   the same day the address lookup itself (TripAddresses,
                      #   AddressLookup, AddressLine, AddressLogText); Android's geocoder,
-                     #   network check and TripAddressesOnAndroid stay in the app
+                     #   network check and TripAddressesOnAndroid stay in the app. Also
+                     #   since that day the driving alert's rules and log words
+                     #   (platform/driving/DrivingAlertRules.kt, DrivingLogText.kt) and
+                     #   TruckReading (platform/bluetooth/TruckConnectionSource.kt)
 platform/party/      # the one-year party between the trip service and Home (2026-10-10):
                      #   asked at a trip's first sound whether today is the day, it says
                      #   who plays the pop and stores what Home owes. It reads when the

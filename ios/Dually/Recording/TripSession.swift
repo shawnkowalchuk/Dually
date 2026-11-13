@@ -12,15 +12,22 @@ final class TripSession: ObservableObject {
     /// The shared code's door, opened once: it opens the database.
     let core = DuallyCore.companion.open(placeFinder: AppleGeocoder())
     let location = LocationRecorder()
+    /// The driving alert (phase 4d, third part).
+    let drivingWatch: DrivingWatch
 
     /// The trip being recorded, or nil.
     @Published private(set) var recording: RecordingNow?
     @Published private(set) var failure: String?
 
     private init() {
+        drivingWatch = DrivingWatch(core: core)
         location.onFix = { [weak self] fix in
             Task { await self?.add(fix) }
         }
+        drivingWatch.onTap = { [weak self] in
+            Task { await self?.startFromAlert() }
+        }
+        drivingWatch.arm()
     }
 
     /// The app has started: a trip or a wait left from before is picked up, and its GPS starts
@@ -39,6 +46,11 @@ final class TripSession: ObservableObject {
 
     func start() async {
         await apply { try await self.core.recorder.start() }
+    }
+
+    /// A tap on the driving alert: a trip started by hand, as on Android.
+    func startFromAlert() async {
+        await apply { try await self.core.recorder.startFromAlert() }
     }
 
     func end() async {
@@ -77,6 +89,8 @@ final class TripSession: ObservableObject {
         } catch {
             failure = error.localizedDescription
         }
+        // A trip has begun, however it began: the alert's "tap to start one" is no longer true.
+        if recording != nil { drivingWatch.withdraw() }
         // TODO(debt): the wait beside a parked truck runs the GPS as a trip does, for up to 72
         //  hours. See docs/FINDINGS_LOG.md (2026-11-13, phase 4d, first part).
         if core.recorder.wantsGps {

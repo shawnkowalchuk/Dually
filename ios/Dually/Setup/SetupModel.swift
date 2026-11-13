@@ -1,7 +1,9 @@
 import Combine
 import CoreLocation
+import CoreMotion
 import DuallyShared
 import UIKit
+import UserNotifications
 
 // The Setup screen's state (phase 4d, second part; ADR-015). What each row says is worked out by
 // the shared code (DuallyCore.setup, IosSetup.kt); this reads the facts from iOS, keeps the
@@ -9,6 +11,8 @@ import UIKit
 @MainActor
 final class SetupModel: ObservableObject {
     @Published private(set) var screen: SetupScreen?
+    /// Whether iOS shows Dually's notifications, read again at each refresh.
+    private var notifications = Permission.notAsked
 
     private let session: TripSession
     private let defaults = UserDefaults.standard
@@ -41,15 +45,28 @@ final class SetupModel: ObservableObject {
     }
 
     /// Reads the facts again: when the screen shows, and when the app comes back from the
-    /// Shortcuts app or Settings.
+    /// Shortcuts app or Settings. The driving alert's watch follows what changed.
     func refresh() {
+        compute()
+        Task {
+            let status = await UNUserNotificationCenter.current().notificationSettings()
+                .authorizationStatus
+            notifications = Self.permission(status)
+            compute()
+        }
+    }
+
+    private func compute() {
         let location = session.location
         screen = session.core.setup(
             location: Self.access(location.authorization),
             precise: location.precise,
             alwaysAsked: defaults.bool(forKey: Self.alwaysAskedKey),
-            vehicle: vehicle
+            vehicle: vehicle,
+            motion: Self.motionPermission(),
+            notifications: notifications
         )
+        session.drivingWatch.arm()
     }
 
     func perform(_ action: SetupAction) {
@@ -63,6 +80,17 @@ final class SetupModel: ObservableObject {
             open(UIApplication.openSettingsURLString)
         case SetupAction.openShortcuts:
             open("shortcuts://")
+        case SetupAction.askMotion:
+            // Any read of the history makes iOS ask; the answer arrives with the result.
+            CMMotionActivityManager().queryActivityStarting(from: Date(), to: Date(), to: .main) { _, _ in
+                Task { @MainActor in self.refresh() }
+            }
+        case SetupAction.askNotifications:
+            Task {
+                _ = try? await UNUserNotificationCenter.current()
+                    .requestAuthorization(options: [.alert, .sound])
+                refresh()
+            }
         default:
             break
         }
@@ -82,6 +110,23 @@ final class SetupModel: ObservableObject {
         }
     }
 
-    private static let vehicleKey = "vehicle_link"
+    private static func motionPermission() -> Permission {
+        switch CMMotionActivityManager.authorizationStatus() {
+        case .authorized: return .allowed
+        case .notDetermined: return .notAsked
+        default: return .off
+        }
+    }
+
+    private static func permission(_ status: UNAuthorizationStatus) -> Permission {
+        switch status {
+        case .authorized, .provisional, .ephemeral: return .allowed
+        case .notDetermined: return .notAsked
+        default: return .off
+        }
+    }
+
+    /// Where the vehicle chosen in Setup is kept; the driving alert reads it too.
+    static let vehicleKey = "vehicle_link"
     private static let alwaysAskedKey = "location_always_asked"
 }
