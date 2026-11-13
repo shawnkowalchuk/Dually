@@ -40,6 +40,13 @@ GoogleService-Info.plist
 !.idea/runConfigurations/
 *.iml
 
+# --- Xcode (the iPhone app, ios/) -------------------------------------------------------------
+# Each person's window layout, breakpoints and schemes Xcode made by itself. The project file
+# and anything under xcshareddata are shared.
+xcuserdata/
+*.xcuserstate
+ios/build/
+
 # --- macOS -----------------------------------------------------------------------------------
 .DS_Store
 

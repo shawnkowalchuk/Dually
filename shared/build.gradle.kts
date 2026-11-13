@@ -23,8 +23,14 @@ kotlin {
     }
     // iPhones, and the simulator on an Apple-silicon Mac. iOS 16 is the floor (ADR-014); it is
     // set where the iPhone app is built, in Xcode.
-    iosArm64()
-    iosSimulatorArm64()
+    // The iPhone app (ios/) links the shared code as one static framework, DuallyShared, which
+    // Xcode has Gradle build for the device or the simulator it is building for (phase 4a).
+    listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
+        target.binaries.framework {
+            baseName = "DuallyShared"
+            isStatic = true
+        }
+    }
 
     compilerOptions {
         // As in the app: a compiler warning fails the build.

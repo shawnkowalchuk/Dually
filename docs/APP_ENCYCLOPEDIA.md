@@ -110,6 +110,7 @@ Each line gives the phase the brief put the capability in, and the states of its
 - [Units: kilometres or miles](#units-kilometres-or-miles) — not in the brief; Shawn's request of 2026-10-07. Built, not yet proven on the phone (unit tests and an emulator; the Android Auto screen has run nowhere)
 - [Service](#service) — not in the brief; Shawn's request of 2026-10-16. Built, not yet proven on the phone (unit tests, and an emulator: the screen, Home's tile, the notification at a trip's end and its tap)
 - [Settings](#settings) — phases 1 to 4. Built, not yet proven on the phone
+- [iPhone app](#iphone-app) — Shawn's request of 2026-11-11 (ADR-014, ADR-015). Being built: phase 4a (the app opens, Home's two figures) on the simulator only
 - [Website](#website) — not in the brief; Shawn's request of 2026-10-08. Built, live at milotriplog.top since 2026-10-08, as "MilO Trip Log" since that evening; rebranded as "Dually Trip Tracker" for dually.top on 2026-10-13 by a change of its own, which is not live (the entry is that change's to bring up to date)
 - [Design system](#design-system) — every phase. Built, not yet proven on the phone (the "Bento" look of 2026-10-06 was drawn on an emulator only)
 
@@ -2550,6 +2551,19 @@ Who reads and writes: the trip controller reads the grace period, the parked lim
 - **The time picker is Material 3's, which that library still marks as experimental** in the release the build pins (1.4.0). It is used through one component (`TimeDialog`), so a change to it in a later release is one file's repair; the weekly update PR would fail to compile, not misbehave.
 
 ---
+
+## iPhone app
+
+**Status:** Being built (ADR-014, phase 4). Phase 4a, 2026-11-13: the app opens on the iPhone simulator. Not yet on an iPhone, not on TestFlight, not in the App Store.
+
+**What it does (phase 4a)**
+- Opens on Home, in Dually's dark look: the top line (the mark, "Dually" and the date, then "Home"), the orange Start trip card, and two figures, today's Business kilometres with the number of trips, and this month's Business kilometres.
+- The figures come from the shared code (`DuallyCore.homeFigures`), from the iPhone's own copy of the database, so they are worked out and written exactly as Android's Home writes them. They are read again whenever the app comes back to the front.
+- **Not yet:** the Start trip card says recording comes in the next step and does nothing; there are no other screens; distances are in kilometres only.
+
+**Where it lives:** `ios/` (ARCHITECTURE §5, "The iPhone app"). Swift reaches the shared code through `shared/src/iosMain/.../ios/DuallyCore.kt`.
+
+**The plan, from Shawn's choices** (ADR-014, ADR-015 of 2026-11-13): recording by hand (4b), the trip list (4c), the automatic start through a Shortcuts automation on CarPlay or the truck's Bluetooth, which setup walks the user through, with the safety net as on Android (4d), the trip on the Lock Screen and in the Dynamic Island (4e), CarPlay (4f), Settings and the report (4g), the online backup with Sign in with Apple and Apple's one-time purchase (4h), the widget (4i), then TestFlight on Shawn's iPhone.
 
 ## Website
 

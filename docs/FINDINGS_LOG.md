@@ -26,6 +26,14 @@
 
 ### 2026-11-13
 
+**`[CHANGE]` Phase 4a: the iPhone app opens** (ADR-014; APP_ENCYCLOPEDIA, iPhone app)
+Shawn: "start building the iphone app". `ios/Dually.xcodeproj` with one SwiftUI target, Home's two figures from the shared code and database, Dually's colours, typefaces and mark, and an app icon from the mark (square, as iOS rounds it). Plan for the rest of phase 4 in ADR-014's Progress.
+- **The project file is written by hand, small on purpose:** Xcode 16's synchronized folder (`PBXFileSystemSynchronizedRootGroup`) takes in whatever is under `ios/Dually/`, so adding a Swift file needs no edit of the project file and no tool such as XcodeGen.
+- **Xcode builds the shared code itself:** a first build step runs Gradle (`embedAndSignAppleFrameworkForXcode`) with the Mac's Java 17; script sandboxing is off for it, as Kotlin's own template does.
+- **`[DEBT]` CI does not build the iPhone app yet.** It needs a Mac runner with Xcode 26; added before TestFlight. Until then the Mac's build and the simulator are the check.
+- **`[FINDING]` The simulator's first start of the day can take minutes,** and an install sent before it is ready hangs; shutting it down and starting it again cleared it.
+- **Checks:** the app builds for the simulator with warnings as errors; Android's checks are unchanged (the shared module only gained the iPhone's framework, its database opener and `DuallyCore`).
+
 **`[CHANGE]` Phase 3c: the databases, the settings and the export format move to the shared module** (ADR-014, "Progress")
 Shawn: "finish phase 3". 70 files of `data/` moved to `:shared` with `git mv`, package names unchanged; nothing the app does changes, so there is no line in the list of changes.
 - **The databases:** `milo.db` (version 7) and `points.db` (version 1) keep their file names and versions. Room 3's code is generated in `:shared` for Android and the iPhone (`kspAndroid`, `kspIosArm64`, `kspIosSimulatorArm64`, and `@ConstructedBy` on each database); `:app` no longer runs Room's generator at all. The schemas moved to `shared/schemas`, `MiloMigrationsTest` with them. `buildMiloDatabase` and `buildPointsDatabase` take Android's `Context`, so they are in `shared/src/androidMain`, unchanged.
