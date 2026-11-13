@@ -26,6 +26,9 @@
 
 ### 2026-11-12
 
+**`[DECISION]` The iPhone app: iOS 16 and later; CarPlay granted** (ADR-014 amended)
+Shawn: "Apple granted the permission for CarPlay", and on the iOS version, "go back as far back as we can and make it Most compatible and reasonable". iOS 16 is the floor, because CarPlay's Driving Task category, App Intents and Live Activities all need it. The App ID shows "CarPlay Driving Task App" as Assigned. Disk space is no longer a concern: about 140 GB free.
+
 **`[CHANGE]` Settings without drawers: tiles that open pages**
 Shawn: "it is to busy. to many drawers. for example i dont think we need the log". He was shown a mock-up (the Artifact "Dually Settings Redesign") and answered "do all of it". Nothing a setting does changed; only where it is. Three decisions in the build:
 - **Each page reuses the main screen's own tiles.** A composition local (`LocalSettingsOnPage`) tells `SettingsFold` and the new `SettingsAbout` to draw open, so the tiles are not drawn twice.
