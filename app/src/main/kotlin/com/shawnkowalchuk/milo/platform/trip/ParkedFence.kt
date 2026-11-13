@@ -24,11 +24,6 @@ private const val FENCE_ID = "parked_truck"
 private const val FENCE_REQUEST = 7
 
 /**
- * Where a geofence is put around the parked truck: its place, in degrees.
- */
-data class FencePlace(val latitude: Double, val longitude: Double)
-
-/**
  * The second safety net beside a parked, connected truck (since 2026-10-19; Shawn: "yes go ahead
  * with both safety nets"). While MilO waits beside the truck, Android watches a circle of
  * [PARKED_FENCE_RADIUS_METRES] around its place, at little cost to the battery, and reports the

@@ -21,10 +21,7 @@ import com.shawnkowalchuk.milo.data.settings.setParkedTruck
  * that show the truck driving off are kept, and they are stored when the trip they start is
  * opened. Not thread-safe: only the controller's worker calls it, through the ledger.
  */
-internal class TripParking(
-    private val settings: SettingsStore,
-    private val points: RawPointRepository,
-) {
+class TripParking(private val settings: SettingsStore, private val points: RawPointRepository) {
     private var watch: ParkedWatch? = null
 
     /**

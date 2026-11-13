@@ -101,3 +101,8 @@ actual fun formatOffsetMoment(epochMs: Long, zone: ZoneId): String = Instant.ofE
     .toOffsetDateTime()
     .truncatedTo(ChronoUnit.SECONDS)
     .toString()
+
+private val TIME_WITH_SECONDS: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
+
+actual fun formatTimeWithSeconds(epochMs: Long, zone: ZoneId): String =
+    TIME_WITH_SECONDS.format(Instant.ofEpochMilli(epochMs).atZone(zone))

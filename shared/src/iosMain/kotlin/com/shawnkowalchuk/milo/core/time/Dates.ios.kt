@@ -171,3 +171,8 @@ actual fun formatOffsetMoment(epochMs: Long, zone: ZoneId): String {
         }
     return isoDay(at.date) + "T" + time + offset
 }
+
+actual fun formatTimeWithSeconds(epochMs: Long, zone: ZoneId): String {
+    val time = localDateTimeOf(epochMs, zone)
+    return "${twoDigits(time.hour)}:${twoDigits(time.minute)}:${twoDigits(time.second)}"
+}

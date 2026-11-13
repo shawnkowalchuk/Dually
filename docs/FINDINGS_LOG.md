@@ -26,6 +26,14 @@
 
 ### 2026-11-13
 
+**`[CHANGE]` Phase 4b: a trip recorded by hand on the iPhone** (ADR-014; APP_ENCYCLOPEDIA, iPhone app)
+Shawn: "yes start 4b". Start and End on the iPhone's Home, GPS through Core Location with the app in the background, and the trip opened, measured, closed and sorted by the shared code.
+- **The trip ledger moved to `:shared`** (`TripLedger`, `TripParking`, `TripRuleSettings`, `FencePlace`, and the seven log texts the ledger writes, now `TripLedgerText.kt`), package unchanged, `internal` made public because `:app` is now another module. Two Java pieces gave way to shared ones that are the same on Android: `java.io.IOException` (`core/io`) and the log's "HH:mm:ss" (`formatTimeWithSeconds`, java.time's formatter on Android). `@Volatile` is Kotlin's common one. Android's worker, controller and service are unchanged.
+- **`IosTripRecorder`** does Start, End and a fix as Android's `TripWorker` does them, under one lock. It tells the rules the truck is never connected (no truck until 4d), and gives them the time when a deadline of theirs has passed, as Android's timer does.
+- **`[FINDING]` The first tap on Start shows nothing for a moment:** iOS's location question comes up first, and the card turns to Recording behind it.
+- **Proven on the simulator:** `simctl location start` drove 25 m/s across Edmonton; 1.3 km at 65 s, 2.0 km after 30 s behind the home screen, 2.2 km at End; Home then showed 2.2 km Business today, 1 trip.
+- **Checks:** the iPhone app builds with warnings as errors; Android's full check and `:shared`'s tests on Android and the iPhone simulator, below.
+
 **`[CHANGE]` Phase 4a: the iPhone app opens** (ADR-014; APP_ENCYCLOPEDIA, iPhone app)
 Shawn: "start building the iphone app". `ios/Dually.xcodeproj` with one SwiftUI target, Home's two figures from the shared code and database, Dually's colours, typefaces and mark, and an app icon from the mark (square, as iOS rounds it). Plan for the rest of phase 4 in ADR-014's Progress.
 - **The project file is written by hand, small on purpose:** Xcode 16's synchronized folder (`PBXFileSystemSynchronizedRootGroup`) takes in whatever is under `ios/Dually/`, so adding a Swift file needs no edit of the project file and no tool such as XcodeGen.

@@ -1,5 +1,6 @@
 package com.shawnkowalchuk.milo.platform.trip
 
+import com.shawnkowalchuk.milo.core.io.IOException
 import com.shawnkowalchuk.milo.core.schedule.FilingRules
 import com.shawnkowalchuk.milo.core.trip.TripRules
 import com.shawnkowalchuk.milo.core.trip.distanceFactor as factorFor
@@ -9,7 +10,7 @@ import com.shawnkowalchuk.milo.data.settings.DEFAULT_MINIMUM_TRIP_DISTANCE_METRE
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.settings.RunningTripCategory
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
-import java.io.IOException
+import kotlin.concurrent.Volatile
 
 private const val MILLIS_PER_SECOND = 1000L
 
@@ -27,7 +28,7 @@ private const val MILLIS_PER_SECOND = 1000L
  * Only the controller's worker calls [read]. [rules] is also read from other threads, so it is
  * volatile.
  */
-internal class TripRuleSettings(
+class TripRuleSettings(
     private val settings: SettingsStore,
     private val eventLog: EventLogRepository,
     private val clock: () -> Long,

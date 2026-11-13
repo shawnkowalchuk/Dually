@@ -135,3 +135,6 @@ expect fun compareMonths(a: YearMonth, b: YearMonth): Int
  * seconds are zero. The export file records when it was written this way.
  */
 expect fun formatOffsetMoment(epochMs: Long, zone: ZoneId): String
+
+/** The time of the moment [epochMs] in [zone] with its seconds, "07:05:09", for the event log. */
+expect fun formatTimeWithSeconds(epochMs: Long, zone: ZoneId): String

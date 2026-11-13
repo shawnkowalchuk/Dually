@@ -780,7 +780,10 @@ platform/trip/       # TripController, TripService, GPS recording, notifications
                      #   of one of them or of an audio file of Shawn's own, and which
                      #   sounds one moment plays). The ledger sorts a trip into
                      #   Business or Personal as it closes it. TripParking keeps the wait
-                     #   beside a parked truck
+                     #   beside a parked truck. Since 2026-11-13 (phase 4b) the ledger,
+                     #   TripParking, TripRuleSettings, FencePlace and the ledger's log
+                     #   words (TripLedgerText) are in :shared, package unchanged, because
+                     #   the iPhone records trips with them too
 platform/party/      # the one-year party between the trip service and Home (2026-10-10):
                      #   asked at a trip's first sound whether today is the day, it says
                      #   who plays the pop and stores what Home owes. It reads when the
