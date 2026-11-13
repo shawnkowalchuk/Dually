@@ -148,7 +148,7 @@ A broadcast or a callback names a device, and the receiver decides on the spot w
 - **Every GPS fix goes through the controller's inbox too**, so fixes are stored in arrival order under the trip that is open at that moment.
 - **A truck that is connected and parked is a third thing the service can be asked for** (since 2026-10-06 (evening); ADR-002, amendment 28). The trip rules close a trip whose truck has stood still (`core/trip/ParkedRules`), and if the truck is still connected they do not go idle: the state holds `Parked`, and `TripServiceLink` tells the service `watchParked` in place of `record` or `stop`. The service stays in the foreground, asks for a fix every 30 seconds in place of every 5 (`FixRate`), and shows a notification that says the truck is parked. Its fixes still go through the inbox, but with no trip open they are stored nowhere: `platform/trip/TripParking` feeds them to `core/trip/ParkedWatch`, which is the distance calculation run over the parked place and those fixes, so "moved" means beside a parked truck exactly what it means for a trip's kilometres. When it has moved, the rules start a trip, and `TripParking` stores the parked place and the fixes that showed the movement as that trip's first points. The wait itself (when it began, and the place) is kept in the settings file, like the hold-off, so that a restart finds it; `platform/trip/PickedUp.kt` reads it back with the open trip, and keeps it if the truck cannot be read at that moment. Android Auto is watched through the wait as through a trip, and holds it when the truck's Bluetooth drops. The wait lasts three days at most (`WAITING_LIMIT_MS`); after that the service stops and nothing watches the truck. The review of the same evening changed five things in this, set out in ADR-002, amendment 29. The verification of that night changed one more (amendment 30): `ParkedWatch` drops a first fix that nothing bears out within two minutes, so that it cannot date a trip, but keeps it in mind as a sighting, and the next usable fix that also shows the truck away from the parked place starts the trip. Before, a truck driven off while usable fixes came more than two minutes apart was never seen to move.
 
-**How addresses are found.** `platform/address/TripAddresses` stands beside the recording, not inside it:
+**How addresses are found.** `platform/address/TripAddresses` stands beside the recording, not inside it. Since 2026-11-13 it is in `:shared` with `AddressLookup`, `addressLine` and its log words, so the iPhone looks addresses up by the same rules: it reads the trip being recorded as a flow of `TripUnderWay` (its id and start position), which on Android `TripAddressesOnAndroid.kt` makes from `TripController.activity` (and a failure the event log cannot take goes to the crash file there), and on the iPhone `IosTripRecorder.underWay` publishes; the iPhone's `AddressLookup` is Apple's geocoder, asked from Swift (`ios/Dually/Recording/AppleGeocoder.swift`). On Android:
 
 ```
 [ TripController.activity ] --read--> [ TripAddresses ] --asks--> AddressLookup (Geocoder)
@@ -785,7 +785,10 @@ platform/trip/       # TripController, TripService, GPS recording, notifications
                      #   words (TripLedgerText) are in :shared, package unchanged, because
                      #   the iPhone records trips with them too. Likewise since phase 4c
                      #   the month view (feature/trips/TripMonth.kt) and the place helper
-                     #   (platform/address/AddressRetry.kt, OpenTripStart.kt)
+                     #   (platform/address/AddressRetry.kt, OpenTripStart.kt), and since
+                     #   the same day the address lookup itself (TripAddresses,
+                     #   AddressLookup, AddressLine, AddressLogText); Android's geocoder,
+                     #   network check and TripAddressesOnAndroid stay in the app
 platform/party/      # the one-year party between the trip service and Home (2026-10-10):
                      #   asked at a trip's first sound whether today is the day, it says
                      #   who plays the pop and stores what Home owes. It reads when the

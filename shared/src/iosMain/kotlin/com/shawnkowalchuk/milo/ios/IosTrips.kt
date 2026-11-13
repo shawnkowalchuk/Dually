@@ -24,6 +24,7 @@ import com.shawnkowalchuk.milo.data.trip.TripRepository
 import com.shawnkowalchuk.milo.feature.trips.TripKind
 import com.shawnkowalchuk.milo.feature.trips.TripLine
 import com.shawnkowalchuk.milo.feature.trips.monthSummary
+import com.shawnkowalchuk.milo.platform.address.OpenTripStart
 import com.shawnkowalchuk.milo.platform.address.TripPlace
 import kotlinx.coroutines.flow.first
 
@@ -31,7 +32,10 @@ import kotlinx.coroutines.flow.first
  * The Trips screen's door to the shared code on the iPhone (phase 4c). A month is worked out by
  * the same Kotlin as Android's Trips screen ([monthSummary]) and handed to Swift as text ready to
  * show. Marking a trip Business or Personal, deleting, restoring and counting it go through
- * [TripCorrections], as on Android, with the same lines in the event log.
+ * [TripCorrections], as on Android, with the same lines in the event log. Where a trip went is
+ * worded by the same rules as Android's (TripPlaceTexts and TripPlaceWords in the app).
+ *
+ * @param openTripStart where the trip in progress started, from the address lookup.
  */
 class IosTrips internal constructor(
     private val trips: TripRepository,
@@ -40,6 +44,7 @@ class IosTrips internal constructor(
     private val zone: () -> ZoneId,
     private val locale: () -> Locale,
     private val clock: () -> Long,
+    private val openTripStart: () -> OpenTripStart?,
 ) {
     /**
      * The trips started in [month] (1 to 12) of [year]. Deleted and discarded trips are listed
@@ -66,7 +71,7 @@ class IosTrips internal constructor(
                 showLeftOut = showLeftOut,
                 liveTripId = liveTripId,
                 liveDistanceMetres = liveMetres,
-                liveStart = null,
+                liveStart = openTripStart(),
                 unit = unit,
             )
         val twentyFourHour = !usesTwelveHourClock(localeNow)
@@ -163,16 +168,42 @@ class IosTrips internal constructor(
         return saved
     }
 
-    private fun routeText(line: TripLine): String? = when {
-        line.kind == TripKind.IN_PROGRESS || line.kind == TripKind.DISCARDED -> null
+    // A discarded trip has no route line: its addresses are never looked up, and its note says
+    // why it is not counted. A deleted trip shows only what was stored before it was deleted.
+    private fun routeText(line: TripLine): String? = when (line.kind) {
+        TripKind.DISCARDED -> null
 
-        // A deleted trip shows only the places it had: none at all is no line at all.
-        line.from == null && line.to == null -> null
+        TripKind.DELETED ->
+            if (line.from == null && line.to == null) {
+                null
+            } else {
+                fromToText(line.from ?: TripPlace.NotFound, line.to ?: TripPlace.NotFound)
+            }
 
-        line.from == TripPlace.LookingUp && line.to == TripPlace.LookingUp ->
-            "Addresses not looked up yet"
+        TripKind.IN_PROGRESS -> startText(line.from)
 
-        else -> "${placeText(line.from)} → ${placeText(line.to)}"
+        // A finished trip always carries both; "not found" is the honest reading of a missing one.
+        TripKind.COUNTED ->
+            fromToText(line.from ?: TripPlace.NotFound, line.to ?: TripPlace.NotFound)
+    }
+
+    private fun fromToText(from: TripPlace, to: TripPlace): String = when {
+        from == TripPlace.LookingUp && to == TripPlace.LookingUp -> "Looking up the addresses…"
+
+        from == TripPlace.NotFound && to == TripPlace.NotFound -> "No address found for this trip."
+
+        from == TripPlace.LeftBlank && to == TripPlace.LeftBlank ->
+            "No address entered for this trip."
+
+        else -> "${placeText(from)} → ${placeText(to)}"
+    }
+
+    /** A trip in progress: only where it started can be known, and none before its first fix. */
+    private fun startText(from: TripPlace?): String = when (from) {
+        null -> "Where it started is not known yet."
+        is TripPlace.Known -> "From ${from.address}"
+        TripPlace.LookingUp -> "Looking up where it started…"
+        TripPlace.NotFound, TripPlace.LeftBlank -> "No address found for where it started."
     }
 
     private fun noteText(line: TripLine): String? = when {
@@ -192,13 +223,11 @@ class IosTrips internal constructor(
         else -> null
     }
 
-    // On the iPhone no address is looked up yet: that comes in a later step. A trip without
-    // one says so, rather than Android's "looking up the address…".
-    private fun placeText(place: TripPlace?): String = when (place) {
+    private fun placeText(place: TripPlace): String = when (place) {
         is TripPlace.Known -> place.address
-        TripPlace.LookingUp -> "address not looked up yet"
+        TripPlace.LookingUp -> "looking up the address…"
+        TripPlace.NotFound -> "no address found"
         TripPlace.LeftBlank -> "no address entered"
-        TripPlace.NotFound, null -> "no address found"
     }
 
     private companion object {
@@ -231,7 +260,11 @@ data class TripText(
     val tripId: Long,
     /** "8:02 – 8:31 AM", or the start alone for a trip still being recorded. */
     val time: String,
-    /** "77 Commerce Way → 3300 Gateway Blvd", or null for a trip with no places to show. */
+    /**
+     * "77 Commerce Way, Edmonton → 3104 97 St NW, Edmonton", "From 77 Commerce Way, Edmonton"
+     * for a trip in progress, a sentence when neither end is known, or null for a trip with no
+     * places to show.
+     */
     val route: String?,
     val distance: String?,
     val category: String?,

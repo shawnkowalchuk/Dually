@@ -6,7 +6,7 @@ import SwiftUI
 @main
 struct DuallyApp: App {
     /// The shared code's door, opened once: it opens the database.
-    private let core = DuallyCore.companion.open()
+    private let core = DuallyCore.companion.open(placeFinder: AppleGeocoder())
 
     var body: some Scene {
         WindowGroup {
@@ -18,6 +18,7 @@ struct DuallyApp: App {
             }
             .tint(Palette.accent)
             .preferredColorScheme(.dark)
+            .task { try? await core.appStarted() }
         }
     }
 }

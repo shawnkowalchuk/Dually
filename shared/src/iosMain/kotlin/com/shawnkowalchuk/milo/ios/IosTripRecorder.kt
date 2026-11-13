@@ -7,8 +7,12 @@ import com.shawnkowalchuk.milo.core.trip.TripTransition
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.point.RawPoint
+import com.shawnkowalchuk.milo.platform.address.TripUnderWay
 import com.shawnkowalchuk.milo.platform.trip.TripLedger
 import com.shawnkowalchuk.milo.platform.trip.TripRuleSettings
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -34,6 +38,14 @@ class IosTripRecorder internal constructor(
 ) {
     private val lock = Mutex()
     private var known: TripState? = null
+    private val mutableUnderWay = MutableStateFlow<TripUnderWay?>(null)
+
+    /**
+     * The trip being recorded and where it started, for the address lookup, as Android's trip
+     * controller publishes it: the lookup finds where an open trip started, and both ends of a
+     * trip once it is over.
+     */
+    internal val underWay: StateFlow<TripUnderWay?> = mutableUnderWay.asStateFlow()
 
     /** Start pressed: opens a trip, unless one is open already. */
     suspend fun start(): RecordingNow? = lock.withLock {
@@ -152,6 +164,11 @@ class IosTripRecorder internal constructor(
     }
 
     private fun snapshot(): RecordingNow? {
+        mutableUnderWay.value =
+            ledger.open?.let { open ->
+                val start = open.progress.distance.firstAccepted
+                TripUnderWay(open.id, start?.latitude, start?.longitude)
+            }
         val open = ledger.open ?: return null
         val metres = open.progress.distance.metres * ruleSettings.distanceFactor
         return RecordingNow(

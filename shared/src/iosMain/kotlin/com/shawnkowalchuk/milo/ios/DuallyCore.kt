@@ -19,8 +19,12 @@ import com.shawnkowalchuk.milo.data.settings.buildSettingsStore
 import com.shawnkowalchuk.milo.data.trip.TripCorrections
 import com.shawnkowalchuk.milo.data.trip.TripRepository
 import com.shawnkowalchuk.milo.data.trip.categoryTotals
+import com.shawnkowalchuk.milo.platform.address.TripAddresses
 import com.shawnkowalchuk.milo.platform.trip.TripLedger
 import com.shawnkowalchuk.milo.platform.trip.TripRuleSettings
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import platform.Foundation.NSDate
 import platform.Foundation.NSLocale
@@ -42,7 +46,26 @@ class DuallyCore private constructor(
     val recorder: IosTripRecorder,
     /** The Trips screen's months and changes (phase 4c). */
     val trips: IosTrips,
+    private val addresses: TripAddresses,
 ) {
+    /**
+     * The app has started: picks up a trip left open when it last stopped, then looks up the
+     * addresses that are due, as Android does at process start once its trip controller has
+     * dealt with what the last process left behind.
+     */
+    suspend fun appStarted() {
+        recorder.now()
+        addresses.catchUp("the app started")
+    }
+
+    /**
+     * Looks up the addresses that are due, as Android does when its Trips screen comes to the
+     * front. Returns at once.
+     *
+     * @param reason what prompted it, in words, for the event log.
+     */
+    fun lookUpAddresses(reason: String) = addresses.catchUp(reason)
+
     /**
      * Today's and this month's Business kilometres, in the phone's time zone and language.
      * Kilometres until the iPhone has its Settings (phase 4g), which choose miles as Android's do.
@@ -78,8 +101,10 @@ class DuallyCore private constructor(
         /**
          * Opens the databases and the settings file, as Android's AppContainer does; the app
          * calls it once, when it starts.
+         *
+         * @param placeFinder Apple's geocoder, from Swift, for the addresses of trips.
          */
-        fun open(): DuallyCore {
+        fun open(placeFinder: ApplePlaceFinder): DuallyCore {
             val database = buildMiloDatabase()
             val points = buildPointsDatabase()
             val settings = buildSettingsStore()
@@ -100,6 +125,22 @@ class DuallyCore private constructor(
                     TripRuleSettings(settings, eventLog, clock),
                     clock,
                 )
+            val network = IosNetworkStatus()
+            val addresses =
+                TripAddresses(
+                    trips = tripRepository,
+                    eventLog = eventLog,
+                    lookup = IosAddressLookup(placeFinder),
+                    isOnline = network::isOnline,
+                    tripUnderWay = recorder.underWay,
+                    tripUnderWayNow = { recorder.underWay.value },
+                    clock = clock,
+                    // TODO(debt): the iPhone has no crash file yet, so a failed lookup that the
+                    //  event log cannot take either (its database unreadable) is lost. See
+                    //  docs/FINDINGS_LOG.md (2026-11-13).
+                    unlogged = { _, _ -> },
+                    scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+                )
             val trips =
                 IosTrips(
                     tripRepository,
@@ -108,8 +149,9 @@ class DuallyCore private constructor(
                     zone = ::systemZoneId,
                     locale = ::phoneLocale,
                     clock = clock,
+                    openTripStart = { addresses.openTripStart.value },
                 )
-            return DuallyCore(database, recorder, trips)
+            return DuallyCore(database, recorder, trips, addresses)
         }
     }
 }

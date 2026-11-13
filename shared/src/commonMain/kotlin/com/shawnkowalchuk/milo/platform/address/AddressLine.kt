@@ -1,7 +1,7 @@
 package com.shawnkowalchuk.milo.platform.address
 
 // Turns a geocoder's answer into the one short line a trip shows, such as "12 Shop Rd, Edmonton".
-// Pure functions with no Android in them, so they are tested on the JVM with made-up answers.
+// Pure functions, shared by both phones, so they are tested with made-up answers.
 
 /** At most this many parts of the geocoder's own line are shown when nothing better exists. */
 private const val FALLBACK_PARTS = 2

@@ -42,6 +42,11 @@ final class TripsModel: ObservableObject {
         }
     }
 
+    /// Looks up the trips' addresses that are due, as Android does when its Trips screen opens.
+    func lookUpAddresses() {
+        core.lookUpAddresses(reason: "the Trips screen was opened")
+    }
+
     func step(by months: Int) async {
         var index = year * 12 + (monthNumber - 1) + months
         if months > 0 && !canGoForward { return }
