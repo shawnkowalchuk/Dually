@@ -4,18 +4,21 @@ import com.shawnkowalchuk.milo.core.time.LocalDate
 import com.shawnkowalchuk.milo.core.time.YearMonth
 import com.shawnkowalchuk.milo.core.time.ZoneId
 import com.shawnkowalchuk.milo.core.time.compareDates
+import com.shawnkowalchuk.milo.core.time.epochMsOf
 import com.shawnkowalchuk.milo.core.time.firstDay
 import com.shawnkowalchuk.milo.core.time.localDateTimeOf
 import com.shawnkowalchuk.milo.core.time.yearMonth
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.plus
 
 // The iPhone's spans of days and months, worked out as the Android ones are (TimeSpan.kt):
 // from local midnight, so a day on which the clocks change is as long as it really is.
 
+// A midnight the clocks jump over starts the day when the jump ends, as java.time's atStartOfDay.
 private fun LocalDate.startMs(zone: ZoneId): Long =
-    atStartOfDayIn(zone.timeZone).toEpochMilliseconds()
+    epochMsOf(LocalDateTime(this, LocalTime(0, 0)), zone)
 
 actual fun monthSpan(month: YearMonth, zone: ZoneId): TimeSpan = TimeSpan(
     fromMs = month.firstDay().startMs(zone),

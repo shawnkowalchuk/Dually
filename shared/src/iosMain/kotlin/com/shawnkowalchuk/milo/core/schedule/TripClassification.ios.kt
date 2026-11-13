@@ -1,9 +1,9 @@
 package com.shawnkowalchuk.milo.core.schedule
 
 import com.shawnkowalchuk.milo.core.time.ZoneId
+import com.shawnkowalchuk.milo.core.time.epochMsOf
 import com.shawnkowalchuk.milo.core.time.localDateTimeOf
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.toInstant
 
 actual fun workHoursEndMs(startedAtMs: Long, schedule: WorkSchedule, zone: ZoneId): Long? {
     val start = localDateTimeOf(startedAtMs, zone)
@@ -13,5 +13,5 @@ actual fun workHoursEndMs(startedAtMs: Long, schedule: WorkSchedule, zone: ZoneI
     if (!insideHours) return null
     // As on Android: an end time the clocks jump over moves on by the jump; an end time that
     // happens twice is the first.
-    return LocalDateTime(start.date, hours.end).toInstant(zone.timeZone).toEpochMilliseconds()
+    return epochMsOf(LocalDateTime(start.date, hours.end), zone)
 }

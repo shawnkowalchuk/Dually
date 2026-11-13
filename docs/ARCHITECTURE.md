@@ -650,10 +650,11 @@ declares its own `LocalDate`, `LocalTime`, `YearMonth`, `ZoneId`, `DayOfWeek`, `
 declaration with two answers. In `shared/src/androidMain` the type **is** Java's own (`actual
 typealias`), so the app passes and receives the same objects it always did and not one of its
 call sites changed. In `shared/src/iosMain` it is kotlinx-datetime's, Apple's formatter and
-Apple's exact decimals. **Known gap (2026-11-13):** on the iPhone kotlinx-datetime reads time
-zone rules of its own, which can lag behind Apple's; for Edmonton after 2026-11-01 it says
-UTC-7 where iOS says UTC-6 (FINDINGS_LOG), so the iPhone's dates and work hours must move to
-Apple's rules. Where a function was all java.time (`TimeSpan`, `TimeFormat`, most of
+Apple's exact decimals. **The iPhone's time zone rules are Apple's** (since 2026-11-13): its
+`ZoneId` asks `NSTimeZone` for the offset at a moment, and every turn between a moment and a
+clock date or time goes through it, so the shared code agrees with the iPhone's clock.
+kotlinx-datetime does only the calendar, and with UTC; its own time zone files lagged behind
+Apple's for Alberta in 2026 (FINDINGS_LOG). Where a function was all java.time (`TimeSpan`, `TimeFormat`, most of
 `DistanceFormat`, the allowance's per-mile rate, the work-hours end), the function itself is
 `expect`, its Android body is the old one word for word, and its iPhone body does the same with
 the iPhone's tools.
