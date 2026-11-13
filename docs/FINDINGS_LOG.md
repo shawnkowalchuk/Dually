@@ -26,6 +26,11 @@
 
 ### 2026-11-13
 
+**`[CHANGE]` The website: "Tired of paying subscriptions?", pinned bars, no personal name** (APP_ENCYCLOPEDIA, Website)
+Shawn asked for the subscription pitch, a smaller call to action, lighter screenshots, a pinned header and footer, and his name off the site. All in the encyclopedia's entry. Two calls of mine: **the GitHub links went too,** because the account's address is his name, and with them the site's APK route (he had crossed out the APK link); and **the pinned footer is a slim bar** (the price in one line, and the Google Play button), with the full footer left at the page's end, because four pinned lines of links would cover a phone's screen.
+- **`[FIX]` "Dually's server in Canada" was loose.** Shawn: "isnt it stored in firebase? is this in canada?". Yes to both: Firestore and the Cloud Functions are in `northamerica-northeast1`, Montréal (ADR-012); only the sign-in, in Firebase Authentication, cannot be placed (the privacy page already said so). Every short line now says Google's Firebase in Montréal: the site, three strings of the app (live from the next build), What's new's 0.3.4 line, and the Play description (saved in Play Console, sent with the next review).
+- **Checks:** the pages were looked at in a browser at 1440, 800 and 375 pixels wide: the pinned top line holds while scrolling, the page never scrolls sideways on a phone. `tools/changes_page.py --check` passes. The app's checks run in CI.
+
 **`[CHANGE]` 0.3.4 dated for its production release, as build 10**
 Shawn: "make the 0.3.4 production release". The version is dated 2026-11-13 and `versionCode` goes to 10: build 9's bundle (internal testing) was built with the version undated, so its What's new would call 0.3.4 unreleased, and Play takes a build number once. Released from main before phase 3a (#128) merges, so the release holds no code that has not had its phone check. Saved in Play Console the same day and sent with this release: the Data safety answers of `docs/play-data-safety.md`, with the deletion page, and the full description of `marketing/google-play/listing.md`. Not run before production: build 9's restore, one-phone-per-account and delete flows on the phone (DEVICE_TEST_CHECKLIST).
 

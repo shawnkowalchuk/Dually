@@ -7,7 +7,7 @@
         %1$s below is the account's email address.
     -->
     <string name="settings_cloud_title">Online backup</string>
-    <string name="settings_cloud_explained">Keep a copy of every trip online, on Dually\'s server in Canada, without its GPS points. One purchase, no subscription.</string>
+    <string name="settings_cloud_explained">Keep a copy of every trip online, in Google\'s Firebase in Montréal, Canada, without its GPS points. One purchase, no subscription.</string>
     <string name="settings_cloud_signed_in">Signed in as %1$s. Your trips upload by themselves after each change, when the phone is online. The Log has a line for each upload.</string>
     <string name="settings_cloud_sign_out">Sign out</string>
     <!-- The account is signed in but does not hold the one-time unlock (ADR-013). -->
