@@ -240,6 +240,14 @@ internal fun SettingsContent(
                         )
                     }
                 }
+                // First of the settings (Shawn, 2026-11-12: "can you move the units and
+                // light/darkmode to above truck and driving aler"): how everything is shown.
+                UnitsAndLookTiles(
+                    state.distanceUnit,
+                    state.look,
+                    actions.onDistanceUnit,
+                    actions.onLook,
+                )
                 TruckAndAlertTiles(state, actions)
                 // Under the truck: it is the truck's.
                 odometerTile()
@@ -249,14 +257,6 @@ internal fun SettingsContent(
                 // Under the report's own tile: it is the reminder to send that report.
                 ReminderTile(state, actions.reminder)
                 TripRulesTile(state, actions)
-                // Under the trips' tile: it says how every distance is written, that tile's
-                // shortest trip included. Beside it, the other choice of how everything is shown.
-                UnitsAndLookTiles(
-                    state.distanceUnit,
-                    state.look,
-                    actions.onDistanceUnit,
-                    actions.onLook,
-                )
                 ScheduleTile(state, actions.schedule)
                 OutsideHoursTile(state, actions.schedule)
                 // Under the schedule: the check goes by its work days and their start.

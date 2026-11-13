@@ -26,6 +26,9 @@
 
 ### 2026-11-12
 
+**`[CHANGE]` Units and Look moved to the top of Settings**
+Shawn: "can you move the units and light/darkmode to above truck and driving aler". The pair now stands first, above Truck and Driving alert; nothing else changed.
+
 **`[CHANGE]` The purchase check can look up orders**
 Invited `purchase-check@dually-trip-tracker.iam.gserviceaccount.com` to Play Console at Shawn's request ("can you please do"), from his browser. It has access to Dually Trip Tracker only: "View app information" (required), "View financial data" and "Manage orders and subscriptions". Without it, `unlockBackup` got refused by Google Play, which the app showed as "Google could not be reached". That is why his test purchase did not unlock. Google can take hours to switch the access on; then "Restore purchase" unlocks without buying again. The app's message for this case is misleading; that is to fix in slice 1e.
 
