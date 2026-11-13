@@ -10,7 +10,6 @@
     <!-- The truck's tile, while no truck is stored. The design's own words. -->
     <string name="settings_truck_none">None paired</string>
     <!-- The line under the truck's tile and the driving alert's that opens what both are for. -->
-    <string name="settings_about_pair">About the truck and the driving alert</string>
 
     <!--
         Report for the accountant: the grey words inside each field while it is empty, as the
@@ -123,7 +122,6 @@
         (2026-10-10). The address itself is in SupportTile.kt, as it is not to be translated.
     -->
     <string name="settings_support_label">Email support</string>
-    <string name="settings_support_hint">Opens your email app with a new message. Dually\'s version and your phone\'s model are filled in at the end, to help with the answer. Dually is one person\'s project: answers come when he has time.</string>
     <!-- Spoken by the screen reader for what a press on the tile does. -->
     <string name="settings_support_open">write an email to support</string>
     <!-- The subject of the email, and the line at the end of its text. -->
@@ -136,8 +134,6 @@
         browser. Its value is the page's address as it can be typed in.
     -->
     <string name="settings_coffee_label">Buy me a coffee</string>
-    <string name="settings_coffee_value">buymeacoffee.com/SeaWingman</string>
-    <string name="settings_coffee_hint">Dually is free, with no ads and no account. A coffee helps keep it that way. Opens in your browser.</string>
     <!-- Spoken by the screen reader for what a press on the tile does. -->
     <string name="settings_coffee_open">open the page in the browser</string>
     <!-- On the tile after a press, on a phone with no app that opens a web page. -->
@@ -147,10 +143,22 @@
         where a review can be left. Shawn's wording. In every copy, from Google Play or not.
     -->
     <string name="settings_review_label">Review on Google Play</string>
-    <string name="settings_review_value">If you enjoy Dually, please leave us a review on Google Play.</string>
-    <string name="settings_review_hint">It helps other drivers find Dually. Opens the Play Store.</string>
     <!-- Spoken by the screen reader for what a press on the tile does. -->
     <string name="settings_review_open">open Dually\'s page in the Play Store</string>
     <!-- On the tile after a press, on a phone with neither the Play Store nor a browser. -->
     <string name="settings_review_no_store">This phone has neither the Play Store nor a browser. Dually is on Google Play as Dually Trip Tracker.</string>
+    <!--
+        Settings without drawers (since 2026-11-12): the tiles of the main screen that open a
+        page, what they say the page is set to, and the pages' titles.
+    -->
+    <string name="settings_page_work_hours">Work hours</string>
+    <string name="settings_page_work_hours_personal">Outside these hours: saved as Personal</string>
+    <string name="settings_page_work_hours_ignore">Outside these hours: left out</string>
+    <string name="settings_page_report">Report</string>
+    <string name="settings_page_trips">Trips</string>
+    <string name="settings_page_data">Your data</string>
+    <string name="settings_page_report_no_reminder">No monthly reminder</string>
+    <string name="settings_page_widget">Widget</string>
+    <string name="settings_page_widget_on">On</string>
+    <string name="settings_page_data_line">Backup, export, import and the GPS points</string>
 </resources>

@@ -1979,6 +1979,17 @@ Unit tests only.
 | LT-5 | Look at the home-screen widget, then switch back to Dark. | White widget on light, dark again on Dark, within a moment. | not run |
 | LT-6 | Send a report, so the mascot runs and slides on the Report screen, on Light. | He shows clearly; say if his smoke or brake-light glow look too faint. | not run |
 
+## Settings without drawers (2026-11-12)
+
+| # | Do this | Expect | Result |
+|---|---|---|---|
+| SP-1 | Open Settings and scroll to the end. | Setup, Units and Look, Truck and Driving alert, Odometer, Work hours, Report, Trips, Sounds and Widget side by side, Your data, a short list (Email support, Rate on Google Play), the version. No drawers. | not run |
+| SP-2 | Tap Work hours. | A page with the days and hours, Trips outside the work hours and the daily check, all open; Back returns to Settings. | not run |
+| SP-3 | Change the hours on that page, go back. | The Work hours tile shows the new week. | not run |
+| SP-4 | Open Report, Trips, Sounds, Widget and Your data in turn. | Each page shows its settings open, with its "About" sentences written out. | not run |
+| SP-5 | Settings, Setup, scroll to the end. | A Log tile; it opens the Log. | not run |
+| SP-6 | Tap Email support. | The email app opens a draft to support@dually.top. | not run |
+
 ## Later work packages
 
 Nothing waiting. A work package that adds behaviour only the phone can prove adds its checks above.

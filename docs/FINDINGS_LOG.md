@@ -26,6 +26,20 @@
 
 ### 2026-11-12
 
+**`[CHANGE]` "Online backup" on the main Settings screen, bought with one button**
+Shawn: "the backup shouldnt be hidden. also it should probably state something like purchase online backup". On the backup's branch, merged with the Settings redesign, the tile left the Your data page and stands open under Units and Look. "Purchase online backup · price" now signs in with Google first if needed, then opens Google Play. "Restore purchase" signs in first too. The two-step "Sign in with Google", then "Unlock", is gone, and with it the `TODO(debt)` about Google's "G" mark. The tile's tests went from 10 to 12: a purchase that signs in first, an account that already holds the unlock, a restore that signs in first.
+
+**`[CHANGE]` Settings without drawers: tiles that open pages**
+Shawn: "it is to busy. to many drawers. for example i dont think we need the log". He was shown a mock-up (the Artifact "Dually Settings Redesign") and answered "do all of it". Nothing a setting does changed; only where it is. Three decisions in the build:
+- **Each page reuses the main screen's own tiles.** A composition local (`LocalSettingsOnPage`) tells `SettingsFold` and the new `SettingsAbout` to draw open, so the tiles are not drawn twice.
+- **The Log was not removed.** It is not on the bottom bar; the wrench there is Service, since 2026-10-16. It moved to the end of Setup instead, where a trip that did not start is looked into.
+- **The odometer stays on the main screen,** because its Adjust button is used in passing. Only its "About" drawer went.
+
+Three explanations left the app with their drawers: what the truck does, the driving alert's two sentences, and the odometer's. Five footer hint lines went too. Their strings are deleted.
+
+**`[CHANGE]` Units and Look moved to the top of Settings**
+Shawn: "can you move the units and light/darkmode to above truck and driving aler". The pair now stands first, above Truck and Driving alert; nothing else changed.
+
 **`[CHANGE]` Build 8 for internal testing, and the iPhone app's record in App Store Connect**
 Shawn: "yes make build 8", then, while it built, "please setup the dually app in apple app connect and do all setting". Build 8 is `app/cloud-backup` with main merged in: 0.3.4, versionCode 8, the backup with the Android Auto changes and the light look. Its bundle is `app/build/outputs/bundle/release/Dually-0.3.4-build8-test.aab`, signed with `~/keys/milo.jks`. Because 8 went to Play's internal track, a release of main to Play before the backup joins it needs versionCode 9 or more. The App Store Connect record was set up by me in Shawn's Chrome, team 2799748 Alberta Ltd.:
 - **The app:** Apple ID 6834196352, iOS, "Dually Trip Tracker", English (U.S.), bundle ID `top.dually.triptracker`, SKU `dually-trip-tracker`. Subtitle "Mileage log for work trucks"; category Business, then Productivity; content rights "No"; age rating 4+, every question answered No or None; privacy page https://dually.top/privacy; support and marketing URL https://dually.top/; copyright "2026 2799748 Alberta Ltd.".

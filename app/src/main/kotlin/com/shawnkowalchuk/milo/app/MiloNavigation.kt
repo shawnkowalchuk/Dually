@@ -28,6 +28,8 @@ import com.shawnkowalchuk.milo.feature.home.HomeSources
 import com.shawnkowalchuk.milo.feature.home.HomeViewModel
 import com.shawnkowalchuk.milo.feature.pairing.PairingScreen
 import com.shawnkowalchuk.milo.feature.pairing.PairingViewModel
+import com.shawnkowalchuk.milo.feature.settings.LogLinkTile
+import com.shawnkowalchuk.milo.feature.settings.SettingsPage
 import com.shawnkowalchuk.milo.feature.settings.SettingsScreen
 import com.shawnkowalchuk.milo.feature.settings.SettingsViewModel
 import com.shawnkowalchuk.milo.feature.setup.SetupLinkTile
@@ -171,6 +173,8 @@ fun MiloNavigation(
                         onOpenPairing = { backStack.openOnTop(PairingKey) },
                         onBack = { backStack.closeIfOnTop(SetupKey) },
                         onDone = onSetupDone,
+                        // The way into the Log, at the end of Setup since 2026-11-12.
+                        logTile = { LogLinkTile(onOpen = { backStack.openOnTop(LogKey) }) },
                     )
                 }
                 entry<PairingKey> {
@@ -202,49 +206,26 @@ fun MiloNavigation(
                     val lastPlace = remember { mutableIntStateOf(place) }
                     SideEffect { if (place != -1) lastPlace.intValue = place }
                     val openedOnTop = (if (place != -1) place else lastPlace.intValue) > 1
-                    SettingsScreen(
-                        viewModel =
-                            viewModel(
-                                factory = viewModelFactory {
-                                    initializer {
-                                        SettingsViewModel(
-                                            settings = container.settingsStore,
-                                            armDrivingAlert = container.drivingAlert::arm,
-                                            lookAtReminder = container.reports.reminder::look,
-                                            eventLog = container.eventLogRepository,
-                                            clock = container.clock,
-                                        )
-                                    }
-                                },
-                            ),
-                        dataViewModel = viewModel(factory = dataViewModelFactory(container)),
-                        pointsViewModel =
-                            viewModel(factory = gpsPointsViewModelFactory(container)),
-                        checkViewModel =
-                            viewModel(factory = nothingRecordedViewModelFactory(container)),
-                        odometerViewModel =
-                            viewModel(factory = odometerViewModelFactory(container)),
-                        widgetViewModel =
-                            viewModel(factory = homeWidgetViewModelFactory(container)),
-                        cloudViewModel =
-                            viewModel(factory = cloudBackupViewModelFactory(container)),
-                        onChangeTruck = { backStack.openOnTop(PairingKey) },
-                        onOpenSounds = { backStack.openOnTop(SoundListKey(it)) },
+                    SettingsEntry(
+                        container,
+                        backStack,
+                        fromGooglePlay,
+                        page = null,
                         onBack =
                             if (openedOnTop) {
                                 { backStack.closeIfOnTop(SettingsKey) }
                             } else {
                                 null
                             },
-                        setupTile = {
-                            SetupLinkTile(
-                                viewModel = viewModel(factory = setupViewModelFactory(container)),
-                                onOpenSetup = { backStack.openOnTop(SetupKey) },
-                            )
-                        },
-                        versionTile = { VersionTileEntry(container, backStack) },
-                        showCoffee = !fromGooglePlay,
-                        onOpenLog = { backStack.openOnTop(LogKey) },
+                    )
+                }
+                entry<SettingsPageKey> { key ->
+                    SettingsEntry(
+                        container,
+                        backStack,
+                        fromGooglePlay,
+                        page = key.page,
+                        onBack = { backStack.closeIfOnTop(key) },
                     )
                 }
                 entry<SoundListKey> { key -> SoundListEntry(container, backStack, key) }
@@ -252,6 +233,63 @@ fun MiloNavigation(
                 entry<LogKey> { LogEntry(container, backStack) }
                 entry<ServiceKey> { ServiceEntry(container) }
             },
+    )
+}
+
+/**
+ * Settings, or one of its pages (since 2026-11-12), with everything its tiles need.
+ *
+ * @param page the page, or null for the main screen.
+ * @param onBack leaves it: always on a page, and on the main screen when it was opened on top
+ * of another screen (null when it is the bottom bar's).
+ */
+@Composable
+private fun SettingsEntry(
+    container: AppContainer,
+    backStack: NavBackStack<NavKey>,
+    fromGooglePlay: Boolean,
+    page: SettingsPage?,
+    onBack: (() -> Unit)?,
+) {
+    SettingsScreen(
+        page = page,
+        onOpenPage = { backStack.openOnTop(SettingsPageKey(it)) },
+        viewModel =
+            viewModel(
+                factory = viewModelFactory {
+                    initializer {
+                        SettingsViewModel(
+                            settings = container.settingsStore,
+                            armDrivingAlert = container.drivingAlert::arm,
+                            lookAtReminder = container.reports.reminder::look,
+                            eventLog = container.eventLogRepository,
+                            clock = container.clock,
+                        )
+                    }
+                },
+            ),
+        dataViewModel = viewModel(factory = dataViewModelFactory(container)),
+        pointsViewModel =
+            viewModel(factory = gpsPointsViewModelFactory(container)),
+        checkViewModel =
+            viewModel(factory = nothingRecordedViewModelFactory(container)),
+        odometerViewModel =
+            viewModel(factory = odometerViewModelFactory(container)),
+        widgetViewModel =
+            viewModel(factory = homeWidgetViewModelFactory(container)),
+        cloudViewModel =
+            viewModel(factory = cloudBackupViewModelFactory(container)),
+        onChangeTruck = { backStack.openOnTop(PairingKey) },
+        onOpenSounds = { backStack.openOnTop(SoundListKey(it)) },
+        onBack = onBack,
+        setupTile = {
+            SetupLinkTile(
+                viewModel = viewModel(factory = setupViewModelFactory(container)),
+                onOpenSetup = { backStack.openOnTop(SetupKey) },
+            )
+        },
+        versionTile = { VersionTileEntry(container, backStack) },
+        showCoffee = !fromGooglePlay,
     )
 }
 

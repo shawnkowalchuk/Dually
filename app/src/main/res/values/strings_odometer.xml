@@ -35,9 +35,7 @@
     <!-- The argument is the unit's whole word, kilometres or miles. -->
     <string name="settings_odometer_refused">Type the %1$s the dashboard shows, such as 123456.</string>
     <string name="settings_odometer_save">Save reading</string>
-    <string name="settings_about_odometer">About the odometer</string>
     <!-- The argument is the unit's whole word, kilometres or miles. -->
-    <string name="settings_odometer_detail">Dually adds the %1$s of every trip in the truck to your last reading: Business, Personal, and trips you added by hand. A trip started with the button that the truck never joined is left out. Adjust it whenever the dashboard shows something else; each reading is kept with its date. The report for the accountant shows the odometer at the start and the end of its period, marked est. where Dually worked it out.</string>
 
     <!--
         The report for the accountant: the odometer at the start and the end of the period, on a

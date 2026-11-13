@@ -5,6 +5,7 @@ import androidx.navigation3.runtime.NavKey
 import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.designsystem.component.MiloIcons
 import com.shawnkowalchuk.milo.data.settings.TripSound
+import com.shawnkowalchuk.milo.feature.settings.SettingsPage
 import kotlinx.serialization.Serializable
 
 // The screens, as keys of the Navigation 3 back stack. Each is @Serializable because Navigation
@@ -24,8 +25,17 @@ data object TripsKey : NavKey
 data object SettingsKey : NavKey
 
 /**
- * The Log screen. A button of the bottom bar until 2026-10-16, when Service took its place: it is
- * opened from its row on Settings.
+ * One page of Settings (since 2026-11-12, when Settings lost its drawers): opened from its tile
+ * on the main Settings screen, on top of it.
+ *
+ * @param page the page. The back stack saves it by the constant's name.
+ */
+@Serializable
+data class SettingsPageKey(val page: SettingsPage) : NavKey
+
+/**
+ * The Log screen. A button of the bottom bar until 2026-10-16, when Service took its place: it
+ * was opened from its tile at the end of Settings, and since 2026-11-12 from the end of Setup.
  */
 @Serializable
 data object LogKey : NavKey

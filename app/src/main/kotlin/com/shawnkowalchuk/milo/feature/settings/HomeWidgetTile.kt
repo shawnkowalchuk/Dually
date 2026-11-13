@@ -64,7 +64,6 @@ internal fun HomeWidgetTileContent(
     onSaveRate: (String) -> Boolean,
     onAddToHomeScreen: () -> Unit,
 ) {
-    var aboutOpen by rememberSaveable { mutableStateOf(false) }
     // Always open since 2026-10-16 (Shawn: "can we make the home widget not expandable allways
     // open"): its switch is the one thing on it, and a folded switch hides its own state.
     Tile(
@@ -94,11 +93,7 @@ internal fun HomeWidgetTileContent(
             }
             Note(stringResource(R.string.settings_widget_how))
         }
-        QuietExpander(
-            label = stringResource(R.string.settings_about_widget),
-            expanded = aboutOpen,
-            onToggle = { aboutOpen = !aboutOpen },
-        ) {
+        SettingsAbout(label = stringResource(R.string.settings_about_widget)) {
             Note(
                 stringResource(
                     when (shown.unit) {

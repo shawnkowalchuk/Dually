@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.Dp
 import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.designsystem.component.ExpandableHeading
 import com.shawnkowalchuk.milo.core.designsystem.component.ExpandableTile
+import com.shawnkowalchuk.milo.core.designsystem.component.Tile
+import com.shawnkowalchuk.milo.core.designsystem.component.TilePadding
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
 
 /**
@@ -40,6 +42,23 @@ internal fun SettingsFold(
     gap: Dp = MiloTheme.spacing.rowGap,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    if (LocalSettingsOnPage.current) {
+        // On a page of its own (since 2026-11-12) the tile is open, with no fold: its title,
+        // then its rows.
+        Tile(
+            modifier = Modifier.fillMaxWidth(),
+            padding = TilePadding.EVEN,
+            gap = MiloTheme.spacing.tileGap,
+        ) {
+            TileHeading(title)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(gap),
+                content = content,
+            )
+        }
+        return
+    }
     var open by rememberSaveable { mutableStateOf(unfinished) }
     ExpandableTile(
         heading =

@@ -2259,6 +2259,11 @@ Android only: `SystemClock.elapsedRealtime`, `Settings.Global.BOOT_COUNT` and th
 
 ## Cloud backup
 
+**On the main Settings screen as "Online backup", since 2026-11-12 (built, not yet on the phone).** Shawn: "the backup shouldnt be hidden. also it should probably state something like purchase online backup". The tile was the "Cloud backup" fold on the Your data page. It now stands open under Units and Look (`CloudBackupTile`, `backupTile` of `SettingsContent`).
+- **Not bought:** one sentence says what it is ("Keep a copy of every trip online, on Dually's server in Canada, without its GPS points. One purchase, no subscription."). Under it are **Purchase online backup · (Google Play's price)** and **Restore purchase**. The price is asked before anyone signs in.
+- **Sign-in comes first, inside the purchase.** Either button opens Google's account sheet first where nobody is signed in (`CloudBackupViewModel.onPurchase`, `onRestore`). An account that turns out to hold the unlock already is not asked to pay again. There is no separate "Sign in with Google" button any more, so the debt about Google's "G" mark on it is gone.
+- **Bought:** "On", the account the trips go to, and Sign out.
+
 **Status:** Being built (phase 1 of the iPhone and cloud backup plan, ADR-012 and ADR-013). Slice 1a (the comparison) is in main; slices 1b (Firebase and Google sign-in, the Settings tile) 1c (the upload, Firestore and its security rules) and 1d (the one-time unlock and its purchase check) are on the branch `app/cloud-backup`, where slices 1b to 1f gather until the whole backup goes to main with its privacy page (FINDINGS_LOG, 2026-11-11). Uploads run only for an account that holds the unlock. · **Platforms:** Android, phone screen only (the iPhone later, from the same logic, ADR-014; Android Auto has no Settings) · **Last updated:** 2026-11-11
 
 **What it does (when finished)**
@@ -2311,7 +2316,7 @@ Shawn's request of 2026-10-07: "also add the ability in settings to change the u
 **It only changes what is shown.** Every trip, every GPS point, the export file and the backup stay in metres. Switching back and forth changes no stored trip and loses nothing.
 
 **How it works (step by step)**
-1. **The choice.** Settings, the small tile "Units" under "Trips", beside "Look": it names the unit in force, and a tap switches to the other ("Tap for miles"; `feature/settings/UnitsAndLookTiles.kt`, since 2026-11-12; until then a fold with "Kilometres / Miles" in it, `UnitsTile`). A press calls `SettingsViewModel.onDistanceUnit`, which stores one value in the settings file (`distance_unit`, "km" or "mi"; `data/settings/UnitStorage.kt`). Nothing is stored until he chooses.
+1. **The choice.** Settings, the small tile "Units" above "Truck" (under "Trips" until later on 2026-11-12), beside "Look": it names the unit in force, and a tap switches to the other ("Tap for miles"; `feature/settings/UnitsAndLookTiles.kt`, since 2026-11-12; until then a fold with "Kilometres / Miles" in it, `UnitsTile`). A press calls `SettingsViewModel.onDistanceUnit`, which stores one value in the settings file (`distance_unit`, "km" or "mi"; `data/settings/UnitStorage.kt`). Nothing is stored until he chooses.
 2. **How it reaches every surface.** `ShownUnit` (same file) keeps the unit in memory for the life of the process. `MiloApplication` starts it at process start. Home and Trips get it from the `AppContainer`; so do the Android Auto screen, the widget and the trip's notification. The Report screen, Settings, the odometer's tile and the widget's tile read it from the settings they read anyway. Each follows a change at once. The edit form reads it once from the settings file, when it opens, and keeps it (step 7). The trip service writes its notification again when the unit changes (`TripService.keepNotificationInTheChosenUnit`); it touches no trip.
 3. **One rounding rule, in either unit** (`core/util/DistanceFormat.kt`, `DistanceUnit.kt`). `tenthsOf(metres, unit)` rounds one trip once to a tenth of the unit, half a tenth upwards. `sumOfTenths(metres, unit)` adds those rounded figures: that is every total. So a column of trips added up by hand gives the total printed under it, in miles as in kilometres. A mile is 1,609.344 m exactly.
 4. **Kilometres are untouched.** In kilometres `tenthsOf` runs the arithmetic it always ran. On the emulator the kilometre PDF and CSV of this build were byte for byte the files `main` made from the same trips, and every screen said the same words.
@@ -2377,7 +2382,27 @@ The settings file; the main database (version 6); nothing new from outside. No l
 
 ## Settings
 
-**Units and Look (since 2026-11-12).** Two small tiles side by side under "Trips", drawn like the Truck and Driving alert pair (`UnitsAndLookTiles`, `TilePair`, a `Tile` with a press). Each names its choice in force ("Kilometres", "Dark") and is one button: a tap switches to the other, which its last line says ("Tap for miles", "Tap for light"). Shawn, the same day: "can you please have the units and look outside as just clickable. i dont want everything in a expandable drawer. also make sure they are side by side". For a few hours before that each was a fold with a segmented control and a sentence in it; the two sentences are gone with the folds. It is stored as `look` in the settings file (`LookStorage.kt`, the words `dark` and `light`), and Dark is read until Light is picked. See [Design system](#design-system).
+**Without drawers, since 2026-11-12 (built, seen on an emulator, not yet on the phone: SP-1 to SP-6).** Shawn: "can you suggest merging and moving things in the settings screen it is to busy. to many drawers". He was shown a mock-up and answered "do all of it". The main screen now holds, top to bottom:
+- Setup.
+- Units and Look, side by side.
+- Truck and Driving alert, side by side.
+- The odometer, with its Adjust button.
+- **Work hours**, one tile for three earlier drawers: Work schedule, Trips outside the work hours, Daily check. It reads "5 days · 42.5 h a week" and "Outside these hours: saved as Personal".
+- **Report**: Report for the accountant and Monthly reminder, merged. It shows the accountant's address and the reminder's day.
+- **Trips**: "Wait 2 min · shortest 0.3 km · adjust 0 %".
+- **Sounds** and **Widget**, side by side.
+- **Your data**.
+- One short list: Email support, Rate Dually on Google Play, and Buy me a coffee outside the Play copy.
+- The version.
+
+**How a page works.** Each tile that sums a group up (`SettingsLinkTile`) opens that group's own page (`SettingsPageKey`, `SettingsPage`). A page holds the tiles the main screen had, drawn open: `SettingsFold` draws no fold there (`LocalSettingsOnPage`), and each "About …" line shows its sentences as they are (`SettingsAbout`). Only "Set each day's hours" still opens and closes, because it is a control and not an explanation.
+
+**What else changed.**
+- **The Log** moved from the end of Settings to the end of the Setup screen (`SetupScreen`'s `logTile`, which the app fills with `LogLinkTile`). It is not on the bottom bar: Service took that place on 2026-10-16.
+- **Three "About" drawers on the main screen are gone with their words:** the truck and driving alert's, and the odometer's.
+- **The footer rows dropped their second lines;** Email support keeps the address.
+
+**Units and Look (since 2026-11-12).** Two small tiles side by side, the first of the settings, above Truck and Driving alert (Shawn, later the same day: "can you move the units and light/darkmode to above truck and driving aler"; they were under "Trips" until then), drawn like the Truck and Driving alert pair (`UnitsAndLookTiles`, `TilePair`, a `Tile` with a press). Each names its choice in force ("Kilometres", "Dark") and is one button: a tap switches to the other, which its last line says ("Tap for miles", "Tap for light"). Shawn, the same day: "can you please have the units and look outside as just clickable. i dont want everything in a expandable drawer. also make sure they are side by side". For a few hours before that each was a fold with a segmented control and a sentence in it; the two sentences are gone with the folds. It is stored as `look` in the settings file (`LookStorage.kt`, the words `dark` and `light`), and Dark is read until Light is picked. See [Design system](#design-system).
 
 **Status:** Built, not yet proven on the phone. The settings of every phase are stored and have a screen of eleven tiles: the truck, the driving alert, the report's four settings, the monthly reminder's two, the three numbers of the trip rules, the work schedule, the choice for trips outside it, the daily check's two, the connect sound and the trip-start sound (two tiles from 2026-10-08, and since 2026-10-13 one tile, "Sounds", with a screen of its own for each sound), the home-screen widget's switch (since 2026-10-07), and backup, export and import; and under them, since 2026-10-08, the Version tile, which opens What's new ([Version and What's new](#version-and-whats-new)). Since 2026-10-07 the screen is laid out as Shawn drew it. It ran on an emulator only (device checks NL-60 to NL-74, and SD-1 to SD-20 for the sounds) · **Platforms:** Android · **Last updated:** 2026-10-13
 
