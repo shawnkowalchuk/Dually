@@ -641,6 +641,19 @@ or the iOS build fails. Moved so far: `core/trip/` (2026-11-12) and every other 
 
 **The iPhone app, `ios/`** (since 2026-11-13, phase 4a; ADR-014). An Xcode project, `ios/Dually.xcodeproj`, for iOS 16 and later, bundle ID `top.dually.triptracker`, written in Swift with SwiftUI. Its one target syncs the folder `ios/Dually/` (Xcode 16's synchronized folders: a file put there is in the app, with no list of files to keep). Its first build step, "Build the shared Kotlin code", runs `./gradlew :shared:embedAndSignAppleFrameworkForXcode`, which builds `:shared` as the static framework `DuallyShared` for the device or simulator Xcode is building for; Swift imports it as `DuallyShared`. Swift reaches the shared code through one door, `DuallyCore` (`shared/src/iosMain/.../ios/`), whose `suspend` functions Swift calls with `await` and which hands back text ready to show, formatted by the shared rules. The iPhone opens the same database as Android, `milo.db` at the same version, in the app's Application Support folder (`buildMiloDatabase()` in iosMain). `ios/Dually/DesignSystem/` holds the colours and typefaces under the same names and values as `core/designsystem/`; a value changed in one is changed in the other in the same pull request. The typefaces are bundled in `ios/Dually/Fonts/` with their licences. Swift and the Objective-C header treat warnings as errors, as the Android build does.
 
+**Signing and TestFlight (since 2026-11-13).** The app target signs automatically with the team of 2795748 Alberta Ltd. (`DEVELOPMENT_TEAM = 3GA4CQ43F4`, an identifier, not a secret), using the Apple account signed in to Xcode on Shawn's Mac; no key or password is in the repository. A build for TestFlight is archived and uploaded from that Mac:
+
+```
+xcodebuild -project ios/Dually.xcodeproj -scheme Dually -configuration Release \
+  -destination 'generic/platform=iOS' -archivePath ios/build/Dually.xcarchive \
+  -allowProvisioningUpdates archive
+xcodebuild -exportArchive -archivePath ios/build/Dually.xcarchive \
+  -exportOptionsPlist ios/ExportOptions.plist -exportPath ios/build/export \
+  -allowProvisioningUpdates
+```
+
+The build number (`CURRENT_PROJECT_VERSION`) goes up by one for each upload; App Store Connect refuses a number it has seen. `ios/Dually/PrivacyInfo.xcprivacy` is Apple's privacy manifest (no tracking, no data collected, and the reasons for the defaults, file dates and time-since-boot it reads), and `Info.plist` says the app uses no encryption beyond Apple's own (`ITSAppUsesNonExemptEncryption` false), so no export paperwork is asked for each build.
+
 **Dates, languages and exact numbers in `:shared`** (since 2026-11-13). The rules count with
 dates, write words in the phone's language and do exact decimal sums, which on Android are
 java.time, java.util.Locale and java.math.BigDecimal, none of which an iPhone has. `:shared`

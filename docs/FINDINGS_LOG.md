@@ -26,6 +26,12 @@
 
 ### 2026-11-13
 
+**`[CHANGE]` The iPhone app's first TestFlight build** (ARCHITECTURE, "Signing and TestFlight"; ADR-014)
+Shawn: "i have my developer account setup allready on this computer and xcode too", and "i believe you setup dually on apple app connect allready". Version 0.1.0, build 1, uploaded to App Store Connect at 16:05 ("Upload succeeded"; Apple then processes it), so that the Shortcuts automations (4d) can be tried in the truck.
+- **What the upload needed:** the company team on the target (2795748 Alberta Ltd., `3GA4CQ43F4`; Xcode on the Mac already held its Apple Distribution certificate), Apple's privacy manifest (`ios/Dually/PrivacyInfo.xcprivacy`: no tracking, no data collected, reasons for the defaults, file dates and time since boot), the export answer (`ITSAppUsesNonExemptEncryption` false), and `ios/ExportOptions.plist` for the upload. The icon was already opaque, as the App Store requires.
+- **How the next build goes up:** the two commands in ARCHITECTURE, with `CURRENT_PROJECT_VERSION` raised by one first. The next is build 2.
+- **Still to do by Shawn:** in App Store Connect, under TestFlight, add himself to an internal testing group once build 1 has finished processing, then install it on his iPhone through Apple's TestFlight app.
+
 **`[FIX]` The iPhone's shared code uses Apple's time zone rules** (ARCHITECTURE, "Dates, languages and exact numbers in `:shared`")
 Shawn: "Do this task here: iPhone: use Apple's time zone rules in shared code". The finding below (kotlinx-datetime on the iPhone had Edmonton at UTC-7 after 2026-11-01, Apple at UTC-6), fixed the same day.
 - **What changed:** the iPhone's `ZoneId` (`shared/src/iosMain/.../core/time/Dates.ios.kt`) now holds an `NSTimeZone` and answers one question, the offset at a moment. The four places that turned moments into clock time or back use it: a moment's date and time (`localDateTimeOf`), the moment with its offset (`formatOffsetMoment`), the start of a day (`TimeSpan.ios.kt`), and the end of the work hours (`TripClassification.ios.kt`). kotlinx-datetime is still the calendar, but only ever with UTC, which reads no zone files. `systemZoneId()` reads the iPhone's zone afresh each time (`NSTimeZone.resetSystemTimeZone`), so a change of zone is followed.

@@ -11,6 +11,8 @@
 	<string>Dually uses your location to measure each trip's distance and where it started and ended. Your trips stay on this iPhone; only a trip's start and end are sent to Apple, to find their street addresses.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Dually uses your location to record each trip, including trips that start by themselves when your iPhone connects to your vehicle, even when the app is closed. Your trips stay on this iPhone; only a trip's start and end are sent to Apple, to find their street addresses.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
