@@ -1,6 +1,17 @@
 {
   "releases": [
     {
+      "version": "0.3.5",
+      "date": null,
+      "changes": [
+        {
+          "kind": "improved",
+          "title": "Where the online backup is kept, said plainly",
+          "body": "The Online backup tile, the welcome page and Setup's location note now say what the backup is: a copy in Google's Firebase, in its Montréal data centre in Canada."
+        }
+      ]
+    },
+    {
       "version": "0.3.4",
       "date": "2026-11-13",
       "changes": [
