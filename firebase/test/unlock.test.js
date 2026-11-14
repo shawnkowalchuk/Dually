@@ -8,11 +8,15 @@ import { deleteApp, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import {
   accountTag,
+  appleAccountToken,
+  appleNotified,
+  applePurchaseKey,
   deleteAccount,
   KEPT_AFTER_REFUND_MS,
   revokeRefunded,
   runDeletions,
   unlock,
+  unlockApple,
 } from '../functions/unlock.js';
 
 const app = initializeApp({ projectId: 'demo-dually' }, 'unlock-tests');
@@ -243,5 +247,163 @@ describe('the daily deletions', () => {
     assert.ok(!(await exists(`deletions/${OWNER}`)));
     assert.equal((await db.collection(`users/${OTHER}/trips`).get()).size, 3);
     assert.ok(await exists(`deletions/${OTHER}`));
+  });
+});
+
+// The iPhone (ADR-016): purchases are Apple's signed transactions, here as the stand-in for
+// Apple's verifier returns them once their signature has checked out.
+
+/** Apple's App Store, as the test says it is: each signed string stands for one transaction. */
+function fakeAppStore(transactions = {}, notifications = {}) {
+  return {
+    async transaction(signed) {
+      if (!(signed in transactions)) throw Object.assign(new Error('not Apple'), { status: 1 });
+      return transactions[signed];
+    },
+    async notification(signed) {
+      if (!(signed in notifications)) throw Object.assign(new Error('not Apple'), { status: 1 });
+      return notifications[signed];
+    },
+  };
+}
+
+/** A purchase of the backup on the iPhone by [uid]. */
+function boughtOnIphoneBy(uid, extra = {}) {
+  return {
+    bundleId: 'top.dually.triptracker',
+    productId: 'cloud_backup',
+    originalTransactionId: '2000000123456789',
+    transactionId: '2000000123456789',
+    appAccountToken: appleAccountToken(uid),
+    environment: 'Sandbox',
+    purchaseDate: 1763100000000,
+    ...extra,
+  };
+}
+
+const SIGNED = 'eyJhbGciOiJFUzI1NiJ9.apple-signed-transaction';
+
+describe('the Apple account token', () => {
+  test('is the account tag written as a UUID, as the app computes it', () => {
+    // The app's CloudAccountTagTest checks the same value for the same id.
+    assert.equal(appleAccountToken('owner-uid'), '27dfbde6-ec9d-28c3-6258-ee6edad10e40');
+  });
+});
+
+describe('a purchase on the iPhone', () => {
+  test('signed by Apple and made by this account unlocks it', async () => {
+    const appStore = fakeAppStore({ [SIGNED]: boughtOnIphoneBy(OWNER) });
+    const answer = await unlockApple({ uid: OWNER, signed: SIGNED, appStore, db, now: 5 });
+    assert.deepEqual(answer, { unlocked: true });
+    assert.ok(await exists(`unlocks/${OWNER}`));
+    const kept = await db.doc(`purchases/${applePurchaseKey('2000000123456789')}`).get();
+    assert.equal(kept.get('uid'), OWNER);
+    assert.equal(kept.get('store'), 'apple');
+    assert.equal(kept.get('environment'), 'Sandbox');
+  });
+
+  test('restored again, from another transaction of the same purchase, is the same', async () => {
+    const again = 'eyJhbGciOiJFUzI1NiJ9.restored';
+    const appStore = fakeAppStore({
+      [SIGNED]: boughtOnIphoneBy(OWNER),
+      [again]: boughtOnIphoneBy(OWNER, { transactionId: '2000000999999999' }),
+    });
+    await unlockApple({ uid: OWNER, signed: SIGNED, appStore, db, now: 5 });
+    assert.deepEqual(await unlockApple({ uid: OWNER, signed: again, appStore, db, now: 6 }), {
+      unlocked: true,
+    });
+  });
+
+  test('made by another account unlocks nothing', async () => {
+    const appStore = fakeAppStore({ [SIGNED]: boughtOnIphoneBy(OTHER) });
+    assert.equal(
+      await rejection(unlockApple({ uid: OWNER, signed: SIGNED, appStore, db, now: 5 })),
+      'permission-denied/other-account',
+    );
+    assert.equal(await exists(`unlocks/${OWNER}`), false);
+  });
+
+  test('not signed by Apple, or not of the backup, unlocks nothing', async () => {
+    const otherProduct = 'eyJhbGciOiJFUzI1NiJ9.other-product';
+    const otherApp = 'eyJhbGciOiJFUzI1NiJ9.other-app';
+    const appStore = fakeAppStore({
+      [otherProduct]: boughtOnIphoneBy(OWNER, { productId: 'something_else' }),
+      [otherApp]: boughtOnIphoneBy(OWNER, { bundleId: 'com.example.other' }),
+    });
+    assert.equal(
+      await rejection(unlockApple({ uid: OWNER, signed: SIGNED, appStore, db, now: 5 })),
+      'permission-denied/not-apple',
+    );
+    for (const signed of [otherProduct, otherApp]) {
+      assert.equal(
+        await rejection(unlockApple({ uid: OWNER, signed, appStore, db, now: 5 })),
+        'failed-precondition/not-purchased',
+      );
+    }
+    assert.equal(
+      await rejection(unlockApple({ uid: OWNER, signed: 'short', appStore, db, now: 5 })),
+      'invalid-argument/no-token',
+    );
+    assert.equal(await exists(`unlocks/${OWNER}`), false);
+  });
+
+  test('refunded by Apple unlocks nothing, and takes away an unlock it gave', async () => {
+    const refunded = 'eyJhbGciOiJFUzI1NiJ9.refunded';
+    const appStore = fakeAppStore({
+      [SIGNED]: boughtOnIphoneBy(OWNER),
+      [refunded]: boughtOnIphoneBy(OWNER, { revocationDate: 1763200000000 }),
+    });
+    await unlockApple({ uid: OWNER, signed: SIGNED, appStore, db, now: 5 });
+    assert.equal(
+      await rejection(unlockApple({ uid: OWNER, signed: refunded, appStore, db, now: 6 })),
+      'failed-precondition/refunded',
+    );
+    assert.equal(await exists(`unlocks/${OWNER}`), false);
+    const deletion = await db.doc(`deletions/${OWNER}`).get();
+    assert.equal(deletion.get('dueAt'), 1763200000000 + KEPT_AFTER_REFUND_MS);
+  });
+});
+
+describe("Apple's notifications", () => {
+  test('of a refund take the unlock away and mark the cloud copy for deletion', async () => {
+    const appStore = fakeAppStore(
+      { [SIGNED]: boughtOnIphoneBy(OWNER) },
+      {
+        refund: {
+          type: 'REFUND',
+          transaction: boughtOnIphoneBy(OWNER, { revocationDate: 1763300000000 }),
+        },
+      },
+    );
+    await unlockApple({ uid: OWNER, signed: SIGNED, appStore, db, now: 5 });
+    assert.equal(await appleNotified({ signed: 'refund', appStore, db }), true);
+    assert.equal(await exists(`unlocks/${OWNER}`), false);
+    const deletion = await db.doc(`deletions/${OWNER}`).get();
+    assert.equal(deletion.get('dueAt'), 1763300000000 + KEPT_AFTER_REFUND_MS);
+    // Told twice, as Apple may: nothing more happens.
+    assert.equal(await appleNotified({ signed: 'refund', appStore, db }), false);
+  });
+
+  test('of anything else change nothing', async () => {
+    const appStore = fakeAppStore(
+      { [SIGNED]: boughtOnIphoneBy(OWNER) },
+      {
+        declined: { type: 'REFUND_DECLINED', transaction: boughtOnIphoneBy(OWNER) },
+        test: { type: 'TEST', transaction: null },
+      },
+    );
+    await unlockApple({ uid: OWNER, signed: SIGNED, appStore, db, now: 5 });
+    assert.equal(await appleNotified({ signed: 'declined', appStore, db }), false);
+    assert.equal(await appleNotified({ signed: 'test', appStore, db }), false);
+    assert.ok(await exists(`unlocks/${OWNER}`));
+  });
+});
+
+describe('a purchase made on Android', () => {
+  test('unlocks the same account on the iPhone after a sign-in, with nothing bought there', async () => {
+    const play = fakePlay({ [TOKEN]: paidBy(OWNER) });
+    await unlock({ uid: OWNER, token: TOKEN, play, db, now: 1 });
+    // The iPhone asks only whether the account holds the unlock: it does.
+    assert.ok(await exists(`unlocks/${OWNER}`));
   });
 });

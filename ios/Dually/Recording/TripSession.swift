@@ -1,5 +1,6 @@
 import DuallyShared
 import Foundation
+import UIKit
 import UserNotifications
 import WidgetKit
 
@@ -12,7 +13,7 @@ final class TripSession: ObservableObject {
     static let shared = TripSession()
 
     /// The shared code's door, opened once: it opens the database.
-    let core = DuallyCore.companion.open(placeFinder: AppleGeocoder())
+    let core = DuallyCore.companion.open(placeFinder: AppleGeocoder(), cloud: FirebaseCloud.shared)
     let location = LocationRecorder()
     /// The driving alert (phase 4d, third part).
     let drivingWatch: DrivingWatch
@@ -52,10 +53,27 @@ final class TripSession: ObservableObject {
         }
     }
 
-    /// Dually came to the front: a trip that started in the background gets its Live Activity.
+    /// Dually came to the front: a trip that started in the background gets its Live Activity,
+    /// and the online backup sends what an earlier upload could not.
     func cameToFront() async {
         if #available(iOS 16.1, *) { (liveTrip as? LiveTrip)?.cameToFront() }
         await refresh()
+        uploadBackup("the app came to the front")
+    }
+
+    /// One upload of the online backup (phase 4h), with the time iOS gives an app that is going
+    /// to sleep to finish it. Nothing at all where nobody is signed in to the backup.
+    func uploadBackup(_ reason: String) {
+        guard FirebaseCloud.shared.available, core.cloud.account() != nil else { return }
+        var task = UIBackgroundTaskIdentifier.invalid
+        task = UIApplication.shared.beginBackgroundTask(withName: "Online backup") {
+            UIApplication.shared.endBackgroundTask(task)
+            task = .invalid
+        }
+        Task {
+            _ = try? await core.cloud.upload(reason: reason)
+            if task != .invalid { UIApplication.shared.endBackgroundTask(task) }
+        }
     }
 
     /// Reads the trip being recorded again, as of now.
@@ -158,8 +176,12 @@ final class TripSession: ObservableObject {
     private func apply(_ step: @escaping () async throws -> RecordingNow?) async {
         let wasRecording = recording != nil
         defer {
-            // A trip has ended: the service items that came due are told now, never during one.
-            if wasRecording && recording == nil { Task { await self.remindOfService() } }
+            // A trip has ended: the service items that came due are told now, never during one,
+            // and the online backup uploads it before iOS puts the app to sleep.
+            if wasRecording && recording == nil {
+                Task { await self.remindOfService() }
+                uploadBackup("a trip ended")
+            }
         }
         do {
             recording = try await step()

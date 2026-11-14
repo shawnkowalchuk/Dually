@@ -1,4 +1,5 @@
 import DuallyShared
+import GoogleSignIn
 import SwiftUI
 
 // Dually on the iPhone (ADR-014): SwiftUI screens over the shared Kotlin code, which Xcode has
@@ -55,7 +56,17 @@ struct DuallyApp: App {
             }
             .tint(Palette.accent)
             .preferredColorScheme(.dark)
-            .task { await session.appStarted() }
+            .task {
+                // The online backup follows every change, and StoreKit's late purchases reach
+                // the purchase check, in a build with Firebase's settings (phase 4h).
+                if FirebaseCloud.shared.available {
+                    session.core.cloud.watch()
+                    BackupPurchase.listen(core: session.core)
+                }
+                await session.appStarted()
+            }
+            // Google's sign-in comes back to Dually through its web address.
+            .onOpenURL { GIDSignIn.sharedInstance.handle($0) }
             // A tap on the service reminder opens Service, as on Android.
             .onReceive(session.$serviceAsked) { asked in
                 if asked {

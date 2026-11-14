@@ -1,6 +1,8 @@
 package com.shawnkowalchuk.milo.core.report
 
 import com.shawnkowalchuk.milo.feature.car.ENGLISH_CAR_STRINGS
+import com.shawnkowalchuk.milo.feature.cloud.ENGLISH_CLOUD_PLURALS
+import com.shawnkowalchuk.milo.feature.cloud.ENGLISH_CLOUD_STRINGS
 import com.shawnkowalchuk.milo.feature.service.ENGLISH_SERVICE_PLURALS
 import com.shawnkowalchuk.milo.feature.service.ENGLISH_SERVICE_STRINGS
 import com.shawnkowalchuk.milo.feature.tripedit.ENGLISH_FORM_STRINGS
@@ -35,7 +37,7 @@ class EnglishReportWordsTest {
             }
         val copies =
             ENGLISH_REPORT_STRINGS + ENGLISH_FORM_STRINGS + ENGLISH_SERVICE_STRINGS +
-                ENGLISH_CAR_STRINGS
+                ENGLISH_CAR_STRINGS + ENGLISH_CLOUD_STRINGS
         for ((name, english) in copies) {
             assertEquals(strings[name], english, "the string $name")
         }
@@ -43,7 +45,8 @@ class EnglishReportWordsTest {
 
     @Test
     fun `every plural is the resource of the same name`() {
-        for ((name, forms) in ENGLISH_REPORT_PLURALS + ENGLISH_SERVICE_PLURALS) {
+        for ((name, forms) in ENGLISH_REPORT_PLURALS + ENGLISH_SERVICE_PLURALS +
+            ENGLISH_CLOUD_PLURALS) {
             val plural = resources.single {
                 it.tagName == "plurals" &&
                     it.getAttribute("name") == name

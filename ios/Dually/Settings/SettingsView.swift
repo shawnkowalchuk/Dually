@@ -26,6 +26,8 @@ struct SettingsView: View {
                     UnitsTile(miles: text.miles) { Task { await model.setMiles(!text.miles) } }
                     DrivingAlertTile(on: text.drivingAlert) { on in Task { await model.setDrivingAlert(on) } }
                 }
+                // As on Android since 2026-11-12: the online backup stands open under Units.
+                CloudBackupTile(core: core)
                 OdometerTile(core: core, miles: text.miles)
                 ReportDetailsTile(text: text, model: model)
                 WorkHoursTile(text: text, model: model)

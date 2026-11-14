@@ -1,7 +1,7 @@
 # ADR-012: Optional cloud backup on Firebase, with sign-in, and no GPS points
 
 Date: 2026-11-11
-Status: Accepted. **Android built** (slices 1a to 1f, merged into main on 2026-11-12, released first as build 9 on Google Play's internal testing track); iPhone not built. Replaces, for the app only, ADR-003's "the app gets no Firebase".
+Status: Accepted. **Android built** (slices 1a to 1f, merged into main on 2026-11-12, released first as build 9 on Google Play's internal testing track); **iPhone built on 2026-11-14** (phase 4h of ADR-014, with Sign in with Apple and Apple's purchase: ADR-016). Replaces, for the app only, ADR-003's "the app gets no Firebase".
 
 ## Context
 
