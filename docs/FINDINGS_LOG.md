@@ -26,6 +26,9 @@
 
 ### 2026-11-13
 
+**`[CHANGE]` The website's footer names Dually Trip Tracker and its owner** (APP_ENCYCLOPEDIA, Website)
+Shawn: "can you please add. at the footer of the website. © 2026 Dually Trip Tracker · Dually.top Dually Trip Tracker is owned and operated by 2795748 Alberta Ltd." Every page's footer now has those two lines, in that order, in place of "Owned and operated by 2795748 Alberta Ltd." and "© 2026 2795748 Alberta Ltd. All rights reserved." The home page keeps "Google Play is a trademark of Google LLC." on a line of its own, since the Play badge is on it. `tools/changes_page.py` writes the same footer on What's new, which was written again. No app change, so no What's new line.
+
 **`[CHANGE]` The iPhone app looks like Android's: pinned top line, floating bottom bar; Setup's "I've made it"** (APP_ENCYCLOPEDIA, iPhone app)
 Shawn, during 4e: "the app need to be more matching the andorids interface. pinned header and footer. the settings", and "when setting the automation start trip end trip you should havfe a check to say complete after. also if you the phone can check if it is setup correctly that would also be a plus".
 - **Reused from Android's design, not new:** `PinnedScreen` is Android's `PinnedHeaderColumn` (the top line stays, the tiles scroll; Shawn's rule of 2026-10-19), `BottomBar` is `MiloNavigationBar` (a tile of corner 22 floating 18 from the sides, 64 high, icons only, the showing screen's in the accent), and Home's top line has no screen name, Shawn's rule of 2026-10-09. iOS's own tab bar is gone; the app switches screens under the bar itself (`DuallyApp`), so a screen is drawn afresh when it is chosen, as Android's are.
