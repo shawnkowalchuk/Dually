@@ -69,6 +69,8 @@ class DuallyCore private constructor(
     val tripEdit: IosTripEdit,
     /** The Service screen, Home's service tiles and Settings' odometer (2026-11-14). */
     val service: IosService,
+    /** The CarPlay screen (phase 4f). */
+    val car: IosCar,
     private val shownUnit: ShownUnit,
 ) {
     /** "km" or "mi", as Settings has it now: every distance the iPhone writes follows it. */
@@ -267,6 +269,15 @@ class DuallyCore private constructor(
                     settings = settings,
                     trips = tripRepository,
                     recorder = recorder,
+                    eventLog = eventLog,
+                    clock = clock,
+                    zone = ::systemZoneId,
+                    locale = ::phoneLocale,
+                ),
+                IosCar(
+                    recorder = recorder,
+                    settings = settings,
+                    trips = tripRepository,
                     eventLog = eventLog,
                     clock = clock,
                     zone = ::systemZoneId,
