@@ -26,6 +26,13 @@
 
 ### 2026-11-13
 
+**`[CHANGE]` Phase 4i: the iPhone's home-screen widget** (APP_ENCYCLOPEDIA, iPhone app)
+Part of Shawn's bundle ("4g and everything after it").
+- **In the extension that draws the Live Activity** (`DuallyLiveActivity`), not a new target: its widget bundle now holds both. Its figures come from the app through an App Group, `group.top.dually.triptracker`, added to both targets' entitlements (`CODE_SIGN_ENTITLEMENTS`; Xcode's automatic signing registers the group). The dollars are the shared allowance code's (`IosWidget`); a shared `formatShortMonthName` ("Nov") replaced Android's own DateTimeFormatter call in `HomeWidgetContent`, the same words.
+- **Start on the widget** is `WidgetStartTripIntent`, a Live Activity intent run in the app's process through `TripStarter` (the extension's is a stand-in), logged "Start on the home-screen widget"; End is `StopTripIntent`.
+- **Redrawing:** at once when a trip starts or ends, at most every minute while one records, and the widget asks again within the hour for the turn of a month.
+- Seen: the App Group holding `{"unit":"mi","dollars":"Nov $4 · 2026 $4 at $0.70/km","recording":false}` after a launch on the simulator. Not seen: the widget on a home screen (the simulator's home-screen edit menu did not open); that is for Shawn's iPhone.
+
 **`[CHANGE]` Phase 4g on the iPhone: Settings, the report for the accountant, export and import** (ADR-014; APP_ENCYCLOPEDIA, iPhone app)
 Shawn: "start on 4g please", then "please bundle all f these together" ("4g and everything after it": one run, one TestFlight build at the end).
 - **Settings** (`IosSettings`, `ios/Dually/Settings/`): Settings takes Setup's place in the bar as on Android; units, the driving alert, the report's details, the work hours, the trip numbers, your data. Every value through the shared settings store with Android's ranges (`SteppedChoice`) and words ("2.5 min", "0.19 mi", "−1 %"). The unit is followed everywhere through the shared `ShownUnit`; `MonthText`, `TripText` and the Live Activity carry the unit's word. Tested: `IosSettingsTest`, 6.

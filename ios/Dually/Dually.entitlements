@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- The App Group the app and its extension share (phase 4i): the app leaves the home-screen
+     widget's figures there (WidgetSnapshot.swift), and the widget reads them. -->
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.top.dually.triptracker</string>
+	</array>
+</dict>
+</plist>

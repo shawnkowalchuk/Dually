@@ -43,6 +43,7 @@
 		D0A1000000000000000000B1 /* Exceptions for "Dually" folder in "Dually" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Dually.entitlements,
 				Info.plist,
 			);
 			target = D0A1000000000000000000C1 /* Dually */;
@@ -50,6 +51,7 @@
 		D0B1000000000000000000B1 /* Exceptions for "DuallyLiveActivity" folder in "DuallyLiveActivity" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				DuallyLiveActivity.entitlements,
 				Info.plist,
 			);
 			target = D0B1000000000000000000C1 /* DuallyLiveActivity */;
@@ -352,6 +354,7 @@
 				CURRENT_PROJECT_VERSION = 3;
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)";
 				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = Dually/Dually.entitlements;
 				INFOPLIST_FILE = Dually/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Dually;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
@@ -387,6 +390,7 @@
 				CURRENT_PROJECT_VERSION = 3;
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)";
 				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = Dually/Dually.entitlements;
 				INFOPLIST_FILE = Dually/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Dually;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
@@ -420,6 +424,7 @@
 				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 3GA4CQ43F4;
 				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = DuallyLiveActivity/DuallyLiveActivity.entitlements;
 				INFOPLIST_FILE = DuallyLiveActivity/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Dually;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
@@ -447,6 +452,7 @@
 				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 3GA4CQ43F4;
 				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = DuallyLiveActivity/DuallyLiveActivity.entitlements;
 				INFOPLIST_FILE = DuallyLiveActivity/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Dually;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;

@@ -62,6 +62,8 @@ class DuallyCore private constructor(
     val report: IosReport,
     /** Export all data and Import data (phase 4g). */
     val transfer: IosTransfer,
+    /** The home-screen widget's figures (phase 4i). */
+    val widget: IosWidget,
     private val shownUnit: ShownUnit,
 ) {
     /** "km" or "mi", as Settings has it now: every distance the iPhone writes follows it. */
@@ -248,6 +250,7 @@ class DuallyCore private constructor(
                     zone = ::systemZoneId,
                     clock = clock,
                 ),
+                IosWidget(tripRepository, settings, ::systemZoneId, ::phoneLocale),
                 shownUnit,
             )
         }
