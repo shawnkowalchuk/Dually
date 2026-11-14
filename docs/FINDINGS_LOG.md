@@ -27,7 +27,7 @@
 ### 2026-11-13
 
 **`[CHANGE]` TestFlight build 3: the bundle without the backup and CarPlay** (APP_ENCYCLOPEDIA, iPhone app; ARCHITECTURE §5)
-Shawn chose "Ship build 3 now" over waiting for the whole bundle: the online backup (4h) needs his Firebase iPhone app, Sign in with Apple, the $19.99 purchase in App Store Connect and Apple's Paid Apps agreement, and its purchase check an Apple key (a secret, so an ADR first); CarPlay (4f) needs Apple's permission, which can take weeks.
+Shawn chose "Ship build 3 now" over waiting for the whole bundle: the online backup (4h) needs his Firebase iPhone app, Sign in with Apple, the $19.99 purchase in App Store Connect and Apple's Paid Apps agreement, and its purchase check an Apple key (a secret, so an ADR first); CarPlay (4f) is simply not built yet: Apple granted its permission on 2026-11-12 (entry below), so it waits on nobody.
 - Version 0.1.0, build 3 (4a to 4e, 4g, 4i, trip editing), archived and uploaded at 22:36 from the branch of PR #149; the app and its widget extension both build 3. "Upload succeeded"; Apple's processing can still refuse it by email. The next is build 4.
 
 **`[CHANGE]` Editing trips on the iPhone, and adding a missed one** (ADR-014; APP_ENCYCLOPEDIA, iPhone app)
