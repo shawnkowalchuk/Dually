@@ -6,8 +6,37 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D0B100000000000000000201 /* DuallyLiveActivity.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D0B1000000000000000000A1 /* DuallyLiveActivity.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D0B100000000000000000211 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D0A100000000000000000151 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D0B1000000000000000000C1;
+			remoteInfo = DuallyLiveActivity;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D0B100000000000000000221 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				D0B100000000000000000201 /* DuallyLiveActivity.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		D0A1000000000000000000A1 /* Dually.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dually.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0B1000000000000000000A1 /* DuallyLiveActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DuallyLiveActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -17,6 +46,13 @@
 				Info.plist,
 			);
 			target = D0A1000000000000000000C1 /* Dually */;
+		};
+		D0B1000000000000000000B1 /* Exceptions for "DuallyLiveActivity" folder in "DuallyLiveActivity" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D0B1000000000000000000C1 /* DuallyLiveActivity */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -29,10 +65,30 @@
 			path = Dually;
 			sourceTree = "<group>";
 		};
+		D0B1000000000000000000D1 /* DuallyLiveActivity */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D0B1000000000000000000B1 /* Exceptions for "DuallyLiveActivity" folder in "DuallyLiveActivity" target */,
+			);
+			path = DuallyLiveActivity;
+			sourceTree = "<group>";
+		};
+		D0B1000000000000000000D2 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		D0A1000000000000000000E1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D0B1000000000000000000E1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -46,6 +102,8 @@
 			isa = PBXGroup;
 			children = (
 				D0A1000000000000000000D1 /* Dually */,
+				D0B1000000000000000000D2 /* Shared */,
+				D0B1000000000000000000D1 /* DuallyLiveActivity */,
 				D0A100000000000000000101 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -54,6 +112,7 @@
 			isa = PBXGroup;
 			children = (
 				D0A1000000000000000000A1 /* Dually.app */,
+				D0B1000000000000000000A1 /* DuallyLiveActivity.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,18 +129,42 @@
 				D0A100000000000000000131 /* Sources */,
 				D0A1000000000000000000E1 /* Frameworks */,
 				D0A100000000000000000141 /* Resources */,
+				D0B100000000000000000221 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D0B100000000000000000231 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D0A1000000000000000000D1 /* Dually */,
+				D0B1000000000000000000D2 /* Shared */,
+			);
+			name = Dually;
+			productName = Dually;
+			productReference = D0A1000000000000000000A1 /* Dually.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D0B1000000000000000000C1 /* DuallyLiveActivity */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D0B100000000000000000111 /* Build configuration list for PBXNativeTarget "DuallyLiveActivity" */;
+			buildPhases = (
+				D0B100000000000000000131 /* Sources */,
+				D0B1000000000000000000E1 /* Frameworks */,
+				D0B100000000000000000141 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				D0A1000000000000000000D1 /* Dually */,
+				D0B1000000000000000000D1 /* DuallyLiveActivity */,
+				D0B1000000000000000000D2 /* Shared */,
 			);
-			name = Dually;
-			productName = Dually;
-			productReference = D0A1000000000000000000A1 /* Dually.app */;
-			productType = "com.apple.product-type.application";
+			name = DuallyLiveActivity;
+			productName = DuallyLiveActivity;
+			productReference = D0B1000000000000000000A1 /* DuallyLiveActivity.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -94,6 +177,9 @@
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					D0A1000000000000000000C1 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					D0B1000000000000000000C1 = {
 						CreatedOnToolsVersion = 26.0;
 					};
 				};
@@ -113,12 +199,20 @@
 			projectRoot = "";
 			targets = (
 				D0A1000000000000000000C1 /* Dually */,
+				D0B1000000000000000000C1 /* DuallyLiveActivity */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		D0A100000000000000000141 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D0B100000000000000000141 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -164,7 +258,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Apple refuses a build whose Shortcuts actions name its devices in their titles or\n# descriptions (ITMS-90626; build 1 was refused for \"iPhone\"). This stops such a build here.\nif grep -rnE --include='*.swift' -A3 'IntentDescription\\(|: LocalizedStringResource = ' \"$SRCROOT/Dually\" | grep -iE 'iphone|ipad|ipod|apple watch'; then\n  echo \"error: a Shortcuts action's title or description names an Apple device, which Apple refuses (ITMS-90626)\"\n  exit 1\nfi\n";
+			shellScript = "# Apple refuses a build whose Shortcuts actions name its devices in their titles or\n# descriptions (ITMS-90626; build 1 was refused for \"iPhone\"). This stops such a build here.\nif grep -rnE --include='*.swift' -A3 'IntentDescription\\(|: LocalizedStringResource = ' \"$SRCROOT/Dually\" \"$SRCROOT/Shared\" | grep -iE 'iphone|ipad|ipod|apple watch'; then\n  echo \"error: a Shortcuts action's title or description names an Apple device, which Apple refuses (ITMS-90626)\"\n  exit 1\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -176,7 +270,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D0B100000000000000000131 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D0B100000000000000000231 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D0B1000000000000000000C1 /* DuallyLiveActivity */;
+			targetProxy = D0B100000000000000000211 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		D0A100000000000000000171 /* Debug */ = {
@@ -304,6 +413,60 @@
 			};
 			name = Release;
 		};
+		D0B100000000000000000191 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = 3GA4CQ43F4;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DuallyLiveActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Dually;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = top.dually.triptracker.LiveActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		D0B1000000000000000001A1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = 3GA4CQ43F4;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DuallyLiveActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Dually;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = top.dually.triptracker.LiveActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -321,6 +484,15 @@
 			buildConfigurations = (
 				D0A100000000000000000171 /* Debug */,
 				D0A100000000000000000181 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D0B100000000000000000111 /* Build configuration list for PBXNativeTarget "DuallyLiveActivity" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D0B100000000000000000191 /* Debug */,
+				D0B1000000000000000001A1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

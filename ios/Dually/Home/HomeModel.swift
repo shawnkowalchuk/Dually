@@ -30,6 +30,13 @@ final class HomeModel: ObservableObject {
         await readFigures()
     }
 
+    /// Dually came to the front: as [refresh], and a trip that started in the background gets
+    /// its Live Activity.
+    func cameToFront() async {
+        await session.cameToFront()
+        await readFigures()
+    }
+
     func start() async {
         await session.start()
     }
