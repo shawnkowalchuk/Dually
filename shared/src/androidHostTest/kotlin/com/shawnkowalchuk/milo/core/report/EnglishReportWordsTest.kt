@@ -1,5 +1,7 @@
 package com.shawnkowalchuk.milo.core.report
 
+import com.shawnkowalchuk.milo.feature.service.ENGLISH_SERVICE_PLURALS
+import com.shawnkowalchuk.milo.feature.service.ENGLISH_SERVICE_STRINGS
 import com.shawnkowalchuk.milo.feature.tripedit.ENGLISH_FORM_STRINGS
 import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
@@ -30,14 +32,15 @@ class EnglishReportWordsTest {
                 it.getAttribute("name") to
                     it.textContent
             }
-        for ((name, english) in ENGLISH_REPORT_STRINGS + ENGLISH_FORM_STRINGS) {
+        val copies = ENGLISH_REPORT_STRINGS + ENGLISH_FORM_STRINGS + ENGLISH_SERVICE_STRINGS
+        for ((name, english) in copies) {
             assertEquals(strings[name], english, "the string $name")
         }
     }
 
     @Test
     fun `every plural is the resource of the same name`() {
-        for ((name, forms) in ENGLISH_REPORT_PLURALS) {
+        for ((name, forms) in ENGLISH_REPORT_PLURALS + ENGLISH_SERVICE_PLURALS) {
             val plural = resources.single {
                 it.tagName == "plurals" &&
                     it.getAttribute("name") == name

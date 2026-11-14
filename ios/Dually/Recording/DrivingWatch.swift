@@ -13,9 +13,13 @@ import UserNotifications
 @MainActor
 final class DrivingWatch: NSObject {
     nonisolated static let alertId = "driving-alert"
+    /// The service reminder posted when a trip ends (TripSession), which shares this delegate.
+    nonisolated static let serviceId = "service-reminder"
 
     /// What a tap on the alert does: start a trip.
     var onTap: (() -> Void)?
+    /// What a tap on the service reminder does: open Service.
+    var onServiceTap: (() -> Void)?
 
     private let manager = CLLocationManager()
     private let motion = CMMotionActivityManager()
@@ -134,15 +138,17 @@ extension DrivingWatch: UNUserNotificationCenterDelegate {
         completionHandler([.banner, .list, .sound])
     }
 
-    /// A tap on the alert starts a trip, as on Android.
+    /// A tap on the alert starts a trip, and one on the service reminder opens Service, as on
+    /// Android.
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        let tapped = response.notification.request.identifier == Self.alertId
+        let identifier = response.notification.request.identifier
         Task { @MainActor in
-            if tapped { self.onTap?() }
+            if identifier == Self.alertId { self.onTap?() }
+            if identifier == Self.serviceId { self.onServiceTap?() }
             completionHandler()
         }
     }
