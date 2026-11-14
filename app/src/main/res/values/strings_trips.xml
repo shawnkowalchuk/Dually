@@ -50,6 +50,8 @@
     -->
     <string name="trips_note_separator">" · "</string>
     <!-- A trip whose times, addresses or distance are typed in and not recorded. -->
+    <!-- Since 2026-11-14 (ADR-017): a trip another phone on the backup account recorded. -->
+    <string name="trips_note_other_phone">from your other phone</string>
     <string name="trips_note_added">added by hand</string>
     <string name="trips_note_edited">edited</string>
 

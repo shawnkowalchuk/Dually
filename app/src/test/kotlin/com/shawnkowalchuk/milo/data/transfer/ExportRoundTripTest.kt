@@ -302,7 +302,12 @@ class ExportRoundTripTest {
 
         // Empty on every closed trip: the grace period of a trip that is being recorded.
         val graceColumns = setOf("graceStartedAtMs", "graceDeadlineMs")
-        assertEquals(columns("MiloDatabase", MILO_DATABASE_VERSION, "trips") - graceColumns, trip)
+        // Empty on every trip an export holds: only this phone's own trips go in (ADR-017).
+        val homeColumns = setOf("homePhone", "homeTripId")
+        assertEquals(
+            columns("MiloDatabase", MILO_DATABASE_VERSION, "trips") - graceColumns - homeColumns,
+            trip,
+        )
         assertEquals(columns("MiloDatabase", MILO_DATABASE_VERSION, "sent_reports"), report)
         // A point's id only says in which order the fixes arrived, which the rows' order does.
         val pointColumns = columns("PointsDatabase", 1, "raw_points") - "id"

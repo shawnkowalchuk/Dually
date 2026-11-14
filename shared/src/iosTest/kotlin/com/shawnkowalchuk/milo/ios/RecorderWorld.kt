@@ -82,6 +82,8 @@ internal class RecorderWorld {
 
     fun mainTransferDao() = database.mainTransferDao()
 
+    fun tripDao() = database.tripDao()
+
     fun pointsTransferDao() = points.pointsTransferDao()
 
     /** The world's own folder, for files a test writes. */

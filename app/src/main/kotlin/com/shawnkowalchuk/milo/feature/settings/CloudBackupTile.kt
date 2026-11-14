@@ -12,7 +12,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.designsystem.component.ActionButton
@@ -103,7 +102,7 @@ internal fun CloudBackupTile(viewModel: CloudBackupViewModel<Context>) {
                 )
             }
         }
-        state.note?.let { CloudNoteRow(it, state.restoredTrips) }
+        state.note?.let { CloudNoteRow(it) }
     }
 }
 
@@ -122,39 +121,23 @@ private fun UnlockedRows(
 ) {
     val context = LocalContext.current
     var asking by rememberSaveable { mutableStateOf<CloudQuestion?>(null) }
-    val standing = state.standing
-    val otherTrips =
-        when (standing) {
-            is CloudStartResult.Choose -> standing.trips
-            is CloudStartResult.Moved -> standing.trips
-            else -> null
-        }
-    if (otherTrips == null) {
+    val merge = state.standing as? CloudStartResult.Merge
+    if (merge == null) {
         Text(
             text = stringResource(R.string.settings_cloud_on),
             style = MaterialTheme.typography.titleSmall,
         )
         Note(stringResource(R.string.settings_cloud_signed_in, email))
     } else {
-        Note(
-            if (standing is CloudStartResult.Moved) {
-                stringResource(R.string.settings_cloud_moved, email)
-            } else {
-                pluralStringResource(
-                    R.plurals.settings_cloud_other_phone,
-                    otherTrips,
-                    email,
-                    otherTrips,
-                )
-            },
-        )
+        // ADR-017: a phone with trips of its own asks once before it joins the logbook.
+        Note(stringResource(R.string.settings_cloud_merge_question, email, merge.own, merge.others))
         ActionButtonRow(
             actions =
                 listOf(
                     ActionButton(
-                        label = stringResource(R.string.settings_cloud_restore_here),
+                        label = stringResource(R.string.settings_cloud_merge),
                         kind = ActionKind.ACCENT,
-                        onClick = { asking = CloudQuestion.RESTORE },
+                        onClick = { viewModel.onMerge() },
                         enabled = idle,
                     ),
                 ),
@@ -163,9 +146,9 @@ private fun UnlockedRows(
             actions =
                 listOf(
                     ActionButton(
-                        label = stringResource(R.string.settings_cloud_back_up_here),
+                        label = stringResource(R.string.settings_cloud_use_backup),
                         kind = ActionKind.PLAIN,
-                        onClick = { asking = CloudQuestion.BACK_UP_HERE },
+                        onClick = { asking = CloudQuestion.USE_BACKUP },
                         enabled = idle,
                     ),
                 ),
@@ -189,21 +172,20 @@ private fun UnlockedRows(
             ),
     )
     asking?.let { question ->
-        val trips = otherTrips ?: 0
         ConfirmDialog(
             title = stringResource(question.titleRes),
             text =
                 when (question) {
-                    CloudQuestion.DELETE -> stringResource(question.textRes)
-                    else -> pluralStringResource(question.textRes, trips, trips)
+                    CloudQuestion.DELETE, CloudQuestion.USE_BACKUP -> stringResource(
+                        question.textRes,
+                    )
                 },
             confirmLabel = stringResource(question.confirmRes),
             dismissLabel = stringResource(R.string.action_cancel),
             onConfirm = {
                 asking = null
                 when (question) {
-                    CloudQuestion.RESTORE -> viewModel.onRestoreTrips()
-                    CloudQuestion.BACK_UP_HERE -> viewModel.onBackUpHere()
+                    CloudQuestion.USE_BACKUP -> viewModel.onUseBackupOnly()
                     CloudQuestion.DELETE -> viewModel.onDeleteAccount(context)
                 }
             },
@@ -212,17 +194,12 @@ private fun UnlockedRows(
     }
 }
 
-/** The three questions of the bought backup, each before something is replaced or deleted. */
+/** The two questions of the bought backup, each before something is replaced or deleted. */
 private enum class CloudQuestion(val titleRes: Int, val textRes: Int, val confirmRes: Int) {
-    RESTORE(
-        R.string.settings_cloud_restore_title,
-        R.plurals.settings_cloud_restore_text,
-        R.string.settings_cloud_restore_confirm,
-    ),
-    BACK_UP_HERE(
-        R.string.settings_cloud_back_up_here_title,
-        R.plurals.settings_cloud_back_up_here_text,
-        R.string.settings_cloud_back_up_here_confirm,
+    USE_BACKUP(
+        R.string.settings_cloud_use_backup_title,
+        R.string.settings_cloud_use_backup_text,
+        R.string.settings_cloud_use_backup_confirm,
     ),
     DELETE(
         R.string.settings_cloud_delete_title,
@@ -232,7 +209,7 @@ private enum class CloudQuestion(val titleRes: Int, val textRes: Int, val confir
 }
 
 @Composable
-private fun CloudNoteRow(note: CloudNote, restoredTrips: Int) {
+private fun CloudNoteRow(note: CloudNote) {
     val (text, status) =
         when (note) {
             CloudNote.UNLOCKED -> R.string.settings_cloud_unlocked to RowStatus.OK
@@ -260,7 +237,7 @@ private fun CloudNoteRow(note: CloudNote, restoredTrips: Int) {
             CloudNote.PLAY_NOT_READY ->
                 R.string.settings_cloud_play_not_ready to RowStatus.PROBLEM
 
-            CloudNote.RESTORED -> R.string.settings_cloud_restored to RowStatus.OK
+            CloudNote.USING_BACKUP -> R.string.settings_cloud_using_backup to RowStatus.OK
 
             CloudNote.TRIP_IN_PROGRESS ->
                 R.string.settings_cloud_trip_in_progress to
@@ -268,7 +245,7 @@ private fun CloudNoteRow(note: CloudNote, restoredTrips: Int) {
 
             CloudNote.RESTORE_FAILED -> R.string.settings_cloud_restore_failed to RowStatus.PROBLEM
 
-            CloudNote.BACKING_UP_HERE -> R.string.settings_cloud_backing_up_here to RowStatus.OK
+            CloudNote.MERGED -> R.string.settings_cloud_merged to RowStatus.OK
 
             CloudNote.BACKUP_OFFLINE -> R.string.settings_cloud_backup_offline to RowStatus.PROBLEM
 
@@ -276,15 +253,5 @@ private fun CloudNoteRow(note: CloudNote, restoredTrips: Int) {
 
             CloudNote.DELETED -> R.string.settings_cloud_deleted to RowStatus.OK
         }
-    val words =
-        if (note == CloudNote.RESTORED) {
-            pluralStringResource(
-                R.plurals.settings_cloud_restored_trips,
-                restoredTrips,
-                restoredTrips,
-            )
-        } else {
-            stringResource(text)
-        }
-    StatusRow(words, status)
+    StatusRow(stringResource(text), status)
 }

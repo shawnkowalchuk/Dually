@@ -31,6 +31,16 @@ interface CloudStore {
      * @throws CloudRefusedException if the cloud said no to it.
      */
     suspend fun apply(account: String, documents: List<CloudDocument>, removals: List<String>)
+
+    /**
+     * Every document of the [collections] of [account]'s folder (each a path under it, such as
+     * `phones` or `phones/{install}/trips`), by its path under that folder: `phones/{install}`,
+     * `phones/{install}/trips/17`. Read from the server, never from a cache (ADR-017).
+     *
+     * @throws CloudUnreachableException or [CloudRefusedException], as [apply] does.
+     */
+    suspend fun readCollections(account: String, collections: List<String>): Map<String, String> =
+        emptyMap()
 }
 
 /**
@@ -79,15 +89,18 @@ sealed interface CloudRun {
  *
  * @param rows the trips and the sent reports, read in one transaction.
  * @param settings the settings that travel, or null if they cannot be read.
+ * @param shape what the snapshot becomes before it is compared: since ADR-017 each phone's
+ * documents go into its own folder, with its record (`inFolder`).
  */
 class CloudBackup(
     private val rows: suspend () -> MainRows,
     private val settings: suspend () -> TransferredSettings?,
     private val ledger: CloudLedgerStore,
     private val store: CloudStore,
+    private val shape: suspend (CloudSnapshot) -> CloudSnapshot = { it },
 ) {
     suspend fun run(account: String): CloudRun {
-        val snapshot = cloudSnapshotOf(rows(), settings())
+        val snapshot = shape(cloudSnapshotOf(rows(), settings()))
         val uploaded = ledger.read(account).toMutableMap()
         val plan = cloudPlanFor(snapshot, uploaded)
         var uploadedCount = 0

@@ -250,6 +250,7 @@ class DuallyCore private constructor(
                     apple = cloud,
                     files = IosCloudFiles(),
                     mainRows = database.mainTransferDao(),
+                    trips = database.tripDao(),
                     settings = settings,
                     transfer = transfer,
                     eventLog = eventLog,

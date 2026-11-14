@@ -166,6 +166,26 @@ internal val MIGRATION_6_7: Migration =
     }
 
 /**
+ * Version 7 to 8 (2026-11-14, ADR-017): a trip may come from another phone on the same online
+ * backup account. Two columns say which phone and its id there, empty on every stored trip,
+ * which are all this phone's own; the index finds another phone's trip by the two, and keeps
+ * one row per such trip.
+ *
+ * The exported `shared/schemas/.../8.json` is the reference.
+ */
+internal val MIGRATION_7_8: Migration =
+    object : Migration(7, 8) {
+        override suspend fun migrate(connection: SQLiteConnection) {
+            connection.execSQL("ALTER TABLE trips ADD COLUMN homePhone TEXT")
+            connection.execSQL("ALTER TABLE trips ADD COLUMN homeTripId INTEGER")
+            connection.execSQL(
+                "CREATE UNIQUE INDEX IF NOT EXISTS `index_trips_homePhone_homeTripId` " +
+                    "ON `trips` (`homePhone`, `homeTripId`)",
+            )
+        }
+    }
+
+/**
  * Every step, in order. `buildMiloDatabase` hands them to Room, which runs them one after the
  * other for a database that is more than one version behind.
  */
@@ -177,4 +197,5 @@ internal val MILO_MIGRATIONS: Array<Migration> =
         MIGRATION_4_5,
         MIGRATION_5_6,
         MIGRATION_6_7,
+        MIGRATION_7_8,
     )

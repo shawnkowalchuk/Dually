@@ -9,6 +9,9 @@ rules_version = '2';
 //     the account {uid} reads and removes its own documents at any time, and writes them only
 //     while it holds the unlock. Each document is one field, "json", a string the app wrote:
 //     the same JSON as the export file (data/cloud/CloudDocuments.kt).
+//   - users/{uid}/phones/{phone}, and its trips/{id} and backup/{sentReports, settings} (since
+//     2026-11-14, ADR-017): each phone's own folder, and the phone's record, the folder's own
+//     document. The same rules as the documents above; a phone is named by its install number.
 //   - unlocks/{uid}: the one-time purchase (ADR-013). The account reads its own; nobody
 //     writes one from an app. Only the purchase check on the server (functions/unlock.js) or
 //     the console does.
@@ -36,6 +39,31 @@ service cloud.firestore {
       return data.keys().hasOnly(['json'])
         && data.json is string
         && data.json.size() <= 500000;
+    }
+
+    // A phone's install number: a UUID as both apps make it.
+    function phoneName(phone) {
+      return phone.matches('^[0-9a-fA-F-]{36}$');
+    }
+
+    match /users/{uid}/phones/{phone} {
+      // A list names no phone: every phone of the account reads the others' records.
+      allow list: if signedInAs(uid);
+      allow get, delete: if signedInAs(uid) && phoneName(phone);
+      allow create, update: if signedInAs(uid)
+        && phoneName(phone)
+        && unlocked(uid)
+        && wellFormed();
+    }
+
+    match /users/{uid}/phones/{phone}/{folder}/{name} {
+      allow get, delete: if signedInAs(uid) && phoneName(phone) && knownPath(folder, name);
+      allow list: if signedInAs(uid) && phoneName(phone) && folder in ['trips', 'backup'];
+      allow create, update: if signedInAs(uid)
+        && phoneName(phone)
+        && knownPath(folder, name)
+        && unlocked(uid)
+        && wellFormed();
     }
 
     match /unlocks/{uid} {

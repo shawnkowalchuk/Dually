@@ -85,6 +85,12 @@ class CloudUploads(
         }
     }
 
+    /**
+     * An upload as soon as the network allows, which also brings in the other phones' trips
+     * (ADR-017): after a sign-in, a merge, or the tile's look at the backup.
+     */
+    fun uploadNow() = request()
+
     private fun request() {
         WorkManager.getInstance(context).enqueueUniqueWork(
             UPLOAD_NOW,

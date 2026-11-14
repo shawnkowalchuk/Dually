@@ -176,3 +176,60 @@ describe('the unlocks', () => {
     await assertFails(deleteDoc(doc(as(OWNER), `unlocks/${OWNER}`)));
   });
 });
+
+// ADR-017 (2026-11-14): every phone backs up into its own folder, and reads the others'.
+describe("each phone's own folder", () => {
+  const PHONE = '0f9b6c1e-6a2b-4c55-9d1e-3b2a8f7c6d5e';
+  const IPHONE = 'a7c3e2d1-1b2c-4d3e-8f4a-5b6c7d8e9f01';
+  const record = { json: '{"name":"iPhone","platform":"iphone"}' };
+
+  test('an account with the unlock writes its phone, its trips and its backup documents', async () => {
+    await unlock(OWNER);
+    const db = as(OWNER);
+    await assertSucceeds(setDoc(doc(db, `users/${OWNER}/phones/${PHONE}`), record));
+    for (const path of ['trips/17', 'backup/sentReports', 'backup/settings']) {
+      const ref = doc(db, `users/${OWNER}/phones/${PHONE}/${path}`);
+      await assertSucceeds(setDoc(ref, trip));
+      await assertSucceeds(getDoc(ref));
+      await assertSucceeds(deleteDoc(ref));
+    }
+  });
+
+  test('every phone of the account lists the phones and reads the other phones\' trips', async () => {
+    await unlock(OWNER);
+    await seed(`users/${OWNER}/phones/${PHONE}`, record);
+    await seed(`users/${OWNER}/phones/${PHONE}/trips/17`, trip);
+    const db = as(OWNER);
+    await assertSucceeds(getDocs(collection(db, `users/${OWNER}/phones`)));
+    await assertSucceeds(getDocs(collection(db, `users/${OWNER}/phones/${PHONE}/trips`)));
+    await assertSucceeds(getDocs(collection(db, `users/${OWNER}/phones/${IPHONE}/trips`)));
+  });
+
+  test('without the unlock, a phone writes nothing, and still reads', async () => {
+    await seed(`users/${OWNER}/phones/${PHONE}/trips/17`, trip);
+    const db = as(OWNER);
+    await assertFails(setDoc(doc(db, `users/${OWNER}/phones/${PHONE}`), record));
+    await assertFails(setDoc(doc(db, `users/${OWNER}/phones/${PHONE}/trips/18`), trip));
+    await assertSucceeds(getDoc(doc(db, `users/${OWNER}/phones/${PHONE}/trips/17`)));
+  });
+
+  test('no other account, and nobody signed out, reads or writes a phone\'s folder', async () => {
+    await unlock(OWNER);
+    await unlock(OTHER);
+    await seed(`users/${OWNER}/phones/${PHONE}/trips/17`, trip);
+    for (const db of [as(OTHER), as(null)]) {
+      await assertFails(getDocs(collection(db, `users/${OWNER}/phones`)));
+      await assertFails(getDoc(doc(db, `users/${OWNER}/phones/${PHONE}/trips/17`)));
+      await assertFails(setDoc(doc(db, `users/${OWNER}/phones/${PHONE}/trips/18`), trip));
+    }
+  });
+
+  test('a phone folder takes only a phone\'s name, and only the backup\'s own paths', async () => {
+    await unlock(OWNER);
+    const db = as(OWNER);
+    await assertFails(setDoc(doc(db, `users/${OWNER}/phones/not-a-phone`), record));
+    await assertFails(setDoc(doc(db, `users/${OWNER}/phones/${PHONE}/photos/1`), trip));
+    await assertFails(setDoc(doc(db, `users/${OWNER}/phones/${PHONE}/trips/abc`), trip));
+    await assertFails(setDoc(doc(db, `users/${OWNER}/phones/${PHONE}`), { json: 1 }));
+  });
+});

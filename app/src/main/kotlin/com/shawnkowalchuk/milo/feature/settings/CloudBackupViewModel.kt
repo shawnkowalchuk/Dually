@@ -29,8 +29,8 @@ enum class CloudNote {
     UNLOCK_FAILED,
     PLAY_NOT_READY,
 
-    /** The backup's trips are on this phone now: [CloudBackupCardState.restoredTrips]. */
-    RESTORED,
+    /** This phone's own trips were set aside; it holds the logbook's (ADR-017). */
+    USING_BACKUP,
 
     /** Not while a trip is being recorded. */
     TRIP_IN_PROGRESS,
@@ -38,8 +38,8 @@ enum class CloudNote {
     /** The restore did not work; nothing was changed, or the safety copy has it. */
     RESTORE_FAILED,
 
-    /** This phone backs up to the account now, in place of the other. */
-    BACKING_UP_HERE,
+    /** This phone's trips joined the logbook (ADR-017). */
+    MERGED,
 
     /** The online backup could not be reached; nothing was changed. */
     BACKUP_OFFLINE,
@@ -59,10 +59,9 @@ enum class CloudNote {
  * @param account the account signed in, or null. Unknown until the file was read: [read].
  * @param read whether the account's file has been read yet. No button is offered before.
  * @param price the unlock's price as Google Play shows it, once asked, or null.
- * @param standing how the backup stands for an account that holds the unlock (since
- * 2026-11-12): this phone backs up, or another phone's trips are in it and the user chooses.
- * Null until it was asked.
- * @param restoredTrips how many trips the last restore brought back, for its note.
+ * @param standing how the backup stands for an account that holds the unlock: this phone
+ * backs up, or it asks once whether to merge its trips with the other phones' (ADR-017). Null
+ * until it was asked.
  */
 data class CloudBackupCardState(
     val available: Boolean,
@@ -72,7 +71,6 @@ data class CloudBackupCardState(
     val note: CloudNote? = null,
     val price: String? = null,
     val standing: CloudStartResult? = null,
-    val restoredTrips: Int = 0,
 )
 
 /**
@@ -97,10 +95,10 @@ class CloudBackupViewModel<H>(
     private val unlock: suspend (H) -> CloudUnlockResult,
     private val restore: suspend () -> CloudUnlockResult,
     private val startBackup: suspend () -> CloudStartResult = { CloudStartResult.BackingUp },
-    private val restoreTrips: suspend () -> CloudRestoreResult = {
+    private val useBackupOnly: suspend () -> CloudRestoreResult = {
         CloudRestoreResult.Failed("Not offered")
     },
-    private val backUpHere: suspend () -> Boolean = { false },
+    private val merge: suspend () -> Boolean = { false },
     private val deleteAccount: suspend (H) -> Boolean = { false },
     private val eventLog: EventLogRepository,
     private val clock: () -> Long,
@@ -134,20 +132,15 @@ class CloudBackupViewModel<H>(
         if (readyToBuy()) work { if (signedIn(host) && locked()) unlocked(restore()) }
     }
 
-    /** "Restore my trips here", once the user said yes to the question. */
-    fun onRestoreTrips() {
+    /** "Use only the backup's trips", once the user said yes to the question (ADR-017). */
+    fun onUseBackupOnly() {
         if (!unlockedAndIdle()) return
         work {
             val note =
-                when (val result = restoreTrips()) {
+                when (useBackupOnly()) {
                     is CloudRestoreResult.Restored -> {
-                        mutableState.update {
-                            it.copy(
-                                restoredTrips = result.trips,
-                                standing = CloudStartResult.BackingUp,
-                            )
-                        }
-                        CloudNote.RESTORED
+                        mutableState.update { it.copy(standing = CloudStartResult.BackingUp) }
+                        CloudNote.USING_BACKUP
                     }
 
                     CloudRestoreResult.TripInProgress -> CloudNote.TRIP_IN_PROGRESS
@@ -160,14 +153,14 @@ class CloudBackupViewModel<H>(
         }
     }
 
-    /** "Back up this phone instead", once the user said yes to the question. */
-    fun onBackUpHere() {
+    /** "Merge": this phone's trips join the logbook (ADR-017). */
+    fun onMerge() {
         if (!unlockedAndIdle()) return
         work {
-            val done = backUpHere()
+            val done = merge()
             mutableState.update {
                 if (done) {
-                    it.copy(standing = CloudStartResult.BackingUp, note = CloudNote.BACKING_UP_HERE)
+                    it.copy(standing = CloudStartResult.BackingUp, note = CloudNote.MERGED)
                 } else {
                     it.copy(note = CloudNote.BACKUP_OFFLINE)
                 }

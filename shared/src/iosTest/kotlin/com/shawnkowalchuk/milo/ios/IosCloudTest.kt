@@ -5,7 +5,6 @@ import com.shawnkowalchuk.milo.core.time.testZone
 import com.shawnkowalchuk.milo.core.trip.driveNorth
 import com.shawnkowalchuk.milo.data.cloud.CLOUD_OWNER
 import com.shawnkowalchuk.milo.data.cloud.CloudDocument
-import com.shawnkowalchuk.milo.data.cloud.cloudOwnerOf
 import com.shawnkowalchuk.milo.data.transfer.DataExport
 import com.shawnkowalchuk.milo.data.transfer.DataImport
 import kotlin.test.AfterTest
@@ -65,10 +64,12 @@ class IosCloudTest {
 
         assertEquals("Backup unlocked. Your trips start uploading now.", note?.text)
         assertTrue(backup.upload("the test"))
+        // ADR-017: into this phone's own folder, with its record.
         val held = cloud.documents.getValue(ACCOUNT)
-        assertEquals(1, held.keys.count { it.startsWith("trips/") })
-        assertTrue(held.containsKey("backup/settings"))
-        assertNotNull(held[CLOUD_OWNER]?.let(::cloudOwnerOf))
+        assertEquals(1, held.keys.count { it.matches(Regex("phones/[^/]+/trips/[0-9]+")) })
+        assertEquals(1, held.keys.count { it.matches(Regex("phones/[^/]+/backup/settings")) })
+        assertEquals(1, held.keys.count { it.matches(Regex("phones/[^/]+")) })
+        assertNull(held[CLOUD_OWNER])
         val tile = backup.tile(available = true, price = null)
         assertEquals("On", tile.on)
         assertNull(tile.purchase)
@@ -80,30 +81,66 @@ class IosCloudTest {
     }
 
     @Test
-    fun `a second iPhone is asked and restores the first one's trips`() = runTest {
+    fun `a second iPhone with no trips takes the first one's at once with nothing to press`() =
+        runTest {
+            driveOneTrip(firstPhone)
+            cloud.unlocked += ACCOUNT
+            val first = backupOf(firstPhone)
+            first.signedIn(ACCOUNT, "shawn@example.com")
+            assertTrue(first.upload("the test"))
+
+            val second = backupOf(secondPhone)
+            second.signedIn(ACCOUNT, "shawn@example.com")
+            assertTrue(second.upload("the test"))
+
+            val trips = secondPhone.trips.observeFinishedTrips().first()
+            assertEquals(1, trips.size)
+            assertNotNull(trips.single().homePhone, "marked as the other phone's")
+            assertEquals("On", second.tile(available = true, price = null).on)
+        }
+
+    @Test
+    fun `a second iPhone with trips of its own asks once and after Merge holds both`() = runTest {
         driveOneTrip(firstPhone)
         cloud.unlocked += ACCOUNT
         val first = backupOf(firstPhone)
         first.signedIn(ACCOUNT, "shawn@example.com")
         assertTrue(first.upload("the test"))
 
+        secondPhone.nowMs += 6L * 60 * 60 * 1000 // a later drive, not the same one
+        driveOneTrip(secondPhone)
         val second = backupOf(secondPhone)
         second.signedIn(ACCOUNT, "shawn@example.com")
         second.upload("the test")
         val tile = second.tile(available = true, price = null)
-        assertNotNull(tile.restoreHere)
-        assertNotNull(tile.backUpHere)
-        assertTrue(tile.text.contains("1 trip from another phone"), tile.text)
-        assertEquals(
-            0,
-            secondPhone.trips.observeFinishedTrips().first().size,
-            "nothing replaced before the yes",
-        )
+        assertNotNull(tile.merge)
+        assertNotNull(tile.useBackup)
+        assertTrue(tile.text.contains("Trips on this phone: 1"), tile.text)
+        assertEquals(1, secondPhone.trips.observeFinishedTrips().first().size, "nothing yet")
 
-        val note = second.restoreHere()
-        assertTrue(note.good, note.text)
+        assertTrue(second.merge().good)
+        assertTrue(second.upload("the test"))
+        assertEquals(2, secondPhone.trips.observeFinishedTrips().first().size)
+        // And the first phone takes the second's at its next upload.
+        assertTrue(first.upload("the test"))
+        assertEquals(2, firstPhone.trips.observeFinishedTrips().first().size)
+    }
+
+    @Test
+    fun `the same drive recorded on both phones is counted once`() = runTest {
+        driveOneTrip(firstPhone)
+        driveOneTrip(secondPhone)
+        cloud.unlocked += ACCOUNT
+        val first = backupOf(firstPhone)
+        first.signedIn(ACCOUNT, "")
+        assertTrue(first.upload("the test"))
+        val second = backupOf(secondPhone)
+        second.signedIn(ACCOUNT, "")
+        second.upload("the test")
+        assertTrue(second.merge().good)
+        assertTrue(second.upload("the test"))
+
         assertEquals(1, secondPhone.trips.observeFinishedTrips().first().size)
-        assertEquals("On", second.tile(available = true, price = null).on)
     }
 
     @Test
@@ -149,6 +186,7 @@ class IosCloudTest {
         apple = cloud,
         files = IosCloudFiles(phone.folderPath + "/cloud"),
         mainRows = phone.mainTransferDao(),
+        trips = phone.tripDao(),
         settings = phone.settings,
         transfer =
             IosTransfer(
@@ -224,10 +262,18 @@ private class FakeFirebase : AppleCloud {
         reply.done()
     }
 
-    override fun read(account: String, path: String?, reply: CloudReadReply) {
+    override fun readCollections(
+        account: String,
+        collections: List<String>,
+        reply: CloudReadReply,
+    ) {
         calls++
         val held = documents[account].orEmpty()
-        reply.documents(if (path == null) held else held.filterKeys { it == path })
+        reply.documents(
+            held.filterKeys { path ->
+                collections.any { path.substringBeforeLast('/') == it }
+            },
+        )
     }
 
     override fun holdsUnlock(account: String, reply: CloudHoldsReply) {

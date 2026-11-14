@@ -45,7 +45,7 @@ class CloudBackupViewModelTest {
 
     /** How the backup stands, and what a restore, a take-over and a deletion come to. */
     private var standing: CloudStartResult = CloudStartResult.BackingUp
-    private var restoreTripsAnswer: CloudRestoreResult = CloudRestoreResult.Restored(12)
+    private var restoreTripsAnswer: CloudRestoreResult = CloudRestoreResult.Restored(0)
     private var backUpHereAnswer = true
     private var deleteAnswer = true
     private var deletions = 0
@@ -73,8 +73,8 @@ class CloudBackupViewModelTest {
             unlock = { unlockAnswer },
             restore = { restoreAnswer },
             startBackup = { standing },
-            restoreTrips = { restoreTripsAnswer },
-            backUpHere = { backUpHereAnswer },
+            useBackupOnly = { restoreTripsAnswer },
+            merge = { backUpHereAnswer },
             deleteAccount = {
                 deletions++
                 deleteAnswer
@@ -275,63 +275,62 @@ class CloudBackupViewModelTest {
     fun `an account that holds the unlock is told how the backup stands when the tile opens`() =
         runTest {
             stored = account.copy(unlocked = true)
-            standing = CloudStartResult.Choose(trips = 12)
+            standing = CloudStartResult.Merge(own = 4, others = 12)
 
-            assertEquals(CloudStartResult.Choose(12), viewModel().state.value.standing)
+            assertEquals(CloudStartResult.Merge(4, 12), viewModel().state.value.standing)
         }
 
     @Test
-    fun `Restore my trips here brings them back, says how many, and backs up from here`() =
-        runTest {
-            stored = account.copy(unlocked = true)
-            standing = CloudStartResult.Choose(trips = 12)
-            val tile = viewModel()
-
-            tile.onRestoreTrips()
-            runCurrent()
-
-            assertEquals(CloudNote.RESTORED, tile.state.value.note)
-            assertEquals(12, tile.state.value.restoredTrips)
-            assertEquals(CloudStartResult.BackingUp, tile.state.value.standing)
-        }
-
-    @Test
-    fun `each way a restore does not happen has its note, and nothing else changes`() = runTest {
+    fun `Use only the backup's trips sets this phone's aside and backs up from here`() = runTest {
         stored = account.copy(unlocked = true)
-        standing = CloudStartResult.Choose(trips = 12)
+        standing = CloudStartResult.Merge(own = 4, others = 12)
         val tile = viewModel()
-        val cases =
-            listOf(
-                CloudRestoreResult.TripInProgress to CloudNote.TRIP_IN_PROGRESS,
-                CloudRestoreResult.Offline to CloudNote.BACKUP_OFFLINE,
-                CloudRestoreResult.Failed("Import refused") to CloudNote.RESTORE_FAILED,
-            )
-        for ((result, note) in cases) {
-            restoreTripsAnswer = result
-            tile.onRestoreTrips()
-            runCurrent()
 
-            assertEquals(note, tile.state.value.note)
-            assertEquals(CloudStartResult.Choose(12), tile.state.value.standing)
-        }
+        tile.onUseBackupOnly()
+        runCurrent()
+
+        assertEquals(CloudNote.USING_BACKUP, tile.state.value.note)
+        assertEquals(CloudStartResult.BackingUp, tile.state.value.standing)
     }
 
     @Test
-    fun `Back up this phone instead takes the backup over, or says it could not`() = runTest {
+    fun `each way setting this phone's trips aside fails has its note, and nothing changes`() =
+        runTest {
+            stored = account.copy(unlocked = true)
+            standing = CloudStartResult.Merge(own = 4, others = 12)
+            val tile = viewModel()
+            val cases =
+                listOf(
+                    CloudRestoreResult.TripInProgress to CloudNote.TRIP_IN_PROGRESS,
+                    CloudRestoreResult.Offline to CloudNote.BACKUP_OFFLINE,
+                    CloudRestoreResult.Failed("Import refused") to CloudNote.RESTORE_FAILED,
+                )
+            for ((result, note) in cases) {
+                restoreTripsAnswer = result
+                tile.onUseBackupOnly()
+                runCurrent()
+
+                assertEquals(note, tile.state.value.note)
+                assertEquals(CloudStartResult.Merge(4, 12), tile.state.value.standing)
+            }
+        }
+
+    @Test
+    fun `Merge joins the logbook, or says it could not`() = runTest {
         stored = account.copy(unlocked = true)
-        standing = CloudStartResult.Moved(trips = 3)
+        standing = CloudStartResult.Merge(own = 4, others = 3)
         val tile = viewModel()
 
         backUpHereAnswer = false
-        tile.onBackUpHere()
+        tile.onMerge()
         runCurrent()
         assertEquals(CloudNote.BACKUP_OFFLINE, tile.state.value.note)
-        assertEquals(CloudStartResult.Moved(3), tile.state.value.standing)
+        assertEquals(CloudStartResult.Merge(4, 3), tile.state.value.standing)
 
         backUpHereAnswer = true
-        tile.onBackUpHere()
+        tile.onMerge()
         runCurrent()
-        assertEquals(CloudNote.BACKING_UP_HERE, tile.state.value.note)
+        assertEquals(CloudNote.MERGED, tile.state.value.note)
         assertEquals(CloudStartResult.BackingUp, tile.state.value.standing)
     }
 
@@ -355,12 +354,12 @@ class CloudBackupViewModelTest {
     }
 
     @Test
-    fun `a locked account is offered no restore and no take-over`() = runTest {
+    fun `a locked account is offered no merge and no setting aside`() = runTest {
         stored = account
         val tile = viewModel()
 
-        tile.onRestoreTrips()
-        tile.onBackUpHere()
+        tile.onUseBackupOnly()
+        tile.onMerge()
         runCurrent()
 
         assertNull(tile.state.value.note)

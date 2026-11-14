@@ -97,15 +97,15 @@ class IosTrips internal constructor(
             label = line.label,
             canMarkBusiness = TripCategory.BUSINESS in line.markableAs,
             canMarkPersonal = TripCategory.PERSONAL in line.markableAs,
-            correction = line.kind.correction?.name,
+            correction = line.kind.correction?.name?.takeIf { !line.fromOtherPhone },
             correctionWords =
                 when (line.kind) {
                     TripKind.COUNTED -> "Delete"
                     TripKind.DELETED -> "Restore"
                     TripKind.DISCARDED -> "Count it"
                     TripKind.IN_PROGRESS -> null
-                },
-            canLabel = line.kind == TripKind.COUNTED,
+                }.takeIf { !line.fromOtherPhone },
+            canLabel = line.kind == TripKind.COUNTED && !line.fromOtherPhone,
             canEdit = line.editable,
             unit = unitWord(unit),
         )
@@ -211,6 +211,9 @@ class IosTrips internal constructor(
     }
 
     private fun noteText(line: TripLine): String? = when {
+        // ADR-017: changed on the phone that recorded it, until editing from any phone.
+        line.fromOtherPhone -> "From your other phone"
+
         line.kind == TripKind.DELETED -> "Deleted by you. Not counted."
 
         line.kind == TripKind.DISCARDED && line.ignored ->

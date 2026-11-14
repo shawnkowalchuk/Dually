@@ -81,7 +81,9 @@ final class FirebaseCloud: AppleCloud {
         }
     }
 
-    func read(account: String, path: String?, reply: CloudReadReply) {
+    /// Every document of the account's [collections] (`phones`, `phones/{install}/trips`,
+    /// `trips`, `backup`), from the server, by its path under the account's folder (ADR-017).
+    func readCollections(account: String, collections: [String], reply: CloudReadReply) {
         guard start() else {
             reply.refused(reason: "No Firebase settings in this build")
             return
@@ -90,18 +92,12 @@ final class FirebaseCloud: AppleCloud {
         Task {
             do {
                 var found: [String: String] = [:]
-                if let path {
-                    let document = try await firestore.document("users/\(account)/\(path)")
-                        .getDocument(source: .server)
-                    if let json = document.data()?[Self.jsonField] as? String { found[path] = json }
-                } else {
-                    for folder in ["trips", "backup"] {
-                        let all = try await firestore.collection("users/\(account)/\(folder)")
-                            .getDocuments(source: .server)
-                        for document in all.documents {
-                            if let json = document.data()[Self.jsonField] as? String {
-                                found["\(folder)/\(document.documentID)"] = json
-                            }
+                for folder in collections {
+                    let all = try await firestore.collection("users/\(account)/\(folder)")
+                        .getDocuments(source: .server)
+                    for document in all.documents {
+                        if let json = document.data()[Self.jsonField] as? String {
+                            found["\(folder)/\(document.documentID)"] = json
                         }
                     }
                 }

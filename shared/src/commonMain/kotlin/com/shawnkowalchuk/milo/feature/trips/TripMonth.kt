@@ -90,6 +90,8 @@ enum class TripKind(val status: TripStatus) {
  * @param editable whether the edit screen can be opened for it: a counted trip, and no other.
  * @param label what Shawn labelled the trip ("Work"), or null (since 2026-10-08). The row
  * writes it after the times, and the report prints it as the trip's purpose.
+ * @param fromOtherPhone whether another phone on the online backup account recorded it (ADR-017):
+ * the row says so, and offers nothing to change until editing from any phone is built.
  */
 data class TripLine(
     val id: Long,
@@ -106,6 +108,7 @@ data class TripLine(
     val mark: ByHandMark? = null,
     val editable: Boolean = false,
     val label: String? = null,
+    val fromOtherPhone: Boolean = false,
 )
 
 /**
@@ -268,10 +271,11 @@ private fun Trip.toLine(kind: TripKind): TripLine = TripLine(
     category = category,
     ranPastSchedule = ranPastScheduleShown,
     ignored = kind == TripKind.DISCARDED && ignoredOutsideSchedule,
-    markableAs = categoriesOffered(status, category),
+    markableAs = if (homePhone == null) categoriesOffered(status, category) else emptyList(),
     mark = byHandMark,
-    editable = canBeEdited,
+    editable = canBeEdited && homePhone == null,
     label = label,
+    fromOtherPhone = homePhone != null,
 )
 
 /**

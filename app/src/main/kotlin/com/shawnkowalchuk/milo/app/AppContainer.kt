@@ -318,7 +318,13 @@ class AppContainer(context: Context, private val trustedClock: TrustedClock) {
     val sentRun: SentRunObjects by lazy { SentRunObjects(appContext, this) }
     val cloud: CloudObjects by lazy {
         val changes = miloDatabase.invalidationTracker.createFlow("trips", "sent_reports")
-        CloudObjects(appContext, this, miloDatabase.mainTransferDao(), changes.map { })
+        CloudObjects(
+            appContext,
+            this,
+            miloDatabase.mainTransferDao(),
+            miloDatabase.tripDao(),
+            changes.map { },
+        )
     }
 
     /**

@@ -54,8 +54,12 @@ internal fun TripLine.byHandNoteRes(): Int? = when (mark.takeIf { kind != TripKi
  * saved as, then that its figures are typed, then why it is not counted. The row joins them
  * with a middle dot: "7:42 – 8:06 AM · Business · edited".
  */
-internal fun TripLine.notesRes(): List<Int> =
-    listOfNotNull(categoryNoteRes(), byHandNoteRes(), leftOutNoteRes())
+internal fun TripLine.notesRes(): List<Int> = listOfNotNull(
+    R.string.trips_note_other_phone.takeIf { fromOtherPhone },
+    categoryNoteRes(),
+    byHandNoteRes(),
+    leftOutNoteRes(),
+)
 
 /** One thing that can be done with a listed trip: one button under its row. */
 internal sealed interface TripAction {
@@ -86,6 +90,8 @@ internal sealed interface TripAction {
  * @param pressed whether this trip is the one whose buttons were brought up by a press.
  */
 internal fun TripLine.actions(pressed: Boolean): List<TripAction> {
+    // Another phone's trip is changed on that phone, until editing from any phone (ADR-017).
+    if (fromOtherPhone) return emptyList()
     val counted = kind == TripKind.COUNTED
     val shown = counted && pressed
     val change = kind.correction?.takeIf { !counted || shown }

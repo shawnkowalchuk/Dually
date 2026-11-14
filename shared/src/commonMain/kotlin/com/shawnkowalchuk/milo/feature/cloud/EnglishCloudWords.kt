@@ -49,28 +49,32 @@ val ENGLISH_CLOUD_STRINGS: Map<String, String> = mapOf(
     "settings_cloud_failed" to "Signing in did not work. Try again; the Log says why.",
     "settings_cloud_unavailable" to
         "This copy of Dually was built without the cloud backup\\'s settings.",
-    "settings_cloud_moved" to
-        "Signed in as %1\$s. Another phone backs up to this account now, so this phone stopped. " +
-        "Restore its trips here, or back up this phone instead.",
-    "settings_cloud_restore_here" to "Restore my trips here",
-    "settings_cloud_back_up_here" to "Back up this phone instead",
+    "settings_cloud_merge_question" to
+        "Signed in as %1\$s. Trips on this phone: %2\$d. Trips from your other phones: %3\$d. " +
+        "Merge them into one logbook?",
+    "settings_cloud_merge" to "Merge",
+    "settings_cloud_use_backup" to "Use only the backup\\'s trips",
+    "settings_cloud_use_backup_title" to "Use only the backup\\'s trips?",
+    "settings_cloud_use_backup_text" to
+        "This phone\\'s own trips are taken off it, and your logbook shows the trips from your " +
+        "other phones. A safety copy of this phone\\'s trips is made first, under Your data.",
+    "settings_cloud_use_backup_confirm" to "Use the backup\\'s trips",
+    "settings_cloud_using_backup" to
+        "This phone now shows the trips from your online backup, and backs up from now on.",
+    "settings_cloud_merged" to
+        "Merged. This phone\\'s trips back up from now on, and your other phones\\' trips show " +
+        "here too.",
     "settings_cloud_delete" to "Delete my online backup and account",
-    "settings_cloud_restore_title" to "Restore your trips here?",
-    "settings_cloud_restore_confirm" to "Restore",
-    "settings_cloud_back_up_here_title" to "Back up this phone instead?",
-    "settings_cloud_back_up_here_confirm" to "Replace the backup",
     "settings_cloud_delete_title" to "Delete your online backup and account?",
     "settings_cloud_delete_text" to
         "Your trips are deleted from Dually\\'s server, and your Dually account with them. The " +
         "trips on this phone stay. Your purchase stays with your Google Play account: sign in " +
         "again later and press Restore purchase.",
     "settings_cloud_delete_confirm" to "Delete",
-    "settings_cloud_restored" to "Restored from your online backup.",
     "settings_cloud_trip_in_progress" to
-        "Not while a trip is being recorded. End the trip, then restore.",
+        "Not while a trip is being recorded. End the trip, then try again.",
     "settings_cloud_restore_failed" to
-        "The restore did not work; the trips on this phone were not changed. The Log says why.",
-    "settings_cloud_backing_up_here" to "This phone backs up to your account now.",
+        "That did not work; the trips on this phone were not changed. The Log says why.",
     "settings_cloud_backup_offline" to
         "Your online backup could not be reached. Check the phone is online and try again.",
     "settings_cloud_delete_failed" to
@@ -80,37 +84,7 @@ val ENGLISH_CLOUD_STRINGS: Map<String, String> = mapOf(
 )
 
 /** The plurals, by name: the "one" form, then the "other". */
-val ENGLISH_CLOUD_PLURALS: Map<String, Pair<String, String>> = mapOf(
-    "settings_cloud_other_phone" to Pair(
-
-        "Signed in as %1\$s. Your online backup holds %2\$d trip from another phone. Restore it " +
-            "here, or back up this phone instead.",
-
-        "Signed in as %1\$s. Your online backup holds %2\$d trips from another phone. Restore " +
-            "them here, or back up this phone instead.",
-    ),
-    "settings_cloud_restore_text" to Pair(
-
-        "The trips on this phone are replaced with the %d trip in your online backup, without " +
-            "its GPS route. A safety copy of this phone\\'s trips is made first, under Your data.",
-
-        "The trips on this phone are replaced with the %d trips in your online backup, without " +
-            "their GPS routes. A safety copy of this phone\\'s trips is made first, under Your " +
-            "data.",
-    ),
-    "settings_cloud_back_up_here_text" to Pair(
-
-        "Your online backup is replaced with this phone\\'s trips. The %d trip the other phone " +
-            "backed up is removed from it.",
-
-        "Your online backup is replaced with this phone\\'s trips. The %d trips the other phone " +
-            "backed up are removed from it.",
-    ),
-    "settings_cloud_restored_trips" to Pair(
-        "%d trip restored from your online backup. This phone backs up from now on.",
-        "%d trips restored from your online backup. This phone backs up from now on.",
-    ),
-)
+val ENGLISH_CLOUD_PLURALS: Map<String, Pair<String, String>> = mapOf()
 
 /** The resource [name], as it reads on the screen. */
 fun englishCloudText(name: String): String = unescape(ENGLISH_CLOUD_STRINGS.getValue(name))

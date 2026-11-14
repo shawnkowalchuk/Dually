@@ -87,7 +87,7 @@ class MiloMigrationsTest {
     fun `there is one step for every version the database has had`() {
         val current = schemas.listFiles { file -> file.extension == "json" }.orEmpty().size
 
-        assertEquals("One schema file per version, and no gaps", current, 7)
+        assertEquals("One schema file per version, and no gaps", current, 8)
         // In order and without a gap, so a database that is two versions behind is taken
         // through both steps, one after the other.
         assertEquals(
@@ -132,6 +132,7 @@ class MiloMigrationsTest {
                 statement.startsWith("ALTER TABLE trips ADD COLUMN ") ||
                     statement.startsWith("ALTER TABLE sent_reports ADD COLUMN ") ||
                     statement.startsWith("CREATE INDEX IF NOT EXISTS ") ||
+                    statement.startsWith("CREATE UNIQUE INDEX IF NOT EXISTS ") ||
                     statement.startsWith("CREATE TABLE IF NOT EXISTS ")
             assertTrue("Not an addition: $statement", adds)
         }
@@ -143,8 +144,9 @@ class MiloMigrationsTest {
         // Personal, and the marks and kept figures of a trip that was added or edited by hand.
         // The step to version 5 adds none: it makes a table of its own. The step to version 6
         // adds one to that table: the unit a sent report was printed in. The step to version 7
-        // adds two to the trips: the vehicle and the label, both of which may be empty.
-        val columnsAdded = mapOf(1 to 4, 2 to 4, 3 to 7, 4 to 0, 5 to 1, 6 to 2)
+        // adds two to the trips: the vehicle and the label, both of which may be empty. The step
+        // to version 8 adds two to the trips: the phone a trip came from and its id there.
+        val columnsAdded = mapOf(1 to 4, 2 to 4, 3 to 7, 4 to 0, 5 to 1, 6 to 2, 7 to 2)
         for (step in MILO_MIGRATIONS) {
             val added = statementsOf(step).filter { it.contains(" ADD COLUMN ") }
 
@@ -184,6 +186,21 @@ class MiloMigrationsTest {
                 "ALTER TABLE trips ADD COLUMN label TEXT",
             ),
             statementsOf(MIGRATION_6_7),
+        )
+    }
+
+    @Test
+    fun `the step from 7 to 8 adds the phone a trip came from, empty on every stored trip`() {
+        // Every trip stored before is this phone's own (ADR-017): both columns empty, and the
+        // index that finds another phone's trip lets any number of empty pairs stand.
+        assertEquals(
+            listOf(
+                "ALTER TABLE trips ADD COLUMN homePhone TEXT",
+                "ALTER TABLE trips ADD COLUMN homeTripId INTEGER",
+                "CREATE UNIQUE INDEX IF NOT EXISTS index_trips_homePhone_homeTripId " +
+                    "ON trips (homePhone, homeTripId)",
+            ),
+            statementsOf(MIGRATION_7_8),
         )
     }
 
