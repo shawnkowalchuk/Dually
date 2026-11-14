@@ -15,7 +15,9 @@ import com.shawnkowalchuk.milo.data.buildMiloDatabase
 import com.shawnkowalchuk.milo.data.buildPointsDatabase
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.point.RawPointRepository
+import com.shawnkowalchuk.milo.data.settings.ShownUnit
 import com.shawnkowalchuk.milo.data.settings.buildSettingsStore
+import com.shawnkowalchuk.milo.data.settings.buildShownUnit
 import com.shawnkowalchuk.milo.data.trip.TripCorrections
 import com.shawnkowalchuk.milo.data.trip.TripRepository
 import com.shawnkowalchuk.milo.data.trip.categoryTotals
@@ -50,7 +52,13 @@ class DuallyCore private constructor(
     private val automations: TruckBelief,
     /** The driving alert (phase 4d, third part). */
     val drivingAlert: IosDrivingAlert,
+    /** The Settings screen (phase 4g). */
+    val settings: IosSettings,
+    private val shownUnit: ShownUnit,
 ) {
+    /** "km" or "mi", as Settings has it now: every distance the iPhone writes follows it. */
+    fun unitWord(): String = unitWord(shownUnit.unit.value)
+
     /**
      * The Setup screen (phase 4d, second part) for what iOS reports, with the check that each
      * automation has run.
@@ -105,7 +113,7 @@ class DuallyCore private constructor(
     suspend fun homeFigures(nowMs: Long): HomeFigures {
         val zone = systemZoneId()
         val locale = phoneLocale()
-        val unit = DistanceUnit.KILOMETRES
+        val unit = shownUnit.unit.value
         val today = daySpan(localDateOf(nowMs, zone), zone)
         val month = monthOf(nowMs, zone)
         val monthSpan = monthSpan(month, zone)
@@ -127,7 +135,7 @@ class DuallyCore private constructor(
 
     /** [metres] as Home writes a distance: "12.3", in the phone's language. */
     fun distanceText(metres: Double): String =
-        formatDistance(metres, DistanceUnit.KILOMETRES, phoneLocale())
+        formatDistance(metres, shownUnit.unit.value, phoneLocale())
 
     companion object {
         /**
@@ -159,6 +167,9 @@ class DuallyCore private constructor(
                     truck,
                     clock,
                 )
+            // The app's scope: what the shared code follows for as long as the app runs.
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+            val shownUnit = buildShownUnit(settings, { eventLog }, scope, clock).also { it.start() }
             val network = IosNetworkStatus()
             val addresses =
                 TripAddresses(
@@ -173,7 +184,7 @@ class DuallyCore private constructor(
                     //  event log cannot take either (its database unreadable) is lost. See
                     //  docs/FINDINGS_LOG.md (2026-11-13).
                     unlogged = { _, _ -> },
-                    scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+                    scope = scope,
                 )
             val trips =
                 IosTrips(
@@ -184,6 +195,7 @@ class DuallyCore private constructor(
                     locale = ::phoneLocale,
                     clock = clock,
                     openTripStart = { addresses.openTripStart.value },
+                    unit = { shownUnit.unit.value },
                 )
             val drivingAlert =
                 IosDrivingAlert(
@@ -195,7 +207,16 @@ class DuallyCore private constructor(
                     zone = ::systemZoneId,
                     clock = clock,
                 )
-            return DuallyCore(database, recorder, trips, addresses, truck, drivingAlert)
+            return DuallyCore(
+                database,
+                recorder,
+                trips,
+                addresses,
+                truck,
+                drivingAlert,
+                IosSettings(settings, ::phoneLocale),
+                shownUnit,
+            )
         }
     }
 }

@@ -31,12 +31,14 @@ struct HomeView: View {
                 FigureTile(
                     label: "Today · Business",
                     value: model.figures?.todayBusiness,
-                    note: model.figures.map { tripCount(Int($0.todayTrips)) }
+                    note: model.figures.map { tripCount(Int($0.todayTrips)) },
+                    unit: model.unitWord
                 )
                 FigureTile(
                     label: model.figures?.monthName ?? " ",
                     value: model.figures?.monthBusiness,
-                    note: "Business"
+                    note: "Business",
+                    unit: model.unitWord
                 )
             }
             if let failure = model.failure ?? model.recordingFailure {
@@ -68,7 +70,7 @@ private struct TripCard: View {
 
     var body: some View {
         if let trip = model.recording {
-            RecordingCard(trip: trip, distance: model.distanceText(trip)) {
+            RecordingCard(trip: trip, distance: model.distanceText(trip), unit: model.unitWord) {
                 Task { await model.end() }
             }
         } else {
@@ -102,6 +104,7 @@ private struct TripCard: View {
 private struct RecordingCard: View {
     let trip: RecordingNow
     let distance: String
+    let unit: String
     let onEnd: () -> Void
 
     var body: some View {
@@ -111,7 +114,7 @@ private struct RecordingCard: View {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(distance)
                     .font(Typography.figure(40))
-                Text("km")
+                Text(unit)
                     .font(Typography.body(16))
             }
             TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -143,6 +146,7 @@ private struct FigureTile: View {
     let label: String
     let value: String?
     let note: String?
+    let unit: String
 
     var body: some View {
         Tile {
@@ -153,7 +157,7 @@ private struct FigureTile: View {
                 Text(value ?? "–")
                     .font(Typography.figure(28))
                     .foregroundStyle(Palette.text)
-                Text("km")
+                Text(unit)
                     .font(Typography.body(14))
                     .foregroundStyle(Palette.textSecondary)
             }

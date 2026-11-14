@@ -29,7 +29,7 @@ struct TripSheet: View {
                             Text(route).font(Typography.body(15)).foregroundStyle(Palette.textSecondary)
                         }
                         if let distance = trip.distance {
-                            Text("\(distance) km").font(Typography.figure(20)).foregroundStyle(Palette.text)
+                            Text("\(distance) \(trip.unit)").font(Typography.figure(20)).foregroundStyle(Palette.text)
                         }
                         if let note = trip.note {
                             Text(note).font(Typography.body(14)).foregroundStyle(Palette.amber)

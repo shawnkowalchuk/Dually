@@ -10,7 +10,7 @@ struct TripActivityAttributes: ActivityAttributes {
     struct ContentState: Codable, Hashable {
         /// The distance so far, written as Home writes it: "12.3".
         var distance: String
-        /// "km" until the iPhone has its Settings (phase 4g).
+        /// "km" or "mi", as Settings has it.
         var unit: String
         /// The grace period runs: the truck has gone, and the trip ends unless it comes back.
         var waitingForTruck: Bool

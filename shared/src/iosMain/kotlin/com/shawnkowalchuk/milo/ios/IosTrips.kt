@@ -45,6 +45,7 @@ class IosTrips internal constructor(
     private val locale: () -> Locale,
     private val clock: () -> Long,
     private val openTripStart: () -> OpenTripStart?,
+    private val unit: () -> DistanceUnit,
 ) {
     /**
      * The trips started in [month] (1 to 12) of [year]. Deleted and discarded trips are listed
@@ -60,7 +61,7 @@ class IosTrips internal constructor(
     ): MonthText {
         val zoneNow = zone()
         val localeNow = locale()
-        val unit = DistanceUnit.KILOMETRES
+        val unit = unit()
         val shown = yearMonthOf(year, month)
         val span = monthSpan(shown, zoneNow)
         val rows = trips.observeTripsStartedBetween(span.fromMs, span.untilMs).first()
@@ -105,6 +106,7 @@ class IosTrips internal constructor(
                     TripKind.IN_PROGRESS -> null
                 },
             canLabel = line.kind == TripKind.COUNTED,
+            unit = unitWord(unit),
         )
         return MonthText(
             title = formatMonthAndYear(shown, localeNow),
@@ -114,6 +116,7 @@ class IosTrips internal constructor(
             businessCount = summary.totals.business.count,
             personalCount = summary.totals.personal.count,
             hiddenLeftOut = summary.hiddenLeftOut,
+            unit = unitWord(unit),
             inProgress = summary.inProgress?.let(::lineText),
             days =
                 summary.days.map { day ->
@@ -248,6 +251,8 @@ data class MonthText(
     val personalCount: Int,
     /** How many deleted or discarded trips the switch would add to the list. */
     val hiddenLeftOut: Int,
+    /** "km" or "mi", as Settings has it: every distance of the month is in it. */
+    val unit: String,
     val inProgress: TripText?,
     val days: List<DayText>,
 )
@@ -277,4 +282,6 @@ data class TripText(
     /** Its words on the button: "Delete", "Restore", "Count it". */
     val correctionWords: String?,
     val canLabel: Boolean,
+    /** "km" or "mi". */
+    val unit: String,
 )

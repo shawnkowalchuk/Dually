@@ -22,7 +22,7 @@ struct TripsView: View {
                     TripRow(trip: live, recording: true)
                 }
                 ForEach(month.days, id: \.title) { day in
-                    DaySection(day: day) { chosen = $0 }
+                    DaySection(day: day, unit: month.unit) { chosen = $0 }
                 }
                 if month.days.isEmpty && month.inProgress == nil {
                     Text("No trips this month.")
@@ -126,7 +126,7 @@ private struct MonthTotals: View {
                     .font(Typography.body(13, weight: .semibold))
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(month.business).font(Typography.figure(28))
-                    Text("km").font(Typography.body(14))
+                    Text(month.unit).font(Typography.body(14))
                 }
                 Text(tripCount(month.businessCount))
                     .font(Typography.body(13))
@@ -138,7 +138,7 @@ private struct MonthTotals: View {
                     .foregroundStyle(Palette.textSecondary)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(month.personal).font(Typography.figure(28)).foregroundStyle(Palette.text)
-                    Text("km").font(Typography.body(14)).foregroundStyle(Palette.textSecondary)
+                    Text(month.unit).font(Typography.body(14)).foregroundStyle(Palette.textSecondary)
                 }
                 Text(tripCount(month.personalCount))
                     .font(Typography.body(13))
@@ -155,6 +155,7 @@ private struct MonthTotals: View {
 /// One day: its date and Business kilometres, then its trips.
 private struct DaySection: View {
     let day: DayText
+    let unit: String
     let onChoose: (TripText) -> Void
 
     var body: some View {
@@ -164,7 +165,7 @@ private struct DaySection: View {
                     .font(Typography.body(16, weight: .bold))
                     .foregroundStyle(Palette.text)
                 Spacer()
-                Text("\(day.business) km Business")
+                Text("\(day.business) \(unit) Business")
                     .font(Typography.body(13))
                     .foregroundStyle(Palette.textSecondary)
             }

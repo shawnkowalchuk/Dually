@@ -111,7 +111,7 @@ final class TripSession: ObservableObject {
         if recording != nil { drivingWatch.withdraw() }
         if #available(iOS 16.1, *) {
             let distance = recording.map { core.distanceText(metres: $0.metres) } ?? ""
-            (liveTrip as? LiveTrip)?.show(recording, distance: distance)
+            (liveTrip as? LiveTrip)?.show(recording, distance: distance, unit: core.unitWord())
         }
         // TODO(debt): the wait beside a parked truck runs the GPS as a trip does, for up to 72
         //  hours. See docs/FINDINGS_LOG.md (2026-11-13, phase 4d, first part).
