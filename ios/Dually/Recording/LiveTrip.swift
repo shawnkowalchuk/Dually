@@ -19,14 +19,14 @@ final class LiveTrip {
     private var refusedFor: Int64?
 
     /// Shows [trip], or ends the activity when no trip is being recorded.
-    func show(_ trip: RecordingNow?, distance: String) {
+    func show(_ trip: RecordingNow?, distance: String, unit: String) {
         guard let trip else {
             end()
             return
         }
         let state = TripActivityAttributes.ContentState(
             distance: distance,
-            unit: "km",
+            unit: unit,
             waitingForTruck: trip.waitingForTruck
         )
         if activity?.attributes.tripId != trip.tripId {

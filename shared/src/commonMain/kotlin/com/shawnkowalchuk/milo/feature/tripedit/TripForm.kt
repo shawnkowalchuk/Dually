@@ -1,6 +1,17 @@
 package com.shawnkowalchuk.milo.feature.tripedit
 
+import com.shawnkowalchuk.milo.core.number.decimalOf
 import com.shawnkowalchuk.milo.core.schedule.TripCategory
+import com.shawnkowalchuk.milo.core.text.rootLocale
+import com.shawnkowalchuk.milo.core.time.LocalDate
+import com.shawnkowalchuk.milo.core.time.LocalTime
+import com.shawnkowalchuk.milo.core.time.ZoneId
+import com.shawnkowalchuk.milo.core.time.addDays
+import com.shawnkowalchuk.milo.core.time.compareDates
+import com.shawnkowalchuk.milo.core.time.compareTimes
+import com.shawnkowalchuk.milo.core.time.daysUntil
+import com.shawnkowalchuk.milo.core.time.minuteOf
+import com.shawnkowalchuk.milo.core.time.momentOf
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.formatDistance
 import com.shawnkowalchuk.milo.core.util.localDateOf
@@ -9,14 +20,6 @@ import com.shawnkowalchuk.milo.data.trip.Trip
 import com.shawnkowalchuk.milo.data.trip.TripEdit
 import com.shawnkowalchuk.milo.data.trip.TypedAddress
 import com.shawnkowalchuk.milo.data.trip.TypedTrip
-import java.math.BigDecimal
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.temporal.ChronoUnit
-import java.util.Locale
 
 // The edit form as plain values: what Shawn has picked and typed, and what that means as stored
 // times, metres and addresses. Pure functions, so they are tested without a phone. The same
@@ -75,14 +78,14 @@ fun blankForm(nowMs: Long, zone: ZoneId, unit: DistanceUnit): TripForm =
 
 /** The form for [trip]: its day and its two times, with every field untouched. */
 fun formFor(trip: Trip, zone: ZoneId, unit: DistanceUnit): TripForm {
-    val start = Instant.ofEpochMilli(trip.startedAtMs).atZone(zone)
-    val end = trip.endedAtMs?.let { Instant.ofEpochMilli(it).atZone(zone) }
+    val startDay = localDateOf(trip.startedAtMs, zone)
+    val endDay = trip.endedAtMs?.let { localDateOf(it, zone) }
     return TripForm(
-        date = start.toLocalDate(),
-        start = start.toLocalTime().truncatedTo(ChronoUnit.MINUTES),
-        end = end?.toLocalTime()?.truncatedTo(ChronoUnit.MINUTES),
+        date = startDay,
+        start = minuteOf(trip.startedAtMs, zone),
+        end = trip.endedAtMs?.let { minuteOf(it, zone) },
         endDayOffset =
-            end?.let { ChronoUnit.DAYS.between(start.toLocalDate(), it.toLocalDate()) } ?: 0,
+            endDay?.let { startDay.daysUntil(it) } ?: 0,
         unit = unit,
     )
 }
@@ -100,13 +103,14 @@ fun TripForm.startedAtMs(stored: Trip?, zone: ZoneId): Long? =
 
 /** When the trip ends by the form, on the same terms as [startedAtMs]. */
 fun TripForm.endedAtMs(stored: Trip?, zone: ZoneId): Long? =
-    moment(date.plusDays(endDayOffset), end ?: return null, stored?.endedAtMs, zone)
+    moment(date.addDays(endDayOffset), end ?: return null, stored?.endedAtMs, zone)
 
 private fun moment(day: LocalDate, time: LocalTime, storedMs: Long?, zone: ZoneId): Long {
-    val shown = day.atTime(time)
-    val stored = storedMs?.let { Instant.ofEpochMilli(it).atZone(zone) }
-    if (stored != null && stored.toLocalDateTime().truncatedTo(ChronoUnit.MINUTES) == shown) {
-        return stored.toInstant().toEpochMilli()
+    if (storedMs != null &&
+        compareDates(localDateOf(storedMs, zone), day) == 0 &&
+        compareTimes(minuteOf(storedMs, zone), time) == 0
+    ) {
+        return storedMs
     }
     // On the night the clocks go forward an hour does not exist, and java.time moves a time in
     // it on by that hour. On the night they go back an hour happens twice, and a dial cannot
@@ -114,7 +118,7 @@ private fun moment(day: LocalDate, time: LocalTime, storedMs: Long?, zone: ZoneI
     // change the stored time is on: a trip that ended at the second 01:30 and is given the end
     // 01:40 ends ten minutes later, not fifty minutes earlier. Without a stored time (a trip
     // that is being added) it is the first of the two.
-    return ZonedDateTime.ofLocal(shown, zone, stored?.offset).toInstant().toEpochMilli()
+    return momentOf(day, time, zone, sameSideAsMs = storedMs)
 }
 
 /**
@@ -126,7 +130,7 @@ fun TripForm.endingNextDay(nextDay: Boolean): TripForm = copy(endDayOffset = if 
 
 /** The day the trip ends on by the form, or null if it ends on the day it starts. */
 val TripForm.laterEndDate: LocalDate?
-    get() = date.plusDays(endDayOffset).takeIf { endDayOffset > 0 }
+    get() = date.addDays(endDayOffset).takeIf { endDayOffset > 0 }
 
 /** What the distance field holds. */
 sealed interface TypedDistance {
@@ -152,7 +156,7 @@ fun parseDistance(text: String, unit: DistanceUnit): TypedDistance {
     val typed = text.trim()
     if (typed.isEmpty()) return TypedDistance.Missing
     if (!DISTANCE_AS_TYPED.matches(typed)) return TypedDistance.NotANumber
-    return TypedDistance.Metres(metresOf(BigDecimal(typed.replace(',', '.')), unit))
+    return TypedDistance.Metres(metresOf(decimalOf(typed.replace(',', '.')), unit))
 }
 
 private val DISTANCE_AS_TYPED = Regex("""-?(\d{1,6}([.,]\d{0,3})?|[.,]\d{1,3})""")
@@ -177,7 +181,7 @@ fun TripForm.distance(stored: Trip?): TypedDistance {
     // not shown either, so nothing typed can be "the figure that was shown".
     val wasShown = storedMetres != null && storedMetres.isFinite() && storedMetres >= 0.0
     if (parsed is TypedDistance.Metres && storedMetres != null && wasShown) {
-        val shown = parseDistance(formatDistance(storedMetres, unit, Locale.ROOT), unit)
+        val shown = parseDistance(formatDistance(storedMetres, unit, rootLocale), unit)
         if (parsed == shown) return TypedDistance.Metres(storedMetres)
     }
     return parsed

@@ -76,6 +76,16 @@ final class TripsModel: ObservableObject {
         await load()
     }
 
+    /// The edit form for [trip], or nil if it cannot be edited (any more).
+    func editor(for trip: TripText) async -> TripEditor? {
+        try? await core.tripEdit.open(tripId: trip.tripId)
+    }
+
+    /// The empty form for a trip Dually missed.
+    func blankEditor() async -> TripEditor? {
+        try? await core.tripEdit.blank()
+    }
+
     private func run(_ work: @escaping () async throws -> Void) async {
         do {
             try await work()

@@ -144,3 +144,13 @@ expect fun YearMonth.monthsLater(months: Long): YearMonth
 
 /** The month [year]-[month] (1 to 12). */
 expect fun yearMonthOf(year: Int, month: Int): YearMonth
+
+/**
+ * The moment the clock in [zone] shows [time] on [date] (2026-11-13, for the trip form both
+ * phones share). A time the clocks skip moves on by the jump. A time that happens twice is read
+ * on the side of the change [sameSideAsMs] is on, or as the first of the two without it.
+ */
+expect fun momentOf(date: LocalDate, time: LocalTime, zone: ZoneId, sameSideAsMs: Long?): Long
+
+/** The clock time in [zone] at [epochMs], to the minute. */
+expect fun minuteOf(epochMs: Long, zone: ZoneId): LocalTime

@@ -7,10 +7,12 @@ import SwiftUI
 // with the steps to make them and the check that each has run.
 struct SetupView: View {
     @ObservedObject var model: SetupModel
+    /// Back to where Setup was opened from.
+    let back: () -> Void
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
-        PinnedScreen(title: "Setup") {
+        PinnedScreen(title: "Setup", onBack: back) {
             if let screen = model.screen {
                 ReadyTile(screen: screen)
                 ForEach(Array(screen.rows.enumerated()), id: \.offset) { _, row in

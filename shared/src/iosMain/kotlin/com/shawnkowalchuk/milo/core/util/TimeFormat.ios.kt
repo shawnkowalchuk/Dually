@@ -106,6 +106,9 @@ actual fun formatMonthAndYear(month: YearMonth, locale: Locale): String =
 actual fun formatMonthName(month: YearMonth, locale: Locale): String =
     patterned(locale, "LLLL").stringFromDate(noonOf(month.firstDay()))
 
+actual fun formatShortMonthName(month: YearMonth, locale: Locale): String =
+    patterned(locale, "MMM").stringFromDate(noonOf(month.firstDay()))
+
 actual fun formatShortDay(date: LocalDate, locale: Locale): String =
     patterned(locale, "EEE, MMM d").stringFromDate(noonOf(date))
 

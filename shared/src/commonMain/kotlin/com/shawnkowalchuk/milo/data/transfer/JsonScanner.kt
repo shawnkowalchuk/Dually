@@ -1,6 +1,6 @@
 package com.shawnkowalchuk.milo.data.transfer
 
-import java.io.Reader
+import com.shawnkowalchuk.milo.core.io.Reader
 
 /** The text is not JSON a reader can follow: it ends too early, or something is out of place. */
 internal class BrokenJsonException(message: String) : Exception(message)

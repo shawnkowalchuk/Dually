@@ -1,10 +1,10 @@
 package com.shawnkowalchuk.milo.data.transfer
 
+import com.shawnkowalchuk.milo.core.io.Reader
 import com.shawnkowalchuk.milo.data.point.RawPoint
 import com.shawnkowalchuk.milo.data.report.SentReport
 import com.shawnkowalchuk.milo.data.settings.TransferredSettings
 import com.shawnkowalchuk.milo.data.trip.Trip
-import java.io.Reader
 import kotlinx.serialization.SerializationException
 
 /** Why a file cannot be imported. Nothing on the phone has been touched when one is found. */

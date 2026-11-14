@@ -17,6 +17,11 @@ import com.shawnkowalchuk.milo.core.report.ReportTrip
 import com.shawnkowalchuk.milo.core.report.VehicleOdometer
 import com.shawnkowalchuk.milo.core.report.reportDays
 import com.shawnkowalchuk.milo.core.report.wholeYear
+import com.shawnkowalchuk.milo.core.time.LocalDate
+import com.shawnkowalchuk.milo.core.time.ZoneId
+import com.shawnkowalchuk.milo.core.time.compareMonths
+import com.shawnkowalchuk.milo.core.time.yearMonth
+import com.shawnkowalchuk.milo.core.time.yearMonthOf
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.localDateOf
 import com.shawnkowalchuk.milo.core.util.sumOfTenths
@@ -24,7 +29,6 @@ import com.shawnkowalchuk.milo.data.report.ReportSelection
 import com.shawnkowalchuk.milo.data.report.SentReport
 import com.shawnkowalchuk.milo.data.report.nextRevision
 import com.shawnkowalchuk.milo.data.report.period
-import com.shawnkowalchuk.milo.data.report.removalEffect
 import com.shawnkowalchuk.milo.data.report.sentFor
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.settings.MissingDetail
@@ -32,13 +36,10 @@ import com.shawnkowalchuk.milo.data.settings.missingForPdf
 import com.shawnkowalchuk.milo.data.settings.missingForSending
 import com.shawnkowalchuk.milo.data.settings.pairedVehicles
 import com.shawnkowalchuk.milo.data.settings.vehicleNamed
-import java.time.LocalDate
-import java.time.Month
-import java.time.YearMonth
-import java.time.ZoneId
 
 // The report a press on the Report screen would make, and what each kind of press needs of the
-// settings first. Pure functions, so they are tested without a phone. They were part of
+// settings first. Pure functions, so they are tested without a phone. Shared by both phones
+// since 2026-11-13: the iPhone's report is made by them too. They were part of
 // ReportUiState.kt until that file reached its size limit (ENGINEERING_STANDARDS section 3).
 
 /**
@@ -118,12 +119,12 @@ private fun yearMonths(
     today: LocalDate,
 ): List<MonthTotal> {
     fun byMonth(trips: List<ReportTrip>) =
-        trips.groupBy { YearMonth.from(localDateOf(it.startedAtMs, zone)) }
+        trips.groupBy { localDateOf(it.startedAtMs, zone).yearMonth() }
     val business = byMonth(selection.trips)
     val personal = byMonth(selection.personalTrips)
-    return Month.entries.map { month ->
-        val yearMonth = YearMonth.of(year, month)
-        if (yearMonth > YearMonth.from(today)) {
+    return (1..MONTHS_IN_A_YEAR).map { month ->
+        val yearMonth = yearMonthOf(year, month)
+        if (compareMonths(yearMonth, today.yearMonth()) > 0) {
             MonthTotal(yearMonth, null, null)
         } else {
             MonthTotal(
@@ -194,13 +195,6 @@ private fun odometersOver(
     }
 }
 
-/** The question "Email the report" asks first, or null for a period never sent before. */
-fun resendOf(period: ReportPeriod, sent: List<SentReport>): Resend? {
-    val sentBefore = sentFor(period, sent)
-    val last = sentBefore.lastOrNull() ?: return null
-    return Resend(last = last.asLine(sent), revision = nextRevision(sentBefore))
-}
-
 /** What a press needs of the settings before it may make a file. */
 enum class ReportNeed {
     /** A CSV: nothing. It prints no name and goes wherever Shawn shares it. */
@@ -221,13 +215,4 @@ enum class ReportNeed {
     }
 }
 
-internal fun SentReport.asLine(sent: List<SentReport>): SentLine = SentLine(
-    id = id,
-    period = period,
-    sentAtMs = sentAtMs,
-    tripCount = tripCount,
-    distanceMetres = distanceMetres,
-    unit = distanceUnit,
-    revision = revision,
-    removal = removalEffect(this, sent),
-)
+private const val MONTHS_IN_A_YEAR = 12

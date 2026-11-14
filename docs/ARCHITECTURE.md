@@ -808,7 +808,11 @@ platform/trip/       # TripController, TripService, GPS recording, notifications
                      #   the same day the address lookup itself (TripAddresses,
                      #   AddressLookup, AddressLine, AddressLogText); Android's geocoder,
                      #   network check and TripAddressesOnAndroid stay in the app. Also
-                     #   since that day the driving alert's rules and log words
+                     #   since that day (phase 4g) the report's assembly
+                     #   (feature/report/ReportMaking.kt), its English words
+                     #   (core/report/EnglishReportWords.kt), and the export and import
+                     #   (data/transfer/DataExport, DataImport, ExportReader, JsonScanner,
+                     #   behind core/io/Reader). Also since that day the driving alert's rules and log words
                      #   (platform/driving/DrivingAlertRules.kt, DrivingLogText.kt) and
                      #   TruckReading (platform/bluetooth/TruckConnectionSource.kt)
 platform/party/      # the one-year party between the trip service and Home (2026-10-10):

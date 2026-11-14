@@ -1,10 +1,9 @@
 package com.shawnkowalchuk.milo.data.transfer
 
+import com.shawnkowalchuk.milo.core.io.IOException
+import com.shawnkowalchuk.milo.core.io.Reader
 import com.shawnkowalchuk.milo.core.trip.TripStatus
 import com.shawnkowalchuk.milo.data.eventlog.EventLogEntry
-import java.io.File
-import java.io.IOException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /** How much of Shawn's own data the phone holds now. The question before an import says it. */
@@ -30,9 +29,12 @@ data class StoredCounts(val trips: Int, val sentReports: Int)
  * the line that says an import was made.
  */
 class DataImport(private val main: MainTransferDao, private val points: PointsTransferDao) {
-    /** Reads and checks the whole of [file], and changes nothing. */
-    suspend fun check(file: File): ExportReading = withContext(Dispatchers.IO) {
-        readExport(open = { file.bufferedReader(Charsets.UTF_8) })
+    /**
+     * Reads and checks the whole file [open] opens, and changes nothing. Android opens its file
+     * (`check(File)` in the app); the iPhone its own.
+     */
+    suspend fun check(open: () -> Reader): ExportReading = withContext(transferDispatcher) {
+        readExport(open = open)
     }
 
     /** How many trips and sent reports an import would replace. */
@@ -75,15 +77,18 @@ class DataImport(private val main: MainTransferDao, private val points: PointsTr
     // beside points.db (points.db-wal), which SQLite reuses and never shrinks by itself. It
     // holds nothing that is not in the database, and the backup agent empties it the next
     // time Android collects a backup; until then it is disk space (FINDINGS_LOG, 2026-10-06).
-    suspend fun replacePoints(file: File, export: CheckedExport, highestTripId: Long): Long =
-        points.replaceUpToTrip(highestTripId) { store ->
-            if (export.pointCount == null) return@replaceUpToTrip
-            val read = readExport(open = { file.bufferedReader(Charsets.UTF_8) }, onPoints = store)
-            if (read != ExportReading.Good(export)) {
-                // Thrown inside the transaction, so the points stored so far are taken back.
-                throw IOException("The export file is no longer what was checked: $read")
-            }
+    suspend fun replacePoints(
+        open: () -> Reader,
+        export: CheckedExport,
+        highestTripId: Long,
+    ): Long = points.replaceUpToTrip(highestTripId) { store ->
+        if (export.pointCount == null) return@replaceUpToTrip
+        val read = readExport(open = open, onPoints = store)
+        if (read != ExportReading.Good(export)) {
+            // Thrown inside the transaction, so the points stored so far are taken back.
+            throw IOException("The export file is no longer what was checked: $read")
         }
+    }
 
     /**
      * Removes the raw points of every trip up to [highestTripId]: the way out when
