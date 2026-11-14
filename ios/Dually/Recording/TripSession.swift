@@ -1,5 +1,6 @@
 import DuallyShared
 import Foundation
+import UserNotifications
 import WidgetKit
 
 // The trip being recorded, for all of the iPhone app (phase 4d). Home's Start and End, the
@@ -21,6 +22,8 @@ final class TripSession: ObservableObject {
     /// The trip being recorded, or nil.
     @Published private(set) var recording: RecordingNow?
     @Published private(set) var failure: String?
+    /// A tap on the service reminder asked for Service; the app opens it and sets this back.
+    @Published var serviceAsked = false
 
     private init() {
         drivingWatch = DrivingWatch(core: core)
@@ -35,6 +38,7 @@ final class TripSession: ObservableObject {
         drivingWatch.onTap = { [weak self] in
             Task { await self?.startFromAlert() }
         }
+        drivingWatch.onServiceTap = { [weak self] in self?.serviceAsked = true }
         drivingWatch.arm()
     }
 
@@ -115,6 +119,17 @@ final class TripSession: ObservableObject {
         WidgetCenter.shared.reloadAllTimelines()
     }
 
+    /// The service reminder, as Android's: the items soon or due that were not told yet.
+    private func remindOfService() async {
+        guard let reminder = try? await core.service.reminder() else { return }
+        let content = UNMutableNotificationContent()
+        content.title = reminder.title
+        content.body = reminder.text
+        content.sound = .default
+        let request = UNNotificationRequest(identifier: DrivingWatch.serviceId, content: content, trigger: nil)
+        try? await UNUserNotificationCenter.current().add(request)
+    }
+
     private func add(_ fix: Fix) async {
         await apply {
             try await self.core.recorder.addFix(
@@ -131,6 +146,11 @@ final class TripSession: ObservableObject {
     /// One step of the recorder, then the GPS on or off as the trip rules now want it: on while a
     /// trip is open, and while they wait beside a parked truck for it to move.
     private func apply(_ step: @escaping () async throws -> RecordingNow?) async {
+        let wasRecording = recording != nil
+        defer {
+            // A trip has ended: the service items that came due are told now, never during one.
+            if wasRecording && recording == nil { Task { await self.remindOfService() } }
+        }
         do {
             recording = try await step()
             failure = nil

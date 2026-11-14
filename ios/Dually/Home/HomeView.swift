@@ -7,12 +7,15 @@ import SwiftUI
 struct HomeView: View {
     @StateObject private var model: HomeModel
     @ObservedObject var setup: SetupModel
+    @ObservedObject var service: ServiceModel
     let openSetup: () -> Void
     @Environment(\.scenePhase) private var scenePhase
+    @State private var finishing: AlertText?
 
-    init(session: TripSession, setup: SetupModel, openSetup: @escaping () -> Void) {
+    init(session: TripSession, setup: SetupModel, service: ServiceModel, openSetup: @escaping () -> Void) {
         _model = StateObject(wrappedValue: HomeModel(session: session))
         self.setup = setup
+        self.service = service
         self.openSetup = openSetup
     }
 
@@ -41,6 +44,13 @@ struct HomeView: View {
                     unit: model.unitWord
                 )
             }
+            // What service is soon or due, as Android's Home tiles: not while a trip records,
+            // when there is nothing to read while driving.
+            if model.recording == nil {
+                ForEach(service.text?.alerts ?? [], id: \.id) { alert in
+                    ServiceAlertTile(alert: alert) { finishing = alert }
+                }
+            }
             if let failure = model.failure ?? model.recordingFailure {
                 Text(failure)
                     .font(Typography.body(14))
@@ -50,17 +60,61 @@ struct HomeView: View {
         .task {
             setup.refresh()
             await model.refresh()
+            await service.load()
         }
         .onChange(of: scenePhase) { phase in
             if phase == .active {
                 setup.refresh()
-                Task { await model.cameToFront() }
+                Task {
+                    await model.cameToFront()
+                    await service.load()
+                }
             }
+        }
+        .onChange(of: model.recording == nil) { _ in Task { await service.load() } }
+        .confirmationDialog(
+            finishing?.doneTitle ?? "",
+            isPresented: Binding(get: { finishing != nil }, set: { if !$0 { finishing = nil } }),
+            titleVisibility: .visible,
+            presenting: finishing
+        ) { alert in
+            Button(serviceWords("home_service_done")) {
+                Task { await service.change { try await service.core.service.doneNow(id: alert.id) } }
+            }
+            Button(serviceWords("action_cancel"), role: .cancel) {}
+        } message: { _ in
+            Text(serviceWords("home_service_done_text"))
         }
     }
 
     private func tripCount(_ count: Int) -> String {
         count == 1 ? "1 trip" : "\(count) trips"
+    }
+}
+
+/// One service item that is soon or due: its name, its line, and Done, as Android's tile.
+private struct ServiceAlertTile: View {
+    let alert: AlertText
+    let done: () -> Void
+
+    var body: some View {
+        Tile {
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "wrench.and.screwdriver.fill")
+                    .foregroundStyle(Palette.amber)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(alert.name)
+                        .font(Typography.body(17, weight: .semibold))
+                        .foregroundStyle(Palette.text)
+                    Text(alert.line)
+                        .font(Typography.body(15))
+                        .foregroundStyle(Palette.amber)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            WideButton(title: serviceWords("home_service_done"), filled: true, action: done)
+        }
     }
 }
 

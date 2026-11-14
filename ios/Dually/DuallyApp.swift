@@ -8,6 +8,8 @@ struct DuallyApp: App {
     /// The trip being recorded and the shared code's door, one for the whole app (phase 4d).
     private let session = TripSession.shared
     @StateObject private var setup = SetupModel(session: TripSession.shared)
+    /// The service book, for Service and for Home's tiles of what is due.
+    @StateObject private var service = ServiceModel(core: TripSession.shared.core)
     @State private var tab = AppTab.home
     /// Where Setup was opened from: its way back leads there, and the bar keeps it lit.
     @State private var setupOpenedFrom = AppTab.settings
@@ -22,7 +24,7 @@ struct DuallyApp: App {
             // from Settings' first tile (and from Home's warning), with the way back in its top line.
             Group {
                 switch tab {
-                case .home: HomeView(session: session, setup: setup) { openSetup(from: .home) }
+                case .home: HomeView(session: session, setup: setup, service: service) { openSetup(from: .home) }
                 case .trips:
                     TripsView(core: session.core) { year, month in
                         reportMonth = (year, month)
@@ -39,6 +41,7 @@ struct DuallyApp: App {
                 case .settings:
                     SettingsView(core: session.core, setup: setup) { openSetup(from: .settings) }
                 case .setup: SetupView(model: setup) { tab = setupOpenedFrom }
+                case .service: ServiceView(model: service)
                 }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -46,12 +49,20 @@ struct DuallyApp: App {
                     entry(.home, "Home", "house.fill"),
                     entry(.trips, "Trips", "list.bullet"),
                     entry(.settings, "Settings", "slider.horizontal.3"),
+                    entry(.service, "Service", "wrench.and.screwdriver.fill"),
                 ])
                 .background(Palette.page.ignoresSafeArea())
             }
             .tint(Palette.accent)
             .preferredColorScheme(.dark)
             .task { await session.appStarted() }
+            // A tap on the service reminder opens Service, as on Android.
+            .onReceive(session.$serviceAsked) { asked in
+                if asked {
+                    tab = .service
+                    session.serviceAsked = false
+                }
+            }
         }
     }
 }
@@ -68,7 +79,7 @@ extension DuallyApp {
     }
 }
 
-/// The screens: the bar's three, Setup (opened from Settings or Home) and the report (from Trips).
+/// The screens: the bar's four, Setup (opened from Settings or Home) and the report (from Trips).
 enum AppTab: Hashable {
-    case home, trips, settings, setup, report
+    case home, trips, settings, service, setup, report
 }

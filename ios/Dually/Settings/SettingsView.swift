@@ -26,6 +26,7 @@ struct SettingsView: View {
                     UnitsTile(miles: text.miles) { Task { await model.setMiles(!text.miles) } }
                     DrivingAlertTile(on: text.drivingAlert) { on in Task { await model.setDrivingAlert(on) } }
                 }
+                OdometerTile(core: core, miles: text.miles)
                 ReportDetailsTile(text: text, model: model)
                 WorkHoursTile(text: text, model: model)
                 TripNumbersTile(text: text, model: model)
@@ -69,6 +70,90 @@ private struct SetupLinkTile: View {
             }
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// The truck's odometer, as Android's tile in Settings (2026-11-14 on the iPhone, for Service):
+/// the figure Dually works out from the last reading and the trips since, and the way to type a
+/// new reading. A reading is never changed: a new one is added beside it, with its date.
+private struct OdometerTile: View {
+    let core: DuallyCore
+    /// The unit chosen: the tile is read again when it changes.
+    let miles: Bool
+    @State private var text: OdometerText?
+    @State private var editing = false
+    @State private var typed = ""
+    @State private var refused = false
+    @State private var failed = false
+
+    var body: some View {
+        Tile {
+            if let text {
+                Text(text.title)
+                    .font(Typography.body(17, weight: .semibold))
+                    .foregroundStyle(Palette.text)
+                if let figure = text.figure {
+                    Text(figure)
+                        .font(Typography.display(28))
+                        .foregroundStyle(Palette.text)
+                }
+                Text(text.madeOf)
+                    .font(Typography.body(14))
+                    .foregroundStyle(Palette.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                if failed {
+                    Text(serviceWords("settings_could_not_save"))
+                        .font(Typography.body(14))
+                        .foregroundStyle(Palette.amber)
+                }
+                if editing {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(text.field)
+                            .font(Typography.body(13, weight: .semibold))
+                            .foregroundStyle(Palette.textSecondary)
+                        TextField(text.example, text: $typed)
+                            .keyboardType(.numberPad)
+                            .font(Typography.body(16))
+                            .padding(12)
+                            .background(Palette.controlFill, in: RoundedRectangle(cornerRadius: 12))
+                            .foregroundStyle(Palette.text)
+                            .accessibilityLabel(text.field)
+                    }
+                    if refused {
+                        Text(text.refused)
+                            .font(Typography.body(14))
+                            .foregroundStyle(Palette.amber)
+                    }
+                    HStack(spacing: 8) {
+                        WideButton(title: serviceWords("action_cancel"), filled: false) {
+                            editing = false
+                            refused = false
+                        }
+                        WideButton(title: text.save, filled: true) {
+                            Task { await save() }
+                        }
+                    }
+                } else {
+                    WideButton(title: text.button, filled: false) {
+                        typed = ""
+                        editing = true
+                    }
+                }
+            }
+        }
+        .task(id: miles) { text = try? await core.service.odometer() }
+    }
+
+    private func save() async {
+        guard core.service.isReading(typed: typed) else {
+            refused = true
+            return
+        }
+        let stored = (try? await core.service.saveReading(typed: typed))?.boolValue ?? false
+        failed = !stored
+        refused = false
+        editing = !stored
+        text = try? await core.service.odometer()
     }
 }
 

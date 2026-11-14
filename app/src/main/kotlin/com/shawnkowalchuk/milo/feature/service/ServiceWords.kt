@@ -16,26 +16,7 @@ import java.math.BigDecimal
 import java.time.ZoneId
 import java.util.Locale
 
-/** The most digits of whole dollars a cost may have: $999,999.99. */
-private const val MAX_DOLLAR_DIGITS = 6
 private const val CENT_DIGITS = 2
-
-/**
- * A cost as typed ("59.99", "$1,200", "80"), in cents, or null if it is not one. Commas and
- * spaces between the digits are allowed; at most two decimals, and up to $999,999.99.
- */
-internal fun parseCost(typed: String): Long? {
-    val bare = typed.trim().removePrefix("$").filterNot { it == ',' || it.isWhitespace() }
-    val whole = bare.substringBefore('.')
-    val fraction = bare.substringAfter('.', missingDelimiterValue = "")
-    val wellFormed =
-        whole.length in 1..MAX_DOLLAR_DIGITS &&
-            fraction.length <= CENT_DIGITS &&
-            (whole + fraction).all { it in '0'..'9' }
-    if (!wellFormed) return null
-    return BigDecimal("$whole.${fraction.padEnd(CENT_DIGITS, '0')}").movePointRight(CENT_DIGITS)
-        .longValueExact()
-}
 
 /** A cost in cents as dollars: "$59.99". */
 internal fun formatCost(cents: Long, locale: Locale): String =

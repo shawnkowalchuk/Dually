@@ -67,6 +67,8 @@ class DuallyCore private constructor(
     val widget: IosWidget,
     /** The edit screen: a trip's times, addresses and distance by hand, or a missed trip. */
     val tripEdit: IosTripEdit,
+    /** The Service screen, Home's service tiles and Settings' odometer (2026-11-14). */
+    val service: IosService,
     private val shownUnit: ShownUnit,
 ) {
     /** "km" or "mi", as Settings has it now: every distance the iPhone writes follows it. */
@@ -260,6 +262,15 @@ class DuallyCore private constructor(
                     zone = ::systemZoneId,
                     locale = ::phoneLocale,
                     clock = clock,
+                ),
+                IosService(
+                    settings = settings,
+                    trips = tripRepository,
+                    recorder = recorder,
+                    eventLog = eventLog,
+                    clock = clock,
+                    zone = ::systemZoneId,
+                    locale = ::phoneLocale,
                 ),
                 shownUnit,
             )
