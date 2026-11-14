@@ -12,21 +12,33 @@ struct DuallyApp: App {
 
     var body: some Scene {
         WindowGroup {
-            TabView(selection: $tab) {
-                HomeView(session: session, setup: setup) { tab = .setup }
-                    .tabItem { Label("Home", systemImage: "house.fill") }
-                    .tag(AppTab.home)
-                TripsView(core: session.core)
-                    .tabItem { Label("Trips", systemImage: "list.bullet") }
-                    .tag(AppTab.trips)
-                SetupView(model: setup)
-                    .tabItem { Label("Setup", systemImage: "checklist") }
-                    .tag(AppTab.setup)
+            // Android's bottom bar, not iOS's tab bar (Shawn, 2026-11-13: "the app need to be more
+            // matching the andorids interface"): one screen at a time over the floating bar.
+            Group {
+                switch tab {
+                case .home: HomeView(session: session, setup: setup) { tab = .setup }
+                case .trips: TripsView(core: session.core)
+                case .setup: SetupView(model: setup)
+                }
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                BottomBar(entries: [
+                    entry(.home, "Home", "house.fill"),
+                    entry(.trips, "Trips", "list.bullet"),
+                    entry(.setup, "Setup", "checklist"),
+                ])
+                .background(Palette.page.ignoresSafeArea())
             }
             .tint(Palette.accent)
             .preferredColorScheme(.dark)
             .task { await session.appStarted() }
         }
+    }
+}
+
+extension DuallyApp {
+    private func entry(_ which: AppTab, _ label: String, _ systemImage: String) -> BottomBarEntry {
+        BottomBarEntry(label: label, systemImage: systemImage, selected: tab == which) { tab = which }
     }
 }
 
