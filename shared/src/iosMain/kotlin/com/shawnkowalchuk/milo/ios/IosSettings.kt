@@ -17,6 +17,9 @@ import com.shawnkowalchuk.milo.data.settings.MINIMUM_TRIP_DISTANCE_CHOICE
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.settings.PARKED_LIMIT_CHOICE
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
+import com.shawnkowalchuk.milo.data.settings.isEmailAddress
+import com.shawnkowalchuk.milo.data.settings.isReportText
+import com.shawnkowalchuk.milo.data.settings.reportTextOrNull
 import com.shawnkowalchuk.milo.data.settings.setDistanceAdjustSteps
 import com.shawnkowalchuk.milo.data.settings.setDistanceUnit
 import com.shawnkowalchuk.milo.data.settings.setParkedLimitSeconds
@@ -92,6 +95,44 @@ class IosSettings internal constructor(
         return stored
     }
 
+    /**
+     * One of the report's details as it is typed (phase 4g, second part), stored as Android
+     * stores it: trimmed, forgotten when emptied, refused past 80 characters. [field] is
+     * "name", "company" or "vehicle". Returns false, storing nothing, for a refused text.
+     */
+    suspend fun setReportText(field: String, typed: String): Boolean {
+        val text = reportTextOrNull(typed)
+        if (text != null && !isReportText(text)) return false
+        when (field) {
+            "name" -> settings.setReportName(text)
+            "company" -> settings.setReportCompany(text)
+            "vehicle" -> settings.setReportVehicle(text)
+            else -> return false
+        }
+        return true
+    }
+
+    /**
+     * The accountant's address, stored only once it is a whole address, as on Android; an
+     * emptied field forgets it. Returns false while what is typed is not one yet.
+     */
+    suspend fun setAccountantEmail(typed: String): Boolean {
+        val text = typed.trim()
+        return when {
+            text.isEmpty() -> {
+                settings.setAccountantEmail(null)
+                true
+            }
+
+            isEmailAddress(text) -> {
+                settings.setAccountantEmail(text)
+                true
+            }
+
+            else -> false
+        }
+    }
+
     private suspend fun change(work: suspend (MiloSettings) -> Unit): SettingsText {
         work(settings.current())
         return read()
@@ -114,6 +155,10 @@ class IosSettings internal constructor(
                 (day.end.secondsIntoDay() - day.start.secondsIntoDay()) / SECONDS_PER_MINUTE
             }
         return SettingsText(
+            reportName = now.reportName.orEmpty(),
+            reportCompany = now.reportCompany.orEmpty(),
+            reportVehicle = now.reportVehicle.orEmpty(),
+            accountantEmail = now.accountantEmail.orEmpty(),
             miles = unit == DistanceUnit.MILES,
             drivingAlert = now.drivingAlertEnabled,
             days =
@@ -194,6 +239,11 @@ data class WorkDayText(val name: String, val tracked: Boolean)
 
 /** The Settings screen's values, worded, and which steps are left. */
 data class SettingsText(
+    /** The report's details, as stored ("" for none). */
+    val reportName: String,
+    val reportCompany: String,
+    val reportVehicle: String,
+    val accountantEmail: String,
     val miles: Boolean,
     val drivingAlert: Boolean,
     /** Monday first. */

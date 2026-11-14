@@ -78,6 +78,8 @@ internal class RecorderWorld {
         return lines.sortedBy { it.atMs }
     }
 
+    fun sentReportDao() = database.sentReportDao()
+
     fun close() {
         database.close()
         points.close()

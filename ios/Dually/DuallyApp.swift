@@ -11,6 +11,8 @@ struct DuallyApp: App {
     @State private var tab = AppTab.home
     /// Where Setup was opened from: its way back leads there, and the bar keeps it lit.
     @State private var setupOpenedFrom = AppTab.settings
+    /// The month the report was opened for, from Trips.
+    @State private var reportMonth = (year: 2026, month: 1)
 
     var body: some Scene {
         WindowGroup {
@@ -21,7 +23,19 @@ struct DuallyApp: App {
             Group {
                 switch tab {
                 case .home: HomeView(session: session, setup: setup) { openSetup(from: .home) }
-                case .trips: TripsView(core: session.core)
+                case .trips:
+                    TripsView(core: session.core) { year, month in
+                        reportMonth = (year, month)
+                        tab = .report
+                    }
+                case .report:
+                    ReportView(
+                        core: session.core,
+                        year: reportMonth.year,
+                        month: reportMonth.month,
+                        back: { tab = .trips },
+                        openSettings: { tab = .settings }
+                    )
                 case .settings:
                     SettingsView(core: session.core, setup: setup) { openSetup(from: .settings) }
                 case .setup: SetupView(model: setup) { tab = setupOpenedFrom }
@@ -44,7 +58,7 @@ struct DuallyApp: App {
 
 extension DuallyApp {
     private func entry(_ which: AppTab, _ label: String, _ systemImage: String) -> BottomBarEntry {
-        let lit = tab == which || (tab == .setup && setupOpenedFrom == which)
+        let lit = tab == which || (tab == .setup && setupOpenedFrom == which) || (tab == .report && which == .trips)
         return BottomBarEntry(label: label, systemImage: systemImage, selected: lit) { tab = which }
     }
 
@@ -54,7 +68,7 @@ extension DuallyApp {
     }
 }
 
-/// The screens: the bar's three, and Setup, opened from Settings or Home.
+/// The screens: the bar's three, Setup (opened from Settings or Home) and the report (from Trips).
 enum AppTab: Hashable {
-    case home, trips, settings, setup
+    case home, trips, settings, setup, report
 }

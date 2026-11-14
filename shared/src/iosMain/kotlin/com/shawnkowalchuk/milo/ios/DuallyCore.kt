@@ -15,6 +15,7 @@ import com.shawnkowalchuk.milo.data.buildMiloDatabase
 import com.shawnkowalchuk.milo.data.buildPointsDatabase
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.point.RawPointRepository
+import com.shawnkowalchuk.milo.data.report.SentReportRepository
 import com.shawnkowalchuk.milo.data.settings.ShownUnit
 import com.shawnkowalchuk.milo.data.settings.buildSettingsStore
 import com.shawnkowalchuk.milo.data.settings.buildShownUnit
@@ -54,6 +55,8 @@ class DuallyCore private constructor(
     val drivingAlert: IosDrivingAlert,
     /** The Settings screen (phase 4g). */
     val settings: IosSettings,
+    /** The report for the accountant (phase 4g). */
+    val report: IosReport,
     private val shownUnit: ShownUnit,
 ) {
     /** "km" or "mi", as Settings has it now: every distance the iPhone writes follows it. */
@@ -215,6 +218,15 @@ class DuallyCore private constructor(
                 truck,
                 drivingAlert,
                 IosSettings(settings, ::phoneLocale),
+                IosReport(
+                    trips = tripRepository,
+                    sent = SentReportRepository(database.sentReportDao()),
+                    settings = settings,
+                    eventLog = eventLog,
+                    zone = ::systemZoneId,
+                    locale = ::phoneLocale,
+                    clock = clock,
+                ),
                 shownUnit,
             )
         }

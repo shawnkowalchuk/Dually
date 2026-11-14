@@ -43,6 +43,16 @@ final class SettingsModel: ObservableObject {
         await load()
     }
 
+    /// One of the report's details, stored as it is typed ("name", "company", "vehicle").
+    func setReportText(_ field: String, _ typed: String) async {
+        _ = try? await core.settings.setReportText(field: field, typed: typed)
+    }
+
+    /// The accountant's address: stored once it is a whole address. Returns whether it was.
+    func setAccountantEmail(_ typed: String) async -> Bool {
+        (try? await core.settings.setAccountantEmail(typed: typed))?.boolValue ?? false
+    }
+
     private func apply(_ change: @escaping () async throws -> SettingsText) async {
         if let changed = try? await change() { text = changed }
     }

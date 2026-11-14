@@ -23,6 +23,7 @@ struct SettingsView: View {
                     UnitsTile(miles: text.miles) { Task { await model.setMiles(!text.miles) } }
                     DrivingAlertTile(on: text.drivingAlert) { on in Task { await model.setDrivingAlert(on) } }
                 }
+                ReportDetailsTile(text: text, model: model)
                 WorkHoursTile(text: text, model: model)
                 TripNumbersTile(text: text, model: model)
             }
@@ -264,5 +265,74 @@ private struct TripNumbersTile: View {
                 .font(Typography.body(13))
                 .foregroundStyle(Palette.textSecondary)
         }
+    }
+}
+
+/// The report's details, as Android's "Report for the accountant" tile: each stored as it is
+/// typed; the address only once it is a whole one, outlined in amber until then.
+private struct ReportDetailsTile: View {
+    let text: SettingsText
+    @ObservedObject var model: SettingsModel
+    @State private var name = ""
+    @State private var company = ""
+    @State private var vehicle = ""
+    @State private var email = ""
+    @State private var emailRefused = false
+    @State private var loaded = false
+
+    var body: some View {
+        Tile {
+            Text("Report for the accountant")
+                .font(Typography.body(17, weight: .semibold))
+                .foregroundStyle(Palette.text)
+            field("Your name", "[Your name]", $name) { typed in Task { await model.setReportText("name", typed) } }
+            field("Company", "[Company]", $company) { typed in Task { await model.setReportText("company", typed) } }
+            field("Vehicle", "Make, model and plate", $vehicle) { typed in Task { await model.setReportText("vehicle", typed) } }
+            field("Accountant's email address", "name@example.com", $email, email: true) { typed in
+                Task { emailRefused = !(await model.setAccountantEmail(typed)) }
+            }
+            if emailRefused {
+                Text("Not saved: this is not a complete email address. It has to look like name@example.com, with nothing else in the field.")
+                    .font(Typography.body(13))
+                    .foregroundStyle(Palette.amber)
+            }
+            Text("A report cannot be made without your name, or emailed without the address. Company and vehicle can be left empty, and are then left off the report.")
+                .font(Typography.body(13))
+                .foregroundStyle(Palette.textSecondary)
+        }
+        .onAppear {
+            guard !loaded else { return }
+            loaded = true
+            name = text.reportName
+            company = text.reportCompany
+            vehicle = text.reportVehicle
+            email = text.accountantEmail
+        }
+    }
+
+    private func field(
+        _ label: String,
+        _ example: String,
+        _ value: Binding<String>,
+        email: Bool = false,
+        changed: @escaping (String) -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label).font(Typography.body(13)).foregroundStyle(Palette.textSecondary)
+            TextField(example, text: value)
+                .font(Typography.body(16))
+                .foregroundStyle(Palette.text)
+                .padding(10)
+                .background(Palette.controlFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(email && emailRefused ? Palette.amber : .clear, lineWidth: 1.5)
+                )
+                .keyboardType(email ? .emailAddress : .default)
+                .textInputAutocapitalization(email ? .never : .words)
+                .autocorrectionDisabled(email)
+                .onChange(of: value.wrappedValue) { changed($0) }
+        }
+        .padding(.top, 4)
     }
 }

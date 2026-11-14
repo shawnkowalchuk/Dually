@@ -9,7 +9,11 @@ struct TripsView: View {
     @State private var chosen: TripText?
     @Environment(\.scenePhase) private var scenePhase
 
-    init(core: DuallyCore) {
+    /// Opens the report for the accountant for a month: (year, month 1 to 12).
+    let openReport: (Int, Int) -> Void
+
+    init(core: DuallyCore, openReport: @escaping (Int, Int) -> Void) {
+        self.openReport = openReport
         _model = StateObject(wrappedValue: TripsModel(core: core))
     }
 
@@ -18,6 +22,9 @@ struct TripsView: View {
             MonthHeader(model: model)
             if let month = model.month {
                 MonthTotals(month: month)
+            WideButton(title: "Report for the accountant", filled: false) {
+                openReport(model.year, model.monthNumber)
+            }
                 if let live = month.inProgress {
                     TripRow(trip: live, recording: true)
                 }
