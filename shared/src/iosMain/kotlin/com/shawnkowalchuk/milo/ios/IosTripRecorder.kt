@@ -72,6 +72,9 @@ class IosTripRecorder internal constructor(
     /** Start on the home-screen widget (phase 4i): a trip started by hand, as Android's widget. */
     suspend fun startFromWidget(): RecordingNow? = startByHand("Start on the home-screen widget")
 
+    /** Start trip on the CarPlay screen (phase 4f), as Android Auto's Start button. */
+    suspend fun startFromCar(): RecordingNow? = startByHand("Start trip on the CarPlay screen")
+
     private suspend fun startByHand(source: String): RecordingNow? = lock.withLock {
         val atMs = clock()
         advance(source, TripEvent.ManualStart(truck.connected, atMs))
@@ -108,6 +111,9 @@ class IosTripRecorder internal constructor(
      * the event log, as Android tells its phone's and its car's buttons apart.
      */
     suspend fun endFromLiveActivity(): RecordingNow? = endByHand("End trip on the Live Activity")
+
+    /** End trip on the CarPlay screen (phase 4f), as Android Auto's End button. */
+    suspend fun endFromCar(): RecordingNow? = endByHand("End trip on the CarPlay screen")
 
     private suspend fun endByHand(source: String): RecordingNow? = lock.withLock {
         val atMs = clock()
@@ -190,6 +196,15 @@ class IosTripRecorder internal constructor(
         pickUp()
         checkIfDue()
         snapshot()
+    }
+
+    /**
+     * Whether the trip rules wait beside the parked truck for it to move, as Android's
+     * "Truck parked. A trip starts when it moves" on the car screen says (CarPlay, 2026-11-14).
+     */
+    suspend fun parkedWaiting(): Boolean = lock.withLock {
+        pickUp()
+        known?.waitingToMove == true
     }
 
     /**

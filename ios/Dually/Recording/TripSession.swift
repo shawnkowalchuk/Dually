@@ -81,6 +81,16 @@ final class TripSession: ObservableObject {
         await apply { try await self.core.recorder.end() }
     }
 
+    /// Start trip on the CarPlay screen (phase 4f).
+    func startFromCar() async {
+        await apply { try await self.core.recorder.startFromCar() }
+    }
+
+    /// End trip on the CarPlay screen (phase 4f).
+    func endFromCar() async {
+        await apply { try await self.core.recorder.endFromCar() }
+    }
+
     /// End trip on the Live Activity.
     func endFromLiveActivity() async {
         await apply { try await self.core.recorder.endFromLiveActivity() }

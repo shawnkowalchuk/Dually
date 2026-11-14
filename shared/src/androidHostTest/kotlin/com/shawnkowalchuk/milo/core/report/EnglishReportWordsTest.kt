@@ -1,5 +1,6 @@
 package com.shawnkowalchuk.milo.core.report
 
+import com.shawnkowalchuk.milo.feature.car.ENGLISH_CAR_STRINGS
 import com.shawnkowalchuk.milo.feature.service.ENGLISH_SERVICE_PLURALS
 import com.shawnkowalchuk.milo.feature.service.ENGLISH_SERVICE_STRINGS
 import com.shawnkowalchuk.milo.feature.tripedit.ENGLISH_FORM_STRINGS
@@ -32,7 +33,9 @@ class EnglishReportWordsTest {
                 it.getAttribute("name") to
                     it.textContent
             }
-        val copies = ENGLISH_REPORT_STRINGS + ENGLISH_FORM_STRINGS + ENGLISH_SERVICE_STRINGS
+        val copies =
+            ENGLISH_REPORT_STRINGS + ENGLISH_FORM_STRINGS + ENGLISH_SERVICE_STRINGS +
+                ENGLISH_CAR_STRINGS
         for ((name, english) in copies) {
             assertEquals(strings[name], english, "the string $name")
         }
