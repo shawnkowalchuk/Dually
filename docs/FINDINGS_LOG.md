@@ -26,6 +26,9 @@
 
 ### 2026-11-14
 
+**`[CHANGE]` TestFlight build 4: Service and CarPlay** (APP_ENCYCLOPEDIA, iPhone app; ARCHITECTURE §5)
+Archived from PR #151's branch (Service from #150 under it) and uploaded at 09:49 ("Upload succeeded"); Apple's processing can still refuse it by email to the developer account. In it: Service with Home's tiles, the reminder and the odometer, and CarPlay. The repository now says build 5 for the next upload.
+
 **`[CHANGE]` CarPlay on the iPhone: Android Auto's screen (phase 4f)** (APP_ENCYCLOPEDIA, iPhone app; ADR-014)
 Shawn: "you allready made the carplay request and it was excepted" (Apple granted it on 2026-11-12) and "keep building all other phases". Android Auto's one screen on the truck's CarPlay display, with its words: "This trip" with the status, Business or Personal, distance and time; "Business" with today, the month and the odometer or the dollars; Start trip or End trip, and Make Personal or Make Business while a trip records. `IosCar` (iosMain) builds it from the shared rules and words (`EnglishCarWords.kt`); `CarPlayScene.swift` draws it in Apple's information template, one of those the Driving Task category may use, and redraws it every 15 seconds and when a trip starts or ends. The app declares a CarPlay scene in `Info.plist` (the generated scene manifest is off for that) and the entitlement `com.apple.developer.carplay-driving-task`; automatic signing takes the permission from the App ID. The phone screens open as before with the scene manifest in place.
 - `[FINDING]` The simulator's CarPlay window could not be checked: opening it needs control of the Simulator app, which was declined on the Mac. The screen is unseen until the truck, on TestFlight build 4.
