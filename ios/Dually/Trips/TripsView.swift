@@ -3,10 +3,12 @@ import SwiftUI
 
 // The Trips screen on the iPhone (phase 4c): one month at a time, its Business and Personal
 // totals, and each day's trips, newest first, as Android's Trips screen lists them. A trip opens
-// a sheet to mark it Business or Personal, label it, or delete it.
+// a sheet to mark it Business or Personal, label it, edit it, or delete it; a trip Dually missed is
+// added by hand from here, as on Android.
 struct TripsView: View {
     @StateObject private var model: TripsModel
     @State private var chosen: TripText?
+    @State private var addingMissed = false
     @Environment(\.scenePhase) private var scenePhase
 
     /// Opens the report for the accountant for a month: (year, month 1 to 12).
@@ -22,9 +24,12 @@ struct TripsView: View {
             MonthHeader(model: model)
             if let month = model.month {
                 MonthTotals(month: month)
-            WideButton(title: "Report for the accountant", filled: false) {
-                openReport(model.year, model.monthNumber)
-            }
+                WideButton(title: "Report for the accountant", filled: false) {
+                    openReport(model.year, model.monthNumber)
+                }
+                WideButton(title: EnglishFormWordsKt.englishFormText(name: "trip_add_title"), filled: false) {
+                    addingMissed = true
+                }
                 if let live = month.inProgress {
                     TripRow(trip: live, recording: true)
                 }
@@ -70,6 +75,12 @@ struct TripsView: View {
         }
         .sheet(item: Binding(get: { chosen.map(ChosenTrip.init) }, set: { chosen = $0?.trip })) { item in
             TripSheet(trip: item.trip, model: model) { chosen = nil }
+        }
+        .sheet(isPresented: $addingMissed) {
+            TripEditSheet(load: { await model.blankEditor() }) { saved in
+                addingMissed = false
+                if saved { Task { await model.load() } }
+            }
         }
     }
 }

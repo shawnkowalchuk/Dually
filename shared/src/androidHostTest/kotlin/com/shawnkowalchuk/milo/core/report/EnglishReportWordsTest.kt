@@ -1,5 +1,6 @@
 package com.shawnkowalchuk.milo.core.report
 
+import com.shawnkowalchuk.milo.feature.tripedit.ENGLISH_FORM_STRINGS
 import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 import kotlin.test.Test
@@ -29,7 +30,7 @@ class EnglishReportWordsTest {
                 it.getAttribute("name") to
                     it.textContent
             }
-        for ((name, english) in ENGLISH_REPORT_STRINGS) {
+        for ((name, english) in ENGLISH_REPORT_STRINGS + ENGLISH_FORM_STRINGS) {
             assertEquals(strings[name], english, "the string $name")
         }
     }

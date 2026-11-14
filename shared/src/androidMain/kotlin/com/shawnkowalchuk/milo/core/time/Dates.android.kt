@@ -110,3 +110,16 @@ actual fun formatTimeWithSeconds(epochMs: Long, zone: ZoneId): String =
 actual fun YearMonth.monthsLater(months: Long): YearMonth = plusMonths(months)
 
 actual fun yearMonthOf(year: Int, month: Int): YearMonth = YearMonth.of(year, month)
+
+actual fun momentOf(date: LocalDate, time: LocalTime, zone: ZoneId, sameSideAsMs: Long?): Long {
+    val preferred = sameSideAsMs?.let { java.time.Instant.ofEpochMilli(it).atZone(zone).offset }
+    return java.time.ZonedDateTime.ofLocal(
+        date.atTime(time),
+        zone,
+        preferred,
+    ).toInstant().toEpochMilli()
+}
+
+actual fun minuteOf(epochMs: Long, zone: ZoneId): LocalTime =
+    java.time.Instant.ofEpochMilli(epochMs).atZone(zone).toLocalTime()
+        .truncatedTo(java.time.temporal.ChronoUnit.MINUTES)

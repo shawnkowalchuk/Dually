@@ -147,7 +147,7 @@ internal fun localDateTimeOf(epochMs: Long, zone: ZoneId): LocalDateTime =
  * twice (fall back) is the first of the two. Offsets are read a day either side, so a zone
  * that changed its clocks twice within two days would be read wrong; none does.
  */
-internal fun epochMsOf(local: LocalDateTime, zone: ZoneId): Long {
+internal fun epochMsOf(local: LocalDateTime, zone: ZoneId, sameSideAsMs: Long? = null): Long {
     val wallMs = local.toInstant(TimeZone.UTC).toEpochMilliseconds()
     val before = zone.offsetSecondsAt(wallMs - DAY_MS)
     val after = zone.offsetSecondsAt(wallMs + DAY_MS)
@@ -158,7 +158,19 @@ internal fun epochMsOf(local: LocalDateTime, zone: ZoneId): Long {
             .filter { moment ->
                 wallMs - zone.offsetSecondsAt(moment) * MS_PER_SECOND_LONG == moment
             }
-    return moments.minOrNull() ?: (wallMs - before * MS_PER_SECOND_LONG)
+    // A time that happens twice: the one with the offset [sameSideAsMs] has, as java.time's
+    // ZonedDateTime.ofLocal with a preferred offset.
+    val preferred = sameSideAsMs?.let { zone.offsetSecondsAt(it) }
+    val onSameSide = moments.firstOrNull { zone.offsetSecondsAt(it) == preferred }
+    return onSameSide ?: moments.minOrNull() ?: (wallMs - before * MS_PER_SECOND_LONG)
+}
+
+actual fun momentOf(date: LocalDate, time: LocalTime, zone: ZoneId, sameSideAsMs: Long?): Long =
+    epochMsOf(LocalDateTime(date, time), zone, sameSideAsMs)
+
+actual fun minuteOf(epochMs: Long, zone: ZoneId): LocalTime {
+    val time = localDateTimeOf(epochMs, zone).time
+    return LocalTime(time.hour, time.minute)
 }
 
 private const val MS_PER_SECOND_LONG = 1000L

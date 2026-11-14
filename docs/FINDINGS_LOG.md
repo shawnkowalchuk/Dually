@@ -26,6 +26,14 @@
 
 ### 2026-11-13
 
+**`[CHANGE]` Editing trips on the iPhone, and adding a missed one** (ADR-014; APP_ENCYCLOPEDIA, iPhone app)
+Part of Shawn's bundle ("4g and everything after it").
+- **Android's form, moved and not copied.** `TripForm`, `formProblems`, `TripEditing` and the "who chose Business or Personal" logic (`EditSession`, `KindSource`, `kindShown`) are in `:shared`, package unchanged; Android's edit screen runs on them as before. Their java.time calls became the shared `momentOf` and `minuteOf`. The iPhone's door is `IosTripEdit`: Swift hands over what its pickers and fields hold (`EditFields`) and gets back words to show.
+- **A field that still shows what it opened with is sent as untouched,** as Android's form keeps it null: the stored distance stays exact to the metre, and an address stored with a line break is not rewritten by being shown.
+- **The iPhone reads a day in the Gregorian calendar in the phone's zone,** whatever calendar the phone shows; the shared code's days are Gregorian.
+- **The words** are Android's strings, copied into `EnglishFormWords.kt` and held to strings.xml by the drift test (`EnglishReportWordsTest`), as the report's are.
+- Android's view model needed one change: a smart cast on `session.stored` is not allowed across modules, so it reads it into a local first.
+
 **`[CHANGE]` Phase 4i: the iPhone's home-screen widget** (APP_ENCYCLOPEDIA, iPhone app)
 Part of Shawn's bundle ("4g and everything after it").
 - **In the extension that draws the Live Activity** (`DuallyLiveActivity`), not a new target: its widget bundle now holds both. Its figures come from the app through an App Group, `group.top.dually.triptracker`, added to both targets' entitlements (`CODE_SIGN_ENTITLEMENTS`; Xcode's automatic signing registers the group). The dollars are the shared allowance code's (`IosWidget`); a shared `formatShortMonthName` ("Nov") replaced Android's own DateTimeFormatter call in `HomeWidgetContent`, the same words.

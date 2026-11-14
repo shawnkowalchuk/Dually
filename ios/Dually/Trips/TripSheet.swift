@@ -1,8 +1,9 @@
 import DuallyShared
 import SwiftUI
 
-// What can be done with one trip (phase 4c): mark it Business or Personal, give it a label, and
-// delete it (or restore or count it), each through the shared code as on Android.
+// What can be done with one trip (phase 4c): mark it Business or Personal, give it a label, change
+// its times, places and distance (the edit sheet, 2026-11-13), and delete it (or restore or count
+// it), each through the shared code as on Android.
 struct TripSheet: View {
     let trip: TripText
     @ObservedObject var model: TripsModel
@@ -11,6 +12,7 @@ struct TripSheet: View {
     @State private var label: String
     @State private var choices: [String] = []
     @State private var askingToDelete = false
+    @State private var editing = false
 
     init(trip: TripText, model: TripsModel, onClose: @escaping () -> Void) {
         self.trip = trip
@@ -81,6 +83,11 @@ struct TripSheet: View {
                             }
                         }
                     }
+                    if trip.canEdit {
+                        WideButton(title: EnglishFormWordsKt.englishFormText(name: "trip_edit_title"), filled: false) {
+                            editing = true
+                        }
+                    }
                     if let words = trip.correctionWords {
                         WideButton(title: words, filled: false) {
                             if trip.correction == "DELETE" {
@@ -105,6 +112,15 @@ struct TripSheet: View {
                 }
             } message: {
                 Text("It leaves the list and the month's total. It is not destroyed: switch on \"Show deleted and discarded\" to see it again and restore it.")
+            }
+        }
+        .sheet(isPresented: $editing) {
+            TripEditSheet(load: { await model.editor(for: trip) }) { saved in
+                editing = false
+                if saved {
+                    Task { await model.load() }
+                    onClose()
+                }
             }
         }
         .presentationDetents([.medium, .large])

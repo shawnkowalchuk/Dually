@@ -24,6 +24,7 @@ import com.shawnkowalchuk.milo.data.transfer.DataImport
 import com.shawnkowalchuk.milo.data.trip.TripCorrections
 import com.shawnkowalchuk.milo.data.trip.TripRepository
 import com.shawnkowalchuk.milo.data.trip.categoryTotals
+import com.shawnkowalchuk.milo.feature.tripedit.TripEditing
 import com.shawnkowalchuk.milo.platform.address.TripAddresses
 import com.shawnkowalchuk.milo.platform.trip.TripLedger
 import com.shawnkowalchuk.milo.platform.trip.TripRuleSettings
@@ -64,6 +65,8 @@ class DuallyCore private constructor(
     val transfer: IosTransfer,
     /** The home-screen widget's figures (phase 4i). */
     val widget: IosWidget,
+    /** The edit screen: a trip's times, addresses and distance by hand, or a missed trip. */
+    val tripEdit: IosTripEdit,
     private val shownUnit: ShownUnit,
 ) {
     /** "km" or "mi", as Settings has it now: every distance the iPhone writes follows it. */
@@ -251,6 +254,13 @@ class DuallyCore private constructor(
                     clock = clock,
                 ),
                 IosWidget(tripRepository, settings, ::systemZoneId, ::phoneLocale),
+                IosTripEdit(
+                    editing = TripEditing(tripRepository, settings, eventLog, clock),
+                    unit = { shownUnit.unit.value },
+                    zone = ::systemZoneId,
+                    locale = ::phoneLocale,
+                    clock = clock,
+                ),
                 shownUnit,
             )
         }

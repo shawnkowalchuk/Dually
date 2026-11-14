@@ -1,10 +1,10 @@
 package com.shawnkowalchuk.milo.feature.tripedit
 
+import com.shawnkowalchuk.milo.core.time.ZoneId
 import com.shawnkowalchuk.milo.core.trip.MAX_SPEED_KMH
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.wholeUnitsBelow
 import com.shawnkowalchuk.milo.data.trip.Trip
-import java.time.ZoneId
 
 // What stops a form from being saved. A pure function, so every rule is tested without a phone.
 // The form is the last point before a typed value becomes a line on the report accounts reads,

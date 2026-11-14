@@ -106,6 +106,7 @@ class IosTrips internal constructor(
                     TripKind.IN_PROGRESS -> null
                 },
             canLabel = line.kind == TripKind.COUNTED,
+            canEdit = line.editable,
             unit = unitWord(unit),
         )
         return MonthText(
@@ -282,6 +283,8 @@ data class TripText(
     /** Its words on the button: "Delete", "Restore", "Count it". */
     val correctionWords: String?,
     val canLabel: Boolean,
+    /** A finished trip: its times, addresses and distance can be changed by hand. */
+    val canEdit: Boolean,
     /** "km" or "mi". */
     val unit: String,
 )
