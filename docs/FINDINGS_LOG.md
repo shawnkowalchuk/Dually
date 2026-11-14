@@ -26,6 +26,13 @@
 
 ### 2026-11-14
 
+**`[CHANGE]` The backup's functions deployed with the Apple check; Apple's notices, the purchase's review and App Privacy entered** (ADR-016; firebase/README.md)
+- **Deployed** from main after #152 merged (`npx firebase deploy --only functions`): `unlockBackup`, `deleteMyAccount`, `checkRefunds` updated, `appleNotifications` created. Checked from the Mac: an empty POST to `appleNotifications` answers 400 (reachable, not 403), a forged notice 200 and nothing done, `unlockBackup` without a sign-in 401.
+- **App Store Server Notifications** (Shawn: "yes enter the address"): App Store Connect, App Information, Production and Sandbox both `https://northamerica-northeast1-dually-trip-tracker.cloudfunctions.net/appleNotifications` (Apple's form offered no version choice; new addresses get version 2).
+- **The purchase's review screenshot** (the tile with "Purchase online backup · $19.99", from the simulator) and review notes saying where it is and that the sign-in comes first. Status "Prepare for Submission": it goes to review with the first App Store version.
+- **App Privacy** (Shawn: "fill in the app privacy answers too"): the six data types of docs/play-data-safety.md, "Apple" (Name, Email Address, Precise Location, Other User Content, User ID, Purchase History), each used for App Functionality, linked to the user, not for tracking; Device ID left out. **Saved, not published:** Apple's Publish asks the account to attest the answers are accurate and lawful, which is Shawn's to agree to.
+- **Proposal written:** the multi-phone backup (one folder per phone, other phones' trips shown read-only), for Shawn's decision; nothing built.
+
 **`[CHANGE]` TestFlight build 5: the online backup** (APP_ENCYCLOPEDIA, iPhone app and Cloud backup; ARCHITECTURE §5)
 Archived from PR #152's branch and uploaded at 12:06 ("Upload succeeded"); signed with Sign in with Apple and CarPlay, with the Firebase settings copied in. The privacy manifest now declares the backup's data (precise location, name, email, user id, purchase history, other user content; linked, for the app's working, no tracking), as App Store Connect's App Privacy answers will have to before the App Store (docs/play-data-safety.md). `[FINDING]` The upload warns that Firebase's prebuilt frameworks (Firestore, gRPC, abseil, openssl) came without dSYMs: crash reports from inside them will not be symbolicated; the build itself is not affected. A purchase in it is a sandbox one, which the check accepts once its functions are deployed (after this pull request is merged). The repository now says build 6 for the next upload.
 
