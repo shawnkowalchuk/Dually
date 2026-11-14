@@ -170,8 +170,10 @@ android {
         // the same track; Play takes a versionCode once, so main goes on from 9. Build 10
         // (2026-11-13) is 0.3.4 for production, rebuilt with the version dated.
         // Build 11 (2026-11-13) is 0.3.5 for internal testing: the shared module's phone check.
-        versionCode = 11
-        versionName = "0.3.5"
+        // Build 12 (2026-11-14) is 0.3.6 for internal testing, from the branch app/multi-phone:
+        // every phone on a backup account backs up and holds the logbook (ADR-017, steps 1-2).
+        versionCode = 12
+        versionName = "0.3.6"
 
         // The Firebase settings (above), empty in a build without the file.
         buildConfigField("String", "FIREBASE_PROJECT_ID", firebaseValue("projectId"))
