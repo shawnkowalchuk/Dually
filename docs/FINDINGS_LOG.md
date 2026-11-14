@@ -34,6 +34,8 @@ Shawn signed in on the iPhone with the account his Android phone backs up to, me
 - **The rows** of another phone's trips say "from your other phone" and have no buttons.
 - **Rules:** `users/{uid}/phones/{phone}` and its `trips`/`backup` documents, under the same conditions; 5 new tests (38 in all). Tests: `CloudLogbookTest` (both), `IosCloudTest` (9, among them a second iPhone that takes the logbook with nothing to press, the merge, and the same drive counted once), `MiloMigrationsTest` (version 8), the Android tile's tests rewritten.
 
+**`[DECISION]` The rules for the phone folders published from the branch** (Shawn, asked how they should go live while the branch stays unmerged: "You publish them now"). `npx firebase deploy --only firestore:rules` from the Mac, 2026-11-14 afternoon: the file on `app/multi-phone`, which only adds the phone folders; today's paths are unchanged.
+
 **`[FINDING]` A Firestore list request names no document, so a rule that checks the document's name refuses every list**
 `allow list: if phoneName(phone)` failed with "Null value error": `{phone}` is not bound for a list of `phones`. The list rule checks the account only.
 
