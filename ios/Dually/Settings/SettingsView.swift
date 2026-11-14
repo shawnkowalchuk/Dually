@@ -1,5 +1,6 @@
 import DuallyShared
 import SwiftUI
+import UniformTypeIdentifiers
 
 // Settings on the iPhone (phase 4g), laid out as Android's Settings screen: Setup first, then
 // Units and Driving alert side by side, the work hours, and the trip numbers. Each press is stored
@@ -8,8 +9,10 @@ struct SettingsView: View {
     @StateObject private var model: SettingsModel
     @ObservedObject var setup: SetupModel
     let openSetup: () -> Void
+    private let core: DuallyCore
 
     init(core: DuallyCore, setup: SetupModel, openSetup: @escaping () -> Void) {
+        self.core = core
         _model = StateObject(wrappedValue: SettingsModel(core: core))
         self.setup = setup
         self.openSetup = openSetup
@@ -26,6 +29,7 @@ struct SettingsView: View {
                 ReportDetailsTile(text: text, model: model)
                 WorkHoursTile(text: text, model: model)
                 TripNumbersTile(text: text, model: model)
+                YourDataTile(core: core)
             }
         }
         .task {
@@ -334,5 +338,88 @@ private struct ReportDetailsTile: View {
                 .onChange(of: value.wrappedValue) { changed($0) }
         }
         .padding(.top, 4)
+    }
+}
+
+/// Android's "Your data" tile: everything exported to one file (raw GPS points included), which
+/// Android imports too, and a file imported here, which replaces what the iPhone holds after
+/// a question. A copy of what it held is kept first.
+struct YourDataTile: View {
+    let core: DuallyCore
+    @State private var exported: URL?
+    @State private var choosing = false
+    @State private var found: (url: URL, check: ImportCheck)?
+    @State private var said: String?
+
+    var body: some View {
+        Tile {
+            Text("Your data")
+                .font(Typography.body(17, weight: .semibold))
+                .foregroundStyle(Palette.text)
+            if let exported {
+                ShareLink(item: exported) {
+                    Text("Share the export")
+                        .font(Typography.body(16, weight: .bold))
+                        .frame(maxWidth: .infinity, minHeight: 46)
+                        .background(Palette.accent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .foregroundStyle(Palette.markLetter)
+                }
+            } else {
+                WideButton(title: "Export all data", filled: false) {
+                    Task {
+                        if let file = try? await core.transfer.exportAll() {
+                            exported = URL(fileURLWithPath: file.path)
+                            said = file.tripCount == 1 ? "1 trip exported." : "\(file.tripCount) trips exported."
+                        } else {
+                            said = "A trip is being recorded. End it first, then export."
+                        }
+                    }
+                }
+            }
+            WideButton(title: "Import data", filled: false) { choosing = true }
+            if let said {
+                Text(said).font(Typography.body(14)).foregroundStyle(Palette.textSecondary)
+            }
+            Text("An export holds every trip, report sent and setting, and the GPS points. Dually on Android imports it too.")
+                .font(Typography.body(13))
+                .foregroundStyle(Palette.textSecondary)
+        }
+        .fileImporter(isPresented: $choosing, allowedContentTypes: [.json, .data]) { result in
+            guard case let .success(url) = result else { return }
+            Task { await look(at: url) }
+        }
+        .alert(
+            "Replace everything on this iPhone?",
+            isPresented: Binding(get: { found != nil }, set: { if !$0 { found = nil } }),
+            presenting: found
+        ) { item in
+            Button("Replace", role: .destructive) {
+                Task { said = try? await core.transfer.importChecked(path: item.url.path, check: item.check) }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { item in
+            Text("The file holds \(item.check.tripCount) trips\(item.check.hasSettings ? " and settings" : ""). They replace the \(item.check.storedTrips) trips on this iPhone. A copy of those is kept first.")
+        }
+    }
+
+    /// Copies the chosen file into Dually's own folder (a file from elsewhere may only be read
+    /// while it is open), then checks it.
+    private func look(at url: URL) async {
+        let open = url.startAccessingSecurityScopedResource()
+        defer { if open { url.stopAccessingSecurityScopedResource() } }
+        let copy = FileManager.default.temporaryDirectory.appendingPathComponent(url.lastPathComponent)
+        try? FileManager.default.removeItem(at: copy)
+        do {
+            try FileManager.default.copyItem(at: url, to: copy)
+        } catch {
+            said = "That file could not be read."
+            return
+        }
+        guard let check = try? await core.transfer.check(path: copy.path) else { return }
+        if let problem = check.problem {
+            said = problem
+        } else {
+            found = (copy, check)
+        }
     }
 }

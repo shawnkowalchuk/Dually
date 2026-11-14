@@ -80,6 +80,13 @@ internal class RecorderWorld {
 
     fun sentReportDao() = database.sentReportDao()
 
+    fun mainTransferDao() = database.mainTransferDao()
+
+    fun pointsTransferDao() = points.pointsTransferDao()
+
+    /** The world's own folder, for files a test writes. */
+    val folderPath: String get() = folder.toString()
+
     fun close() {
         database.close()
         points.close()

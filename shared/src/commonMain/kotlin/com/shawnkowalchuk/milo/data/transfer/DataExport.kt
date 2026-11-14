@@ -1,15 +1,13 @@
 package com.shawnkowalchuk.milo.data.transfer
 
+import com.shawnkowalchuk.milo.core.io.IOException
+import com.shawnkowalchuk.milo.core.time.ZoneId
 import com.shawnkowalchuk.milo.core.trip.TripStatus
 import com.shawnkowalchuk.milo.data.MILO_DATABASE_VERSION
 import com.shawnkowalchuk.milo.data.point.RawPoint
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.TransferredSettings
 import com.shawnkowalchuk.milo.data.settings.transferred
-import java.io.IOException
-import java.io.OutputStream
-import java.time.ZoneId
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /** How many raw points are read from the table at a time while an export is written. */
@@ -63,14 +61,16 @@ class DataExport(
     private val zone: () -> ZoneId,
 ) {
     /**
-     * @param out where the document is written. Left open: the caller opened it.
+     * @param out where the document is written. Left open: the caller opened it. Shared by
+     * both phones since 2026-11-13: Android hands in a writer on its file
+     * (`writeTo(OutputStream, …)` in the app), the iPhone one on its own.
      * @param includePoints false leaves the raw GPS points out, for a small file.
      * @throws IOException if [out] cannot be written.
      * @throws ChangedWhileExportingException if the points changed while the file was written.
      * @throws IllegalStateException for a stored value that cannot be written as JSON at all.
      */
-    suspend fun writeTo(out: OutputStream, includePoints: Boolean): ExportWritten =
-        withContext(Dispatchers.IO) {
+    suspend fun writeTo(out: Appendable, includePoints: Boolean): ExportWritten =
+        withContext(transferDispatcher) {
             val rows = main.rowsUnlessOpen(TripStatus.OPEN)
             if (rows == null) return@withContext ExportWritten.TripInProgress
             // The points that exist now. One recorded from here on has a higher id and is left
@@ -93,10 +93,7 @@ class DataExport(
                     pointCount = newestPoint?.let { kept.sumOf { it.points } },
                     points = { each -> pointPages(upToId = newestPoint ?: 0L, each) },
                 )
-            val writer = out.bufferedWriter(Charsets.UTF_8)
-            val contents = writeExport(writer, source)
-            writer.flush()
-            ExportWritten.Done(contents, leftOut(strays))
+            ExportWritten.Done(writeExport(out, source), leftOut(strays))
         }
 
     private fun leftOut(strays: List<TripPoints>): PointsLeftOut? =

@@ -19,6 +19,8 @@ import com.shawnkowalchuk.milo.data.report.SentReportRepository
 import com.shawnkowalchuk.milo.data.settings.ShownUnit
 import com.shawnkowalchuk.milo.data.settings.buildSettingsStore
 import com.shawnkowalchuk.milo.data.settings.buildShownUnit
+import com.shawnkowalchuk.milo.data.transfer.DataExport
+import com.shawnkowalchuk.milo.data.transfer.DataImport
 import com.shawnkowalchuk.milo.data.trip.TripCorrections
 import com.shawnkowalchuk.milo.data.trip.TripRepository
 import com.shawnkowalchuk.milo.data.trip.categoryTotals
@@ -29,6 +31,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
+import platform.Foundation.NSBundle
 import platform.Foundation.NSDate
 import platform.Foundation.NSLocale
 import platform.Foundation.currentLocale
@@ -57,6 +60,8 @@ class DuallyCore private constructor(
     val settings: IosSettings,
     /** The report for the accountant (phase 4g). */
     val report: IosReport,
+    /** Export all data and Import data (phase 4g). */
+    val transfer: IosTransfer,
     private val shownUnit: ShownUnit,
 ) {
     /** "km" or "mi", as Settings has it now: every distance the iPhone writes follows it. */
@@ -227,6 +232,22 @@ class DuallyCore private constructor(
                     locale = ::phoneLocale,
                     clock = clock,
                 ),
+                IosTransfer(
+                    export =
+                        DataExport(
+                            main = database.mainTransferDao(),
+                            points = points.pointsTransferDao(),
+                            settings = settings,
+                            appVersion = appVersion(),
+                            clock = clock,
+                            zone = ::systemZoneId,
+                        ),
+                    import = DataImport(database.mainTransferDao(), points.pointsTransferDao()),
+                    settings = settings,
+                    eventLog = eventLog,
+                    zone = ::systemZoneId,
+                    clock = clock,
+                ),
                 shownUnit,
             )
         }
@@ -251,3 +272,8 @@ private fun phoneLocale(): Locale = Locale(NSLocale.currentLocale.localeIdentifi
 private fun nowMs(): Long = (NSDate().timeIntervalSince1970 * MILLIS_PER_SECOND).toLong()
 
 private const val MILLIS_PER_SECOND = 1000.0
+
+/** The app's version, "0.1.0", as an export names the app that wrote it. */
+private fun appVersion(): String =
+    NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleShortVersionString") as? String
+        ?: "unknown"
