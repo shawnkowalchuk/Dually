@@ -32,6 +32,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import platform.Foundation.NSBundle
 import platform.Foundation.NSDate
 import platform.Foundation.NSLocale
@@ -71,6 +72,8 @@ class DuallyCore private constructor(
     val service: IosService,
     /** The CarPlay screen (phase 4f). */
     val car: IosCar,
+    /** The online backup (phase 4h). */
+    val cloud: IosCloud,
     private val shownUnit: ShownUnit,
 ) {
     /** "km" or "mi", as Settings has it now: every distance the iPhone writes follows it. */
@@ -160,8 +163,9 @@ class DuallyCore private constructor(
          * calls it once, when it starts.
          *
          * @param placeFinder Apple's geocoder, from Swift, for the addresses of trips.
+         * @param cloud Firebase, from Swift, for the online backup. Nothing starts it here.
          */
-        fun open(placeFinder: ApplePlaceFinder): DuallyCore {
+        fun open(placeFinder: ApplePlaceFinder, cloud: AppleCloud): DuallyCore {
             val database = buildMiloDatabase()
             val points = buildPointsDatabase()
             val settings = buildSettingsStore()
@@ -224,6 +228,41 @@ class DuallyCore private constructor(
                     zone = ::systemZoneId,
                     clock = clock,
                 )
+            val transfer =
+                IosTransfer(
+                    export =
+                        DataExport(
+                            main = database.mainTransferDao(),
+                            points = points.pointsTransferDao(),
+                            settings = settings,
+                            appVersion = appVersion(),
+                            clock = clock,
+                            zone = ::systemZoneId,
+                        ),
+                    import = DataImport(database.mainTransferDao(), points.pointsTransferDao()),
+                    settings = settings,
+                    eventLog = eventLog,
+                    zone = ::systemZoneId,
+                    clock = clock,
+                )
+            val backup =
+                IosCloud(
+                    apple = cloud,
+                    files = IosCloudFiles(),
+                    mainRows = database.mainTransferDao(),
+                    settings = settings,
+                    transfer = transfer,
+                    eventLog = eventLog,
+                    changes =
+                        database.invalidationTracker
+                            .createFlow("trips", "sent_reports")
+                            .map { },
+                    scope = scope,
+                    appVersion = appVersion(),
+                    clock = clock,
+                    zone = ::systemZoneId,
+                    locale = ::phoneLocale,
+                )
             return DuallyCore(
                 database,
                 recorder,
@@ -241,22 +280,7 @@ class DuallyCore private constructor(
                     locale = ::phoneLocale,
                     clock = clock,
                 ),
-                IosTransfer(
-                    export =
-                        DataExport(
-                            main = database.mainTransferDao(),
-                            points = points.pointsTransferDao(),
-                            settings = settings,
-                            appVersion = appVersion(),
-                            clock = clock,
-                            zone = ::systemZoneId,
-                        ),
-                    import = DataImport(database.mainTransferDao(), points.pointsTransferDao()),
-                    settings = settings,
-                    eventLog = eventLog,
-                    zone = ::systemZoneId,
-                    clock = clock,
-                ),
+                transfer,
                 IosWidget(tripRepository, settings, ::systemZoneId, ::phoneLocale),
                 IosTripEdit(
                     editing = TripEditing(tripRepository, settings, eventLog, clock),
@@ -283,6 +307,7 @@ class DuallyCore private constructor(
                     zone = ::systemZoneId,
                     locale = ::phoneLocale,
                 ),
+                backup,
                 shownUnit,
             )
         }

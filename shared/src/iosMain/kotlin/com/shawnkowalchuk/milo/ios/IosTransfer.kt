@@ -82,32 +82,54 @@ class IosTransfer internal constructor(
      * Replaces what the phone holds with the file at [path], checked by [check] as [check].
      * Returns what to say: done, or why nothing was replaced.
      */
-    suspend fun importChecked(path: String, check: ImportCheck): String {
-        val checked = check.checked ?: return "Nothing was imported."
+    suspend fun importChecked(path: String, check: ImportCheck): String =
+        when (val outcome = replaceWith(path, check, "Imported on the iPhone")) {
+            is ImportOutcome.Done ->
+                "Imported: ${outcome.trips} trips" +
+                    if (outcome.settings) ", and the settings." else "."
+
+            ImportOutcome.TripRecording ->
+                "A trip is being recorded. End it first; nothing was replaced."
+
+            ImportOutcome.NothingChecked -> "Nothing was imported."
+
+            is ImportOutcome.Failed ->
+                "The import failed: ${outcome.cause}. The safety copy is in Dually's files."
+        }
+
+    /**
+     * The import itself, for [importChecked] and the online backup's restore (IosCloud): a
+     * safety copy first, then the trips, the points and the settings of the file at [path].
+     *
+     * @param said how the line in the Log begins: "Imported on the iPhone".
+     */
+    internal suspend fun replaceWith(
+        path: String,
+        check: ImportCheck,
+        said: String,
+    ): ImportOutcome {
+        val checked = check.checked ?: return ImportOutcome.NothingChecked
         try {
             // A copy of what is replaced, as on Android, before anything is.
             if (write(
                     folder() + "/Before-import-" + exportFileName(clock(), zone()),
                 ) !is ExportWritten.Done
             ) {
-                return "A trip is being recorded. End it first; nothing was replaced."
+                return ImportOutcome.TripRecording
             }
-            val said =
+            val line =
                 EventLogEntry(
                     atMs = clock(),
                     category = EventCategory.REPORT,
                     message =
-                        "Imported on the iPhone: ${checked.trips.size} trips replace the " +
+                        "$said: ${checked.trips.size} trips replace the " +
                             "${check.storedTrips} that were here",
                 )
-            val replaced = import.replaceMain(checked, said)
-            if (replaced !is MainReplacement.Done) {
-                return "A trip is being recorded. End it first; nothing was replaced."
-            }
+            val replaced = import.replaceMain(checked, line)
+            if (replaced !is MainReplacement.Done) return ImportOutcome.TripRecording
             import.replacePoints({ IosFileReader(path) }, checked, replaced.highestTripId)
             checked.settings?.let { settings.replaceTransferred(it, TruckChange.Keep) }
-            return "Imported: ${checked.trips.size} trips" +
-                if (checked.settings != null) ", and the settings." else "."
+            return ImportOutcome.Done(checked.trips.size, checked.settings != null)
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (failure: Exception) {
@@ -117,7 +139,7 @@ class IosTransfer internal constructor(
                 "The import failed",
                 failure.stackTraceToString(),
             )
-            return "The import failed: ${failure.message}. The safety copy is in Dually's files."
+            return ImportOutcome.Failed(failure.message.orEmpty())
         }
     }
 
@@ -142,6 +164,19 @@ private class SinkAppendable(private val sink: BufferedSink) : Appendable {
     override fun append(value: CharSequence?, startIndex: Int, endIndex: Int): Appendable = apply {
         sink.writeUtf8(value.toString(), startIndex, endIndex)
     }
+}
+
+/** What an import came to. */
+internal sealed interface ImportOutcome {
+    data class Done(val trips: Int, val settings: Boolean) : ImportOutcome
+
+    /** A trip is being recorded: nothing was replaced. */
+    data object TripRecording : ImportOutcome
+
+    /** The file was never found good. */
+    data object NothingChecked : ImportOutcome
+
+    data class Failed(val cause: String) : ImportOutcome
 }
 
 /** An export written to [path], holding [tripCount] trips. */

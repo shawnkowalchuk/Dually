@@ -26,6 +26,33 @@
 
 ### 2026-11-14
 
+**`[CHANGE]` The online backup on the iPhone (phase 4h)** (ADR-012, ADR-013, ADR-016; APP_ENCYCLOPEDIA, Cloud backup; ADR-014)
+Shawn: "yes create the key and build the backup". Settings' Online backup tile, as Android's under Units: the price from the App Store ("Purchase online backup · $19.99", read live from App Store Connect's sandbox on the simulator), Restore purchase, a sign-in sheet first where nobody is signed in (Apple's own Sign in with Apple button, then Sign in with Google, so an Android buyer finds the same account), then "On", Sign out and Delete, or Restore here / Back up this phone instead when another phone's trips are in the backup.
+- **Shared, not copied:** the backup's run (`CloudBackup`, `CloudStore`, `CloudRun`), `uploadUntilQuiet`, the account (`CloudAccount`) and its tag moved from `:app` to `:shared` (the ledger behind a new `CloudLedgerStore`; Android's `CloudLedger` implements it; Android's `CloudAccount.kt` is now `CloudAccountFile.kt`). The iPhone's backup is `IosCloud` with its files (`IosCloudFiles`: account, ledger and install number in a `cloud` folder iCloud backup leaves out), the same documents, comparison, owner document, restore through the import and unlock as Android's. Its words are Android's (`EnglishCloudWords.kt`, generated from `strings_cloud.xml`, held to it by `EnglishReportWordsTest`); where Android says Google Play the iPhone says the App Store (`IosCloud`'s own lines).
+- **Swift:** `FirebaseCloud` (Firestore with its cache in memory, the account, the functions over HTTPS as on Android), `BackupSignIn` (Apple with a nonce; Google), `BackupPurchase` (StoreKit 2; the purchase carries the account's `appAccountToken`; `Transaction.updates` sends late purchases to the check), `CloudBackupModel`, `CloudBackupTile`. Firebase starts only at the first backup call, and none is made while nobody is signed in.
+- **When it uploads:** five seconds after the trips, the sent reports or the travelling settings last changed (Android waits 30 seconds, with WorkManager to run it later; an iPhone app may be put to sleep soon after a trip), as soon as a trip ends (inside a background task), when the app comes to the front, at a sign-in and an unlock; stopped by the network, again after 1 minute, doubling to an hour, while the app runs.
+- **The server:** `unlockBackup` also takes `signedTransaction`, checked with Apple's own library against Apple Root CA - G3 (`firebase/functions/apple.js`, no Apple key); `appleNotifications` takes Apple's refund notices. 33 tests on the emulator (11 new); `IosCloudTest` (7) on the simulator; `CloudAccountTagTest` on both.
+- **Libraries:** Firebase iOS SDK 13.2.0 (FirebaseAuth, FirebaseFirestore) and Google Sign-In for iOS 10.1.0, pinned exactly, `Package.resolved` committed; `@apple/app-store-server-library` 3.1.0. No analytics code is linked (checked in the built app).
+- **Seen on the simulator:** the tile and its price, the sign-in sheet, Google's "Dually wants to use google.com to sign in" (cancelled: nothing was signed in to). **Not seen:** a real sign-in, a purchase, an upload to the real Firestore, a restore and a deletion: TestFlight's sandbox is the first place a purchase can reach the check.
+
+**`[FINDING]` Firebase keeps a Sign in with Apple key only with a Services ID**
+The key alone ("OAuth code flow configuration") was refused: "A services ID is required when OAuth code flow is set". One was registered for it, `top.dually.triptracker.signin`, with nothing configured on it (ADR-016). The key is `46NB688HYN`, in `~/keys/dually-AuthKey_46NB688HYN.p8`; Shawn pasted it, and Firebase said "Apple updated". It is the only copy: Apple lets a key be downloaded once.
+
+**`[FINDING]` A build step that edits the app's Info.plist must come after "Embed Foundation Extensions"**
+Placed before it, Xcode found a cycle (the Info.plist's processing waits for the embedded Live Activity, whose copy waited for the step). After it, the step copies `GoogleService-Info.plist` in from `~/keys` and adds Google's address scheme; a Release build without the file stops.
+
+**`[FINDING]` Kotlin/Native names a Kotlin property `delete` something else in Swift**
+`CloudTile.delete` did not exist in Swift (Objective-C's `delete` is taken). Renamed `deleteAccount`. Also: an exception from a Kotlin `suspend` function that Swift calls ends the app unless it is declared, so `IosCloud` catches everything that is not a cancellation itself.
+
+**`[FIX]` The iPhone's Service and odometer words showed Android's escapes**
+"truck\'s dashboard" read with its backslash: `englishServiceText` handed the resource over as stored. It now takes Android's escapes out, as the report's words do.
+
+**`[FINDING]` Android reads the whole backup before every upload**
+`CloudObjects.look` reads every trip document to decide whether this phone backs up (`cloudStart`). The iPhone reads the owner document first and stops there when it names this install (`cloudStart` answers BACK_UP whatever else it is told), so an upload costs one read, not one per trip. Android could do the same; a few thousand reads per user per day is pennies today and grows with every trip.
+
+**`[DEBT]` The iPhone has no daily upload**
+Android's WorkManager also runs the backup once a day. The iPhone uploads after each change, at a trip's end, at the front and at a sign-in, and tries again while the app runs; a change whose upload failed while the app was asleep waits for the next of those. A `BGAppRefreshTask` would close it. Cost: one Swift file and an Info.plist entry.
+
 **`[CHANGE]` TestFlight build 4: Service and CarPlay** (APP_ENCYCLOPEDIA, iPhone app; ARCHITECTURE §5)
 Archived from PR #151's branch (Service from #150 under it) and uploaded at 09:49 ("Upload succeeded"); Apple's processing can still refuse it by email to the developer account. In it: Service with Home's tiles, the reminder and the odometer, and CarPlay. The repository now says build 5 for the next upload.
 

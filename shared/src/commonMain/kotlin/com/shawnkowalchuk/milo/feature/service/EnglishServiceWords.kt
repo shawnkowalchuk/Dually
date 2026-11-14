@@ -89,7 +89,7 @@ val ENGLISH_SERVICE_PLURALS: Map<String, Pair<String, String>> = mapOf(
 )
 
 /** The string resource [name], with Android's escapes undone. */
-fun englishServiceText(name: String): String = ENGLISH_SERVICE_STRINGS.getValue(name)
+fun englishServiceText(name: String): String = unescape(ENGLISH_SERVICE_STRINGS.getValue(name))
     .replace("\\\"", "\"").replace("\\'", "'").replace("\\n", "\n")
 
 /** The string resource [name] with [args] in its places. */
@@ -99,5 +99,12 @@ fun englishServiceFormat(name: String, locale: Locale, vararg args: Any?): Strin
 /** The notification's title for [count] items. */
 fun englishServiceCount(count: Int, locale: Locale): String {
     val (one, other) = ENGLISH_SERVICE_PLURALS.getValue("notification_service_title_many")
-    return formatText(locale, if (count == 1) one else other, count)
+    return formatText(locale, unescape(if (count == 1) one else other), count)
 }
+
+/**
+ * Android's escapes taken out, so that "truck\\'s" reads "truck's" (on the iPhone until
+ * 2026-11-14 it did not).
+ */
+private fun unescape(raw: String): String =
+    raw.replace("\\\"", "\"").replace("\\'", "'").replace("\\n", "\n")

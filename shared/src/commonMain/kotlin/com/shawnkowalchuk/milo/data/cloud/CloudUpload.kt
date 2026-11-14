@@ -42,7 +42,7 @@ suspend fun uploadUntilQuiet(
                 val refused = run.cause is CloudRefusedException
                 log(
                     "Cloud backup stopped after ${run.uploaded} sent and ${run.removed} removed: " +
-                        "${run.cause.javaClass.simpleName}, ${run.cause.message}." +
+                        "${run.cause::class.simpleName}, ${run.cause.message}." +
                         if (refused) " Not tried again." else " Tried again later.",
                 )
                 return if (refused) CloudUploadOutcome.REFUSED else CloudUploadOutcome.TRY_LATER

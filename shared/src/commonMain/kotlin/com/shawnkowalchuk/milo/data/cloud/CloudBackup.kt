@@ -33,6 +33,23 @@ interface CloudStore {
     suspend fun apply(account: String, documents: List<CloudDocument>, removals: List<String>)
 }
 
+/**
+ * What the cloud holds of one account, as far as this phone knows: the fingerprint of every
+ * document it uploaded there, by path (`cloudPlanFor`). A file in the app's own folder on each
+ * phone (Android's `CloudLedger`, the iPhone's `IosCloudFiles`), never in a backup or an export.
+ */
+interface CloudLedgerStore {
+    /** The fingerprints uploaded to [account]; none if it is not known. None is a full answer. */
+    fun read(account: String): Map<String, String>
+
+    /**
+     * Stores [documents] as what [account] holds, in place of what was there.
+     *
+     * @throws IOException if it cannot be stored.
+     */
+    fun write(account: String, documents: Map<String, String>)
+}
+
 /** What one run of the backup did. */
 sealed interface CloudRun {
     val uploaded: Int
@@ -66,7 +83,7 @@ sealed interface CloudRun {
 class CloudBackup(
     private val rows: suspend () -> MainRows,
     private val settings: suspend () -> TransferredSettings?,
-    private val ledger: CloudLedger,
+    private val ledger: CloudLedgerStore,
     private val store: CloudStore,
 ) {
     suspend fun run(account: String): CloudRun {

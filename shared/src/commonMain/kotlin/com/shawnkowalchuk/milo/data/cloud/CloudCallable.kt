@@ -21,6 +21,12 @@ private data class UnlockRequest(val data: UnlockData)
 private data class UnlockData(val purchaseToken: String)
 
 @Serializable
+private data class AppleUnlockRequest(val data: AppleUnlockData)
+
+@Serializable
+private data class AppleUnlockData(val signedTransaction: String)
+
+@Serializable
 private data class CallableAnswer(val error: CallableError? = null)
 
 @Serializable
@@ -29,6 +35,13 @@ private data class CallableError(val status: String = "", val message: String = 
 /** The body of the call to the purchase check, for the purchase [token]. */
 fun unlockRequestBody(token: String): String =
     callableJson.encodeToString(UnlockRequest(UnlockData(token)))
+
+/**
+ * The body of the call to the purchase check for an iPhone purchase (ADR-016): the signed
+ * transaction StoreKit 2 handed the app, [signed].
+ */
+fun appleUnlockRequestBody(signed: String): String =
+    callableJson.encodeToString(AppleUnlockRequest(AppleUnlockData(signed)))
 
 /**
  * What the purchase check's answer means: its HTTP status [code] and its [body]. The server's
