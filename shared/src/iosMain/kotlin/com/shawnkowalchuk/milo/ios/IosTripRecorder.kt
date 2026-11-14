@@ -69,6 +69,9 @@ class IosTripRecorder internal constructor(
     /** A tap on the driving alert (phase 4d, third part): a trip started by hand, as on Android. */
     suspend fun startFromAlert(): RecordingNow? = startByHand("tap on the driving alert")
 
+    /** Start on the home-screen widget (phase 4i): a trip started by hand, as Android's widget. */
+    suspend fun startFromWidget(): RecordingNow? = startByHand("Start on the home-screen widget")
+
     private suspend fun startByHand(source: String): RecordingNow? = lock.withLock {
         val atMs = clock()
         advance(source, TripEvent.ManualStart(truck.connected, atMs))

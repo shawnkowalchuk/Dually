@@ -6,11 +6,13 @@ import SwiftUI
 struct PinnedScreen<Content: View>: View {
     /// The screen's name at the end of the top line, or nil on Home, as on Android.
     let title: String?
+    /// For a screen opened from another one: its top line then leads back.
+    var onBack: (() -> Void)?
     @ViewBuilder var content: Content
 
     var body: some View {
         VStack(spacing: 0) {
-            TopLine(screen: title)
+            TopLine(screen: title, onBack: onBack)
                 .padding(.horizontal, 16)
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {

@@ -11,6 +11,7 @@ import WidgetKit
 struct DuallyLiveActivityBundle: WidgetBundle {
     var body: some Widget {
         TripLiveActivity()
+        TripWidget()
     }
 }
 

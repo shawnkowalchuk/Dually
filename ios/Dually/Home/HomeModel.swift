@@ -46,6 +46,9 @@ final class HomeModel: ObservableObject {
         await readFigures()
     }
 
+    /// "km" or "mi", as Settings has it.
+    var unitWord: String { session.core.unitWord() }
+
     /// The running trip's distance as Home writes it: "12.3".
     func distanceText(_ trip: RecordingNow) -> String {
         session.core.distanceText(metres: trip.metres)

@@ -1,5 +1,6 @@
 import DuallyShared
 import Foundation
+import WidgetKit
 
 // The trip being recorded, for all of the iPhone app (phase 4d). Home's Start and End, the
 // Shortcuts automation's "Start a trip" and "End a trip" (TripIntents.swift) and the GPS all go
@@ -40,6 +41,7 @@ final class TripSession: ObservableObject {
     /// The app has started: a trip or a wait left from before is picked up, and its GPS starts
     /// again; the addresses that are due are looked up.
     func appStarted() async {
+        defer { Task { await self.updateWidget(force: true) } }
         await apply {
             try await self.core.appStarted()
             return try await self.core.recorder.now()
@@ -59,6 +61,11 @@ final class TripSession: ObservableObject {
 
     func start() async {
         await apply { try await self.core.recorder.start() }
+    }
+
+    /// Start on the home-screen widget.
+    func startFromWidget() async {
+        await apply { try await self.core.recorder.startFromWidget() }
     }
 
     /// A tap on the driving alert: a trip started by hand, as on Android.
@@ -83,6 +90,29 @@ final class TripSession: ObservableObject {
     /// The Shortcuts automation says the vehicle disconnected.
     func truckDisconnected() async {
         await apply { try await self.core.recorder.truckDisconnected() }
+    }
+
+    private var widgetDrawnAt = Date.distantPast
+    private var widgetRecording: Bool?
+
+    /// Leaves the widget's figures where it reads them and asks for a new drawing: at once when
+    /// a trip starts or ends, and while one is recorded at most every minute, since iOS limits
+    /// how often a widget is redrawn and the Live Activity has the running figures.
+    func updateWidget(force: Bool = false) async {
+        let isRecording = recording != nil
+        let changed = isRecording != widgetRecording
+        guard force || changed || Date().timeIntervalSince(widgetDrawnAt) >= 60 else { return }
+        widgetRecording = isRecording
+        widgetDrawnAt = Date()
+        let dollars = try? await core.widget.dollars(nowMs: Int64(Date().timeIntervalSince1970 * 1000))
+        WidgetSnapshot(
+            recording: isRecording,
+            startedAt: recording.map { Date(timeIntervalSince1970: Double($0.startedAtMs) / 1000) },
+            distance: recording.map { core.distanceText(metres: $0.metres) },
+            unit: core.unitWord(),
+            dollars: dollars
+        ).save()
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     private func add(_ fix: Fix) async {
@@ -111,8 +141,9 @@ final class TripSession: ObservableObject {
         if recording != nil { drivingWatch.withdraw() }
         if #available(iOS 16.1, *) {
             let distance = recording.map { core.distanceText(metres: $0.metres) } ?? ""
-            (liveTrip as? LiveTrip)?.show(recording, distance: distance)
+            (liveTrip as? LiveTrip)?.show(recording, distance: distance, unit: core.unitWord())
         }
+        await updateWidget()
         // TODO(debt): the wait beside a parked truck runs the GPS as a trip does, for up to 72
         //  hours. See docs/FINDINGS_LOG.md (2026-11-13, phase 4d, first part).
         if core.recorder.wantsGps {

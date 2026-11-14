@@ -101,3 +101,6 @@ expect fun formatLongDay(date: LocalDate, locale: Locale): String
  * spell differently.)
  */
 expect fun formatFullMonthName(month: YearMonth, locale: Locale): String
+
+/** The month's short name in the phone's language: "Nov". The home-screen widget's dollars. */
+expect fun formatShortMonthName(month: YearMonth, locale: Locale): String

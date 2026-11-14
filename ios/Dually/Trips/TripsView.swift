@@ -3,13 +3,19 @@ import SwiftUI
 
 // The Trips screen on the iPhone (phase 4c): one month at a time, its Business and Personal
 // totals, and each day's trips, newest first, as Android's Trips screen lists them. A trip opens
-// a sheet to mark it Business or Personal, label it, or delete it.
+// a sheet to mark it Business or Personal, label it, edit it, or delete it; a trip Dually missed is
+// added by hand from here, as on Android.
 struct TripsView: View {
     @StateObject private var model: TripsModel
     @State private var chosen: TripText?
+    @State private var addingMissed = false
     @Environment(\.scenePhase) private var scenePhase
 
-    init(core: DuallyCore) {
+    /// Opens the report for the accountant for a month: (year, month 1 to 12).
+    let openReport: (Int, Int) -> Void
+
+    init(core: DuallyCore, openReport: @escaping (Int, Int) -> Void) {
+        self.openReport = openReport
         _model = StateObject(wrappedValue: TripsModel(core: core))
     }
 
@@ -18,11 +24,17 @@ struct TripsView: View {
             MonthHeader(model: model)
             if let month = model.month {
                 MonthTotals(month: month)
+                WideButton(title: "Report for the accountant", filled: false) {
+                    openReport(model.year, model.monthNumber)
+                }
+                WideButton(title: EnglishFormWordsKt.englishFormText(name: "trip_add_title"), filled: false) {
+                    addingMissed = true
+                }
                 if let live = month.inProgress {
                     TripRow(trip: live, recording: true)
                 }
                 ForEach(month.days, id: \.title) { day in
-                    DaySection(day: day) { chosen = $0 }
+                    DaySection(day: day, unit: month.unit) { chosen = $0 }
                 }
                 if month.days.isEmpty && month.inProgress == nil {
                     Text("No trips this month.")
@@ -63,6 +75,12 @@ struct TripsView: View {
         }
         .sheet(item: Binding(get: { chosen.map(ChosenTrip.init) }, set: { chosen = $0?.trip })) { item in
             TripSheet(trip: item.trip, model: model) { chosen = nil }
+        }
+        .sheet(isPresented: $addingMissed) {
+            TripEditSheet(load: { await model.blankEditor() }) { saved in
+                addingMissed = false
+                if saved { Task { await model.load() } }
+            }
         }
     }
 }
@@ -126,7 +144,7 @@ private struct MonthTotals: View {
                     .font(Typography.body(13, weight: .semibold))
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(month.business).font(Typography.figure(28))
-                    Text("km").font(Typography.body(14))
+                    Text(month.unit).font(Typography.body(14))
                 }
                 Text(tripCount(month.businessCount))
                     .font(Typography.body(13))
@@ -138,7 +156,7 @@ private struct MonthTotals: View {
                     .foregroundStyle(Palette.textSecondary)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(month.personal).font(Typography.figure(28)).foregroundStyle(Palette.text)
-                    Text("km").font(Typography.body(14)).foregroundStyle(Palette.textSecondary)
+                    Text(month.unit).font(Typography.body(14)).foregroundStyle(Palette.textSecondary)
                 }
                 Text(tripCount(month.personalCount))
                     .font(Typography.body(13))
@@ -155,6 +173,7 @@ private struct MonthTotals: View {
 /// One day: its date and Business kilometres, then its trips.
 private struct DaySection: View {
     let day: DayText
+    let unit: String
     let onChoose: (TripText) -> Void
 
     var body: some View {
@@ -164,7 +183,7 @@ private struct DaySection: View {
                     .font(Typography.body(16, weight: .bold))
                     .foregroundStyle(Palette.text)
                 Spacer()
-                Text("\(day.business) km Business")
+                Text("\(day.business) \(unit) Business")
                     .font(Typography.body(13))
                     .foregroundStyle(Palette.textSecondary)
             }

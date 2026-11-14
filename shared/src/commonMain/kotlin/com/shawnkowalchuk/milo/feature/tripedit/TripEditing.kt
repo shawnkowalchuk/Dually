@@ -1,6 +1,8 @@
 package com.shawnkowalchuk.milo.feature.tripedit
 
+import com.shawnkowalchuk.milo.core.io.IOException
 import com.shawnkowalchuk.milo.core.schedule.WorkSchedule
+import com.shawnkowalchuk.milo.core.time.ZoneId
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
@@ -15,8 +17,6 @@ import com.shawnkowalchuk.milo.data.trip.addedText
 import com.shawnkowalchuk.milo.data.trip.canBeEdited
 import com.shawnkowalchuk.milo.data.trip.editText
 import com.shawnkowalchuk.milo.data.trip.restoreText
-import java.io.IOException
-import java.time.ZoneId
 import kotlin.coroutines.cancellation.CancellationException
 
 /** What became of a press on the form's Save button. */
