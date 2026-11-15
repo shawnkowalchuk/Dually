@@ -3,7 +3,8 @@ import SwiftUI
 
 // What can be done with one trip (phase 4c): mark it Business or Personal, give it a label, change
 // its times, places and distance (the edit sheet, 2026-11-13), and delete it (or restore or count
-// it), each through the shared code as on Android.
+// it), and put back a change another phone's replaced (ADR-017), each through the shared code as
+// on Android.
 struct TripSheet: View {
     let trip: TripText
     @ObservedObject var model: TripsModel
@@ -86,6 +87,11 @@ struct TripSheet: View {
                     if trip.canEdit {
                         WideButton(title: EnglishFormWordsKt.englishFormText(name: "trip_edit_title"), filled: false) {
                             editing = true
+                        }
+                    }
+                    if trip.canPutBack {
+                        WideButton(title: "Put back the change that was replaced", filled: false) {
+                            Task { await model.putBack(trip); onClose() }
                         }
                     }
                     if let words = trip.correctionWords {

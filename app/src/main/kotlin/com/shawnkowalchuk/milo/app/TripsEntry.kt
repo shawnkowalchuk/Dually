@@ -60,6 +60,7 @@ internal fun TripsEntry(
                             lookUpAddresses = container.tripAddresses::catchUp,
                             clock = container.clock,
                             zone = ZoneId::systemDefault,
+                            putBack = container.cloud::putBack,
                         )
                     }
                 },

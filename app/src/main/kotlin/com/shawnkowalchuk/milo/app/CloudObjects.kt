@@ -33,6 +33,7 @@ import com.shawnkowalchuk.milo.data.cloud.cloudPhoneFolder
 import com.shawnkowalchuk.milo.data.cloud.cloudRemovableBy
 import com.shawnkowalchuk.milo.data.cloud.cloudRestoreExport
 import com.shawnkowalchuk.milo.data.cloud.inFolder
+import com.shawnkowalchuk.milo.data.cloud.putBackReplaced
 import com.shawnkowalchuk.milo.data.cloud.readOtherPhones
 import com.shawnkowalchuk.milo.data.cloud.restoreFrom
 import com.shawnkowalchuk.milo.data.cloud.syncLogbook
@@ -52,6 +53,7 @@ import com.shawnkowalchuk.milo.platform.cloud.CloudUploads
 import com.shawnkowalchuk.milo.platform.cloud.FirestoreCloudStore
 import com.shawnkowalchuk.milo.platform.cloud.GoogleCloudSignIn
 import com.shawnkowalchuk.milo.platform.cloud.PlayBilling
+import com.shawnkowalchuk.milo.platform.cloud.ReplacedChangeNotification
 import com.shawnkowalchuk.milo.platform.system.readInstalledVersion
 import com.shawnkowalchuk.milo.platform.transfer.TransferOutcome
 import com.shawnkowalchuk.milo.platform.transfer.TransferRefusal
@@ -152,6 +154,26 @@ class CloudObjects(
             .map { }
 
     private val uploads = CloudUploads(appContext, account, merge(tableChanges, settingsChanges))
+
+    private val replacedNotification: ReplacedChangeNotification by lazy {
+        ReplacedChangeNotification(appContext, opens = MainActivity::class.java)
+    }
+
+    /**
+     * "Put back" on a trip whose history holds a change another phone's replaced (ADR-017):
+     * the trip takes that change again, and the upload sends it to every phone.
+     */
+    suspend fun putBack(tripId: Long): Boolean {
+        val done =
+            withContext(Dispatchers.IO) {
+                putBackReplaced(tripTable, tripId, container.clock(), phoneName(appContext))
+            }
+        if (done) {
+            log("Cloud backup: trip $tripId: the change that was replaced was put back.")
+            uploads.uploadNow()
+        }
+        return done
+    }
 
     /**
      * Reads which account is signed in, then has uploads follow it. Called once at the app's
@@ -365,7 +387,19 @@ class CloudObjects(
         if (account.backingUp != true) keep(account.copy(backingUp = true))
         try {
             withContext(Dispatchers.IO) {
-                syncLogbook(store, account.id, phone, others, tripTable, ledger, ::log)
+                val notices =
+                    syncLogbook(
+                        store,
+                        account.id,
+                        phone,
+                        phoneName(appContext),
+                        container.clock(),
+                        others,
+                        tripTable,
+                        ledger,
+                        ::log,
+                    )
+                if (notices.isNotEmpty()) replacedNotification.show(notices)
                 syncShared(store, account.id, container.settingsStore, ledger, ::log)
             }
         } catch (unreachable: IOException) {

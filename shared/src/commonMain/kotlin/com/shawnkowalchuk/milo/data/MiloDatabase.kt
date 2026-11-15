@@ -22,7 +22,7 @@ const val MILO_DATABASE_FILE = "milo.db"
 /**
  * The version of the main database's tables. An export file says which one it was written from.
  */
-const val MILO_DATABASE_VERSION = 8
+const val MILO_DATABASE_VERSION = 9
 
 /**
  * The main database: trips, the event log and the list of sent reports. It is the small,

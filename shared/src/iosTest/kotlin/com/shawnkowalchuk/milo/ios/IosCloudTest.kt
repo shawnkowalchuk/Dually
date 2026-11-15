@@ -8,6 +8,7 @@ import com.shawnkowalchuk.milo.core.trip.driveNorth
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.data.cloud.CLOUD_OWNER
 import com.shawnkowalchuk.milo.data.cloud.CloudDocument
+import com.shawnkowalchuk.milo.data.cloud.historyOf
 import com.shawnkowalchuk.milo.data.settings.addOdometerReading
 import com.shawnkowalchuk.milo.data.transfer.DataExport
 import com.shawnkowalchuk.milo.data.transfer.DataImport
@@ -175,6 +176,57 @@ class IosCloudTest {
     }
 
     @Test
+    fun `of two changes to one trip the later upload wins and the other phone is told`() = runTest {
+        driveOneTrip(firstPhone)
+        cloud.unlocked += ACCOUNT
+        val first = backupOf(firstPhone)
+        first.signedIn(ACCOUNT, "")
+        assertTrue(first.upload("the test"))
+        val toldSecond = mutableListOf<String>()
+        val second = backupOf(secondPhone, toldSecond)
+        second.signedIn(ACCOUNT, "")
+        assertTrue(second.upload("the test"))
+        val mine = firstPhone.trips.observeFinishedTrips().first().single()
+        val theirs = secondPhone.trips.observeFinishedTrips().first().single()
+
+        // Both change the trip before either has seen the other's; the first uploads last.
+        assertEquals(1, firstPhone.tripDao().setLabel(mine.id, "Supplier", TripStatus.OPEN))
+        assertEquals(
+            1,
+            secondPhone.tripDao().setLabel(theirs.id, "Site visit", TripStatus.OPEN),
+        )
+        assertTrue(second.upload("the test"))
+        assertTrue(first.upload("the test"))
+        assertTrue(second.upload("the test"))
+
+        val kept = secondPhone.trips.observeFinishedTrips().first().single()
+        assertEquals("Supplier", kept.label)
+        assertEquals("Site visit", historyOf(kept).single().trip.label)
+        assertEquals(1, toldSecond.size)
+        assertTrue(
+            "replaced by a later change on iPhone" in toldSecond.single(),
+            toldSecond.single(),
+        )
+        // Told once: the notice is marked on every phone, and nothing goes back and forth.
+        assertTrue(first.upload("the test"))
+        val writes = cloud.writes
+        assertTrue(second.upload("the test"))
+        assertTrue(first.upload("the test"))
+        assertEquals(writes, cloud.writes)
+        assertEquals(1, toldSecond.size)
+
+        // "Put back" on the second phone: its change reaches the first.
+        assertTrue(second.putBack(kept.id))
+        assertTrue(second.upload("the test"))
+        assertTrue(first.upload("the test"))
+        assertEquals(
+            "Site visit",
+            firstPhone.trips.observeFinishedTrips().first().single().label,
+        )
+        assertEquals(1, toldSecond.size)
+    }
+
+    @Test
     fun `the report details and odometer readings are shared and the work hours are not`() =
         runTest {
             firstPhone.settings.setReportName("Shawn Kowalchuk")
@@ -245,7 +297,10 @@ class IosCloudTest {
             assertEquals(false, backup.account()?.unlocked)
         }
 
-    private fun backupOf(phone: RecorderWorld): IosCloud = IosCloud(
+    private fun backupOf(
+        phone: RecorderWorld,
+        told: MutableList<String> = mutableListOf(),
+    ): IosCloud = IosCloud(
         apple = cloud,
         files = IosCloudFiles(phone.folderPath + "/cloud"),
         mainRows = phone.mainTransferDao(),
@@ -276,6 +331,7 @@ class IosCloudTest {
         clock = { phone.nowMs },
         zone = { testZone("America/Edmonton") },
         locale = { Locale("en_CA") },
+        notify = { title, text -> told += "$title: $text" },
     )
 
     private suspend fun driveOneTrip(phone: RecorderWorld) {

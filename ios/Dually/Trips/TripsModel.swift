@@ -67,6 +67,12 @@ final class TripsModel: ObservableObject {
         await load()
     }
 
+    /// Brings back the change another phone's later change replaced (ADR-017).
+    func putBack(_ trip: TripText) async {
+        await run { _ = try await self.core.cloud.putBack(tripId: trip.tripId) }
+        await load()
+    }
+
     func labelChoices(for trip: TripText) async -> [String] {
         (try? await core.trips.labelChoicesFor(tripId: trip.tripId)) ?? []
     }

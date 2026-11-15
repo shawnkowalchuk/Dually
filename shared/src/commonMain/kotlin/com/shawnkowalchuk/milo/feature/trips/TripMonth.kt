@@ -96,6 +96,8 @@ enum class TripKind(val status: TripStatus) {
  * @param readOnly whether nothing about the trip may be changed here: its month was sent to the
  * accountant (locked once sent, on every phone; ADR-017), or it is in the backup of a phone on an
  * older version of Dually, which reads no other phone's changes.
+ * @param canPutBack whether the trip's history holds a change that another phone's later change
+ * replaced (ADR-017), which "Put back" brings back.
  */
 data class TripLine(
     val id: Long,
@@ -114,6 +116,7 @@ data class TripLine(
     val label: String? = null,
     val fromOtherPhone: Boolean = false,
     val readOnly: Boolean = false,
+    val canPutBack: Boolean = false,
 )
 
 /**
@@ -289,6 +292,7 @@ private fun Trip.line(kind: TripKind, changeable: Boolean): TripLine = TripLine(
     label = label,
     fromOtherPhone = homePhone != null,
     readOnly = !changeable,
+    canPutBack = changeable && changeHistory != null,
 )
 
 /**

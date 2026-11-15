@@ -3,12 +3,14 @@ package com.shawnkowalchuk.milo.data.cloud
 import com.shawnkowalchuk.milo.core.trip.TripStatus
 import com.shawnkowalchuk.milo.data.transfer.EXPORT_FORMAT_VERSION
 import com.shawnkowalchuk.milo.data.transfer.ExportJson
+import com.shawnkowalchuk.milo.data.transfer.ExportedTrip
 import com.shawnkowalchuk.milo.data.transfer.toExported
 import com.shawnkowalchuk.milo.data.transfer.toTrip
 import com.shawnkowalchuk.milo.data.trip.Trip
 import com.shawnkowalchuk.milo.data.trip.TripDao
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.ListSerializer
 
 // One logbook on every phone of an online backup account (ADR-017, 2026-11-14). Each phone
 // backs up into a folder of its own, `phones/{its install number}/`, with a record of itself at
@@ -72,15 +74,8 @@ fun CloudSnapshot.inFolder(folder: String, record: CloudDocument): CloudSnapshot
 fun cloudTripsOf(documents: Map<String, String>): List<Trip> =
     documents.filterKeys { it.substringBeforeLast('/').endsWith(CLOUD_TRIPS) }
         .values
-        .mapNotNull { json ->
-            try {
-                ExportJson.decodeFromString(CloudTrip.serializer(), json).trip.toTrip()
-            } catch (unreadable: SerializationException) {
-                null
-            } catch (unreadable: IllegalArgumentException) {
-                null
-            }
-        }.filter { it.status == TripStatus.FINISHED }
+        .mapNotNull(::cloudTripOf)
+        .filter { it.status == TripStatus.FINISHED }
 
 /**
  * The other phones of an account, as their folders were read.
@@ -140,6 +135,7 @@ private fun tripDocument(path: String, trip: Trip): CloudDocument = CloudDocumen
         CloudTrip(
             EXPORT_FORMAT_VERSION,
             trip.copy(homePhone = null, homeTripId = null).toExported(),
+            historyOf(trip),
         ),
     ),
 )
@@ -180,56 +176,106 @@ fun cloudRemovableBy(install: String, path: String): Boolean = path == cloudPhon
  * and not yet uploaded; and the ledger learns what this phone now holds of theirs, so that only
  * a change made here is uploaded.
  *
- * Two changes to one trip: the one uploaded last wins. A change from another phone to a trip
- * changed here too is not taken: this phone's upload follows, and replaces it. A line in the
- * Log says which trips changed.
+ * Two changes to one trip: the one uploaded last wins. The phone that finds the other's change
+ * under its own keeps its own, which its upload sends next, and adds the other's to the trip's
+ * history; the phone whose change it was finds it there, marked replaced, and is told
+ * (`ReplacedNotice`), once (the entry is then marked noticed, on every phone).
  *
+ * @param phoneName what this phone is called, for the history.
+ * @return the changes of this phone's that another phone's replaced, newly found.
  * @throws com.shawnkowalchuk.milo.core.io.IOException if the cloud or the ledger fails.
  */
 suspend fun syncLogbook(
     store: CloudStore,
     account: String,
     install: String,
+    phoneName: String,
+    nowMs: Long,
     others: OtherPhones,
     trips: TripDao,
     ledger: CloudLedgerStore,
     log: suspend (String) -> Unit,
-) {
+): List<ReplacedNotice> {
     val known = ledger.read(account).toMutableMap()
     val folder = cloudPhoneFolder(install)
+    val notices = mutableListOf<ReplacedNotice>()
     // 1. This phone's own trips, as other phones may have changed them in its folder.
     val own = trips.findOwn().associateBy { it.id }
     val inFolder = store.readCollections(account, listOf("$folder/$CLOUD_TRIPS"))
-    val taken = mutableListOf<Trip>()
+    val written = mutableListOf<Trip>()
     for ((path, json) in inFolder) {
         val cloud = CloudDocument(path, json).fingerprint
         val sent = known[path] ?: continue
         if (cloud == sent) continue
         val id = path.substringAfterLast('/').toLongOrNull() ?: continue
         val row = own[id] ?: continue
+        val theirs = cloudTripOf(json) ?: continue
         if (tripDocument(path, row).fingerprint != sent) {
+            // Changed here too: this phone's is kept, and theirs goes into the history.
+            written += row.replacing(theirs, cloud, nowMs, phoneName)
             log(
                 "Cloud backup: trip $id was changed here and on another phone; this phone's is kept.",
             )
             continue
         }
-        val changed = cloudTripOf(json) ?: continue
-        taken += changed.copy(id = row.id, homePhone = null, homeTripId = null)
+        val (taken, told) = theirs.noticing(sent)
+        notices += told
+        written += taken.copy(id = row.id, homePhone = null, homeTripId = null)
+        // What the cloud holds is known; a notice marked here differs, and is uploaded.
         known[path] = cloud
     }
-    if (taken.isNotEmpty()) {
-        trips.updateAll(taken)
-        log("Cloud backup: ${taken.size} of this phone's trips were changed on another phone.")
+    if (written.isNotEmpty()) {
+        trips.updateAll(written)
+        log("Cloud backup: ${written.size} of this phone's trips were changed on another phone.")
     }
     // 2. The other phones' trips, but for those changed here and not yet uploaded.
     val stored = trips.findFromOtherPhones()
-    val pending =
-        stored.filter { row ->
-            val document = cloudHomeDocument(row) ?: return@filter false
-            val sent = known[document.path]
-            sent != null && sent != document.fingerprint
-        }.map { it.id }.toSet()
-    val change = logbookChange(stored, own.values.toList(), others)
+    val byHome = others.trips.flatMap { (phone, list) ->
+        list.map { (phone to it.id) to it }
+    }.toMap()
+    val pending = mutableSetOf<Long>()
+    val marked = mutableMapOf<Pair<String, Long>, Trip>()
+    val cloudPrints = mutableMapOf<String, String>()
+    val replaced = mutableListOf<Trip>()
+    for (row in stored) {
+        val home = row.homePhone ?: continue
+        val homeId = row.homeTripId ?: continue
+        val document = cloudHomeDocument(row) ?: continue
+        val sent = known[document.path]
+        val cloudTrip = byHome[home to homeId]
+        val cloudPrint =
+            cloudTrip?.let { cloudHomeDocument(it.copy(homePhone = home, homeTripId = homeId)) }
+                ?.fingerprint
+        cloudPrint?.let { cloudPrints[document.path] = it }
+        if (sent != null && sent != document.fingerprint) {
+            pending += row.id
+            if (cloudTrip != null && cloudPrint != sent) {
+                // Changed here and, since this phone last saw it, there: this phone's is kept.
+                replaced += row.replacing(cloudTrip, cloudPrint.orEmpty(), nowMs, phoneName)
+                log(
+                    "Cloud backup: a trip was changed here and on another phone; this phone's is kept.",
+                )
+            }
+            continue
+        }
+        if (cloudTrip != null && sent != null) {
+            val (taken, told) = cloudTrip.noticing(sent)
+            if (told.isNotEmpty()) {
+                notices += told
+                marked[home to homeId] = taken
+            }
+        }
+    }
+    if (replaced.isNotEmpty()) trips.updateAll(replaced)
+    val noticedOthers =
+        OtherPhones(
+            trips =
+                others.trips.mapValues { (phone, list) ->
+                    list.map { marked[phone to it.id] ?: it }
+                },
+            names = others.names,
+        )
+    val change = logbookChange(stored, own.values.toList(), noticedOthers)
     val kept =
         LogbookChange(
             insert = change.insert,
@@ -244,23 +290,145 @@ suspend fun syncLogbook(
         )
     }
     // 3. The ledger: what this phone holds of the other phones' trips, as it would write them.
+    // A row marked here (a notice) is known as the cloud holds it, so that its upload follows.
+    val markedKeys = marked.keys
     val now = trips.findFromOtherPhones()
     val held = mutableSetOf<String>()
     for (row in now) {
         val document = cloudHomeDocument(row) ?: continue
         held += document.path
-        if (row.id !in pending) known[document.path] = document.fingerprint
+        when {
+            row.id in pending -> Unit
+
+            (row.homePhone to row.homeTripId) in markedKeys ->
+                cloudPrints[document.path]?.let { known[document.path] = it }
+
+            else -> known[document.path] = document.fingerprint
+        }
     }
     known.keys.removeAll { path ->
         path.startsWith("$CLOUD_PHONES/") && !path.startsWith("$folder/") && path != folder &&
             path !in held
     }
     ledger.write(account, known)
+    return notices
 }
 
-/** A trip of any status from its document, or null if it cannot be read. */
+/**
+ * A version of a trip that another phone's change replaced, kept in the trip's history
+ * (ADR-017).
+ *
+ * @param atMs when it was replaced.
+ * @param keptOn the phone whose change was kept, by name ("iPhone").
+ * @param replacedFingerprint the fingerprint of the replaced version's document, by which the
+ * phone that uploaded it knows it as its own.
+ * @param trip the replaced version.
+ * @param noticed whether the phone whose change it was has been told.
+ */
+@Serializable
+data class ReplacedChange(
+    val atMs: Long,
+    val keptOn: String,
+    val replacedFingerprint: String,
+    val trip: ExportedTrip,
+    val noticed: Boolean = false,
+)
+
+/** A change of this phone's that another phone's replaced: [keptOn] is the other phone's name. */
+data class ReplacedNotice(val tripStartedAtMs: Long, val keptOn: String)
+
+/** How many replaced versions a trip keeps. */
+private const val HISTORY_KEPT = 10
+
+private val historySerializer = ListSerializer(ReplacedChange.serializer())
+
+/** The replaced versions [trip] keeps, oldest first. */
+fun historyOf(trip: Trip): List<ReplacedChange> = trip.changeHistory?.let { json ->
+    try {
+        ExportJson.decodeFromString(historySerializer, json)
+    } catch (unreadable: SerializationException) {
+        null
+    } catch (unreadable: IllegalArgumentException) {
+        null
+    }
+}.orEmpty()
+
+private fun historyJson(history: List<ReplacedChange>): String? =
+    history.takeIf { it.isNotEmpty() }?.let {
+        ExportJson.encodeToString(historySerializer, it.takeLast(HISTORY_KEPT))
+    }
+
+/** Two histories as one, each version once, oldest first. */
+private fun merged(a: List<ReplacedChange>, b: List<ReplacedChange>): List<ReplacedChange> =
+    (a + b).groupBy { it.atMs to it.replacedFingerprint }
+        .map { (_, same) -> same.first().copy(noticed = same.any { it.noticed }) }
+        .sortedBy { it.atMs }
+
+/** This version kept over [theirs]: its history holds theirs as replaced, and theirs too. */
+private fun Trip.replacing(theirs: Trip, theirsPrint: String, nowMs: Long, keptOn: String): Trip {
+    val entry =
+        ReplacedChange(
+            atMs = nowMs,
+            keptOn = keptOn,
+            replacedFingerprint = theirsPrint,
+            trip = theirs.copy(
+                homePhone = null,
+                homeTripId = null,
+                changeHistory = null,
+            ).toExported(),
+        )
+    return copy(changeHistory = historyJson(merged(historyOf(this), historyOf(theirs)) + entry))
+}
+
+/**
+ * This trip with the history entries that replaced [mine] (the fingerprint of what this phone
+ * last uploaded or saw of it) marked noticed, and the notices for them.
+ */
+private fun Trip.noticing(mine: String): Pair<Trip, List<ReplacedNotice>> {
+    val history = historyOf(this)
+    val found = history.filter { !it.noticed && it.replacedFingerprint == mine }
+    if (found.isEmpty()) return this to emptyList()
+    val marked = history.map { if (it in found) it.copy(noticed = true) else it }
+    return copy(changeHistory = historyJson(marked)) to
+        found.map { ReplacedNotice(startedAtMs, it.keptOn) }
+}
+
+/**
+ * "Put back my change" (ADR-017): the trip [tripId] takes the newest version its history holds,
+ * and the version it had goes into the history in its place, as replaced by this phone. Its
+ * next upload sends it to every phone.
+ *
+ * @return false if the trip has no history, or cannot be changed here.
+ */
+suspend fun putBackReplaced(trips: TripDao, tripId: Long, nowMs: Long, phoneName: String): Boolean {
+    val row = trips.findById(tripId) ?: return false
+    if (cloudIsEarlierBackup(row.homePhone)) return false
+    val history = historyOf(row)
+    val newest = history.lastOrNull() ?: return false
+    val path = cloudHomeDocument(row)?.path ?: cloudTripPath(row.id)
+    val now =
+        ReplacedChange(
+            atMs = nowMs,
+            keptOn = phoneName,
+            replacedFingerprint = tripDocument(path, row).fingerprint,
+            trip = row.copy(homePhone = null, homeTripId = null, changeHistory = null).toExported(),
+            noticed = true,
+        )
+    val back =
+        newest.trip.toTrip().copy(
+            id = row.id,
+            homePhone = row.homePhone,
+            homeTripId = row.homeTripId,
+            changeHistory = historyJson(history.dropLast(1) + now),
+        )
+    trips.updateAll(listOf(back))
+    return true
+}
+
+/** A trip of any status from its document, with its history, or null if it cannot be read. */
 private fun cloudTripOf(json: String): Trip? = try {
-    ExportJson.decodeFromString(CloudTrip.serializer(), json).trip.toTrip()
+    val document = ExportJson.decodeFromString(CloudTrip.serializer(), json)
+    document.trip.toTrip().copy(changeHistory = historyJson(document.history))
 } catch (unreadable: SerializationException) {
     null
 } catch (unreadable: IllegalArgumentException) {

@@ -109,6 +109,7 @@
     <!-- The odometer check when a trip starts in another vehicle (2026-10-16). The title's arguments: the vehicle's name, its odometer as Dually has it ("120,345") and the unit's short word. -->
     <string name="notification_channel_odometer_check">Odometer check</string>
     <string name="notification_channel_service">Service reminders</string>
+    <string name="notification_channel_backup">Online backup</string>
     <string name="notification_channel_work_hours">Work hours</string>
     <!-- The argument is the time the work hours ended: "4:30 PM". -->
     <string name="notification_work_hours_ended">Work hours ended at %1$s</string>

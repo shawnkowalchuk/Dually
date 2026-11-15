@@ -102,6 +102,8 @@ data class TripsUiState(
  * becomes a finished one again; a plain function, like the ones for navigation.
  * @param clock and [zone] are read again each time the screen comes to the front: the phone can
  * cross midnight, the end of a month or a time zone while MilO is open.
+ * @param putBack brings back a trip's change that another phone's replaced (the online backup's,
+ * ADR-017); false if it could not be.
  */
 class TripsViewModel(
     private val trips: TripRepository,
@@ -114,6 +116,7 @@ class TripsViewModel(
     private val lookUpAddresses: (reason: String) -> Unit,
     private val clock: () -> Long,
     private val zone: () -> ZoneId,
+    private val putBack: suspend (tripId: Long) -> Boolean = { false },
 ) : ViewModel() {
     /** What Shawn has chosen, and the month, day and zone it is measured against. */
     private data class Choice(
@@ -261,6 +264,17 @@ class TripsViewModel(
     fun onMark(tripId: Long, category: TripCategory) {
         viewModelScope.launch {
             val made = corrections.mark(tripId, category)
+            choice.update { it.copy(changeFailed = !made) }
+        }
+    }
+
+    /**
+     * Brings back the change of a trip that another phone's later change replaced (ADR-017).
+     * The version it had goes into the history, so a second press undoes the first.
+     */
+    fun onPutBack(tripId: Long) {
+        viewModelScope.launch {
+            val made = putBack(tripId)
             choice.update { it.copy(changeFailed = !made) }
         }
     }

@@ -112,6 +112,7 @@ class IosTrips internal constructor(
                 }.takeIf { !line.readOnly },
             canLabel = line.kind == TripKind.COUNTED && !line.readOnly,
             canEdit = line.editable,
+            canPutBack = line.canPutBack,
             unit = unitWord(unit),
         )
         return MonthText(
@@ -216,6 +217,10 @@ class IosTrips internal constructor(
     }
 
     private fun noteText(line: TripLine): String? = when {
+        // ADR-017: another phone's later change replaced one, kept in the trip's history.
+        line.canPutBack ->
+            "A change to this trip was replaced by a later one. Put back brings it back."
+
         // ADR-017: recorded by another phone on the backup account.
         line.fromOtherPhone -> "From your other phone"
 
@@ -295,6 +300,8 @@ data class TripText(
     val canLabel: Boolean,
     /** A finished trip: its times, addresses and distance can be changed by hand. */
     val canEdit: Boolean,
+    /** Its history holds a change another phone's replaced, for [IosCloud.putBack] (ADR-017). */
+    val canPutBack: Boolean,
     /** "km" or "mi". */
     val unit: String,
 )

@@ -186,6 +186,19 @@ internal val MIGRATION_7_8: Migration =
     }
 
 /**
+ * Version 8 to 9 (2026-11-14, ADR-017): a trip keeps the versions that two phones' changes at
+ * once replaced. Empty on every stored trip.
+ *
+ * The exported `shared/schemas/.../9.json` is the reference.
+ */
+internal val MIGRATION_8_9: Migration =
+    object : Migration(8, 9) {
+        override suspend fun migrate(connection: SQLiteConnection) {
+            connection.execSQL("ALTER TABLE trips ADD COLUMN changeHistory TEXT")
+        }
+    }
+
+/**
  * Every step, in order. `buildMiloDatabase` hands them to Room, which runs them one after the
  * other for a database that is more than one version behind.
  */
@@ -198,4 +211,5 @@ internal val MILO_MIGRATIONS: Array<Migration> =
         MIGRATION_5_6,
         MIGRATION_6_7,
         MIGRATION_7_8,
+        MIGRATION_8_9,
     )

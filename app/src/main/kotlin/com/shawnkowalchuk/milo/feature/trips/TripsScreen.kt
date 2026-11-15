@@ -36,6 +36,7 @@ import java.time.YearMonth
  * trip MilO missed. Both lead to another screen, so both are the app's to carry out.
  * @param onReport opens the Report screen for a month, on the same terms.
  * @param onLabel opens the choice of a finished trip's label.
+ * @param onPutBack brings back a trip's change that another phone's replaced (ADR-017).
  */
 internal class TripsActions(
     val onPreviousMonth: () -> Unit,
@@ -49,6 +50,7 @@ internal class TripsActions(
     val onReport: (YearMonth) -> Unit,
     val onLabel: (Long) -> Unit,
     val onGraph: () -> Unit = {},
+    val onPutBack: (Long) -> Unit = {},
 )
 
 /**
@@ -126,6 +128,7 @@ fun TripsScreen(
                 onReport = onOpenReport,
                 onLabel = labels::onLabel,
                 onGraph = onOpenGraph,
+                onPutBack = viewModel::onPutBack,
             ),
         modifier = modifier,
     )
@@ -180,6 +183,11 @@ internal fun TripsContent(
                 // Put away as well: the row shows its label once it is saved.
                 openTripId = null
                 actions.onLabel(trip.id)
+            },
+            onPutBack = { trip ->
+                // Put away as well: the row shows the change that came back.
+                openTripId = null
+                actions.onPutBack(trip.id)
             },
         )
     val onToggleDay = { day: TripDay ->

@@ -86,6 +86,9 @@ import com.shawnkowalchuk.milo.core.trip.TripStatus
  * own trips, which are all trips before then. Another phone's trip comes from the backup,
  * is never uploaded from here, and is not changed here until editing from any phone is built.
  * @param homeTripId the trip's id on [homePhone]; null for this phone's own trips.
+ * @param changeHistory the versions of the trip that two phones' changes at once replaced
+ * (since 2026-11-14, ADR-017): the JSON of a list of `ReplacedChange`, newest last, at most ten;
+ * null while there are none. It travels with the trip to every phone.
  */
 // The first index is for the Trips screen, which reads the trips that started in a span of
 // time; the second finds another phone's trip by its phone and its id there.
@@ -134,4 +137,5 @@ data class Trip(
     val label: String? = null,
     val homePhone: String? = null,
     val homeTripId: Long? = null,
+    val changeHistory: String? = null,
 )

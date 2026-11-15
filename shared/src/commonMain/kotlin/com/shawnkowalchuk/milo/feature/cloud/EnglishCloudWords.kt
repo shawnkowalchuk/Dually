@@ -61,6 +61,10 @@ val ENGLISH_CLOUD_STRINGS: Map<String, String> = mapOf(
     "settings_cloud_use_backup_confirm" to "Use the backup\\'s trips",
     "settings_cloud_using_backup" to
         "This phone now shows the trips from your online backup, and backs up from now on.",
+    "settings_cloud_replaced_title" to "A change of yours was replaced",
+    "settings_cloud_replaced_text" to
+        "Your change to the trip of %1\$s was replaced by a later change on %2\$s. Open the " +
+        "trip to put yours back.",
     "settings_cloud_merged" to
         "Merged. This phone\\'s trips back up from now on, and your other phones\\' trips show " +
         "here too.",

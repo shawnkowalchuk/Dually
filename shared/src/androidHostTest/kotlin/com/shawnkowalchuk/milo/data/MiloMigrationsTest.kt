@@ -87,7 +87,7 @@ class MiloMigrationsTest {
     fun `there is one step for every version the database has had`() {
         val current = schemas.listFiles { file -> file.extension == "json" }.orEmpty().size
 
-        assertEquals("One schema file per version, and no gaps", current, 8)
+        assertEquals("One schema file per version, and no gaps", current, 9)
         // In order and without a gap, so a database that is two versions behind is taken
         // through both steps, one after the other.
         assertEquals(
@@ -145,8 +145,9 @@ class MiloMigrationsTest {
         // The step to version 5 adds none: it makes a table of its own. The step to version 6
         // adds one to that table: the unit a sent report was printed in. The step to version 7
         // adds two to the trips: the vehicle and the label, both of which may be empty. The step
-        // to version 8 adds two to the trips: the phone a trip came from and its id there.
-        val columnsAdded = mapOf(1 to 4, 2 to 4, 3 to 7, 4 to 0, 5 to 1, 6 to 2, 7 to 2)
+        // to version 8 adds two to the trips: the phone a trip came from and its id there. The
+        // step to version 9 adds one: the versions two phones' changes at once replaced.
+        val columnsAdded = mapOf(1 to 4, 2 to 4, 3 to 7, 4 to 0, 5 to 1, 6 to 2, 7 to 2, 8 to 1)
         for (step in MILO_MIGRATIONS) {
             val added = statementsOf(step).filter { it.contains(" ADD COLUMN ") }
 
@@ -186,6 +187,14 @@ class MiloMigrationsTest {
                 "ALTER TABLE trips ADD COLUMN label TEXT",
             ),
             statementsOf(MIGRATION_6_7),
+        )
+    }
+
+    @Test
+    fun `the step from 8 to 9 adds the trip's replaced versions, empty on every stored trip`() {
+        assertEquals(
+            listOf("ALTER TABLE trips ADD COLUMN changeHistory TEXT"),
+            statementsOf(MIGRATION_8_9),
         )
     }
 

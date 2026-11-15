@@ -26,6 +26,15 @@
 
 ### 2026-11-14
 
+**`[CHANGE]` The replaced change is kept in the trip's history, its phone is told, and Put back brings it back (ADR-017, step 4)** (APP_ENCYCLOPEDIA, Cloud backup, "One logbook on every phone")
+Shawn: "build the notice and history for replaced changes". On `app/multi-phone`, both apps:
+- **History:** `ReplacedChange` (when, the phone kept, the fingerprint of the replaced document, the replaced trip, told or not), up to 10 per trip, in the trip's document (`CloudTrip.history`, left out when empty, so every other trip's document and fingerprint stay as they were) and in the trips table (`changeHistory`, database version 9, `MIGRATION_8_9`).
+- **The notice:** `syncLogbook` returns the changes of this phone's that another phone's replaced, found by the fingerprint this phone uploaded; each is told once, and the entry is marked told, which travels to every phone like any change. Android: `ReplacedChangeNotification` (channel "Online backup", id 8). iPhone: posted from the shared code (`IosNotices.kt`), so no Swift change; injected into `IosCloud` so tests record it instead.
+- **Put back:** `putBackReplaced`; Android's row button and the iPhone's trip sheet. The version it had goes into the history in its place, so a second press swaps back; it is marked told, so the other phone is not told of a change the person made on purpose.
+- **Why the phone name is "iPhone" on the iPhone:** since iOS 16 the device's own name needs an entitlement Apple grants rarely; Android uses the phone's name in its settings.
+- Tests: `IosCloudTest` (12: two phones change one trip, the later upload wins, the other is told once, nothing goes back and forth, Put back reaches the first phone), `TripsWordsTest` (the button and the note), `MiloMigrationsTest` (8 to 9).
+- **No What's new line yet, for any of ADR-017's steps:** the list allows one undated version, main's 0.3.5 is still undated, and the branch's test builds say 0.3.6. The lines go in with the merge to main, once the version they ship in is known.
+
 **`[FIX]` The iPhone stopped when Sign in with Apple finished, on a fresh launch** (iPhone app, online backup)
 TestFlight's crash report (Shawn's iPhone 17e, 18:31, build 9): `Auth.auth()` asserting in `BackupSignIn.signIn(with:)`. Firebase starts only once the backup is used (ADR-012), and Google's path started it, Apple's did not: the first Firebase call after a launch was Apple's credential going to `Auth.auth()`. Both `signIn(with:)` and the token revoke at deletion now start Firebase first. `[FINDING]` The build numbers App Store Connect shows are Xcode's: an upload with the `app-store-connect` export raises the build number past the last one uploaded (`manageAppVersionAndBuildNumber` is on by default), so the repository's `CURRENT_PROJECT_VERSION` is not what TestFlight lists. The upload of 18:26 is build 9 there.
 
@@ -40,7 +49,7 @@ Shawn: "go straight on to step 4". On `app/multi-phone`: another phone's trip ha
 **`[CHANGE]` Test builds with step 4:** TestFlight build 7 uploaded at 18:12 (next 8), and Android build 13 (0.3.6), `Dually-0.3.6-build13-multiphone.aab`, for Shawn to upload to internal testing in place of build 12.
 
 **`[DEBT]` Step 4's notice and history are a Log line**
-ADR-017 asked for the trip's history and a notice on the phone whose change was replaced. Built: the change uploaded last wins, and the phone that keeps its own writes a Log line. Not built: the history kept in the trip's document, and a notice on the phone whose change was replaced. Also: the lock is kept by the Trips screens, not by the trips table, and its open point ("Unlock this month" for a correction) is still Shawn's to answer.
+ADR-017 asked for the trip's history and a notice on the phone whose change was replaced. Built: the change uploaded last wins, and the phone that keeps its own writes a Log line. Not built: the history kept in the trip's document, and a notice on the phone whose change was replaced. *(Paid off the same evening: see the entry above on the history, the notice and Put back.)* Still open: the lock is kept by the Trips screens, not by the trips table, and its open point ("Unlock this month" for a correction) is still Shawn's to answer.
 
 **`[CHANGE]` Every phone on a backup account backs up, and holds the others' trips (ADR-017, steps 1 and 2)** (APP_ENCYCLOPEDIA, Cloud backup, "One logbook on every phone")
 Shawn signed in on the iPhone with the account his Android phone backs up to, met "Restore my trips here / Back up this phone instead", and said: "it should automaticlly restore the phone ... if there are trips allready on the exisint gphone it should than ask if you want to merge them. i dont like the idea of hitting extra buttons"; he chose full sync (way C) and "count it once" for a drive both phones record, and asked to "bang it out in a couple hours". On the branch `app/multi-phone`, both apps:

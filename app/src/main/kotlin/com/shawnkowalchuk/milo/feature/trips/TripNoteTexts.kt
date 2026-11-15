@@ -57,6 +57,7 @@ internal fun TripLine.byHandNoteRes(): Int? = when (mark.takeIf { kind != TripKi
 internal fun TripLine.notesRes(): List<Int> = listOfNotNull(
     R.string.trips_note_other_phone.takeIf { fromOtherPhone },
     R.string.trips_note_locked.takeIf { readOnly && !fromOtherPhone },
+    R.string.trips_note_replaced.takeIf { canPutBack },
     categoryNoteRes(),
     byHandNoteRes(),
     leftOutNoteRes(),
@@ -72,6 +73,9 @@ internal sealed interface TripAction {
 
     /** Marks the trip as [category], whatever the work schedule made of it. */
     data class Mark(val category: TripCategory) : TripAction
+
+    /** Brings back the change another phone's later change replaced (ADR-017). */
+    data object PutBack : TripAction
 
     /** Deletes, restores or counts the trip. */
     data class Correct(val correction: TripCorrection) : TripAction
@@ -102,6 +106,7 @@ internal fun TripLine.actions(pressed: Boolean): List<TripAction> {
             if (editable) add(TripAction.Edit)
             add(TripAction.Label)
             markableAs.forEach { add(TripAction.Mark(it)) }
+            if (canPutBack) add(TripAction.PutBack)
         }
         if (change != null) add(TripAction.Correct(change))
     }
@@ -114,6 +119,8 @@ internal fun TripAction.wordsRes(): Int = when (this) {
     TripAction.Label -> R.string.trips_button_label
 
     is TripAction.Mark -> categoryWordsRes(category, ranPastSchedule = false)
+
+    TripAction.PutBack -> R.string.trips_button_put_back
 
     is TripAction.Correct ->
         when (correction) {
@@ -131,6 +138,7 @@ internal fun TripAction.spokenRes(): Int = when (this) {
     TripAction.Edit -> R.string.trips_action_edit
     TripAction.Label -> R.string.trips_action_label
     is TripAction.Mark -> category.markLabelRes()
+    TripAction.PutBack -> R.string.trips_action_put_back
     is TripAction.Correct -> correction.labelRes()
 }
 

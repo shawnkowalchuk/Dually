@@ -10,6 +10,8 @@ import com.shawnkowalchuk.milo.data.transfer.ExportedSettings
 import com.shawnkowalchuk.milo.data.transfer.ExportedTrip
 import com.shawnkowalchuk.milo.data.transfer.MainRows
 import com.shawnkowalchuk.milo.data.transfer.toExported
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 
@@ -38,7 +40,14 @@ fun cloudTripPath(tripId: Long): String = "$CLOUD_TRIPS/$tripId"
 
 /** A trip's document. */
 @Serializable
-data class CloudTrip(val formatVersion: Int, val trip: ExportedTrip)
+@OptIn(ExperimentalSerializationApi::class)
+data class CloudTrip(
+    val formatVersion: Int,
+    val trip: ExportedTrip,
+    // The versions two phones' changes at once replaced (ADR-017, 2026-11-14). Written only
+    // when there are some, so a trip's document is as it was before for every other trip.
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val history: List<ReplacedChange> = emptyList(),
+)
 
 /** The document of the reports recorded as sent, all of them, oldest first. */
 @Serializable
@@ -89,7 +98,7 @@ fun cloudSnapshotOf(rows: MainRows, settings: TransferredSettings?): CloudSnapsh
                 CloudDocument(
                     path = cloudTripPath(trip.id),
                     json = ExportJson.encodeToString(
-                        CloudTrip(EXPORT_FORMAT_VERSION, trip.toExported()),
+                        CloudTrip(EXPORT_FORMAT_VERSION, trip.toExported(), historyOf(trip)),
                     ),
                 )
             }

@@ -4,6 +4,7 @@ import com.shawnkowalchuk.milo.core.io.IOException
 import com.shawnkowalchuk.milo.core.text.Locale
 import com.shawnkowalchuk.milo.core.time.ZoneId
 import com.shawnkowalchuk.milo.core.trip.TripStatus
+import com.shawnkowalchuk.milo.core.util.formatDate
 import com.shawnkowalchuk.milo.data.appFolderPath
 import com.shawnkowalchuk.milo.data.cloud.CLOUD_BACKUP
 import com.shawnkowalchuk.milo.data.cloud.CLOUD_OWNER
@@ -17,6 +18,7 @@ import com.shawnkowalchuk.milo.data.cloud.CloudUnlockResult
 import com.shawnkowalchuk.milo.data.cloud.CloudUnlockServer
 import com.shawnkowalchuk.milo.data.cloud.CloudUnreachableException
 import com.shawnkowalchuk.milo.data.cloud.CloudUploadOutcome
+import com.shawnkowalchuk.milo.data.cloud.ReplacedNotice
 import com.shawnkowalchuk.milo.data.cloud.appleUnlockRequestBody
 import com.shawnkowalchuk.milo.data.cloud.cloudAppleAccountToken
 import com.shawnkowalchuk.milo.data.cloud.cloudAsksToMerge
@@ -27,6 +29,7 @@ import com.shawnkowalchuk.milo.data.cloud.cloudPhoneFolder
 import com.shawnkowalchuk.milo.data.cloud.cloudRemovableBy
 import com.shawnkowalchuk.milo.data.cloud.cloudRestoreExport
 import com.shawnkowalchuk.milo.data.cloud.inFolder
+import com.shawnkowalchuk.milo.data.cloud.putBackReplaced
 import com.shawnkowalchuk.milo.data.cloud.readOtherPhones
 import com.shawnkowalchuk.milo.data.cloud.restoreFrom
 import com.shawnkowalchuk.milo.data.cloud.syncLogbook
@@ -175,6 +178,7 @@ class IosCloud internal constructor(
     private val clock: () -> Long,
     private val zone: () -> ZoneId,
     private val locale: () -> Locale,
+    private val notify: (title: String, text: String) -> Unit = { _, _ -> },
 ) {
     private val store = AppleCloudStore()
     private val server = CloudUnlockServer { signed -> callUnlock(signed) }
@@ -194,7 +198,7 @@ class IosCloud internal constructor(
                 val phone = files.install()
                 snapshot.inFolder(
                     cloudPhoneFolder(phone),
-                    cloudPhoneDocument(phone, "iPhone", "iphone"),
+                    cloudPhoneDocument(phone, IPHONE_NAME, "iphone"),
                 ).withEdits(trips.findFromOtherPhones())
                     .withShared(
                         try {
@@ -527,8 +531,20 @@ class IosCloud internal constructor(
             }
             if (account.backingUp != true) keep(account.copy(backingUp = true))
             try {
-                syncLogbook(store, account.id, phone, others, trips, files, ::log)
+                val notices =
+                    syncLogbook(
+                        store,
+                        account.id,
+                        phone,
+                        IPHONE_NAME,
+                        clock(),
+                        others,
+                        trips,
+                        files,
+                        ::log,
+                    )
                 syncShared(store, account.id, settings, files, ::log)
+                if (notices.isNotEmpty()) tellReplaced(notices)
             } catch (unreachable: IOException) {
                 tryAgainLater()
                 return false
@@ -571,6 +587,45 @@ class IosCloud internal constructor(
         } finally {
             uploading.unlock()
         }
+    }
+
+    /**
+     * "Put back" on a trip whose history holds a change another phone's replaced (ADR-017): the
+     * trip takes that change again, and the upload that follows the change sends it to every
+     * phone.
+     *
+     * @return false if there was nothing to put back, or it could not be done.
+     */
+    suspend fun putBack(tripId: Long): Boolean = try {
+        putBackReplaced(trips, tripId, clock(), IPHONE_NAME).also { done ->
+            if (done) log("Cloud backup: trip $tripId: the change that was replaced was put back.")
+        }
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (failure: Exception) {
+        // Swift cannot be handed an exception it was not told of: it would end the app.
+        eventLog.add(
+            clock(),
+            EventCategory.ERROR,
+            "Putting back a trip's change failed",
+            failure.stackTraceToString(),
+        )
+        false
+    }
+
+    /** "A change of yours was replaced", as Android's notification says it. */
+    private fun tellReplaced(notices: List<ReplacedNotice>) {
+        val localeNow = locale()
+        val text =
+            notices.joinToString("\n") {
+                englishCloudFormat(
+                    "settings_cloud_replaced_text",
+                    localeNow,
+                    formatDate(it.tripStartedAtMs, zone(), localeNow),
+                    it.keptOn,
+                )
+            }
+        notify(englishCloudText("settings_cloud_replaced_title"), text)
     }
 
     private fun tryAgainLater() {
@@ -778,6 +833,9 @@ class IosCloud internal constructor(
         FileSystem.SYSTEM.createDirectories(it.toPath())
     }
 }
+
+/** What this iPhone is called in the backup: its phone record, and the trips' history. */
+private const val IPHONE_NAME = "iPhone"
 
 /** The email the tile names: Apple may have hidden it. */
 private fun shown(account: CloudAccount): String = account.email.ifEmpty { "your Apple account" }

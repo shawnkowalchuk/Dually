@@ -53,6 +53,10 @@
     <!-- Since 2026-11-14 (ADR-017): a trip another phone on the backup account recorded. -->
     <string name="trips_note_other_phone">from your other phone</string>
     <string name="trips_note_locked">sent to your accountant, locked</string>
+    <!-- Since 2026-11-14 (ADR-017): another phone's change replaced one, kept in the trip's history. -->
+    <string name="trips_note_replaced">a change was replaced</string>
+    <string name="trips_button_put_back">Put back</string>
+    <string name="trips_action_put_back">Put back the change that was replaced</string>
     <string name="trips_note_added">added by hand</string>
     <string name="trips_note_edited">edited</string>
 

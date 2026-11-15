@@ -264,6 +264,7 @@ class DuallyCore private constructor(
                     clock = clock,
                     zone = ::systemZoneId,
                     locale = ::phoneLocale,
+                    notify = ::postReplacedNotice,
                 )
             return DuallyCore(
                 database,

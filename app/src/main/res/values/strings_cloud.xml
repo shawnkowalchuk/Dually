@@ -38,6 +38,9 @@
     <string name="settings_cloud_use_backup_text">This phone\'s own trips are taken off it, and your logbook shows the trips from your other phones. A safety copy of this phone\'s trips is made first, under Your data.</string>
     <string name="settings_cloud_use_backup_confirm">Use the backup\'s trips</string>
     <string name="settings_cloud_using_backup">This phone now shows the trips from your online backup, and backs up from now on.</string>
+    <!-- Since 2026-11-14 (ADR-017): another phone's change to the same trip, uploaded later, replaced this phone's. %1$s is the trip's date, %2$s the other phone's name. -->
+    <string name="settings_cloud_replaced_title">A change of yours was replaced</string>
+    <string name="settings_cloud_replaced_text">Your change to the trip of %1$s was replaced by a later change on %2$s. Open the trip to put yours back.</string>
     <string name="settings_cloud_merged">Merged. This phone\'s trips back up from now on, and your other phones\' trips show here too.</string>
     <string name="settings_cloud_delete">Delete my online backup and account</string>
     <string name="settings_cloud_delete_title">Delete your online backup and account?</string>
