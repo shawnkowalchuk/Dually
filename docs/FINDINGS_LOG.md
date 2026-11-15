@@ -26,6 +26,9 @@
 
 ### 2026-11-14
 
+**`[FIX]` The iPhone stopped when Sign in with Apple finished, on a fresh launch** (iPhone app, online backup)
+TestFlight's crash report (Shawn's iPhone 17e, 18:31, a build from the branch `app/multi-phone`): `Auth.auth()` asserting in `BackupSignIn.signIn(with:)`. Firebase starts only once the backup is used (ADR-012), and Google's path started it, Apple's did not: the first Firebase call after a launch was Apple's credential going to `Auth.auth()`. Both `signIn(with:)` and the token revoke at deletion now start Firebase first. `[FINDING]` The build numbers App Store Connect shows are Xcode's: an upload with the `app-store-connect` export raises the build number past the last one uploaded (`manageAppVersionAndBuildNumber` is on by default), so the repository's `CURRENT_PROJECT_VERSION` is not what TestFlight lists.
+
 **`[CHANGE]` The backup's functions deployed with the Apple check; Apple's notices, the purchase's review and App Privacy entered** (ADR-016; firebase/README.md)
 - **Deployed** from main after #152 merged (`npx firebase deploy --only functions`): `unlockBackup`, `deleteMyAccount`, `checkRefunds` updated, `appleNotifications` created. Checked from the Mac: an empty POST to `appleNotifications` answers 400 (reachable, not 403), a forged notice 200 and nothing done, `unlockBackup` without a sign-in 401.
 - **App Store Server Notifications** (Shawn: "yes enter the address"): App Store Connect, App Information, Production and Sandbox both `https://northamerica-northeast1-dually-trip-tracker.cloudfunctions.net/appleNotifications` (Apple's form offered no version choice; new addresses get version 2).
