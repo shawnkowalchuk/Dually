@@ -26,7 +26,7 @@
 
 ### 2026-11-14
 
-**`[CHANGE]` Test builds with all four steps:** TestFlight build 8 uploaded at 18:26 (next 9); Android build 14 (0.3.6), `Dually-0.3.6-build14-multiphone.aab`, in place of 12 and 13. The rules with `shared/` wait for Shawn's word to be published.
+**`[CHANGE]` Test builds with all four steps:** TestFlight build 8 uploaded at 18:26 (next 9); Android build 14 (0.3.6), `Dually-0.3.6-build14-multiphone.aab`, in place of 12 and 13. The rules with `shared/` published the same evening (Shawn: "Yes, publish them").
 
 **`[CHANGE]` The report details, service book and odometer readings shared between phones (ADR-017, step 3)** (APP_ENCYCLOPEDIA, Cloud backup)
 Shawn: "go on to step 3". On `app/multi-phone`: three documents under `users/{uid}/shared/` (`CloudShared.kt`). The report details and the service book: the change uploaded last wins, and a phone that never shared takes the account's. The odometer readings: every phone's readings are added together, since readings are facts and cannot contradict each other; the note of which trip was open when a reading was typed stays on its phone. A run never removes a shared document or another phone's (`cloudRemovableBy` now allows only this phone's folder and an older version's top-level documents). Rules for `shared/{report, service, odometer}` with 2 tests (40 in all); `IosCloudTest` (11: the joining phone takes the report name, both phones end with both readings, and a later change reaches the other phone).
