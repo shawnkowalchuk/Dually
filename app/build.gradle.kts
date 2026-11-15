@@ -172,7 +172,8 @@ android {
         // Build 11 (2026-11-13) is 0.3.5 for internal testing: the shared module's phone check.
         // Build 12 (2026-11-14) is 0.3.6 for internal testing, from the branch app/multi-phone:
         // every phone on a backup account backs up and holds the logbook (ADR-017, steps 1-2).
-        versionCode = 12
+        // Build 13 (2026-11-14), the same branch with step 4: any phone changes any trip.
+        versionCode = 13
         versionName = "0.3.6"
 
         // The Firebase settings (above), empty in a build without the file.
