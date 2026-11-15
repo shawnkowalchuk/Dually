@@ -36,9 +36,11 @@ import com.shawnkowalchuk.milo.data.cloud.inFolder
 import com.shawnkowalchuk.milo.data.cloud.readOtherPhones
 import com.shawnkowalchuk.milo.data.cloud.restoreFrom
 import com.shawnkowalchuk.milo.data.cloud.syncLogbook
+import com.shawnkowalchuk.milo.data.cloud.syncShared
 import com.shawnkowalchuk.milo.data.cloud.unlockAfter
 import com.shawnkowalchuk.milo.data.cloud.uploadUntilQuiet
 import com.shawnkowalchuk.milo.data.cloud.withEdits
+import com.shawnkowalchuk.milo.data.cloud.withShared
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.settings.transferred
 import com.shawnkowalchuk.milo.data.transfer.MainTransferDao
@@ -126,6 +128,13 @@ class CloudObjects(
                     cloudPhoneFolder(phone),
                     cloudPhoneDocument(phone, phoneName(appContext), "android"),
                 ).withEdits(withContext(Dispatchers.IO) { tripTable.findFromOtherPhones() })
+                    .withShared(
+                        try {
+                            container.settingsStore.current()
+                        } catch (unreadable: IOException) {
+                            null
+                        },
+                    )
             },
             removable = { path ->
                 cloudRemovableBy(withContext(Dispatchers.IO) { install.id() }, path)
@@ -357,6 +366,7 @@ class CloudObjects(
         try {
             withContext(Dispatchers.IO) {
                 syncLogbook(store, account.id, phone, others, tripTable, ledger, ::log)
+                syncShared(store, account.id, container.settingsStore, ledger, ::log)
             }
         } catch (unreachable: IOException) {
             return ListenableWorker.Result.retry()

@@ -30,9 +30,11 @@ import com.shawnkowalchuk.milo.data.cloud.inFolder
 import com.shawnkowalchuk.milo.data.cloud.readOtherPhones
 import com.shawnkowalchuk.milo.data.cloud.restoreFrom
 import com.shawnkowalchuk.milo.data.cloud.syncLogbook
+import com.shawnkowalchuk.milo.data.cloud.syncShared
 import com.shawnkowalchuk.milo.data.cloud.unlockAnswer
 import com.shawnkowalchuk.milo.data.cloud.uploadUntilQuiet
 import com.shawnkowalchuk.milo.data.cloud.withEdits
+import com.shawnkowalchuk.milo.data.cloud.withShared
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
@@ -194,6 +196,13 @@ class IosCloud internal constructor(
                     cloudPhoneFolder(phone),
                     cloudPhoneDocument(phone, "iPhone", "iphone"),
                 ).withEdits(trips.findFromOtherPhones())
+                    .withShared(
+                        try {
+                            settings.current()
+                        } catch (unreadable: IOException) {
+                            null
+                        },
+                    )
             },
             removable = { path -> cloudRemovableBy(files.install(), path) },
         )
@@ -519,6 +528,7 @@ class IosCloud internal constructor(
             if (account.backingUp != true) keep(account.copy(backingUp = true))
             try {
                 syncLogbook(store, account.id, phone, others, trips, files, ::log)
+                syncShared(store, account.id, settings, files, ::log)
             } catch (unreachable: IOException) {
                 tryAgainLater()
                 return false

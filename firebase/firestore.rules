@@ -12,6 +12,8 @@ rules_version = '2';
 //   - users/{uid}/phones/{phone}, and its trips/{id} and backup/{sentReports, settings} (since
 //     2026-11-14, ADR-017): each phone's own folder, and the phone's record, the folder's own
 //     document. The same rules as the documents above; a phone is named by its install number.
+//   - users/{uid}/shared/{report, service, odometer} (since 2026-11-14, ADR-017 step 3): the
+//     settings every phone of the account shares, under the same rules.
 //   - unlocks/{uid}: the one-time purchase (ADR-013). The account reads its own; nobody
 //     writes one from an app. Only the purchase check on the server (functions/unlock.js) or
 //     the console does.
@@ -62,6 +64,16 @@ service cloud.firestore {
       allow create, update: if signedInAs(uid)
         && phoneName(phone)
         && knownPath(folder, name)
+        && unlocked(uid)
+        && wellFormed();
+    }
+
+    // The settings every phone of the account shares (since 2026-11-14, ADR-017 step 3).
+    match /users/{uid}/shared/{name} {
+      allow list: if signedInAs(uid);
+      allow get, delete: if signedInAs(uid) && name in ['report', 'service', 'odometer'];
+      allow create, update: if signedInAs(uid)
+        && name in ['report', 'service', 'odometer']
         && unlocked(uid)
         && wellFormed();
     }

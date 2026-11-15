@@ -233,3 +233,22 @@ describe("each phone's own folder", () => {
     await assertFails(setDoc(doc(db, `users/${OWNER}/phones/${PHONE}`), { json: 1 }));
   });
 });
+
+describe('the settings every phone shares (ADR-017, step 3)', () => {
+  test('an account with the unlock writes and lists them; without it, it only reads', async () => {
+    await unlock(OWNER);
+    const db = as(OWNER);
+    for (const name of ['report', 'service', 'odometer']) {
+      await assertSucceeds(setDoc(doc(db, `users/${OWNER}/shared/${name}`), trip));
+    }
+    await assertSucceeds(getDocs(collection(db, `users/${OWNER}/shared`)));
+    await assertFails(setDoc(doc(db, `users/${OWNER}/shared/photos`), trip));
+    await assertFails(getDocs(collection(as(OTHER), `users/${OWNER}/shared`)));
+  });
+
+  test('without the unlock nothing is written', async () => {
+    await seed(`users/${OWNER}/shared/report`, trip);
+    await assertFails(setDoc(doc(as(OWNER), `users/${OWNER}/shared/report`), trip));
+    await assertSucceeds(getDoc(doc(as(OWNER), `users/${OWNER}/shared/report`)));
+  });
+});

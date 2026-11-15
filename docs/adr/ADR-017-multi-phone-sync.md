@@ -1,7 +1,7 @@
 # ADR-017: Every phone on a backup account holds the whole logbook (full sync)
 
 Date: 2026-11-14
-Status: Accepted. Steps 1, 2 and 4 built on 2026-11-14 on the branch `app/multi-phone` (every phone backs up into its own folder; every phone holds the others' finished trips and may change them; one merge question; sent months locked), for TestFlight and Google Play's internal testing; step 3 (shared settings) not built. Replaces ADR-012's "one phone backs up per account" and "backup only, the phone is the source of truth". The proposal Shawn decided from is his doc "Multi-phone online backup proposal".
+Status: Accepted. All four steps built on 2026-11-14 on the branch `app/multi-phone` (every phone backs up into its own folder; every phone holds the others' finished trips and may change them; one merge question; sent months locked; the report details, service book and odometer readings shared), for TestFlight and Google Play's internal testing; not yet tried on two real phones. Replaces ADR-012's "one phone backs up per account" and "backup only, the phone is the source of truth". The proposal Shawn decided from is his doc "Multi-phone online backup proposal".
 
 ## Context
 
@@ -56,6 +56,13 @@ The steps gather on the branch `app/multi-phone`, each as a pull request into it
 - **"The later change wins" is the change uploaded last.** A phone that finds its own unsent change and another phone's to the same trip keeps its own, whose upload follows, and writes a line in the Log. Two phones' times are not compared: edit times are not stored, and the phone that uploads last is the one whose change was made last in nearly every case.
 - **Locked once sent:** a month with a report recorded as sent shows its trips read-only on every phone ("sent to your accountant, locked"). Kept in the Trips screens; the edit form is reached only from them.
 - **An older version's backup** is read-only here (`cloudIsEarlierBackup`): that version reads no other phone's changes, and its trips move into its folder once it is updated.
+
+### Built in step 3 (2026-11-14)
+
+- `users/{uid}/shared/report` (the report's name, company, vehicle and accountant's email), `shared/service` (the service book) and `shared/odometer` (the readings), each one `json` field as every document (`CloudShared.kt`). Uploaded by the comparison like the rest (`withShared`), never removed by a run.
+- **The report details and the service book:** the change uploaded last wins (`syncShared`), as for trips; a phone that has never shared takes what the account holds.
+- **The odometer readings: every reading any phone typed is kept,** not the last list: a reading is a fact, and two phones' readings never contradict each other. Which trip was open when one was typed stays on the phone that typed it (another phone numbers that trip differently).
+- Work hours, the trip rules and the reminder stay each phone's own, in its own `backup/settings`.
 
 ## Consequences
 

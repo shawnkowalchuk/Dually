@@ -1,11 +1,14 @@
 package com.shawnkowalchuk.milo.ios
 
+import com.shawnkowalchuk.milo.core.odometer.OdometerReading
 import com.shawnkowalchuk.milo.core.text.Locale
 import com.shawnkowalchuk.milo.core.time.testZone
 import com.shawnkowalchuk.milo.core.trip.TripStatus
 import com.shawnkowalchuk.milo.core.trip.driveNorth
+import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.data.cloud.CLOUD_OWNER
 import com.shawnkowalchuk.milo.data.cloud.CloudDocument
+import com.shawnkowalchuk.milo.data.settings.addOdometerReading
 import com.shawnkowalchuk.milo.data.transfer.DataExport
 import com.shawnkowalchuk.milo.data.transfer.DataImport
 import kotlin.test.AfterTest
@@ -170,6 +173,38 @@ class IosCloudTest {
         assertTrue(second.upload("the test"))
         assertEquals(writes, cloud.writes)
     }
+
+    @Test
+    fun `the report details and odometer readings are shared and the work hours are not`() =
+        runTest {
+            firstPhone.settings.setReportName("Shawn Kowalchuk")
+            firstPhone.settings.addOdometerReading(
+                OdometerReading(atMs = 1_000L, value = 123_456L, unit = DistanceUnit.KILOMETRES),
+            )
+            secondPhone.settings.addOdometerReading(
+                OdometerReading(atMs = 2_000L, value = 123_500L, unit = DistanceUnit.KILOMETRES),
+            )
+            cloud.unlocked += ACCOUNT
+            val first = backupOf(firstPhone)
+            first.signedIn(ACCOUNT, "")
+            assertTrue(first.upload("the test"))
+            val second = backupOf(secondPhone)
+            second.signedIn(ACCOUNT, "")
+            assertTrue(second.upload("the test"))
+
+            val there = secondPhone.settings.current()
+            assertEquals("Shawn Kowalchuk", there.reportName, "taken by the phone that joined")
+            assertEquals(setOf(1_000L, 2_000L), there.odometerReadings.map { it.atMs }.toSet())
+            // And the first phone gets the second's reading at its next upload.
+            assertTrue(first.upload("the test"))
+            assertEquals(2, firstPhone.settings.current().odometerReadings.size)
+
+            // A later change on the first phone reaches the second.
+            firstPhone.settings.setReportName("S. Kowalchuk")
+            assertTrue(first.upload("the test"))
+            assertTrue(second.upload("the test"))
+            assertEquals("S. Kowalchuk", secondPhone.settings.current().reportName)
+        }
 
     @Test
     fun `a purchase goes to the check with Apple's signed transaction`() = runTest {

@@ -167,11 +167,12 @@ fun CloudSnapshot.withEdits(otherPhonesRows: List<Trip>): CloudSnapshot =
 /**
  * Whether a run of this phone ([install]) may remove [path] from the cloud: its own documents,
  * and an older version's at the account's top, which it moves into its folder. Never another
- * phone's: a trip this phone no longer holds of theirs is still theirs.
+ * phone's, nor a shared document: a trip this phone no longer holds of theirs is still theirs.
  */
-fun cloudRemovableBy(install: String, path: String): Boolean =
-    !path.startsWith("$CLOUD_PHONES/") || path == cloudPhoneFolder(install) ||
-        path.startsWith("${cloudPhoneFolder(install)}/")
+fun cloudRemovableBy(install: String, path: String): Boolean = path == cloudPhoneFolder(install) ||
+    path.startsWith("${cloudPhoneFolder(install)}/") ||
+    path.startsWith("$CLOUD_TRIPS/") ||
+    path.startsWith("$CLOUD_BACKUP/")
 
 /**
  * Before each upload (ADR-017, steps 2 and 4): the changes other phones made to this phone's
