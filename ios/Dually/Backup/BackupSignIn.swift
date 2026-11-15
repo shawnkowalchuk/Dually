@@ -103,6 +103,7 @@ enum BackupSignIn {
               let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
               let code = credential.authorizationCode.flatMap({ String(data: $0, encoding: .utf8) })
         else { return false }
+        guard FirebaseCloud.shared.start() else { return false }
         do {
             try await Auth.auth().revokeToken(withAuthorizationCode: code)
             return true
@@ -112,6 +113,9 @@ enum BackupSignIn {
     }
 
     private static func signIn(with credential: AuthCredential) async -> BackupSignInResult {
+        // Firebase starts only once the backup is used (ADR-012); Auth.auth() before it stops the
+        // app (TestFlight crash of 2026-11-14, after Sign in with Apple on a fresh launch).
+        guard FirebaseCloud.shared.start() else { return .failed("Firebase: not set up in this build") }
         do {
             let result = try await Auth.auth().signIn(with: credential)
             return .signedIn(id: result.user.uid, email: result.user.email ?? "")
