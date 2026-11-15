@@ -1,9 +1,12 @@
 package com.shawnkowalchuk.milo.data.cloud
 
 import com.shawnkowalchuk.milo.core.trip.TripStatus
+import com.shawnkowalchuk.milo.data.transfer.EXPORT_FORMAT_VERSION
 import com.shawnkowalchuk.milo.data.transfer.ExportJson
+import com.shawnkowalchuk.milo.data.transfer.toExported
 import com.shawnkowalchuk.milo.data.transfer.toTrip
 import com.shawnkowalchuk.milo.data.trip.Trip
+import com.shawnkowalchuk.milo.data.trip.TripDao
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 
@@ -109,15 +112,158 @@ suspend fun readOtherPhones(store: CloudStore, account: String, install: String)
         names[phone] = cloudPhoneOf(json)?.name ?: "Another phone"
     }
     val earlier = store.readCollections(account, listOf(CLOUD_TRIPS, CLOUD_BACKUP))
-    val owner = earlier[CLOUD_OWNER]?.let(::cloudOwnerOf) ?: LEGACY_PHONE
+    val owner = earlier[CLOUD_OWNER]?.let(::cloudOwnerOf)
     if (owner != install && owner !in trips) {
         val earlierTrips = cloudTripsOf(earlier)
         if (earlierTrips.isNotEmpty()) {
-            trips[owner] = earlierTrips
-            names[owner] = "Your other phone"
+            // Read-only here: the phone that wrote it reads no other phone's changes.
+            val phone = if (owner == null) LEGACY_PHONE else "$LEGACY_PHONE:$owner"
+            trips[phone] = earlierTrips
+            names[phone] = "Your other phone"
         }
     }
     return OtherPhones(trips, names)
+}
+
+/**
+ * Whether [phone], a trip's home, is the backup an older version keeps at the account's top
+ * (ADR-017): its trips are read-only on the other phones, since that version reads no other
+ * phone's changes, and goes to its own folder once it is updated.
+ */
+fun cloudIsEarlierBackup(phone: String?): Boolean = phone?.startsWith(LEGACY_PHONE) == true
+
+/** A trip's document as [path] holds it: the export format's JSON, as every trip's. */
+private fun tripDocument(path: String, trip: Trip): CloudDocument = CloudDocument(
+    path,
+    ExportJson.encodeToString(
+        CloudTrip.serializer(),
+        CloudTrip(
+            EXPORT_FORMAT_VERSION,
+            trip.copy(homePhone = null, homeTripId = null).toExported(),
+        ),
+    ),
+)
+
+/**
+ * Another phone's trip as this phone would write it into that phone's folder (step 4 of
+ * ADR-017): under its home, with its id there. Null for a trip of an older version's backup,
+ * which is read-only.
+ */
+fun cloudHomeDocument(row: Trip): CloudDocument? {
+    val home = row.homePhone ?: return null
+    val id = row.homeTripId ?: return null
+    if (cloudIsEarlierBackup(home)) return null
+    return tripDocument("${cloudPhoneFolder(home)}/${cloudTripPath(id)}", row.copy(id = id))
+}
+
+/**
+ * The snapshot with this phone's rows of other phones' trips added, each at its home: a row
+ * changed here differs from what the ledger has for it, and its upload is the change reaching
+ * the phone that recorded it and every other phone (step 4 of ADR-017).
+ */
+fun CloudSnapshot.withEdits(otherPhonesRows: List<Trip>): CloudSnapshot =
+    copy(documents = documents + otherPhonesRows.mapNotNull(::cloudHomeDocument))
+
+/**
+ * Whether a run of this phone ([install]) may remove [path] from the cloud: its own documents,
+ * and an older version's at the account's top, which it moves into its folder. Never another
+ * phone's: a trip this phone no longer holds of theirs is still theirs.
+ */
+fun cloudRemovableBy(install: String, path: String): Boolean =
+    !path.startsWith("$CLOUD_PHONES/") || path == cloudPhoneFolder(install) ||
+        path.startsWith("${cloudPhoneFolder(install)}/")
+
+/**
+ * Before each upload (ADR-017, steps 2 and 4): the changes other phones made to this phone's
+ * own trips come in; the other phones' trips are brought up to date, except those changed here
+ * and not yet uploaded; and the ledger learns what this phone now holds of theirs, so that only
+ * a change made here is uploaded.
+ *
+ * Two changes to one trip: the one uploaded last wins. A change from another phone to a trip
+ * changed here too is not taken: this phone's upload follows, and replaces it. A line in the
+ * Log says which trips changed.
+ *
+ * @throws com.shawnkowalchuk.milo.core.io.IOException if the cloud or the ledger fails.
+ */
+suspend fun syncLogbook(
+    store: CloudStore,
+    account: String,
+    install: String,
+    others: OtherPhones,
+    trips: TripDao,
+    ledger: CloudLedgerStore,
+    log: suspend (String) -> Unit,
+) {
+    val known = ledger.read(account).toMutableMap()
+    val folder = cloudPhoneFolder(install)
+    // 1. This phone's own trips, as other phones may have changed them in its folder.
+    val own = trips.findOwn().associateBy { it.id }
+    val inFolder = store.readCollections(account, listOf("$folder/$CLOUD_TRIPS"))
+    val taken = mutableListOf<Trip>()
+    for ((path, json) in inFolder) {
+        val cloud = CloudDocument(path, json).fingerprint
+        val sent = known[path] ?: continue
+        if (cloud == sent) continue
+        val id = path.substringAfterLast('/').toLongOrNull() ?: continue
+        val row = own[id] ?: continue
+        if (tripDocument(path, row).fingerprint != sent) {
+            log(
+                "Cloud backup: trip $id was changed here and on another phone; this phone's is kept.",
+            )
+            continue
+        }
+        val changed = cloudTripOf(json) ?: continue
+        taken += changed.copy(id = row.id, homePhone = null, homeTripId = null)
+        known[path] = cloud
+    }
+    if (taken.isNotEmpty()) {
+        trips.updateAll(taken)
+        log("Cloud backup: ${taken.size} of this phone's trips were changed on another phone.")
+    }
+    // 2. The other phones' trips, but for those changed here and not yet uploaded.
+    val stored = trips.findFromOtherPhones()
+    val pending =
+        stored.filter { row ->
+            val document = cloudHomeDocument(row) ?: return@filter false
+            val sent = known[document.path]
+            sent != null && sent != document.fingerprint
+        }.map { it.id }.toSet()
+    val change = logbookChange(stored, own.values.toList(), others)
+    val kept =
+        LogbookChange(
+            insert = change.insert,
+            update = change.update.filter { it.id !in pending },
+            delete = change.delete.filter { it !in pending },
+        )
+    if (!kept.isEmpty) {
+        trips.replaceFromOtherPhones(kept.insert, kept.update, kept.delete)
+        log(
+            "Cloud backup: from the other phones, ${kept.insert.size} trips added, " +
+                "${kept.update.size} changed, ${kept.delete.size} removed.",
+        )
+    }
+    // 3. The ledger: what this phone holds of the other phones' trips, as it would write them.
+    val now = trips.findFromOtherPhones()
+    val held = mutableSetOf<String>()
+    for (row in now) {
+        val document = cloudHomeDocument(row) ?: continue
+        held += document.path
+        if (row.id !in pending) known[document.path] = document.fingerprint
+    }
+    known.keys.removeAll { path ->
+        path.startsWith("$CLOUD_PHONES/") && !path.startsWith("$folder/") && path != folder &&
+            path !in held
+    }
+    ledger.write(account, known)
+}
+
+/** A trip of any status from its document, or null if it cannot be read. */
+private fun cloudTripOf(json: String): Trip? = try {
+    ExportJson.decodeFromString(CloudTrip.serializer(), json).trip.toTrip()
+} catch (unreadable: SerializationException) {
+    null
+} catch (unreadable: IllegalArgumentException) {
+    null
 }
 
 /** What changes in this phone's rows of other phones' trips. */

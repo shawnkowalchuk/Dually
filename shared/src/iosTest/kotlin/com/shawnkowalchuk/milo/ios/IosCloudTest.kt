@@ -2,6 +2,7 @@ package com.shawnkowalchuk.milo.ios
 
 import com.shawnkowalchuk.milo.core.text.Locale
 import com.shawnkowalchuk.milo.core.time.testZone
+import com.shawnkowalchuk.milo.core.trip.TripStatus
 import com.shawnkowalchuk.milo.core.trip.driveNorth
 import com.shawnkowalchuk.milo.data.cloud.CLOUD_OWNER
 import com.shawnkowalchuk.milo.data.cloud.CloudDocument
@@ -141,6 +142,33 @@ class IosCloudTest {
         assertTrue(second.upload("the test"))
 
         assertEquals(1, secondPhone.trips.observeFinishedTrips().first().size)
+    }
+
+    @Test
+    fun `a change made on the second phone to the first one's trip reaches the first`() = runTest {
+        driveOneTrip(firstPhone)
+        cloud.unlocked += ACCOUNT
+        val first = backupOf(firstPhone)
+        first.signedIn(ACCOUNT, "")
+        assertTrue(first.upload("the test"))
+        val second = backupOf(secondPhone)
+        second.signedIn(ACCOUNT, "")
+        assertTrue(second.upload("the test"))
+        val theirs = secondPhone.trips.observeFinishedTrips().first().single()
+
+        // Step 4 of ADR-017: labelled on the second phone, which did not record it.
+        assertEquals(1, secondPhone.tripDao().setLabel(theirs.id, "Supplier", TripStatus.OPEN))
+        assertTrue(second.upload("the test"))
+        assertTrue(first.upload("the test"))
+
+        val mine = firstPhone.trips.observeFinishedTrips().first().single()
+        assertEquals("Supplier", mine.label)
+        assertNull(mine.homePhone, "still the first phone's own trip")
+        // And nothing goes back and forth after that.
+        val writes = cloud.writes
+        assertTrue(first.upload("the test"))
+        assertTrue(second.upload("the test"))
+        assertEquals(writes, cloud.writes)
     }
 
     @Test

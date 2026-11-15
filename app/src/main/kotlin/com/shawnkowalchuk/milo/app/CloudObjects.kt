@@ -21,7 +21,6 @@ import com.shawnkowalchuk.milo.data.cloud.CloudSignInResult
 import com.shawnkowalchuk.milo.data.cloud.CloudStartResult
 import com.shawnkowalchuk.milo.data.cloud.CloudUnlockResult
 import com.shawnkowalchuk.milo.data.cloud.CloudUploadOutcome
-import com.shawnkowalchuk.milo.data.cloud.OtherPhones
 import com.shawnkowalchuk.milo.data.cloud.buildCloudAccountFile
 import com.shawnkowalchuk.milo.data.cloud.buildCloudInstall
 import com.shawnkowalchuk.milo.data.cloud.buildCloudLedger
@@ -31,13 +30,15 @@ import com.shawnkowalchuk.milo.data.cloud.cloudCopyOf
 import com.shawnkowalchuk.milo.data.cloud.cloudOwnerOf
 import com.shawnkowalchuk.milo.data.cloud.cloudPhoneDocument
 import com.shawnkowalchuk.milo.data.cloud.cloudPhoneFolder
+import com.shawnkowalchuk.milo.data.cloud.cloudRemovableBy
 import com.shawnkowalchuk.milo.data.cloud.cloudRestoreExport
 import com.shawnkowalchuk.milo.data.cloud.inFolder
-import com.shawnkowalchuk.milo.data.cloud.logbookChange
 import com.shawnkowalchuk.milo.data.cloud.readOtherPhones
 import com.shawnkowalchuk.milo.data.cloud.restoreFrom
+import com.shawnkowalchuk.milo.data.cloud.syncLogbook
 import com.shawnkowalchuk.milo.data.cloud.unlockAfter
 import com.shawnkowalchuk.milo.data.cloud.uploadUntilQuiet
+import com.shawnkowalchuk.milo.data.cloud.withEdits
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.settings.transferred
 import com.shawnkowalchuk.milo.data.transfer.MainTransferDao
@@ -124,7 +125,10 @@ class CloudObjects(
                 snapshot.inFolder(
                     cloudPhoneFolder(phone),
                     cloudPhoneDocument(phone, phoneName(appContext), "android"),
-                )
+                ).withEdits(withContext(Dispatchers.IO) { tripTable.findFromOtherPhones() })
+            },
+            removable = { path ->
+                cloudRemovableBy(withContext(Dispatchers.IO) { install.id() }, path)
             },
         )
     }
@@ -325,24 +329,6 @@ class CloudObjects(
     }
 
     /**
-     * Brings the other phones' trips into this phone's trips table (ADR-017), the same drive
-     * recorded here too left out.
-     */
-    private suspend fun takeOthers(others: OtherPhones) {
-        val trips = tripTable
-        withContext(Dispatchers.IO) {
-            val change = logbookChange(trips.findFromOtherPhones(), trips.findOwn(), others)
-            if (!change.isEmpty) {
-                trips.replaceFromOtherPhones(change.insert, change.update, change.delete)
-                log(
-                    "Cloud backup: from the other phones, ${change.insert.size} trips added, " +
-                        "${change.update.size} changed, ${change.delete.size} removed.",
-                )
-            }
-        }
-    }
-
-    /**
      * One upload, for WorkManager's job (`CloudBackupWorker`), which may run in a process that
      * has just started: the account is read from its file if [start] has not yet.
      */
@@ -368,7 +354,13 @@ class CloudObjects(
             return ListenableWorker.Result.success()
         }
         if (account.backingUp != true) keep(account.copy(backingUp = true))
-        takeOthers(others)
+        try {
+            withContext(Dispatchers.IO) {
+                syncLogbook(store, account.id, phone, others, tripTable, ledger, ::log)
+            }
+        } catch (unreachable: IOException) {
+            return ListenableWorker.Result.retry()
+        }
         return when (uploadUntilQuiet(backup, account.id, ::log)) {
             CloudUploadOutcome.DONE -> {
                 forgetEarlierOwner(account, phone)

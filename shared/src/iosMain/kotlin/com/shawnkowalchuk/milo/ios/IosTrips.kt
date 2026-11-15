@@ -18,6 +18,8 @@ import com.shawnkowalchuk.milo.core.util.monthSpan
 import com.shawnkowalchuk.milo.core.util.usesTwelveHourClock
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
+import com.shawnkowalchuk.milo.data.report.SentReport
+import com.shawnkowalchuk.milo.data.report.monthSubmission
 import com.shawnkowalchuk.milo.data.trip.ByHandMark
 import com.shawnkowalchuk.milo.data.trip.TripCorrections
 import com.shawnkowalchuk.milo.data.trip.TripRepository
@@ -46,6 +48,7 @@ class IosTrips internal constructor(
     private val clock: () -> Long,
     private val openTripStart: () -> OpenTripStart?,
     private val unit: () -> DistanceUnit,
+    private val sentReports: suspend () -> List<SentReport> = { emptyList() },
 ) {
     /**
      * The trips started in [month] (1 to 12) of [year]. Deleted and discarded trips are listed
@@ -74,6 +77,8 @@ class IosTrips internal constructor(
                 liveDistanceMetres = liveMetres,
                 liveStart = openTripStart(),
                 unit = unit,
+                // Locked once sent, on every phone (ADR-017, 2026-11-14).
+                locked = monthSubmission(shown, sentReports()) != null,
             )
         val twentyFourHour = !usesTwelveHourClock(localeNow)
         val today = localDateOf(clock(), zoneNow)
@@ -97,15 +102,15 @@ class IosTrips internal constructor(
             label = line.label,
             canMarkBusiness = TripCategory.BUSINESS in line.markableAs,
             canMarkPersonal = TripCategory.PERSONAL in line.markableAs,
-            correction = line.kind.correction?.name?.takeIf { !line.fromOtherPhone },
+            correction = line.kind.correction?.name?.takeIf { !line.readOnly },
             correctionWords =
                 when (line.kind) {
                     TripKind.COUNTED -> "Delete"
                     TripKind.DELETED -> "Restore"
                     TripKind.DISCARDED -> "Count it"
                     TripKind.IN_PROGRESS -> null
-                }.takeIf { !line.fromOtherPhone },
-            canLabel = line.kind == TripKind.COUNTED && !line.fromOtherPhone,
+                }.takeIf { !line.readOnly },
+            canLabel = line.kind == TripKind.COUNTED && !line.readOnly,
             canEdit = line.editable,
             unit = unitWord(unit),
         )
@@ -211,8 +216,10 @@ class IosTrips internal constructor(
     }
 
     private fun noteText(line: TripLine): String? = when {
-        // ADR-017: changed on the phone that recorded it, until editing from any phone.
+        // ADR-017: recorded by another phone on the backup account.
         line.fromOtherPhone -> "From your other phone"
+
+        line.readOnly -> "Sent to your accountant. Locked."
 
         line.kind == TripKind.DELETED -> "Deleted by you. Not counted."
 

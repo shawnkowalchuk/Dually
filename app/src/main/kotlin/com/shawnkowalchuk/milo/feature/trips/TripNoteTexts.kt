@@ -56,6 +56,7 @@ internal fun TripLine.byHandNoteRes(): Int? = when (mark.takeIf { kind != TripKi
  */
 internal fun TripLine.notesRes(): List<Int> = listOfNotNull(
     R.string.trips_note_other_phone.takeIf { fromOtherPhone },
+    R.string.trips_note_locked.takeIf { readOnly && !fromOtherPhone },
     categoryNoteRes(),
     byHandNoteRes(),
     leftOutNoteRes(),
@@ -90,8 +91,9 @@ internal sealed interface TripAction {
  * @param pressed whether this trip is the one whose buttons were brought up by a press.
  */
 internal fun TripLine.actions(pressed: Boolean): List<TripAction> {
-    // Another phone's trip is changed on that phone, until editing from any phone (ADR-017).
-    if (fromOtherPhone) return emptyList()
+    // A month sent to the accountant is locked on every phone (ADR-017), and an older
+    // version's backup is read-only here.
+    if (readOnly) return emptyList()
     val counted = kind == TripKind.COUNTED
     val shown = counted && pressed
     val change = kind.correction?.takeIf { !counted || shown }

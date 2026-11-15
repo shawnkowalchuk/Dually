@@ -1,7 +1,7 @@
 # ADR-017: Every phone on a backup account holds the whole logbook (full sync)
 
 Date: 2026-11-14
-Status: Accepted. Steps 1 and 2 built on 2026-11-14 on the branch `app/multi-phone` (every phone backs up into its own folder; every phone holds the others' finished trips, read-only; one merge question), for TestFlight and Google Play's internal testing; steps 3 and 4 not built. Replaces ADR-012's "one phone backs up per account" and "backup only, the phone is the source of truth". The proposal Shawn decided from is his doc "Multi-phone online backup proposal".
+Status: Accepted. Steps 1, 2 and 4 built on 2026-11-14 on the branch `app/multi-phone` (every phone backs up into its own folder; every phone holds the others' finished trips and may change them; one merge question; sent months locked), for TestFlight and Google Play's internal testing; step 3 (shared settings) not built. Replaces ADR-012's "one phone backs up per account" and "backup only, the phone is the source of truth". The proposal Shawn decided from is his doc "Multi-phone online backup proposal".
 
 ## Context
 
@@ -48,6 +48,14 @@ Offered three ways (A: each phone backs up apart; B: every phone sees every trip
 4. Editing from any phone: change numbers, the later change wins, history and the notice, the lock on sent months (about 8 days).
 
 The steps gather on the branch `app/multi-phone`, each as a pull request into it, as the backup's slices did on `app/cloud-backup`, and go to main together once steps 1, 2 and 4 work on Shawn's two phones, so that no release has a logbook that cannot be edited where it is read.
+
+### Built in step 4 (2026-11-14)
+
+- **A change to another phone's trip is written into that trip's home folder** by the next upload: each phone's snapshot holds its rows of other phones' trips at their home paths (`withEdits`), and the ledger holds what each looked like when it came down, so only a row changed here differs. A run never removes another phone's document (`cloudRemovableBy`).
+- **The phone that recorded a trip takes other phones' changes from its own folder** before each upload (`syncLogbook`): a document whose fingerprint is not the one it uploaded was changed elsewhere.
+- **"The later change wins" is the change uploaded last.** A phone that finds its own unsent change and another phone's to the same trip keeps its own, whose upload follows, and writes a line in the Log. Two phones' times are not compared: edit times are not stored, and the phone that uploads last is the one whose change was made last in nearly every case.
+- **Locked once sent:** a month with a report recorded as sent shows its trips read-only on every phone ("sent to your accountant, locked"). Kept in the Trips screens; the edit form is reached only from them.
+- **An older version's backup** is read-only here (`cloudIsEarlierBackup`): that version reads no other phone's changes, and its trips move into its folder once it is updated.
 
 ## Consequences
 

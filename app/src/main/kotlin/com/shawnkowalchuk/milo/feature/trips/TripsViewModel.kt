@@ -168,6 +168,7 @@ class TripsViewModel(
             ->
             // Right after a step the trips in hand are still the previous month's. They are
             // not shown under the new month's name: the screen says it is reading.
+            val submission = monthSubmission(chosen.shown, sent)
             val summary =
                 if (read.month == chosen.shown && read.zone == chosen.zone) {
                     monthSummary(
@@ -178,11 +179,12 @@ class TripsViewModel(
                         liveDistanceMetres = activity.trip?.distanceMetres,
                         liveStart = start,
                         unit = read.unit,
+                        // Locked once sent, on every phone (ADR-017, 2026-11-14).
+                        locked = submission != null,
                     )
                 } else {
                     null
                 }
-            val submission = monthSubmission(chosen.shown, sent)
             // The month's Business trips are the report's own, so they can be held against
             // what the newest report listed, in the unit that report was printed in.
             val changed =

@@ -17,7 +17,6 @@ import com.shawnkowalchuk.milo.data.cloud.CloudUnlockResult
 import com.shawnkowalchuk.milo.data.cloud.CloudUnlockServer
 import com.shawnkowalchuk.milo.data.cloud.CloudUnreachableException
 import com.shawnkowalchuk.milo.data.cloud.CloudUploadOutcome
-import com.shawnkowalchuk.milo.data.cloud.OtherPhones
 import com.shawnkowalchuk.milo.data.cloud.appleUnlockRequestBody
 import com.shawnkowalchuk.milo.data.cloud.cloudAppleAccountToken
 import com.shawnkowalchuk.milo.data.cloud.cloudAsksToMerge
@@ -25,13 +24,15 @@ import com.shawnkowalchuk.milo.data.cloud.cloudCopyOf
 import com.shawnkowalchuk.milo.data.cloud.cloudOwnerOf
 import com.shawnkowalchuk.milo.data.cloud.cloudPhoneDocument
 import com.shawnkowalchuk.milo.data.cloud.cloudPhoneFolder
+import com.shawnkowalchuk.milo.data.cloud.cloudRemovableBy
 import com.shawnkowalchuk.milo.data.cloud.cloudRestoreExport
 import com.shawnkowalchuk.milo.data.cloud.inFolder
-import com.shawnkowalchuk.milo.data.cloud.logbookChange
 import com.shawnkowalchuk.milo.data.cloud.readOtherPhones
 import com.shawnkowalchuk.milo.data.cloud.restoreFrom
+import com.shawnkowalchuk.milo.data.cloud.syncLogbook
 import com.shawnkowalchuk.milo.data.cloud.unlockAnswer
 import com.shawnkowalchuk.milo.data.cloud.uploadUntilQuiet
+import com.shawnkowalchuk.milo.data.cloud.withEdits
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
@@ -192,8 +193,9 @@ class IosCloud internal constructor(
                 snapshot.inFolder(
                     cloudPhoneFolder(phone),
                     cloudPhoneDocument(phone, "iPhone", "iphone"),
-                )
+                ).withEdits(trips.findFromOtherPhones())
             },
+            removable = { path -> cloudRemovableBy(files.install(), path) },
         )
     private val uploading = Mutex()
     private var watching: Job? = null
@@ -515,7 +517,12 @@ class IosCloud internal constructor(
                 return true
             }
             if (account.backingUp != true) keep(account.copy(backingUp = true))
-            takeOthers(others)
+            try {
+                syncLogbook(store, account.id, phone, others, trips, files, ::log)
+            } catch (unreachable: IOException) {
+                tryAgainLater()
+                return false
+            }
             return when (uploadUntilQuiet(backup, account.id, ::log)) {
                 CloudUploadOutcome.DONE -> {
                     retryWaitMs = RETRY_FIRST_MS
@@ -594,20 +601,6 @@ class IosCloud internal constructor(
     /** How many finished trips of its own this iPhone holds. */
     private suspend fun ownFinished(): Int =
         trips.findOwn().count { it.status == TripStatus.FINISHED }
-
-    /**
-     * Brings the other phones' trips into this iPhone's trips table, the same drive recorded
-     * here too left out (ADR-017).
-     */
-    private suspend fun takeOthers(others: OtherPhones) {
-        val change = logbookChange(trips.findFromOtherPhones(), trips.findOwn(), others)
-        if (change.isEmpty) return
-        trips.replaceFromOtherPhones(change.insert, change.update, change.delete)
-        log(
-            "Cloud backup: from the other phones, ${change.insert.size} trips added, " +
-                "${change.update.size} changed, ${change.delete.size} removed.",
-        )
-    }
 
     /**
      * The backup an older version kept at the account's top named this iPhone as its owner: the

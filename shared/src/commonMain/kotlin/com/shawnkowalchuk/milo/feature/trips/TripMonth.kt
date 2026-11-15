@@ -11,6 +11,7 @@ import com.shawnkowalchuk.milo.core.trip.TripStatus
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.localDateOf
 import com.shawnkowalchuk.milo.core.util.monthOf
+import com.shawnkowalchuk.milo.data.cloud.cloudIsEarlierBackup
 import com.shawnkowalchuk.milo.data.trip.ByHandMark
 import com.shawnkowalchuk.milo.data.trip.CategoryTotals
 import com.shawnkowalchuk.milo.data.trip.Tally
@@ -91,7 +92,10 @@ enum class TripKind(val status: TripStatus) {
  * @param label what Shawn labelled the trip ("Work"), or null (since 2026-10-08). The row
  * writes it after the times, and the report prints it as the trip's purpose.
  * @param fromOtherPhone whether another phone on the online backup account recorded it (ADR-017):
- * the row says so, and offers nothing to change until editing from any phone is built.
+ * the row says so.
+ * @param readOnly whether nothing about the trip may be changed here: its month was sent to the
+ * accountant (locked once sent, on every phone; ADR-017), or it is in the backup of a phone on an
+ * older version of Dually, which reads no other phone's changes.
  */
 data class TripLine(
     val id: Long,
@@ -109,6 +113,7 @@ data class TripLine(
     val editable: Boolean = false,
     val label: String? = null,
     val fromOtherPhone: Boolean = false,
+    val readOnly: Boolean = false,
 )
 
 /**
@@ -215,18 +220,20 @@ fun monthSummary(
     liveDistanceMetres: Double?,
     liveStart: OpenTripStart?,
     unit: DistanceUnit,
+    locked: Boolean = false,
 ): MonthSummary {
     val finished = trips.filter { it.isCounted }
     val leftOut =
         trips.mapNotNull { trip ->
             when (trip.status) {
-                TripStatus.DISCARDED -> trip.toLine(TripKind.DISCARDED)
-                TripStatus.DELETED -> trip.toLine(TripKind.DELETED)
+                TripStatus.DISCARDED -> trip.toLine(TripKind.DISCARDED, locked)
+                TripStatus.DELETED -> trip.toLine(TripKind.DELETED, locked)
                 else -> null
             }
         }
     val listed =
-        finished.map { it.toLine(TripKind.COUNTED) } + if (showLeftOut) leftOut else emptyList()
+        finished.map { it.toLine(TripKind.COUNTED, locked) } +
+            if (showLeftOut) leftOut else emptyList()
     val newestFirst = compareByDescending<TripLine> { it.startedAtMs }.thenByDescending { it.id }
     val finishedByDay = finished.groupBy { localDateOf(it.startedAtMs, zone) }
     return MonthSummary(
@@ -260,7 +267,12 @@ fun monthSummary(
     )
 }
 
-private fun Trip.toLine(kind: TripKind): TripLine = TripLine(
+private fun Trip.toLine(kind: TripKind, locked: Boolean): TripLine {
+    val changeable = !locked && !cloudIsEarlierBackup(homePhone)
+    return line(kind, changeable)
+}
+
+private fun Trip.line(kind: TripKind, changeable: Boolean): TripLine = TripLine(
     id = id,
     startedAtMs = startedAtMs,
     endedAtMs = endedAtMs,
@@ -271,11 +283,12 @@ private fun Trip.toLine(kind: TripKind): TripLine = TripLine(
     category = category,
     ranPastSchedule = ranPastScheduleShown,
     ignored = kind == TripKind.DISCARDED && ignoredOutsideSchedule,
-    markableAs = if (homePhone == null) categoriesOffered(status, category) else emptyList(),
+    markableAs = if (changeable) categoriesOffered(status, category) else emptyList(),
     mark = byHandMark,
-    editable = canBeEdited && homePhone == null,
+    editable = canBeEdited && changeable,
     label = label,
     fromOtherPhone = homePhone != null,
+    readOnly = !changeable,
 )
 
 /**

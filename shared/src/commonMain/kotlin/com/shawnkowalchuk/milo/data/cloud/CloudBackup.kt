@@ -90,7 +90,10 @@ sealed interface CloudRun {
  * @param rows the trips and the sent reports, read in one transaction.
  * @param settings the settings that travel, or null if they cannot be read.
  * @param shape what the snapshot becomes before it is compared: since ADR-017 each phone's
- * documents go into its own folder, with its record (`inFolder`).
+ * documents go into its own folder, with its record (`inFolder`), and its changes to other
+ * phones' trips go into theirs (`withEdits`).
+ * @param removable whether a document the phone no longer has may be removed: never another
+ * phone's (`cloudRemovableBy`).
  */
 class CloudBackup(
     private val rows: suspend () -> MainRows,
@@ -98,6 +101,7 @@ class CloudBackup(
     private val ledger: CloudLedgerStore,
     private val store: CloudStore,
     private val shape: suspend (CloudSnapshot) -> CloudSnapshot = { it },
+    private val removable: suspend (String) -> Boolean = { true },
 ) {
     suspend fun run(account: String): CloudRun {
         val snapshot = shape(cloudSnapshotOf(rows(), settings()))
@@ -107,7 +111,8 @@ class CloudBackup(
         var removedCount = 0
         // Removals first: a restore that replaced every trip leaves nothing behind in the cloud
         // even if the run stops before the last upload.
-        val work = plan.removals.map { Step.Remove(it) } + plan.uploads.map { Step.Upload(it) }
+        val removals = plan.removals.filter { removable(it) }
+        val work = removals.map { Step.Remove(it) } + plan.uploads.map { Step.Upload(it) }
         for (batch in work.chunked(CLOUD_BATCH)) {
             val documents = batch.filterIsInstance<Step.Upload>().map { it.document }
             val removals = batch.filterIsInstance<Step.Remove>().map { it.path }

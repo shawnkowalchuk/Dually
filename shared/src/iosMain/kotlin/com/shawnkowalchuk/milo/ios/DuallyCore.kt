@@ -217,6 +217,7 @@ class DuallyCore private constructor(
                     clock = clock,
                     openTripStart = { addresses.openTripStart.value },
                     unit = { shownUnit.unit.value },
+                    sentReports = { SentReportRepository(database.sentReportDao()).currentSent() },
                 )
             val drivingAlert =
                 IosDrivingAlert(

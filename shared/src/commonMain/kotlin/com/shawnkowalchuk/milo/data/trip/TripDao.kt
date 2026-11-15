@@ -98,7 +98,7 @@ interface TripDao {
     /** A closed trip's label, or none with null (since 2026-10-08). Not an open trip's. */
     @Query(
         "UPDATE trips SET label = :label WHERE id = :tripId AND status != :open " +
-            "AND homePhone IS NULL",
+            "AND (homePhone IS NULL OR homePhone NOT LIKE 'earlier-backup%')",
     )
     suspend fun setLabel(tripId: Long, label: String?, open: TripStatus): Int
 
@@ -201,7 +201,7 @@ interface TripDao {
      */
     @Query(
         "UPDATE trips SET status = :to WHERE id = :tripId AND status = :from " +
-            "AND homePhone IS NULL",
+            "AND (homePhone IS NULL OR homePhone NOT LIKE 'earlier-backup%')",
     )
     suspend fun changeStatus(tripId: Long, from: TripStatus, to: TripStatus): Int
 
@@ -288,7 +288,8 @@ interface TripDao {
     @Query(
         "UPDATE trips SET category = :category, categorySetByHand = 1 " +
             "WHERE id = :tripId AND status = :finished " +
-            "AND (category IS NULL OR category != :category) AND homePhone IS NULL",
+            "AND (category IS NULL OR category != :category) " +
+            "AND (homePhone IS NULL OR homePhone NOT LIKE 'earlier-backup%')",
     )
     suspend fun setCategoryByHand(tripId: Long, category: TripCategory, finished: TripStatus): Int
 
@@ -313,7 +314,8 @@ interface TripDao {
             "recordedStartedAtMs = :recordedStartedAtMs, " +
             "recordedEndedAtMs = :recordedEndedAtMs, " +
             "recordedDistanceMetres = :recordedDistanceMetres " +
-            "WHERE id = :tripId AND status = :finished AND homePhone IS NULL",
+            "WHERE id = :tripId AND status = :finished " +
+            "AND (homePhone IS NULL OR homePhone NOT LIKE 'earlier-backup%')",
     )
     suspend fun writeByHand(
         tripId: Long,
@@ -352,7 +354,8 @@ interface TripDao {
         rewrite: TripRewrite,
     ): ByHandOutcome {
         val stored = findById(tripId)
-        if (stored == null || stored.status != finished || stored.homePhone != null) {
+        val earlierBackup = stored?.homePhone?.startsWith("earlier-backup") == true
+        if (stored == null || stored.status != finished || earlierBackup) {
             return ByHandOutcome.Refused(stored)
         }
         val wanted = rewrite.of(stored) ?: return ByHandOutcome.Refused(stored)
