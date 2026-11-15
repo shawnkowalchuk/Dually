@@ -24,6 +24,11 @@
 
 ## Log
 
+### 2026-11-15
+
+**`[CHANGE]` The iPhone app's 1.0 is with App Review** (APP_ENCYCLOPEDIA, iPhone app)
+Shawn: "i published the app privacy and app for review". App Store Connect shows iOS App 1.0 "Waiting for Review" with build 6, and the Cloud backup purchase (`cloud_backup`, non-consumable) "Waiting for Review" with it. The version and the location prompts' words are on main (#157). Release is by hand: once Apple approves, 1.0 waits for Shawn's Release. A new build now means taking the version out of review first; some of the page's words can still be changed while it waits.
+
 ### 2026-11-14
 
 **`[CHANGE]` The iPhone app's 1.0 for the App Store: built from main, and its page in App Store Connect filled in** (APP_ENCYCLOPEDIA, iPhone app; ARCHITECTURE, "Signing and TestFlight")
