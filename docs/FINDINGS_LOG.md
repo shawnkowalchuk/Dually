@@ -26,6 +26,9 @@
 
 ### 2026-11-15
 
+**`[CHANGE]` The privacy policy covers the iPhone app** (APP_ENCYCLOPEDIA, Website)
+Shawn chose to publish it at once, ahead of the rest of the website's iPhone change, because App Review can read the policy while 1.0 waits. It described only Android: Android's Geocoder, Android's backup, Android's permissions. Checked against the iPhone code before writing: `AppleGeocoder.swift` (CLGeocoder); the database and the GPS points in Application Support, which iCloud backup includes (only `cloud/` is left out, `IosCloudFiles`); StoreKit's `displayPrice`; Motion only in `DrivingWatch`; no review card, coffee or support tile on the iPhone. Also fixed in passing: the website section said the download button leads to GitHub; it has led to Google Play since 0.3.1.
+
 **`[CHANGE]` The iPhone app's 1.0 is with App Review** (APP_ENCYCLOPEDIA, iPhone app)
 Shawn: "i published the app privacy and app for review". App Store Connect shows iOS App 1.0 "Waiting for Review" with build 6, and the Cloud backup purchase (`cloud_backup`, non-consumable) "Waiting for Review" with it. The version and the location prompts' words are on main (#157). Release is by hand: once Apple approves, 1.0 waits for Shawn's Release. A new build now means taking the version out of review first; some of the page's words can still be changed while it waits.
 
