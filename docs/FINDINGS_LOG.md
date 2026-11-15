@@ -26,6 +26,8 @@
 
 ### 2026-11-14
 
+**`[CHANGE]` Test builds with the replaced-change history:** TestFlight build 11 uploaded at 19:03 (Xcode numbers it at upload; build 10 was the Sign in with Apple crash fix); Android build 15 (0.3.6), `Dually-0.3.6-build15-multiphone.aab`, in place of 14, for Shawn to upload to internal testing.
+
 **`[CHANGE]` The replaced change is kept in the trip's history, its phone is told, and Put back brings it back (ADR-017, step 4)** (APP_ENCYCLOPEDIA, Cloud backup, "One logbook on every phone")
 Shawn: "build the notice and history for replaced changes". On `app/multi-phone`, both apps:
 - **History:** `ReplacedChange` (when, the phone kept, the fingerprint of the replaced document, the replaced trip, told or not), up to 10 per trip, in the trip's document (`CloudTrip.history`, left out when empty, so every other trip's document and fingerprint stay as they were) and in the trips table (`changeHistory`, database version 9, `MIGRATION_8_9`).
