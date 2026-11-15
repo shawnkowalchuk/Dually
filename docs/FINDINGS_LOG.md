@@ -26,6 +26,9 @@
 
 ### 2026-11-14
 
+**`[FINDING]` The iPhone counts the Android phone's odometer readings, though they name the truck** (ADR-017, step 3)
+Shawn, after signing in on the iPhone: "when sycing the km of the vehicle should be filled in too". Suspected: Android's readings carry the truck's Bluetooth address, and the iPhone pairs no vehicle. Not so: with no paired vehicle every reading and every truck trip counts (`vehicleOdometers`), now tested (`VehicleOdometersTest`). The likelier cause: the readings are shared only from Android build 14 on, and 15 is the first of those Shawn uploaded; the iPhone takes them at its first upload after the Android phone's.
+
 **`[CHANGE]` Test builds with the replaced-change history:** TestFlight build 11 uploaded at 19:03 (Xcode numbers it at upload; build 10 was the Sign in with Apple crash fix); Android build 15 (0.3.6), `Dually-0.3.6-build15-multiphone.aab`, in place of 14, for Shawn to upload to internal testing.
 
 **`[CHANGE]` The replaced change is kept in the trip's history, its phone is told, and Put back brings it back (ADR-017, step 4)** (APP_ENCYCLOPEDIA, Cloud backup, "One logbook on every phone")
