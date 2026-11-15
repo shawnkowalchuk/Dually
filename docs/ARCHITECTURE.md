@@ -814,7 +814,8 @@ platform/trip/       # TripController, TripService, GPS recording, notifications
                      #   (data/transfer/DataExport, DataImport, ExportReader, JsonScanner,
                      #   behind core/io/Reader). Also since that day the driving alert's rules and log words
                      #   (platform/driving/DrivingAlertRules.kt, DrivingLogText.kt) and
-                     #   TruckReading (platform/bluetooth/TruckConnectionSource.kt)
+                     #   TruckReading (platform/bluetooth/TruckConnectionSource.kt), and
+                     #   since 2026-11-14 Home's odometer rule (feature/home/HomeOdometer.kt)
 platform/party/      # the one-year party between the trip service and Home (2026-10-10):
                      #   asked at a trip's first sound whether today is the day, it says
                      #   who plays the pop and stores what Home owes. It reads when the

@@ -70,6 +70,8 @@ class DuallyCore private constructor(
     val tripEdit: IosTripEdit,
     /** The Service screen, Home's service tiles and Settings' odometer (2026-11-14). */
     val service: IosService,
+    /** Home's odometer (2026-11-14). */
+    val homeOdometer: IosHomeOdometer,
     /** The CarPlay screen (phase 4f). */
     val car: IosCar,
     /** The online backup (phase 4h). */
@@ -301,6 +303,7 @@ class DuallyCore private constructor(
                     zone = ::systemZoneId,
                     locale = ::phoneLocale,
                 ),
+                IosHomeOdometer(settings, tripRepository, ::systemZoneId, ::phoneLocale),
                 IosCar(
                     recorder = recorder,
                     settings = settings,

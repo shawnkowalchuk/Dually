@@ -309,6 +309,7 @@ class IosTripRecorder internal constructor(
             metres = metres,
             fixCount = open.progress.fixCount,
             waitingForTruck = known?.trip?.grace != null,
+            truckSeen = known?.trip?.truckSeen == true,
         )
     }
 }
@@ -370,7 +371,9 @@ private const val AUTOMATION_DISCONNECTED = "The Shortcuts automation said the t
  * the user's distance adjustment, as Android's Home shows it), and how many fixes it has.
  * [waitingForTruck] is true while the grace period runs: the truck has gone and the trip ends
  * unless it comes back, which Android's trip notification says ("Waiting for the truck to
- * reconnect") and so does the iPhone's Live Activity (phase 4e).
+ * reconnect") and so does the iPhone's Live Activity (phase 4e). [truckSeen] is whether the truck
+ * has been seen in it: until then it moves no odometer, as on Android (`TripSoFar`; Home's
+ * odometer, 2026-11-14).
  */
 data class RecordingNow(
     val tripId: Long,
@@ -378,4 +381,5 @@ data class RecordingNow(
     val metres: Double,
     val fixCount: Int,
     val waitingForTruck: Boolean,
+    val truckSeen: Boolean,
 )

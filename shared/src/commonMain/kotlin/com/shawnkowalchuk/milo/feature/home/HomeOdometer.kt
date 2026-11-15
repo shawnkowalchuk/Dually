@@ -3,12 +3,12 @@ package com.shawnkowalchuk.milo.feature.home
 import com.shawnkowalchuk.milo.core.odometer.OdometerFigure
 import com.shawnkowalchuk.milo.core.odometer.OdometerWheels
 import com.shawnkowalchuk.milo.core.odometer.wheels
+import com.shawnkowalchuk.milo.core.time.ZoneId
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.trip.Trip
 import com.shawnkowalchuk.milo.data.trip.TripSoFar
 import com.shawnkowalchuk.milo.data.trip.VehicleOdometer
 import com.shawnkowalchuk.milo.data.trip.vehicleOdometers
-import java.time.ZoneId
 
 /**
  * How much further the trip being recorded is taken to have gone, to find out which odometer
@@ -25,7 +25,7 @@ private const val FURTHER_METRES = 10_000.0
  * @param tripId that trip's number, to tell whether the odometer's reading was typed during
  * it (`OdometerReading.duringTrip`).
  */
-internal data class HomeOdometer(
+data class HomeOdometer(
     val odometer: VehicleOdometer,
     val tripMetres: Double? = null,
     val tripId: Long? = null,
@@ -60,9 +60,11 @@ internal data class HomeOdometer(
  * out once more with the same trip taken to be ten kilometres further on: the one whose
  * figure is different then is the one the trip moves.
  *
+ * Shared since 2026-11-14: the iPhone's Home shows its odometer by it too (`IosHomeOdometer`).
+ *
  * @param soFar the trip being recorded, or null when there is none.
  */
-internal fun homeOdometers(
+fun homeOdometers(
     settings: MiloSettings,
     finished: List<Trip>,
     nowMs: Long,

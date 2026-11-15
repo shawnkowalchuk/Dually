@@ -44,6 +44,9 @@ struct HomeView: View {
                     unit: model.unitWord
                 )
             }
+            if let odometer = model.odometer {
+                OdometerTile(odometer: odometer)
+            }
             // What service is soon or due, as Android's Home tiles: not while a trip records,
             // when there is nothing to read while driving.
             if model.recording == nil {
@@ -220,6 +223,55 @@ private struct FigureTile: View {
                 .foregroundStyle(Palette.textSecondary)
         }
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// The odometer, as Android's Home tile: the wheels standing on the figure Settings shows, and
+/// while a trip with the truck in it is driven, a dot that pulses and the last wheel turning.
+/// Nothing to press: a reading is typed in Settings, and the tile says so before the first.
+private struct OdometerTile: View {
+    let odometer: HomeOdometerText
+
+    var body: some View {
+        Tile {
+            HStack(spacing: 8) {
+                if odometer.counting { LiveDot() }
+                Text(odometer.title)
+                    .font(Typography.body(13))
+                    .foregroundStyle(Palette.textSecondary)
+            }
+            if odometer.hasReading {
+                DashboardWheels(
+                    whole: odometer.whole,
+                    turn: odometer.counting ? odometer.turn : nil,
+                    unit: odometer.unit,
+                    spoken: odometer.spoken
+                )
+                .padding(.vertical, 4)
+            }
+            Text(odometer.caption)
+                .font(Typography.body(13))
+                .foregroundStyle(Palette.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+/// A dot in the accent that pulses while something is live, as Android's LiveDot.
+private struct LiveDot: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var dim = false
+
+    var body: some View {
+        Circle()
+            .fill(Palette.accent)
+            .frame(width: 8, height: 8)
+            .opacity(dim ? 0.35 : 1)
+            .accessibilityHidden(true)
+            .onAppear {
+                guard !reduceMotion else { return }
+                withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) { dim = true }
+            }
     }
 }
 

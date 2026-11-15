@@ -26,6 +26,15 @@
 
 ### 2026-11-14
 
+**`[CHANGE]` The iPhone's Home shows the odometer, on Android's wheels** (APP_ENCYCLOPEDIA, iPhone app)
+Shawn, once the backup had brought the Android phone's reading to the iPhone: "it shows up under settings but not on the home screen". The iPhone's Home was built in phase 4a with the two figures only, and the odometer tile Android's Home has had since 2026-10-09 was left out; nothing in the plan named it. iPhone only; Android's Home is unchanged.
+- **Moved, not rebuilt:** `homeOdometers` and `HomeOdometer` (which odometer the trip being recorded moves, and how far its last wheel has turned) from `:app`'s `feature/home` to `:shared`, package unchanged and made public, with `HomeOdometerTest` (to `androidHostTest`, JUnit and java.time as it was). Android's Home calls the same code as before.
+- **`RecordingNow.truckSeen`:** an odometer counts a trip only once the truck has been seen in it (`movesOdometer`), and the iPhone's running trip did not say whether it had.
+- **`[FINDING]` The wheels' arithmetic is written twice:** which digit stands on each wheel and the carry (`wheelsOf`) is Android's `WheelPositions.kt` again in Swift, ten lines, because it is drawing, worked out at every frame of the animation, and not a rule. A change to one is made to the other.
+- **What's new:** no line. The list is Android's, and the iPhone has none yet.
+- **Tests:** `IosHomeOdometerTest` (4, on the iPhone simulator: before the first reading, a reading standing, a trip the automation started counting, a trip by the button the truck never joined counting nothing), `HomeOdometerTest` (11) where it now lives, `IosTripRecorderTest`, `EnglishReportWordsTest` and Android's Home tests pass.
+- **Seen on the simulator:** the wheels standing on 123,456 mi with their line. **Not seen:** the counting tile and its turning wheel, which need a trip the truck is in, so the automation's connect and a moving position; it is held by `IosHomeOdometerTest` only.
+
 **`[FINDING]` The iPhone counts the Android phone's odometer readings, though they name the truck** (ADR-017, step 3)
 Shawn, after signing in on the iPhone: "when sycing the km of the vehicle should be filled in too". Suspected: Android's readings carry the truck's Bluetooth address, and the iPhone pairs no vehicle. Not so: with no paired vehicle every reading and every truck trip counts (`vehicleOdometers`), now tested (`VehicleOdometersTest`). The likelier cause: the readings are shared only from Android build 14 on, and 15 is the first of those Shawn uploaded; the iPhone takes them at its first upload after the Android phone's.
 
