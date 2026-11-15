@@ -424,8 +424,9 @@ main > * {
   line-height: 1.5;
 }
 
-/* The two actions, side by side and the same height: the dark Google Play button, and
-   Product Hunt's review badge (2026-11-13: smaller, and the badge beside the button). */
+/* The actions, side by side and the same height: the dark Google Play and App Store buttons
+   (the App Store's since the iPhone app's 1.0), and Product Hunt's review badge (2026-11-13:
+   smaller, and the badge beside the buttons). */
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -1101,8 +1102,10 @@ footer a:hover {
   font-size: 12px;
 }
 
-.dock .cta {
+.dock .dock-ctas {
   grid-area: cta;
+  display: flex;
+  gap: 8px;
 }
 
 .dock .cta,
