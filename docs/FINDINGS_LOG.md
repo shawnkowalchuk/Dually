@@ -26,6 +26,9 @@
 
 ### 2026-11-14
 
+**`[FIX]` The iPhone stopped when Sign in with Apple finished, on a fresh launch** (iPhone app, online backup)
+TestFlight's crash report (Shawn's iPhone 17e, 18:31, build 9): `Auth.auth()` asserting in `BackupSignIn.signIn(with:)`. Firebase starts only once the backup is used (ADR-012), and Google's path started it, Apple's did not: the first Firebase call after a launch was Apple's credential going to `Auth.auth()`. Both `signIn(with:)` and the token revoke at deletion now start Firebase first. `[FINDING]` The build numbers App Store Connect shows are Xcode's: an upload with the `app-store-connect` export raises the build number past the last one uploaded (`manageAppVersionAndBuildNumber` is on by default), so the repository's `CURRENT_PROJECT_VERSION` is not what TestFlight lists. The upload of 18:26 is build 9 there.
+
 **`[CHANGE]` Test builds with all four steps:** TestFlight build 8 uploaded at 18:26 (next 9); Android build 14 (0.3.6), `Dually-0.3.6-build14-multiphone.aab`, in place of 12 and 13. The rules with `shared/` published the same evening (Shawn: "Yes, publish them").
 
 **`[CHANGE]` The report details, service book and odometer readings shared between phones (ADR-017, step 3)** (APP_ENCYCLOPEDIA, Cloud backup)
