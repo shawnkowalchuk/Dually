@@ -174,7 +174,8 @@ android {
         // every phone on a backup account backs up and holds the logbook (ADR-017, steps 1-2).
         // Build 13 (2026-11-14), the same branch with step 4: any phone changes any trip.
         // Build 14 (2026-11-14), with step 3 too: shared report details, service book, odometer.
-        versionCode = 14
+        // Build 15 (2026-11-14), with a replaced change's history, its notice and Put back.
+        versionCode = 15
         versionName = "0.3.6"
 
         // The Firebase settings (above), empty in a build without the file.
