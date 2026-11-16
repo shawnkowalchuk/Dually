@@ -175,7 +175,8 @@ android {
         // Build 13 (2026-11-14), the same branch with step 4: any phone changes any trip.
         // Build 14 (2026-11-14), with step 3 too: shared report details, service book, odometer.
         // Build 15 (2026-11-14), with a replaced change's history, its notice and Put back.
-        versionCode = 15
+        // Build 16 (2026-11-15), with main merged in, and a sync each time Dually is opened.
+        versionCode = 16
         versionName = "0.3.6"
 
         // The Firebase settings (above), empty in a build without the file.

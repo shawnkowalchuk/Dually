@@ -190,6 +190,9 @@ class CloudObjects(
     /** The account in its file, for a screen opened before [start] has read it. */
     fun readAccount(): CloudAccount? = accountFile.read()
 
+    /** Dually came to the front: an upload, which brings in the other phones' changes. */
+    fun appOpened() = uploads.appOpened()
+
     /**
      * Google's sheet over [context], then Firebase, then whether the account holds the unlock
      * already (bought on another phone). An unlocked account starts the uploads.
