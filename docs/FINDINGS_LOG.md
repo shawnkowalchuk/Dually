@@ -26,6 +26,12 @@
 
 ### 2026-11-15
 
+**`[CHANGE]` The iPhone's report: a date range, a whole year, Android's options, the sent list, and a sent month's GPS points** (APP_ENCYCLOPEDIA, iPhone app)
+Chosen by Shawn from the list of what the iPhone lacks. iPhone only; nothing new in the shared report, which already made all three periods and all three options: the iPhone now asks it for them, and hands it every finished trip for the odometer lines (`drivenTrips`), as Android's `ReportReading` does.
+- **The period from Swift** is a number and three values (`kind`, the year and month, a range's epoch days), since a Kotlin sealed type does not cross to Swift well; a whole year is Android's `Range` of 1 January to 31 December.
+- **The GPS points** use the shared `PointCleanup` on the iPhone's own points file (`RoomPointsFile`), with the event log's line naming "the iPhone's Report screen".
+- **Tests:** `IosReportTest` (its calls take the period now; a year's title, the sent list, an option kept). **Seen on the simulator:** the screen with its three periods, its options and an empty list.
+
 **`[CHANGE]` The iPhone's Settings: monthly reminder, daily check, each day's own hours, the widget's switch and rate** (APP_ENCYCLOPEDIA, iPhone app)
 Chosen by Shawn from the list of what the iPhone lacks. iPhone only; the settings are the shared file's, so an export carries them between phones as before.
 - **`[DECISION]` Planned notifications in place of Android's daily alarm.** iOS wakes no app at a set time, so `IosReminders` works out, by Android's rules, the notifications from now on, and the app replaces its pending ones with them whenever it runs. The rules are written again in iOS Kotlin from Android's (`ReminderRules.kt`, `NothingRecordedRules.kt`, which use java.time and stay in `:app`); the reports, trips and settings they read are the shared ones. `[DEBT]` Two copies of two rules: a change to Android's reminder or daily check is made to `IosReminders` too, until the rules move to the shared code on the shared date types. `TODO(debt)` is not in code, as nothing is cut on the iPhone; the cost to fix is porting `ReminderRules.kt` and `NothingRecordedRules.kt` to `kotlinx.datetime`-backed shared types.

@@ -18,7 +18,9 @@ import com.shawnkowalchuk.milo.data.MiloDatabase
 import com.shawnkowalchuk.milo.data.buildMiloDatabase
 import com.shawnkowalchuk.milo.data.buildPointsDatabase
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
+import com.shawnkowalchuk.milo.data.point.PointCleanup
 import com.shawnkowalchuk.milo.data.point.RawPointRepository
+import com.shawnkowalchuk.milo.data.point.RoomPointsFile
 import com.shawnkowalchuk.milo.data.report.SentReportRepository
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.ShownUnit
@@ -325,6 +327,14 @@ class DuallyCore private constructor(
                     zone = ::systemZoneId,
                     locale = ::phoneLocale,
                     clock = clock,
+                    cleanup =
+                        PointCleanup(
+                            trips = tripRepository,
+                            points = RawPointRepository(points.rawPointDao()),
+                            file = RoomPointsFile(points),
+                            eventLog = eventLog,
+                            clock = clock,
+                        ),
                 ),
                 transfer,
                 IosWidget(tripRepository, settings, ::systemZoneId, ::phoneLocale),

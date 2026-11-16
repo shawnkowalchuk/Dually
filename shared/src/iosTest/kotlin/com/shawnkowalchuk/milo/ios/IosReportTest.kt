@@ -42,16 +42,16 @@ class IosReportTest {
         world.drive(recorder, driveNorth(fixCount = 24, metresPerFix = 75.0))
         recorder.end()
 
-        val asking = report.month(2026, 10)
+        val asking = report.month(0, 2026, 10, 0, 0)
         assertEquals("your name and the accountant's email address", asking.missingForSending)
 
         settings.setReportText("name", "Test Driver")
         settings.setAccountantEmail("accounts@example.com")
-        val month = report.month(2026, 10)
+        val month = report.month(0, 2026, 10, 0, 0)
         assertEquals(null, month.missingForSending)
         assertEquals("October 2026", month.title)
 
-        val files = report.files(2026, 10, measure)
+        val files = report.files(0, 2026, 10, 0, 0, measure)
         assertEquals("Mileage-2026-10-Test-Driver.pdf", files.pdfName)
         assertEquals("Mileage-2026-10-Test-Driver.csv", files.csvName)
         assertEquals(1, files.pages.size)
@@ -64,8 +64,23 @@ class IosReportTest {
     @Test
     fun `a report recorded as sent makes the next one a revision`() = runTest {
         settings.setReportText("name", "Test Driver")
-        report.recordSent(2026, 10)
-        assertTrue(report.month(2026, 10).sentBefore)
-        assertTrue(report.files(2026, 10, measure).pdfName.contains("rev"))
+        report.recordSent(0, 2026, 10, 0, 0)
+        assertTrue(report.month(0, 2026, 10, 0, 0).sentBefore)
+        assertTrue(report.files(0, 2026, 10, 0, 0, measure).pdfName.contains("rev"))
+    }
+
+    @Test
+    fun `a whole year and a date range are reports too and a sent one is listed`() = runTest {
+        assertEquals("2026", report.month(2, 2026, 1, 0, 0).title)
+        assertTrue(report.sentList().isEmpty())
+
+        report.recordSent(0, 2026, 10, 0, 0)
+        val sent = report.sentList()
+        assertEquals(1, sent.size)
+        assertEquals("October 2026", sent.single().period)
+        assertTrue(sent.single().line.startsWith("Sent on "))
+
+        report.setListPersonal(true)
+        assertTrue(report.month(0, 2026, 10, 0, 0).listPersonal)
     }
 }
