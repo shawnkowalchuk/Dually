@@ -97,14 +97,14 @@ private struct WheelCell: View {
             }
         }
         .frame(width: digitSize * 1.12, height: height)
-        .background(accent ? Palette.accent : Palette.page)
+        .background(accent ? Palette.accentTile : Palette.asphalt)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
     private func digit(_ value: Int) -> some View {
         Text(String(value))
             .font(Typography.figure(digitSize))
-            .foregroundStyle(accent ? Palette.page : Palette.text)
+            .foregroundStyle(accent ? Palette.asphalt : Palette.bone)
     }
 }
 

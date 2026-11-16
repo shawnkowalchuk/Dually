@@ -7,6 +7,7 @@ import com.shawnkowalchuk.milo.core.time.secondsIntoDay
 import com.shawnkowalchuk.milo.core.time.timeOfSecondOfDay
 import com.shawnkowalchuk.milo.core.trip.MAX_ADJUST_STEPS
 import com.shawnkowalchuk.milo.core.trip.shownAdjustPercent
+import com.shawnkowalchuk.milo.core.util.AppLook
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.formatClockTime
 import com.shawnkowalchuk.milo.core.util.formatShortDayOfWeek
@@ -22,6 +23,7 @@ import com.shawnkowalchuk.milo.data.settings.isReportText
 import com.shawnkowalchuk.milo.data.settings.reportTextOrNull
 import com.shawnkowalchuk.milo.data.settings.setDistanceAdjustSteps
 import com.shawnkowalchuk.milo.data.settings.setDistanceUnit
+import com.shawnkowalchuk.milo.data.settings.setLook
 import com.shawnkowalchuk.milo.data.settings.setParkedLimitSeconds
 
 /**
@@ -59,6 +61,10 @@ class IosSettings internal constructor(
     suspend fun setMiles(miles: Boolean) = change {
         settings.setDistanceUnit(if (miles) DistanceUnit.MILES else DistanceUnit.KILOMETRES)
     }
+
+    /** The look, as Android's Look tile: the screens and the widget follow it, never the phone's. */
+    suspend fun setLight(light: Boolean) =
+        change { settings.setLook(if (light) AppLook.LIGHT else AppLook.DARK) }
 
     suspend fun setDrivingAlert(on: Boolean) = change { settings.setDrivingAlertEnabled(on) }
 
@@ -160,6 +166,7 @@ class IosSettings internal constructor(
             reportVehicle = now.reportVehicle.orEmpty(),
             accountantEmail = now.accountantEmail.orEmpty(),
             miles = unit == DistanceUnit.MILES,
+            light = now.look == AppLook.LIGHT,
             drivingAlert = now.drivingAlertEnabled,
             days =
                 DayOfWeek.entries.map {
@@ -245,6 +252,8 @@ data class SettingsText(
     val reportVehicle: String,
     val accountantEmail: String,
     val miles: Boolean,
+    /** The light look picked in Settings; dark until it is (since 2026-11-15 on the iPhone). */
+    val light: Boolean,
     val drivingAlert: Boolean,
     /** Monday first. */
     val days: List<WorkDayText>,

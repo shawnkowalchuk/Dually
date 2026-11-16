@@ -18,6 +18,7 @@ final class SettingsModel: ObservableObject {
 
     func load() async {
         text = try? await core.settings.read()
+        if let text { Look.shared.follow(text) }
     }
 
     func stepGrace(longer: Bool) async { await apply { try await self.core.settings.stepGrace(longer: longer) } }
@@ -25,6 +26,7 @@ final class SettingsModel: ObservableObject {
     func stepShortest(longer: Bool) async { await apply { try await self.core.settings.stepShortestTrip(longer: longer) } }
     func stepAdjustment(up: Bool) async { await apply { try await self.core.settings.stepAdjustment(up: up) } }
     func setMiles(_ miles: Bool) async { await apply { try await self.core.settings.setMiles(miles: miles) } }
+    func setLight(_ light: Bool) async { await apply { try await self.core.settings.setLight(light: light) } }
     func setDrivingAlert(_ on: Bool) async { await apply { try await self.core.settings.setDrivingAlert(on: on) } }
     func setIgnoreOutside(_ ignore: Bool) async {
         await apply { try await self.core.settings.setIgnoreOutsideHours(ignore: ignore) }
@@ -54,6 +56,9 @@ final class SettingsModel: ObservableObject {
     }
 
     private func apply(_ change: @escaping () async throws -> SettingsText) async {
-        if let changed = try? await change() { text = changed }
+        if let changed = try? await change() {
+            text = changed
+            Look.shared.follow(changed)
+        }
     }
 }

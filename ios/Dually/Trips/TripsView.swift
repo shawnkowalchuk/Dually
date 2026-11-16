@@ -139,7 +139,7 @@ private struct MonthTotals: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Tile(ground: Palette.accent) {
+            Tile(ground: Palette.accentTile) {
                 Text("Business")
                     .font(Typography.body(13, weight: .semibold))
                 HStack(alignment: .firstTextBaseline, spacing: 4) {

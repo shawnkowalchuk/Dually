@@ -112,6 +112,7 @@ struct CloudBackupTile: View {
 
 /// The sign-in sheet before a purchase or a restore: Apple's own button, then Google's.
 private struct SignInSheet: View {
+    @Environment(\.colorScheme) private var colorScheme
     let words: CloudSignIn
     let cancel: String
     @ObservedObject var model: CloudBackupModel
@@ -128,7 +129,8 @@ private struct SignInSheet: View {
             SignInWithAppleButton(.signIn, onRequest: BackupSignIn.prepare) { result in
                 model.signedInWithApple(result)
             }
-            .signInWithAppleButtonStyle(.white)
+            // Apple's white button on the dark page, its black one on the light page.
+            .signInWithAppleButtonStyle(colorScheme == .light ? .black : .white)
             .frame(height: 46)
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             WideButton(title: words.google, filled: false) { model.signInWithGoogle() }

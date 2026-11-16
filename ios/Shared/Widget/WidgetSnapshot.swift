@@ -12,6 +12,9 @@ struct WidgetSnapshot: Codable {
     var unit: String
     /// "Nov $12 · 2026 $340 at $0.70/km", or nil when the widget is switched off in Settings.
     var dollars: String?
+    /// The light look is picked in Settings (since 2026-11-15): the widget follows the app, as
+    /// on Android. Nil in a snapshot left by an app before it, which is drawn dark.
+    var light: Bool?
 
     static let empty = WidgetSnapshot(recording: false, startedAt: nil, distance: nil, unit: "km", dollars: nil)
 

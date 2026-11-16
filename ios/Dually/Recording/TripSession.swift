@@ -142,7 +142,8 @@ final class TripSession: ObservableObject {
             startedAt: recording.map { Date(timeIntervalSince1970: Double($0.startedAtMs) / 1000) },
             distance: recording.map { core.distanceText(metres: $0.metres) },
             unit: core.unitWord(),
-            dollars: dollars
+            dollars: dollars,
+            light: Look.shared.light
         ).save()
         WidgetCenter.shared.reloadAllTimelines()
     }

@@ -105,7 +105,7 @@ struct ReportView: View {
                         .disabled(!model.canGoForward)
                         .opacity(model.canGoForward ? 1 : 0.35)
                 }
-                Tile(ground: Palette.accent) {
+                Tile(ground: Palette.accentTile) {
                     Text("Business").font(Typography.body(13, weight: .semibold))
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text(month.distance).font(Typography.figure(30))

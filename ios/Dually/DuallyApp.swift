@@ -11,6 +11,8 @@ struct DuallyApp: App {
     @StateObject private var setup = SetupModel(session: TripSession.shared)
     /// The service book, for Service and for Home's tiles of what is due.
     @StateObject private var service = ServiceModel(core: TripSession.shared.core)
+    /// Dark or light, as picked in Settings.
+    @ObservedObject private var look = Look.shared
     @State private var tab = AppTab.home
     /// Where Setup was opened from: its way back leads there, and the bar keeps it lit.
     @State private var setupOpenedFrom = AppTab.settings
@@ -55,7 +57,7 @@ struct DuallyApp: App {
                 .background(Palette.page.ignoresSafeArea())
             }
             .tint(Palette.accent)
-            .preferredColorScheme(.dark)
+            .preferredColorScheme(look.scheme)
             .task {
                 // The online backup follows every change, and StoreKit's late purchases reach
                 // the purchase check, in a build with Firebase's settings (phase 4h).
@@ -63,6 +65,9 @@ struct DuallyApp: App {
                     session.core.cloud.watch()
                     BackupPurchase.listen(core: session.core)
                 }
+                // The look the settings file holds, in case it changed while the app was away
+                // (an import brings the look of the file).
+                if let text = try? await session.core.settings.read() { look.follow(text) }
                 await session.appStarted()
             }
             // Google's sign-in comes back to Dually through its web address.

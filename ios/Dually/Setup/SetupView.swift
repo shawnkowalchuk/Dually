@@ -44,7 +44,7 @@ private struct ReadyTile: View {
     }
 
     var body: some View {
-        Tile(ground: screen.complete ? Palette.tile : Palette.accent) {
+        Tile(ground: screen.complete ? Palette.tile : Palette.accentTile) {
             Text("\(screen.ready) of \(screen.total) ready")
                 .font(Typography.display(24))
                 .foregroundStyle(screen.complete ? Palette.text : Palette.markLetter)

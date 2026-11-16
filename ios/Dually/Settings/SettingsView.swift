@@ -3,7 +3,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 // Settings on the iPhone (phase 4g), laid out as Android's Settings screen: Setup first, then
-// Units and Driving alert side by side, the work hours, and the trip numbers. Each press is stored
+// Units and Look side by side, the driving alert, the work hours, and the trip numbers. Each press is stored
 // at once and applies from the next trip; there is no Save, as on Android.
 struct SettingsView: View {
     @StateObject private var model: SettingsModel
@@ -22,10 +22,12 @@ struct SettingsView: View {
         PinnedScreen(title: "Settings") {
             SetupLinkTile(screen: setup.screen, open: openSetup)
             if let text = model.text {
+                // Units and Look side by side, the first of the settings, as on Android.
                 HStack(alignment: .top, spacing: 12) {
                     UnitsTile(miles: text.miles) { Task { await model.setMiles(!text.miles) } }
-                    DrivingAlertTile(on: text.drivingAlert) { on in Task { await model.setDrivingAlert(on) } }
+                    LookTile(light: text.light) { Task { await model.setLight(!text.light) } }
                 }
+                DrivingAlertTile(on: text.drivingAlert) { on in Task { await model.setDrivingAlert(on) } }
                 // As on Android since 2026-11-12: the online backup stands open under Units.
                 CloudBackupTile(core: core)
                 OdometerTile(core: core, miles: text.miles)
@@ -183,6 +185,30 @@ private struct UnitsTile: View {
     }
 }
 
+/// Dark or light: one button, as Android's Look tile ("Tap for light").
+private struct LookTile: View {
+    let light: Bool
+    let toggle: () -> Void
+
+    var body: some View {
+        Button(action: toggle) {
+            Tile {
+                Text("Look")
+                    .font(Typography.body(14))
+                    .foregroundStyle(Palette.textSecondary)
+                Text(light ? "Light" : "Dark")
+                    .font(Typography.body(18, weight: .semibold))
+                    .foregroundStyle(Palette.text)
+                Text(light ? "Tap for dark" : "Tap for light")
+                    .font(Typography.body(13))
+                    .foregroundStyle(Palette.textSecondary)
+            }
+        }
+        .buttonStyle(.plain)
+        .frame(maxHeight: .infinity)
+    }
+}
+
 /// The driving alert's switch, as Android's tile: "Tell me when I drive without a trip".
 private struct DrivingAlertTile: View {
     let on: Bool
@@ -226,7 +252,7 @@ private struct WorkHoursTile: View {
                             .frame(maxWidth: .infinity, minHeight: 38)
                             .background(day.tracked ? Palette.accent : Palette.controlFill,
                                         in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                            .foregroundStyle(day.tracked ? Palette.markLetter : Palette.text)
+                            .foregroundStyle(day.tracked ? Palette.onAccent : Palette.text)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("\(day.name), \(day.tracked ? "work day" : "not a work day")")
@@ -449,7 +475,7 @@ struct YourDataTile: View {
                         .font(Typography.body(16, weight: .bold))
                         .frame(maxWidth: .infinity, minHeight: 46)
                         .background(Palette.accent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .foregroundStyle(Palette.markLetter)
+                        .foregroundStyle(Palette.onAccent)
                 }
             } else {
                 WideButton(title: "Export all data", filled: false) {

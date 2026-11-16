@@ -26,6 +26,13 @@
 
 ### 2026-11-15
 
+**`[CHANGE]` The iPhone has Android's light look** (APP_ENCYCLOPEDIA, iPhone app)
+Shawn: "iphone is also missing light mode. please check if anything else is missing also". iPhone only (Android has had it since 2026-11-12); his choices for Android stand: a switch in Settings, never the phone's setting, the widget following the app.
+- **How:** `Palette`'s colours each hold Android's dark and light values (`Color(dark:light:)`, read from the view's look); the app sets the look with `.preferredColorScheme` from `Look`, which follows `SettingsText.light` (`IosSettings.setLight`, the shared `setLook`). New fixed colours for what Android draws the same in both looks: `accentTile` (the trip card, the mark, the odometer's last window), `asphalt` and `bone` (the odometer's windows, the dark button on the trip card). `onAccent` is the words on a filled button: dark on Hi-Vis Orange, white on the light look's `#B53A08`.
+- **The widget** reads the look from its snapshot (`WidgetSnapshot.light`, nil in an older snapshot, drawn dark) and names its ground outright, since iOS draws the container's ground apart from the view. **The Lock Screen's trip** is held dark, as it was.
+- **Seen on the simulator:** Settings, Home and Trips in both looks, the switch both ways. **Not seen:** the widget on a home screen in the light look, the sign-in sheet.
+- **What's new:** no line; the list is Android's.
+
 **`[CHANGE]` Android syncs each time Dually is opened, as the iPhone does (ADR-017)** (APP_ENCYCLOPEDIA, Cloud backup)
 Shawn: "also need to improve syncing", then, asked what he saw: "when does it sync? before after a trip?", and of the four changes offered, "Sync on open + trip start". Every upload first takes in the other phones' changes, so an upload is a sync. Android uploaded 30 seconds after a change of its own, at the start of the app's process and once a day; Android keeps the process for days, so a change made on the iPhone could wait until the next day. `MainActivity.onStart` now asks for one (`CloudUploads.appOpened`), only while an account holding the unlock is signed in; a request while one waits is the same request. Android only: the iPhone has synced on coming to the front since it had the backup.
 - **`[FINDING]` A trip's start was already a sync, on both phones:** opening a trip writes its row, the trips table's change signal follows, and the upload runs 5 seconds (iPhone) or 30 seconds (Android) after the last write; nothing writes the row again while the truck is driven. Nothing was added for it. Shawn was first told otherwise, then corrected.

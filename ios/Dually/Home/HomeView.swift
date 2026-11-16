@@ -134,7 +134,7 @@ private struct TripCard: View {
             Button {
                 Task { await model.start() }
             } label: {
-                Tile(ground: Palette.accent) {
+                Tile(ground: Palette.accentTile) {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Start trip")
@@ -147,7 +147,7 @@ private struct TripCard: View {
                             .font(.system(size: 20, weight: .bold))
                             .frame(width: 48, height: 48)
                             .background(Palette.markLetter, in: Circle())
-                            .foregroundStyle(Palette.accent)
+                            .foregroundStyle(Palette.accentTile)
                     }
                     .foregroundStyle(Palette.markLetter)
                 }
@@ -165,7 +165,7 @@ private struct RecordingCard: View {
     let onEnd: () -> Void
 
     var body: some View {
-        Tile(ground: Palette.accent) {
+        Tile(ground: Palette.accentTile) {
             Text("Recording")
                 .font(Typography.body(14, weight: .semibold))
             HStack(alignment: .firstTextBaseline, spacing: 4) {
@@ -183,7 +183,7 @@ private struct RecordingCard: View {
                     .font(Typography.body(17, weight: .bold))
                     .frame(maxWidth: .infinity, minHeight: 48)
                     .background(Palette.markLetter, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    .foregroundStyle(Palette.text)
+                    .foregroundStyle(Palette.bone)
             }
             .buttonStyle(.plain)
             .padding(.top, 6)
