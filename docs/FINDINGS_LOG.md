@@ -26,6 +26,8 @@
 
 ### 2026-11-15
 
+**`[CHANGE]` Test builds of the iPhone's missing pieces:** TestFlight 1.0 (10) uploaded at 21:09 (the light look, Home's truck and today tiles), and 1.0 (11) at 21:28 with everything of this evening: the Log, Settings' reminder, daily check, each day's hours and widget, and the report's periods, options, sent list and GPS points. Before it: `spotlessCheck lintDebug testDebugUnitTest :shared:testAndroidHostTest :shared:iosSimulatorArm64Test assembleDebug` pass. No Android change but the shared Log grouping, so no Android build.
+
 **`[CHANGE]` The iPhone's report: a date range, a whole year, Android's options, the sent list, and a sent month's GPS points** (APP_ENCYCLOPEDIA, iPhone app)
 Chosen by Shawn from the list of what the iPhone lacks. iPhone only; nothing new in the shared report, which already made all three periods and all three options: the iPhone now asks it for them, and hands it every finished trip for the odometer lines (`drivenTrips`), as Android's `ReportReading` does.
 - **The period from Swift** is a number and three values (`kind`, the year and month, a range's epoch days), since a Kotlin sealed type does not cross to Swift well; a whole year is Android's `Range` of 1 January to 31 December.
