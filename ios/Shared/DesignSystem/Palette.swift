@@ -32,6 +32,17 @@ enum Palette {
     /// A control or a line on a card.
     static let controlFill = Color(dark: 0x2E2721, light: 0xF1E4D5)
 
+    // ---- The Log's tags, as Android's logTags ----
+
+    /// The words of a line on the Log.
+    static let logText = Color(dark: 0xE3D3C0, light: 0x3B322B)
+    /// The tag of a line about the truck's connection (Android's Bluetooth tag).
+    static let truckTagFill = Color(dark: 0x2A3350, light: 0xDFE7FF)
+    static let truckTagText = Color(dark: 0xC9D6FF, light: 0x24396B)
+    /// The tag of an error or a crash.
+    static let errorTagFill = Color(dark: 0x3A1C1F, light: 0xFADBDC)
+    static let errorTagText = Color(dark: 0xFFB3B3, light: 0x8E1F27)
+
     // ---- The same in both looks ----
 
     /// Hi-Vis Orange as a ground: the trip card, the mark, the odometer's last window.

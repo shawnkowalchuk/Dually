@@ -9,13 +9,15 @@ struct SettingsView: View {
     @StateObject private var model: SettingsModel
     @ObservedObject var setup: SetupModel
     let openSetup: () -> Void
+    let openLog: () -> Void
     private let core: DuallyCore
 
-    init(core: DuallyCore, setup: SetupModel, openSetup: @escaping () -> Void) {
+    init(core: DuallyCore, setup: SetupModel, openSetup: @escaping () -> Void, openLog: @escaping () -> Void) {
         self.core = core
         _model = StateObject(wrappedValue: SettingsModel(core: core))
         self.setup = setup
         self.openSetup = openSetup
+        self.openLog = openLog
     }
 
     var body: some View {
@@ -35,12 +37,39 @@ struct SettingsView: View {
                 WorkHoursTile(text: text, model: model)
                 TripNumbersTile(text: text, model: model)
                 YourDataTile(core: core)
+                LogLinkTile(open: openLog)
             }
         }
         .task {
             setup.refresh()
             await model.load()
         }
+    }
+}
+
+/// The way to the Log, as Android's tile, in its words.
+private struct LogLinkTile: View {
+    let open: () -> Void
+
+    var body: some View {
+        Button(action: open) {
+            Tile {
+                HStack {
+                    Text("Log")
+                        .font(Typography.body(17, weight: .semibold))
+                        .foregroundStyle(Palette.text)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(Palette.textSecondary)
+                }
+                Text("What Dually did and when: every trip, connection and error. Support may ask for it.")
+                    .font(Typography.body(14))
+                    .foregroundStyle(Palette.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .buttonStyle(.plain)
     }
 }
 

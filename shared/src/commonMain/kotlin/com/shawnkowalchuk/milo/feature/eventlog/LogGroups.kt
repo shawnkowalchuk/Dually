@@ -3,7 +3,8 @@ package com.shawnkowalchuk.milo.feature.eventlog
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 
 // How the Log screen sorts the log's fourteen categories into the four chips of the owner's
-// design, and which word a line's tag carries. Pure functions: the words on the chips are in
+// design, and which word a line's tag carries. Shared since 2026-11-15, when the iPhone got its
+// Log screen (IosLog): one rule for both phones. Pure functions: the words on the chips are in
 // the string resources, and the colours are the theme's.
 
 /** The four kinds of line the Log screen's chips narrow the list to. "All" is no group. */

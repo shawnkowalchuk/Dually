@@ -26,6 +26,12 @@
 
 ### 2026-11-15
 
+**`[CHANGE]` The iPhone has Android's Log screen** (APP_ENCYCLOPEDIA, iPhone app)
+Chosen by Shawn from the list of what the iPhone lacks. iPhone only.
+- **Moved, not rebuilt:** `LogGroups.kt` (which chip a category's lines are under, and a tag's word) from `:app` to `:shared`, package unchanged; Android's Log screen and `LogGroupsTest` use it as before.
+- **The iPhone's differences, each on purpose:** the trigger chip is called Truck and its tag TRUCK (the automation reports Bluetooth or CarPlay alike); no Android Auto chip; the file is written with Apple's date formatter in the iPhone's time zone, in Android's fixed forms.
+- **Tests:** `IosLogTest` (paging, the chips, the tags, the empty words, the file). **Seen on the simulator:** the screen with the simulator's own lines, in the light look. **Not seen:** the share sheet with the file.
+
 **`[CHANGE]` The iPhone's Home has Android's truck tile and today's trips** (APP_ENCYCLOPEDIA, iPhone app)
 Shawn, given the list of what the iPhone lacks, chose these first with the Log, the Settings extras and the report's extras. iPhone only.
 - **The truck tile** is Android's words for what the last Shortcuts automation said (`IosTripRecorder.truckTile`): the iPhone reads no connection, so the tile says when the automation said so. It is left out before any automation has run.

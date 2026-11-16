@@ -49,7 +49,13 @@ struct DuallyApp: App {
                         openSettings: { tab = .settings }
                     )
                 case .settings:
-                    SettingsView(core: session.core, setup: setup) { openSetup(from: .settings) }
+                    SettingsView(
+                        core: session.core,
+                        setup: setup,
+                        openSetup: { openSetup(from: .settings) },
+                        openLog: { tab = .log }
+                    )
+                case .log: LogView(core: session.core) { tab = .settings }
                 case .setup: SetupView(model: setup) { tab = setupOpenedFrom }
                 case .service: ServiceView(model: service)
                 }
@@ -93,6 +99,7 @@ struct DuallyApp: App {
 extension DuallyApp {
     private func entry(_ which: AppTab, _ label: String, _ systemImage: String) -> BottomBarEntry {
         let lit = tab == which || (tab == .setup && setupOpenedFrom == which) || (tab == .report && which == .trips)
+            || (tab == .log && which == .settings)
         return BottomBarEntry(label: label, systemImage: systemImage, selected: lit) { tab = which }
     }
 
@@ -102,7 +109,8 @@ extension DuallyApp {
     }
 }
 
-/// The screens: the bar's four, Setup (opened from Settings or Home) and the report (from Trips).
+/// The screens: the bar's four, Setup (opened from Settings or Home), the report (from Trips) and
+/// the Log (from Settings).
 enum AppTab: Hashable {
-    case home, trips, settings, service, setup, report
+    case home, trips, settings, service, setup, report, log
 }

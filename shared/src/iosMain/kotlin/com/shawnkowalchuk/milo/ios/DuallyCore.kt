@@ -180,6 +180,9 @@ class DuallyCore private constructor(
         return tile.copy(heard = "Your Shortcuts automation said so $date at $time.")
     }
 
+    /** The Log screen (2026-11-15): the event log's lines, its chips, and its file to share. */
+    val log: IosLog by lazy { IosLog(EventLogRepository(database.eventLogDao())) }
+
     /** [metres] as Home writes a distance: "12.3", in the phone's language. */
     fun distanceText(metres: Double): String =
         formatDistance(metres, shownUnit.unit.value, phoneLocale())
