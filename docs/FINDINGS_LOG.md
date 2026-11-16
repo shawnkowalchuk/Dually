@@ -26,6 +26,12 @@
 
 ### 2026-11-15
 
+**`[CHANGE]` The iPhone's Home has Android's truck tile and today's trips** (APP_ENCYCLOPEDIA, iPhone app)
+Shawn, given the list of what the iPhone lacks, chose these first with the Log, the Settings extras and the report's extras. iPhone only.
+- **The truck tile** is Android's words for what the last Shortcuts automation said (`IosTripRecorder.truckTile`): the iPhone reads no connection, so the tile says when the automation said so. It is left out before any automation has run.
+- **Today's trips** reuse the Trips screen's rows (`IosTrips.today`; the row's wording moved into `tripText`, shared by the month and today) and the shared count (`todayTrips`), so Home and Trips cannot differ.
+- **Tests:** `IosTripRecorderTest` gains the truck tile through connect, grace, End and disconnect; its 7 pass. **Seen on the simulator:** both tiles in the light look, with a connect report and two trips of today put there by hand.
+
 **`[CHANGE]` The iPhone has Android's light look** (APP_ENCYCLOPEDIA, iPhone app)
 Shawn: "iphone is also missing light mode. please check if anything else is missing also". iPhone only (Android has had it since 2026-11-12); his choices for Android stand: a switch in Settings, never the phone's setting, the widget following the app.
 - **How:** `Palette`'s colours each hold Android's dark and light values (`Color(dark:light:)`, read from the view's look); the app sets the look with `.preferredColorScheme` from `Look`, which follows `SettingsText.light` (`IosSettings.setLight`, the shared `setLook`). New fixed colours for what Android draws the same in both looks: `accentTile` (the trip card, the mark, the odometer's last window), `asphalt` and `bone` (the odometer's windows, the dark button on the trip card). `onAccent` is the words on a filled button: dark on Hi-Vis Orange, white on the light look's `#B53A08`.

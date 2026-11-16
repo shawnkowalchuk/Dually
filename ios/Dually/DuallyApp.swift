@@ -27,7 +27,14 @@ struct DuallyApp: App {
             // from Settings' first tile (and from Home's warning), with the way back in its top line.
             Group {
                 switch tab {
-                case .home: HomeView(session: session, setup: setup, service: service) { openSetup(from: .home) }
+                case .home:
+                    HomeView(
+                        session: session,
+                        setup: setup,
+                        service: service,
+                        openSetup: { openSetup(from: .home) },
+                        openTrips: { tab = .trips }
+                    )
                 case .trips:
                     TripsView(core: session.core) { year, month in
                         reportMonth = (year, month)

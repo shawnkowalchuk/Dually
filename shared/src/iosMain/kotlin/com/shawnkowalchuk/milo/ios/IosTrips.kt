@@ -7,6 +7,7 @@ import com.shawnkowalchuk.milo.core.time.compareDates
 import com.shawnkowalchuk.milo.core.time.yearMonthOf
 import com.shawnkowalchuk.milo.core.trip.labelChoices
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
+import com.shawnkowalchuk.milo.core.util.daySpan
 import com.shawnkowalchuk.milo.core.util.formatDistance
 import com.shawnkowalchuk.milo.core.util.formatMonthAndYear
 import com.shawnkowalchuk.milo.core.util.formatShortDay
@@ -14,8 +15,10 @@ import com.shawnkowalchuk.milo.core.util.formatTenths
 import com.shawnkowalchuk.milo.core.util.formatTimeOfDay
 import com.shawnkowalchuk.milo.core.util.formatTimeSpan
 import com.shawnkowalchuk.milo.core.util.localDateOf
+import com.shawnkowalchuk.milo.core.util.monthOf
 import com.shawnkowalchuk.milo.core.util.monthSpan
 import com.shawnkowalchuk.milo.core.util.usesTwelveHourClock
+import com.shawnkowalchuk.milo.core.util.wholeHoursAndMinutes
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.report.SentReport
@@ -23,6 +26,7 @@ import com.shawnkowalchuk.milo.data.report.monthSubmission
 import com.shawnkowalchuk.milo.data.trip.ByHandMark
 import com.shawnkowalchuk.milo.data.trip.TripCorrections
 import com.shawnkowalchuk.milo.data.trip.TripRepository
+import com.shawnkowalchuk.milo.data.trip.todayTrips
 import com.shawnkowalchuk.milo.feature.trips.TripKind
 import com.shawnkowalchuk.milo.feature.trips.TripLine
 import com.shawnkowalchuk.milo.feature.trips.monthSummary
@@ -82,39 +86,7 @@ class IosTrips internal constructor(
             )
         val twentyFourHour = !usesTwelveHourClock(localeNow)
         val today = localDateOf(clock(), zoneNow)
-        fun lineText(line: TripLine) = TripText(
-            tripId = line.id,
-            time =
-                line.endedAtMs?.let { end ->
-                    val (start, ending) =
-                        formatTimeSpan(line.startedAtMs, end, zoneNow, localeNow, twentyFourHour)
-                    "$start – $ending"
-                } ?: formatTimeOfDay(line.startedAtMs, zoneNow, localeNow, twentyFourHour),
-            route = routeText(line),
-            distance = line.distanceMetres?.let { formatDistance(it, unit, localeNow) },
-            category =
-                when (line.category) {
-                    TripCategory.BUSINESS -> "Business"
-                    TripCategory.PERSONAL -> "Personal"
-                    null -> null
-                },
-            note = noteText(line),
-            label = line.label,
-            canMarkBusiness = TripCategory.BUSINESS in line.markableAs,
-            canMarkPersonal = TripCategory.PERSONAL in line.markableAs,
-            correction = line.kind.correction?.name?.takeIf { !line.readOnly },
-            correctionWords =
-                when (line.kind) {
-                    TripKind.COUNTED -> "Delete"
-                    TripKind.DELETED -> "Restore"
-                    TripKind.DISCARDED -> "Count it"
-                    TripKind.IN_PROGRESS -> null
-                }.takeIf { !line.readOnly },
-            canLabel = line.kind == TripKind.COUNTED && !line.readOnly,
-            canEdit = line.editable,
-            canPutBack = line.canPutBack,
-            unit = unitWord(unit),
-        )
+        fun lineText(line: TripLine) = tripText(line, zoneNow, localeNow, twentyFourHour, unit)
         return MonthText(
             title = formatMonthAndYear(shown, localeNow),
             business = formatTenths(summary.totals.business.tenths, localeNow),
@@ -137,6 +109,94 @@ class IosTrips internal constructor(
                         business = formatTenths(day.businessTenths, localeNow),
                         trips = day.trips.map(::lineText),
                     )
+                },
+        )
+    }
+
+    private fun tripText(
+        line: TripLine,
+        zoneNow: ZoneId,
+        localeNow: Locale,
+        twentyFourHour: Boolean,
+        unit: DistanceUnit,
+    ) = TripText(
+        tripId = line.id,
+        time =
+            line.endedAtMs?.let { end ->
+                val (start, ending) =
+                    formatTimeSpan(line.startedAtMs, end, zoneNow, localeNow, twentyFourHour)
+                "$start – $ending"
+            } ?: formatTimeOfDay(line.startedAtMs, zoneNow, localeNow, twentyFourHour),
+        route = routeText(line),
+        distance = line.distanceMetres?.let { formatDistance(it, unit, localeNow) },
+        category =
+            when (line.category) {
+                TripCategory.BUSINESS -> "Business"
+                TripCategory.PERSONAL -> "Personal"
+                null -> null
+            },
+        note = noteText(line),
+        label = line.label,
+        canMarkBusiness = TripCategory.BUSINESS in line.markableAs,
+        canMarkPersonal = TripCategory.PERSONAL in line.markableAs,
+        correction = line.kind.correction?.name?.takeIf { !line.readOnly },
+        correctionWords =
+            when (line.kind) {
+                TripKind.COUNTED -> "Delete"
+                TripKind.DELETED -> "Restore"
+                TripKind.DISCARDED -> "Count it"
+                TripKind.IN_PROGRESS -> null
+            }.takeIf { !line.readOnly },
+        canLabel = line.kind == TripKind.COUNTED && !line.readOnly,
+        canEdit = line.editable,
+        canPutBack = line.canPutBack,
+        unit = unitWord(unit),
+    )
+
+    /**
+     * Home's list of today's finished trips, newest first, as Android's (`TodayListTile`; on the
+     * iPhone since 2026-11-15): the rows Trips shows for today, and the label "Today", or
+     * "Today · 3 trips · 1 h 5 min driving" once there is one. The trip in progress is left out
+     * until it ends, as on Android.
+     */
+    suspend fun today(): TodayText {
+        val zoneNow = zone()
+        val localeNow = locale()
+        val unit = unit()
+        val nowMs = clock()
+        val span = daySpan(localDateOf(nowMs, zoneNow), zoneNow)
+        val rows = trips.observeTripsStartedBetween(span.fromMs, span.untilMs).first()
+        val counted = todayTrips(rows)
+        val summary =
+            monthSummary(
+                trips = rows,
+                zone = zoneNow,
+                showLeftOut = false,
+                liveTripId = null,
+                liveDistanceMetres = null,
+                liveStart = null,
+                unit = unit,
+                locked = monthSubmission(monthOf(nowMs, zoneNow), sentReports()) != null,
+            )
+        val twentyFourHour = !usesTwelveHourClock(localeNow)
+        val time = wholeHoursAndMinutes(counted.driveTimeMs)
+        val driving = if (time.hours ==
+            0L
+        ) {
+            "${time.minutes} min"
+        } else {
+            "${time.hours} h ${time.minutes} min"
+        }
+        return TodayText(
+            title =
+                when (counted.count) {
+                    0 -> "Today"
+                    1 -> "Today · 1 trip · $driving driving"
+                    else -> "Today · ${counted.count} trips · $driving driving"
+                },
+            trips =
+                summary.days.flatMap { it.trips }.map {
+                    tripText(it, zoneNow, localeNow, twentyFourHour, unit)
                 },
         )
     }
@@ -272,6 +332,9 @@ data class MonthText(
     val inProgress: TripText?,
     val days: List<DayText>,
 )
+
+/** Home's tile of today's finished trips (see [IosTrips.today]). */
+data class TodayText(val title: String, val trips: List<TripText>)
 
 /** One day: "Today · Fri, Nov 13", its Business kilometres, and its trips, newest first. */
 data class DayText(val title: String, val business: String, val trips: List<TripText>)

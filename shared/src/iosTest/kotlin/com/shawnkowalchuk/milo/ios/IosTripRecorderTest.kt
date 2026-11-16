@@ -78,6 +78,43 @@ class IosTripRecorderTest {
     }
 
     @Test
+    fun `Home's truck tile follows what the automation said in Android's words`() = runTest {
+        val recorder = world.recorder()
+        assertNull(recorder.truckTile(), "no automation has run: Setup's warning stands instead")
+
+        assertNotNull(recorder.truckConnected())
+        val recording = assertNotNull(recorder.truckTile())
+        assertTrue(recording.connected)
+        assertEquals("Connected", recording.title)
+        assertEquals(world.nowMs, recording.heardAtMs)
+
+        world.drive(recorder, driveNorth(fixCount = 24, metresPerFix = 75.0))
+        world.nowMs = at(second = 120)
+        assertNotNull(recorder.truckDisconnected())
+        assertEquals(
+            "Truck disconnected. Waiting for it to reconnect",
+            recorder.truckTile()?.text,
+            "a trip in its grace period",
+        )
+
+        world.nowMs = at(second = 130)
+        recorder.truckConnected()
+        world.nowMs = at(second = 140)
+        assertNull(recorder.end())
+        assertEquals(
+            "You ended the trip. The next one starts by itself after the truck reconnects.",
+            recorder.truckTile()?.text,
+        )
+
+        world.nowMs = at(second = 150)
+        recorder.truckDisconnected()
+        val gone = assertNotNull(recorder.truckTile())
+        assertFalse(gone.connected)
+        assertEquals("Not connected", gone.title)
+        assertEquals("A trip starts by itself when the truck connects", gone.text)
+    }
+
+    @Test
     fun `a trip open when the app stopped carries on while the truck is believed connected`() =
         runTest {
             val first = world.recorder()

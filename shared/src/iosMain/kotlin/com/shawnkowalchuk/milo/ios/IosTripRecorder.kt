@@ -100,6 +100,74 @@ class IosTripRecorder internal constructor(
     }
 
     /**
+     * Home's truck tile on the iPhone (2026-11-15), in the words of Android's (`TruckState`):
+     * what the last Shortcuts automation said, since the iPhone cannot read the connection, and
+     * what the rules do about it. Null when no automation has ever run: Setup's warning stands
+     * on Home in its place.
+     */
+    suspend fun truckTile(): TruckTileText? = lock.withLock {
+        pickUp()
+        checkIfDue()
+        val heardAtMs =
+            (if (truck.connected) truck.connectHeardAtMs else truck.disconnectHeardAtMs)
+                ?: return@withLock null
+        val state = known
+        val parked = state?.parked
+        when {
+            !truck.connected && state?.trip != null ->
+                TruckTileText(
+                    false,
+                    "Not connected",
+                    "Truck disconnected. Waiting for it to reconnect",
+                    heardAtMs,
+                )
+
+            !truck.connected ->
+                TruckTileText(
+                    connected = false,
+                    title = "Not connected",
+                    text = "A trip starts by itself when the truck connects",
+                    heardAtMs = heardAtMs,
+                )
+
+            state?.trip != null ->
+                TruckTileText(true, "Connected", "Trip recording started", heardAtMs)
+
+            state?.waitingToMove == true ->
+                TruckTileText(
+                    true,
+                    "Truck connected and parked",
+                    "A trip starts by itself when the truck moves",
+                    heardAtMs,
+                )
+
+            parked != null && !parked.watching ->
+                TruckTileText(
+                    true,
+                    "Truck connected. Dually has stopped watching it",
+                    "It has not moved for a long time. Press Start trip before you drive off.",
+                    heardAtMs,
+                )
+
+            state?.autoStartHeldOff == true ->
+                TruckTileText(
+                    true,
+                    "Connected",
+                    "You ended the trip. The next one starts by itself after the truck reconnects.",
+                    heardAtMs,
+                )
+
+            else ->
+                TruckTileText(
+                    true,
+                    "Connected",
+                    "No trip is being recorded. Press Start trip.",
+                    heardAtMs,
+                )
+        }
+    }
+
+    /**
      * End pressed: closes the open trip, which is then measured and sorted. With the truck
      * believed connected, automatic start is then held off until it connects again, as on
      * Android.
@@ -313,6 +381,19 @@ class IosTripRecorder internal constructor(
         )
     }
 }
+
+/**
+ * Home's truck tile (see [IosTripRecorder.truckTile]): Android's title and sentence for the state,
+ * and when the automation said so.
+ */
+data class TruckTileText(
+    val connected: Boolean,
+    val title: String,
+    val text: String,
+    val heardAtMs: Long,
+    /** "Your Shortcuts automation said so today at 3:45 PM.", filled in by [DuallyCore.truckTile]. */
+    val heard: String = "",
+)
 
 /** See [IosTripRecorder.drivingFacts]. */
 internal data class DrivingFacts(

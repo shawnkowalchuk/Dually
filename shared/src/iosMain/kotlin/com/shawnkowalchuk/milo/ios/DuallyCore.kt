@@ -1,15 +1,19 @@
 package com.shawnkowalchuk.milo.ios
 
 import com.shawnkowalchuk.milo.core.text.Locale
+import com.shawnkowalchuk.milo.core.time.compareDates
 import com.shawnkowalchuk.milo.core.time.systemZoneId
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.daySpan
 import com.shawnkowalchuk.milo.core.util.formatDistance
 import com.shawnkowalchuk.milo.core.util.formatMonthName
+import com.shawnkowalchuk.milo.core.util.formatShortDay
 import com.shawnkowalchuk.milo.core.util.formatTenths
+import com.shawnkowalchuk.milo.core.util.formatTimeOfDay
 import com.shawnkowalchuk.milo.core.util.localDateOf
 import com.shawnkowalchuk.milo.core.util.monthOf
 import com.shawnkowalchuk.milo.core.util.monthSpan
+import com.shawnkowalchuk.milo.core.util.usesTwelveHourClock
 import com.shawnkowalchuk.milo.data.MiloDatabase
 import com.shawnkowalchuk.milo.data.buildMiloDatabase
 import com.shawnkowalchuk.milo.data.buildPointsDatabase
@@ -153,6 +157,27 @@ class DuallyCore private constructor(
             monthName = formatMonthName(month, locale),
             monthBusiness = formatTenths(monthTotals.business.tenths, locale),
         )
+    }
+
+    /**
+     * Home's truck tile (2026-11-15), with when the automation said so: "Your Shortcuts
+     * automation said so today at 3:45 PM." Null before any automation has run.
+     */
+    suspend fun truckTile(nowMs: Long): TruckTileText? {
+        val tile = recorder.truckTile() ?: return null
+        val zone = systemZoneId()
+        val locale = phoneLocale()
+        val time = formatTimeOfDay(tile.heardAtMs, zone, locale, !usesTwelveHourClock(locale))
+        val day = localDateOf(tile.heardAtMs, zone)
+        val date =
+            if (compareDates(day, localDateOf(nowMs, zone)) ==
+                0
+            ) {
+                "today"
+            } else {
+                formatShortDay(day, locale)
+            }
+        return tile.copy(heard = "Your Shortcuts automation said so $date at $time.")
     }
 
     /** [metres] as Home writes a distance: "12.3", in the phone's language. */

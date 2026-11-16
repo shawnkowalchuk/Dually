@@ -9,14 +9,22 @@ struct HomeView: View {
     @ObservedObject var setup: SetupModel
     @ObservedObject var service: ServiceModel
     let openSetup: () -> Void
+    let openTrips: () -> Void
     @Environment(\.scenePhase) private var scenePhase
     @State private var finishing: AlertText?
 
-    init(session: TripSession, setup: SetupModel, service: ServiceModel, openSetup: @escaping () -> Void) {
+    init(
+        session: TripSession,
+        setup: SetupModel,
+        service: ServiceModel,
+        openSetup: @escaping () -> Void,
+        openTrips: @escaping () -> Void
+    ) {
         _model = StateObject(wrappedValue: HomeModel(session: session))
         self.setup = setup
         self.service = service
         self.openSetup = openSetup
+        self.openTrips = openTrips
     }
 
     var body: some View {
@@ -44,6 +52,10 @@ struct HomeView: View {
                     unit: model.unitWord
                 )
             }
+            // The truck, as Android's tile under the figures: what the last automation said.
+            if let truck = model.truck {
+                TruckTile(truck: truck)
+            }
             if let odometer = model.odometer {
                 OdometerTile(odometer: odometer)
             }
@@ -54,6 +66,7 @@ struct HomeView: View {
                     ServiceAlertTile(alert: alert) { finishing = alert }
                 }
             }
+            TodayTile(today: model.today, recording: model.recording != nil, openTrips: openTrips)
             if let failure = model.failure ?? model.recordingFailure {
                 Text(failure)
                     .font(Typography.body(14))
@@ -195,6 +208,110 @@ private struct RecordingCard: View {
     private func elapsed(until now: Date) -> String {
         let seconds = max(0, Int(now.timeIntervalSince1970) - Int(trip.startedAtMs / 1000))
         return String(format: "%d:%02d:%02d", seconds / 3600, seconds / 60 % 60, seconds % 60)
+    }
+}
+
+/// The truck's tile, as Android's under Home's figures: "Truck", the state in Android's words
+/// ("Connected", "Not connected", "Truck connected and parked"), its sentence, and when the
+/// Shortcuts automation said so, since the iPhone cannot read the connection itself.
+private struct TruckTile: View {
+    let truck: TruckTileText
+
+    var body: some View {
+        Tile {
+            Text("Truck")
+                .font(Typography.body(13))
+                .foregroundStyle(Palette.textSecondary)
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(truck.connected ? Palette.accent : Color.clear)
+                    .overlay(Circle().stroke(truck.connected ? Palette.accent : Palette.textSecondary, lineWidth: 2))
+                    .frame(width: 10, height: 10)
+                Text(truck.title)
+                    .font(Typography.body(18, weight: .semibold))
+                    .foregroundStyle(Palette.text)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Text(truck.text)
+                .font(Typography.body(14))
+                .foregroundStyle(Palette.text)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(truck.heard)
+                .font(Typography.body(13))
+                .foregroundStyle(Palette.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Today's finished trips, newest first, as Android's tile at the foot of Home: "Today" or
+/// "Today · 3 trips · 1 h 5 min driving", Trips in its corner, and a row for each trip with its
+/// times, what it is saved as, where it went and its distance. A trip that is not Business has
+/// its figure greyed, as on Android: the figures in full colour add up to the Business above.
+private struct TodayTile: View {
+    let today: TodayText?
+    let recording: Bool
+    let openTrips: () -> Void
+
+    var body: some View {
+        Tile {
+            HStack(alignment: .firstTextBaseline) {
+                Text(today?.title ?? "Today")
+                    .font(Typography.body(13))
+                    .foregroundStyle(Palette.textSecondary)
+                Spacer()
+                Button("Trips", action: openTrips)
+                    .font(Typography.body(14, weight: .semibold))
+                    .foregroundStyle(Palette.accent)
+            }
+            if let today, today.trips.isEmpty {
+                Text("No finished trips yet today.")
+                    .font(Typography.body(14))
+                    .foregroundStyle(Palette.text)
+            }
+            ForEach(Array((today?.trips ?? []).enumerated()), id: \.element.tripId) { index, trip in
+                if index > 0 { Divider().overlay(Palette.controlFill) }
+                TodayRow(trip: trip)
+            }
+            if recording {
+                Text("The trip in progress is added when it ends.")
+                    .font(Typography.body(13))
+                    .foregroundStyle(Palette.textSecondary)
+                    .padding(.top, 4)
+            }
+        }
+    }
+}
+
+private struct TodayRow: View {
+    let trip: TripText
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text([trip.time, trip.category].compactMap { $0 }.joined(separator: " · "))
+                    .font(Typography.body(14, weight: .semibold))
+                    .foregroundStyle(Palette.text)
+                if let route = trip.route {
+                    Text(route)
+                        .font(Typography.body(13))
+                        .foregroundStyle(Palette.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                if let label = trip.label {
+                    Text(label)
+                        .font(Typography.body(13))
+                        .foregroundStyle(Palette.textSecondary)
+                }
+            }
+            Spacer(minLength: 0)
+            Text(trip.distance ?? "–")
+                .font(Typography.figure(20))
+                .foregroundStyle(trip.category == "Business" ? Palette.text : Palette.textSecondary)
+        }
+        .padding(.vertical, 6)
+        .accessibilityElement(children: .combine)
     }
 }
 

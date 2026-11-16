@@ -11,6 +11,10 @@ final class HomeModel: ObservableObject {
     @Published private(set) var figures: HomeFigures?
     /// The odometer as its wheels show it, counting while a trip with the truck is driven.
     @Published private(set) var odometer: HomeOdometerText?
+    /// Today's finished trips, newest first, as Android's Home lists them.
+    @Published private(set) var today: TodayText?
+    /// What the last Shortcuts automation said of the truck, or nil before any has run.
+    @Published private(set) var truck: TruckTileText?
     /// The trip being recorded, or nil.
     @Published private(set) var recording: RecordingNow?
     @Published private(set) var failure: String?
@@ -18,6 +22,7 @@ final class HomeModel: ObservableObject {
 
     private let session: TripSession
     private var following: AnyCancellable?
+    private var turning: AnyCancellable?
     var location: LocationRecorder { session.location }
 
     init(session: TripSession) {
@@ -30,6 +35,14 @@ final class HomeModel: ObservableObject {
             .throttle(for: .seconds(2), scheduler: RunLoop.main, latest: true)
             .sink { [weak self] trip in
                 Task { await self?.readOdometer(trip) }
+            }
+        // Today's trips and the truck when a trip starts or ends, or its truck goes and comes
+        // back: an automation can do that while Home is open.
+        turning = session.$recording
+            .map { trip in trip.map { $0.waitingForTruck ? 2 : 1 } ?? 0 }
+            .removeDuplicates()
+            .sink { [weak self] _ in
+                Task { await self?.readTodayAndTruck() }
             }
     }
 
@@ -72,6 +85,12 @@ final class HomeModel: ObservableObject {
             failure = error.localizedDescription
         }
         await readOdometer(session.recording)
+        await readTodayAndTruck()
+    }
+
+    private func readTodayAndTruck() async {
+        today = try? await session.core.trips.today()
+        truck = try? await session.core.truckTile(nowMs: Int64(Date().timeIntervalSince1970 * 1000))
     }
 
     private func readOdometer(_ trip: RecordingNow?) async {
