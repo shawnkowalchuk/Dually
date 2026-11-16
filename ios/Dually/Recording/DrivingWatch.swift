@@ -20,6 +20,8 @@ final class DrivingWatch: NSObject {
     var onTap: (() -> Void)?
     /// What a tap on the service reminder does: open Service.
     var onServiceTap: (() -> Void)?
+    /// A tap on the monthly reminder: the month whose report it opens.
+    var onReminderTap: ((Int, Int) -> Void)?
 
     private let manager = CLLocationManager()
     private let motion = CMMotionActivityManager()
@@ -149,6 +151,7 @@ extension DrivingWatch: UNUserNotificationCenterDelegate {
         Task { @MainActor in
             if identifier == Self.alertId { self.onTap?() }
             if identifier == Self.serviceId { self.onServiceTap?() }
+            if let month = Reminders.month(of: response) { self.onReminderTap?(month.year, month.month) }
             completionHandler()
         }
     }

@@ -20,6 +20,7 @@ import com.shawnkowalchuk.milo.data.buildPointsDatabase
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.point.RawPointRepository
 import com.shawnkowalchuk.milo.data.report.SentReportRepository
+import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.ShownUnit
 import com.shawnkowalchuk.milo.data.settings.buildSettingsStore
 import com.shawnkowalchuk.milo.data.settings.buildShownUnit
@@ -81,6 +82,7 @@ class DuallyCore private constructor(
     /** The online backup (phase 4h). */
     val cloud: IosCloud,
     private val shownUnit: ShownUnit,
+    private val settingsStore: SettingsStore,
 ) {
     /** "km" or "mi", as Settings has it now: every distance the iPhone writes follows it. */
     fun unitWord(): String = unitWord(shownUnit.unit.value)
@@ -178,6 +180,17 @@ class DuallyCore private constructor(
                 formatShortDay(day, locale)
             }
         return tile.copy(heard = "Your Shortcuts automation said so $date at $time.")
+    }
+
+    /** The monthly reminder and the daily check, planned as notifications (2026-11-15). */
+    val reminders: IosReminders by lazy {
+        IosReminders(
+            settings = settingsStore,
+            trips = TripRepository(database.tripDao()),
+            sent = SentReportRepository(database.sentReportDao()),
+            zone = ::systemZoneId,
+            locale = ::phoneLocale,
+        )
     }
 
     /** The Log screen (2026-11-15): the event log's lines, its chips, and its file to share. */
@@ -343,6 +356,7 @@ class DuallyCore private constructor(
                 ),
                 backup,
                 shownUnit,
+                settings,
             )
         }
     }

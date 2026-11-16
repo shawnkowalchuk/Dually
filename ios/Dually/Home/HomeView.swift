@@ -10,6 +10,7 @@ struct HomeView: View {
     @ObservedObject var service: ServiceModel
     let openSetup: () -> Void
     let openTrips: () -> Void
+    let openReport: (Int, Int) -> Void
     @Environment(\.scenePhase) private var scenePhase
     @State private var finishing: AlertText?
 
@@ -18,13 +19,15 @@ struct HomeView: View {
         setup: SetupModel,
         service: ServiceModel,
         openSetup: @escaping () -> Void,
-        openTrips: @escaping () -> Void
+        openTrips: @escaping () -> Void,
+        openReport: @escaping (Int, Int) -> Void
     ) {
         _model = StateObject(wrappedValue: HomeModel(session: session))
         self.setup = setup
         self.service = service
         self.openSetup = openSetup
         self.openTrips = openTrips
+        self.openReport = openReport
     }
 
     var body: some View {
@@ -51,6 +54,13 @@ struct HomeView: View {
                     note: "Business",
                     unit: model.unitWord
                 )
+            }
+            // Last month's report while the monthly reminder says it waits, as Android's amber
+            // tile, with Send.
+            if let waiting = model.reportWaiting, model.recording == nil {
+                ReportWaitingTile(title: waiting.homeTitle) {
+                    openReport(Int(waiting.year), Int(waiting.month))
+                }
             }
             // The truck, as Android's tile under the figures: what the last automation said.
             if let truck = model.truck {
@@ -208,6 +218,35 @@ private struct RecordingCard: View {
     private func elapsed(until now: Date) -> String {
         let seconds = max(0, Int(now.timeIntervalSince1970) - Int(trip.startedAtMs / 1000))
         return String(format: "%d:%02d:%02d", seconds / 3600, seconds / 60 % 60, seconds % 60)
+    }
+}
+
+/// Android's amber tile for last month's report: "October report", "Not sent to the accountant
+/// yet", and Send, which opens that report.
+private struct ReportWaitingTile: View {
+    let title: String
+    let send: () -> Void
+
+    var body: some View {
+        Tile {
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(Typography.body(17, weight: .semibold))
+                        .foregroundStyle(Palette.amber)
+                    Text("Not sent to the accountant yet")
+                        .font(Typography.body(14))
+                        .foregroundStyle(Palette.text)
+                }
+                Spacer()
+                Button("Send", action: send)
+                    .font(Typography.body(16, weight: .bold))
+                    .padding(.horizontal, 18)
+                    .frame(minHeight: 40)
+                    .background(Palette.accent, in: Capsule())
+                    .foregroundStyle(Palette.onAccent)
+            }
+        }
     }
 }
 

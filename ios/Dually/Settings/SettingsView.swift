@@ -34,8 +34,11 @@ struct SettingsView: View {
                 CloudBackupTile(core: core)
                 OdometerTile(core: core, miles: text.miles)
                 ReportDetailsTile(text: text, model: model)
+                ReminderTile(text: text, model: model)
                 WorkHoursTile(text: text, model: model)
+                DailyCheckTile(text: text, model: model)
                 TripNumbersTile(text: text, model: model)
+                WidgetTile(text: text, model: model)
                 YourDataTile(core: core)
                 LogLinkTile(open: openLog)
             }
@@ -265,6 +268,8 @@ private struct DrivingAlertTile: View {
 private struct WorkHoursTile: View {
     let text: SettingsText
     @ObservedObject var model: SettingsModel
+    /// Each day shown by itself, while all days still have the same hours.
+    @State private var eachDay = false
 
     var body: some View {
         Tile {
@@ -308,10 +313,33 @@ private struct WorkHoursTile: View {
             Text(text.week)
                 .font(Typography.body(14))
                 .foregroundStyle(Palette.textSecondary)
-            if !text.sameHoursEveryDay {
-                Text("Your work days have hours of their own. Changing the hours here gives every day these.")
-                    .font(Typography.body(13))
-                    .foregroundStyle(Palette.amber)
+            // Each work day with hours of its own, as Android's week shown day by day: once the
+            // days differ they stay shown each by itself, and the line above gives them one set.
+            Toggle("Each day its own hours", isOn: Binding(get: { eachDay || !text.sameHoursEveryDay }, set: { eachDay = $0 }))
+                .font(Typography.body(15, weight: .semibold))
+                .foregroundStyle(Palette.text)
+                .tint(Palette.accent)
+                .disabled(!text.sameHoursEveryDay)
+            if eachDay || !text.sameHoursEveryDay {
+                ForEach(Array(text.days.enumerated()), id: \.offset) { index, day in
+                    if day.tracked {
+                        HStack {
+                            Text(day.name)
+                                .font(Typography.body(14, weight: .semibold))
+                                .foregroundStyle(Palette.text)
+                                .frame(width: 44, alignment: .leading)
+                            TimeField(label: "\(day.name) start", minute: Int(day.startMinute)) { start in
+                                Task { await model.setDayHours(index, start: start, end: Int(day.endMinute)) }
+                            }
+                            Spacer()
+                            Text("to").font(Typography.body(14)).foregroundStyle(Palette.textSecondary)
+                            Spacer()
+                            TimeField(label: "\(day.name) end", minute: Int(day.endMinute)) { end in
+                                Task { await model.setDayHours(index, start: Int(day.startMinute), end: end) }
+                            }
+                        }
+                    }
+                }
             }
             Text("Trips outside the work hours")
                 .font(Typography.body(15, weight: .semibold))
@@ -330,6 +358,136 @@ private struct WorkHoursTile: View {
                  : "Recorded and saved as Personal.")
                 .font(Typography.body(13))
                 .foregroundStyle(Palette.textSecondary)
+        }
+    }
+}
+
+/// The monthly reminder, as Android's tile, in its words: the switch, the day it starts on, and
+/// when it comes.
+private struct ReminderTile: View {
+    let text: SettingsText
+    @ObservedObject var model: SettingsModel
+
+    var body: some View {
+        Tile {
+            Text("Monthly reminder")
+                .font(Typography.body(17, weight: .semibold))
+                .foregroundStyle(Palette.text)
+            Toggle("Remind me to send the report", isOn: Binding(get: { text.reminderOn }, set: { on in
+                Task { await model.setReminder(on) }
+            }))
+            .font(Typography.body(15))
+            .foregroundStyle(Palette.text)
+            .tint(Palette.accent)
+            if text.reminderOn {
+                StepperRow(
+                    name: "Start on this day of the month",
+                    value: text.reminderDay,
+                    canLower: text.reminderEarlier,
+                    canRaise: text.reminderLater,
+                    lower: { Task { await model.stepReminderDay(later: false) } },
+                    raise: { Task { await model.stepReminderDay(later: true) } }
+                )
+                Text(text.reminderLine)
+                    .font(Typography.body(14, weight: .semibold))
+                    .foregroundStyle(Palette.text)
+                Text("In a month that has fewer days, the reminder starts on its last day. A month without a Business trip brings no reminder. Tap it to open that report.")
+                    .font(Typography.body(13))
+                    .foregroundStyle(Palette.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+/// The daily check, as Android's tile: on a work day with no trip by the time set, one
+/// notification.
+private struct DailyCheckTile: View {
+    let text: SettingsText
+    @ObservedObject var model: SettingsModel
+
+    var body: some View {
+        Tile {
+            Text("Daily check")
+                .font(Typography.body(17, weight: .semibold))
+                .foregroundStyle(Palette.text)
+            Toggle("Tell me when no trip has been recorded", isOn: Binding(get: { text.dailyCheckOn }, set: { on in
+                Task { await model.setDailyCheck(on) }
+            }))
+            .font(Typography.body(15))
+            .foregroundStyle(Palette.text)
+            .tint(Palette.accent)
+            if text.dailyCheckOn {
+                HStack {
+                    Text("Check at")
+                        .font(Typography.body(15))
+                        .foregroundStyle(Palette.text)
+                    Spacer()
+                    TimeField(label: "Daily check: time", minute: Int(text.dailyCheckMinute)) { minute in
+                        Task { await model.setDailyCheckTime(minute) }
+                    }
+                }
+                Text("On a work day, if no trip has been recorded by this time, Dually sends one notification. It catches the day Dually has quietly stopped noticing the truck. If a work day's hours start later, Dually checks from their start. A trip you add by hand does not count.")
+                    .font(Typography.body(13))
+                    .foregroundStyle(Palette.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+/// The home-screen widget, as Android's tile: its switch and the rate it prices Business
+/// kilometres at, for reference.
+private struct WidgetTile: View {
+    let text: SettingsText
+    @ObservedObject var model: SettingsModel
+    @State private var typed = ""
+    @State private var refused = false
+
+    var body: some View {
+        Tile {
+            Text("Home-screen widget")
+                .font(Typography.body(17, weight: .semibold))
+                .foregroundStyle(Palette.text)
+            Toggle("The trip, Start and End, and business kilometres in dollars", isOn: Binding(get: { text.widgetOn }, set: { on in
+                Task { await model.setWidget(on) }
+            }))
+            .font(Typography.body(15))
+            .foregroundStyle(Palette.text)
+            .tint(Palette.accent)
+            HStack {
+                Text("Rate")
+                    .font(Typography.body(15))
+                    .foregroundStyle(Palette.text)
+                Spacer()
+                Text(text.widgetRate)
+                    .font(Typography.figure(16))
+                    .foregroundStyle(Palette.text)
+            }
+            HStack(spacing: 8) {
+                TextField("0.70", text: $typed)
+                    .keyboardType(.decimalPad)
+                    .font(Typography.figure(16))
+                    .padding(.horizontal, 12)
+                    .frame(minHeight: 46)
+                    .background(Palette.controlFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .accessibilityLabel("Dollars a kilometre")
+                WideButton(title: "Save rate", filled: false) {
+                    Task {
+                        refused = !(await model.setWidgetRate(typed))
+                        if !refused { typed = "" }
+                    }
+                }
+            }
+            if refused {
+                Text(text.widgetRateLimits)
+                    .font(Typography.body(13))
+                    .foregroundStyle(Palette.amber)
+            }
+            Text("Home, the widget and the CarPlay screen show your Business kilometres in dollars at this rate, for reference. The report itself stays in kilometres. To add the widget: touch and hold the Home Screen, tap Edit, then Add Widget, then Dually.")
+                .font(Typography.body(13))
+                .foregroundStyle(Palette.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }

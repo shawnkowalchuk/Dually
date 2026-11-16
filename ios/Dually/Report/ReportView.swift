@@ -66,6 +66,8 @@ final class ReportModel: ObservableObject {
     func recordSent() async {
         try? await core.report.recordSent(year: Int32(year), month: Int32(monthNumber))
         await load()
+        // A month sent takes its reminder away.
+        await Reminders.plan(core: core)
     }
 }
 

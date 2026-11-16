@@ -25,6 +25,8 @@ final class TripSession: ObservableObject {
     @Published private(set) var failure: String?
     /// A tap on the service reminder asked for Service; the app opens it and sets this back.
     @Published var serviceAsked = false
+    /// A tap on the monthly reminder asked for that month's report; the app opens it.
+    @Published var reportAsked: (year: Int, month: Int)?
 
     private init() {
         drivingWatch = DrivingWatch(core: core)
@@ -40,6 +42,7 @@ final class TripSession: ObservableObject {
             Task { await self?.startFromAlert() }
         }
         drivingWatch.onServiceTap = { [weak self] in self?.serviceAsked = true }
+        drivingWatch.onReminderTap = { [weak self] year, month in self?.reportAsked = (year, month) }
         drivingWatch.arm()
     }
 
@@ -59,6 +62,7 @@ final class TripSession: ObservableObject {
         if #available(iOS 16.1, *) { (liveTrip as? LiveTrip)?.cameToFront() }
         await refresh()
         uploadBackup("the app came to the front")
+        await Reminders.plan(core: core)
     }
 
     /// One upload of the online backup (phase 4h), with the time iOS gives an app that is going
@@ -182,6 +186,10 @@ final class TripSession: ObservableObject {
             if wasRecording && recording == nil {
                 Task { await self.remindOfService() }
                 uploadBackup("a trip ended")
+            }
+            // A trip today takes today's daily check away; the plan follows every start and end.
+            if wasRecording != (recording != nil) {
+                Task { await Reminders.plan(core: self.core) }
             }
         }
         do {

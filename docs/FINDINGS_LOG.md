@@ -26,6 +26,13 @@
 
 ### 2026-11-15
 
+**`[CHANGE]` The iPhone's Settings: monthly reminder, daily check, each day's own hours, the widget's switch and rate** (APP_ENCYCLOPEDIA, iPhone app)
+Chosen by Shawn from the list of what the iPhone lacks. iPhone only; the settings are the shared file's, so an export carries them between phones as before.
+- **`[DECISION]` Planned notifications in place of Android's daily alarm.** iOS wakes no app at a set time, so `IosReminders` works out, by Android's rules, the notifications from now on, and the app replaces its pending ones with them whenever it runs. The rules are written again in iOS Kotlin from Android's (`ReminderRules.kt`, `NothingRecordedRules.kt`, which use java.time and stay in `:app`); the reports, trips and settings they read are the shared ones. `[DEBT]` Two copies of two rules: a change to Android's reminder or daily check is made to `IosReminders` too, until the rules move to the shared code on the shared date types. `TODO(debt)` is not in code, as nothing is cut on the iPhone; the cost to fix is porting `ReminderRules.kt` and `NothingRecordedRules.kt` to `kotlinx.datetime`-backed shared types.
+- **What it cannot do that Android does:** take a report sent on the other phone into account before Dually next runs on the iPhone, so a reminder planned already can still come once.
+- **The per-day hours** reuse the shared `areValidHours` and the schedule's `with`; Android's refusal words.
+- **Tests:** `IosRemindersTest` (the reminder's days, the switch, a month without Business, a month sent; the daily check's work days, a trip by hand not counting, one of Dually's taking the day away). **Seen on the simulator:** the four tiles in the light look. **Not seen:** a notification arriving, the per-day rows opened.
+
 **`[CHANGE]` The iPhone has Android's Log screen** (APP_ENCYCLOPEDIA, iPhone app)
 Chosen by Shawn from the list of what the iPhone lacks. iPhone only.
 - **Moved, not rebuilt:** `LogGroups.kt` (which chip a category's lines are under, and a tag's word) from `:app` to `:shared`, package unchanged; Android's Log screen and `LogGroupsTest` use it as before.

@@ -33,7 +33,11 @@ struct DuallyApp: App {
                         setup: setup,
                         service: service,
                         openSetup: { openSetup(from: .home) },
-                        openTrips: { tab = .trips }
+                        openTrips: { tab = .trips },
+                        openReport: { year, month in
+                            reportMonth = (year, month)
+                            tab = .report
+                        }
                     )
                 case .trips:
                     TripsView(core: session.core) { year, month in
@@ -82,9 +86,18 @@ struct DuallyApp: App {
                 // (an import brings the look of the file).
                 if let text = try? await session.core.settings.read() { look.follow(text) }
                 await session.appStarted()
+                await Reminders.plan(core: session.core)
             }
             // Google's sign-in comes back to Dually through its web address.
             .onOpenURL { GIDSignIn.sharedInstance.handle($0) }
+            // A tap on the monthly reminder opens that month's report, as on Android.
+            .onReceive(session.$reportAsked) { asked in
+                if let asked {
+                    reportMonth = asked
+                    tab = .report
+                    session.reportAsked = nil
+                }
+            }
             // A tap on the service reminder opens Service, as on Android.
             .onReceive(session.$serviceAsked) { asked in
                 if asked {

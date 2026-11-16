@@ -15,6 +15,8 @@ final class HomeModel: ObservableObject {
     @Published private(set) var today: TodayText?
     /// What the last Shortcuts automation said of the truck, or nil before any has run.
     @Published private(set) var truck: TruckTileText?
+    /// Last month's report while the monthly reminder says it is waiting, as Android's amber tile.
+    @Published private(set) var reportWaiting: ReminderPlan?
     /// The trip being recorded, or nil.
     @Published private(set) var recording: RecordingNow?
     @Published private(set) var failure: String?
@@ -91,6 +93,8 @@ final class HomeModel: ObservableObject {
     private func readTodayAndTruck() async {
         today = try? await session.core.trips.today()
         truck = try? await session.core.truckTile(nowMs: Int64(Date().timeIntervalSince1970 * 1000))
+        let reminder = try? await session.core.reminders.reminderPlan(nowMs: Int64(Date().timeIntervalSince1970 * 1000))
+        reportWaiting = reminder?.dueNow == true ? reminder : nil
     }
 
     private func readOdometer(_ trip: RecordingNow?) async {
