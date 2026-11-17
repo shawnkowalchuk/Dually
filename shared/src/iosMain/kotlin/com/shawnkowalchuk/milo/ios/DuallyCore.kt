@@ -41,11 +41,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import platform.Foundation.NSBundle
-import platform.Foundation.NSDate
 import platform.Foundation.NSLocale
 import platform.Foundation.currentLocale
 import platform.Foundation.localeIdentifier
-import platform.Foundation.timeIntervalSince1970
 
 /**
  * The door the iPhone app's Swift code comes through to the shared code (ADR-014, phase 4a).
@@ -86,6 +84,13 @@ class DuallyCore private constructor(
     private val shownUnit: ShownUnit,
     private val settingsStore: SettingsStore,
 ) {
+    /**
+     * Dually's time at a moment of the clock that counts from the boot (`IosClock.elapsedMs`):
+     * what a GPS fix is dated by, so that a fix taken while the phone's date is set ahead is
+     * dated when it was taken (ADR-006).
+     */
+    fun timeAtElapsed(elapsedMs: Long): Long = IosClock.atElapsed(elapsedMs)
+
     /** "km" or "mi", as Settings has it now: every distance the iPhone writes follows it. */
     fun unitWord(): String = unitWord(shownUnit.unit.value)
 
@@ -249,6 +254,8 @@ class DuallyCore private constructor(
             val points = buildPointsDatabase()
             val settings = buildSettingsStore()
             val eventLog = EventLogRepository(database.eventLogDao())
+            // Dually's own clock says in the Log what the phone's clock did (ADR-006).
+            IosClock.logTo(eventLog)
             val clock = ::nowMs
             val tripRepository = TripRepository(database.tripDao())
             val ledger =
@@ -420,10 +427,11 @@ data class HomeFigures(
 /** The phone's language, as the shared code takes it. */
 private fun phoneLocale(): Locale = Locale(NSLocale.currentLocale.localeIdentifier)
 
-/** The time now, as stored times are: milliseconds since 1970. */
-private fun nowMs(): Long = (NSDate().timeIntervalSince1970 * MILLIS_PER_SECOND).toLong()
-
-private const val MILLIS_PER_SECOND = 1000.0
+/**
+ * The time now, as stored times are: milliseconds since 1970, by Dually's own clock (since
+ * 2026-11-16, ADR-006), not the phone's, whose date can be set ahead by hand.
+ */
+private fun nowMs(): Long = IosClock.now()
 
 /** The app's version, "0.1.0", as an export names the app that wrote it. */
 private fun appVersion(): String =

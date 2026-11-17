@@ -167,8 +167,10 @@ final class TripSession: ObservableObject {
 
     private func add(_ fix: Fix) async {
         await apply {
+            // Dated by Dually's own clock at the fix's moment, not the phone's (ADR-006), so a
+            // fix taken while the date is set ahead is dated when it was taken.
             try await self.core.recorder.addFix(
-                wallClockMs: fix.wallClockMs,
+                wallClockMs: self.core.timeAtElapsed(elapsedMs: fix.elapsedMs),
                 elapsedMs: fix.elapsedMs,
                 latitude: fix.latitude,
                 longitude: fix.longitude,

@@ -6,6 +6,8 @@ import kotlin.math.abs
 // The clock's lines in the event log. English and plain, like the rest of the log: one line for
 // each change of the phone's clock that MilO saw and did not follow at once, written when it is
 // over, and one for a start of MilO that took a date which was set ahead.
+//
+// Shared since 2026-11-16, when the iPhone got Dually's own clock: both phones say it alike.
 
 private const val MS_PER_SECOND = 1000L
 private const val SECONDS_PER_MINUTE = 60L
@@ -19,7 +21,7 @@ private const val SECONDS_PER_DAY = 24 * SECONDS_PER_HOUR
  * It says what MilO saw and when it looked, and nothing it cannot know. A process that Android
  * had put to sleep sees the clock back only when it next looks, which can be long after.
  */
-internal fun clockNewsText(news: ClockNews): String? = when (news) {
+fun clockNewsText(news: ClockNews): String? = when (news) {
     is ClockNews.SetAside -> null
 
     is ClockNews.CameBack ->
@@ -56,7 +58,7 @@ private fun setText(offsetMs: Long): String {
  * nearest second, so that a day set by hand, which comes out some milliseconds short, reads as
  * 24 hours.
  */
-internal fun spanText(spanMs: Long): String {
+fun spanText(spanMs: Long): String {
     val seconds = wholeSeconds(spanMs)
     val hours = seconds / SECONDS_PER_HOUR
     val minutes = seconds % SECONDS_PER_HOUR / SECONDS_PER_MINUTE
@@ -76,19 +78,19 @@ private fun wholeSeconds(spanMs: Long): Long =
  * The line a process writes at its start on a phone that does not say which boot this is. It is
  * an `ERROR` line: the clock still works while a process lives, and not across two of them.
  */
-internal const val NO_BOOT_NUMBER =
+const val NO_BOOT_NUMBER =
     "Dually's clock: this phone gives no boot number, so Dually's time cannot be kept from one " +
         "start of Dually to the next. A Dually that Android starts while the phone's date is set " +
         "ahead will go by that date until the phone's clock comes back."
 
 /** What the event log calls the asking and the look that follow the phone's clock coming back. */
-internal const val CLOCK_BACK = "the phone's clock is back"
+const val CLOCK_BACK = "the phone's clock is back"
 
 /** ...those that follow a change of the phone's clock that held, and that MilO now follows. */
-internal const val CLOCK_FOLLOWED = "the phone's clock was changed and is followed"
+const val CLOCK_FOLLOWED = "the phone's clock was changed and is followed"
 
 /** ...and those that follow a change of the phone's clock that MilO follows at once. */
-internal const val CLOCK_SET = "the phone's clock was set"
+const val CLOCK_SET = "the phone's clock was set"
 
 /** ...and those that follow the phone's clock being set back by more than MilO follows. */
-internal const val CLOCK_SET_BACK = "the phone's clock was set back and Dually keeps its own time"
+const val CLOCK_SET_BACK = "the phone's clock was set back and Dually keeps its own time"

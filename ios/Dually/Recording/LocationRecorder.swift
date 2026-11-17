@@ -93,7 +93,6 @@ extension LocationRecorder: CLLocationManagerDelegate {
 
 /// One GPS fix, in the units the shared code stores (RawPoint).
 struct Fix {
-    let wallClockMs: Int64
     /// Time since the phone started, which never jumps when the clock is set: the distance
     /// rules judge speeds by it, as Android's elapsedRealtime.
     let elapsedMs: Int64
@@ -106,7 +105,6 @@ struct Fix {
     init?(_ location: CLLocation) {
         guard location.horizontalAccuracy >= 0 else { return nil }
         let ageMs = Date().timeIntervalSince(location.timestamp) * 1000
-        wallClockMs = Int64(location.timestamp.timeIntervalSince1970 * 1000)
         elapsedMs = Int64(Double(clock_gettime_nsec_np(CLOCK_MONOTONIC)) / 1_000_000 - ageMs)
         latitude = location.coordinate.latitude
         longitude = location.coordinate.longitude
