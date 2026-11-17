@@ -55,6 +55,8 @@ enum Palette {
 
     /// Hi-Vis Orange as a ground: the trip card, the mark, the odometer's last window.
     static let accentTile = Color(hex: 0xFF5A12)
+    /// Amber as a ground: the tag of a fix on What's new.
+    static let amberTile = Color(hex: 0xFFB648)
     /// The dark of the letter on the mark, and the words on [accentTile].
     static let markLetter = Color(hex: 0x1E1A17)
     /// Asphalt and Bone, for what stays dark in both looks: the odometer's windows and digits,

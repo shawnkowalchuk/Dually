@@ -4,8 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
-import com.shawnkowalchuk.milo.data.settings.FirstRunStage
-import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.setWhatsNewSeenVersion
 import java.io.IOException
@@ -78,8 +76,3 @@ class WhatsNewNoticeViewModel(
             emit(false)
         }
 }
-
-/** Whether [settings] say that the list of [installedVersion] is still to be shown. */
-internal fun isDue(settings: MiloSettings, installedVersion: String): Boolean =
-    settings.firstRunStage == FirstRunStage.DONE &&
-        settings.whatsNewSeenVersion != installedVersion

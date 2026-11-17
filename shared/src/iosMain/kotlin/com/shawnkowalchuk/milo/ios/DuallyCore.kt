@@ -195,6 +195,17 @@ class DuallyCore private constructor(
         )
     }
 
+    /** What's new and the first start (2026-11-16). */
+    val whatsNew: IosWhatsNew by lazy {
+        IosWhatsNew(
+            settings = settingsStore,
+            trips = TripRepository(database.tripDao()),
+            eventLog = EventLogRepository(database.eventLogDao()),
+            locale = ::phoneLocale,
+            clock = ::nowMs,
+        )
+    }
+
     /** The Log screen (2026-11-15): the event log's lines, its chips, and its file to share. */
     val log: IosLog by lazy { IosLog(EventLogRepository(database.eventLogDao())) }
 

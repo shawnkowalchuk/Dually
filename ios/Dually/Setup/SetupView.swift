@@ -9,6 +9,9 @@ struct SetupView: View {
     @ObservedObject var model: SetupModel
     /// Back to where Setup was opened from.
     let back: () -> Void
+    /// The first start's Setup, after the welcome page: Done at the end ends it, as on Android.
+    var firstStart = false
+    var done: () -> Void = {}
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -18,6 +21,10 @@ struct SetupView: View {
                 ForEach(Array(screen.rows.enumerated()), id: \.offset) { _, row in
                     SetupRowTile(row: row, model: model)
                 }
+            }
+            if firstStart {
+                WideButton(title: "Done", filled: true, action: done)
+                    .padding(.top, 8)
             }
         }
         .task { model.refresh() }

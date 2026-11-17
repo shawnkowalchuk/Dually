@@ -1,7 +1,8 @@
 package com.shawnkowalchuk.milo.data.changelog
 
-import java.time.LocalDate
-import java.time.format.DateTimeParseException
+import com.shawnkowalchuk.milo.core.time.LocalDate
+import com.shawnkowalchuk.milo.core.time.dateOfText
+import com.shawnkowalchuk.milo.core.time.parseDate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
@@ -25,6 +26,9 @@ import kotlinx.serialization.json.Json
 // "body": "..." }, the body optional. A version without a date is not released yet: only the
 // newest can be. tools/changes_page.py checks the rest in CI (the order, the dates, and that the
 // newest version is the build's versionName).
+//
+// Shared since 2026-11-16: the iPhone keeps its own list in the same form, `ios/Dually/changelog.json`
+// (its versions are the App Store's, 1.0 on), and reads it with this same code.
 
 /** The whole list, newest version first. */
 @Serializable
@@ -39,7 +43,7 @@ data class Changelog(val releases: List<Release>)
 @Serializable
 data class Release(val version: String, val date: String?, val changes: List<Change>) {
     /** [date] as a day, or null while the version is not released. */
-    val releasedOn: LocalDate? get() = date?.let(LocalDate::parse)
+    val releasedOn: LocalDate? get() = date?.let(::parseDate)
 }
 
 /**
@@ -91,10 +95,8 @@ fun parseChangelog(text: String): Changelog {
             throw ChangelogUnreadableException("The list of changes is not valid", broken)
         }
     for (release in changelog.releases) {
-        try {
-            release.releasedOn
-        } catch (notADay: DateTimeParseException) {
-            throw ChangelogUnreadableException("${release.version} has no valid date", notADay)
+        if (release.date != null && dateOfText(release.date) == null) {
+            throw ChangelogUnreadableException("${release.version} has no valid date")
         }
     }
     return changelog

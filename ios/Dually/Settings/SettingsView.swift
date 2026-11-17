@@ -10,14 +10,22 @@ struct SettingsView: View {
     @ObservedObject var setup: SetupModel
     let openSetup: () -> Void
     let openLog: () -> Void
+    let openWhatsNew: () -> Void
     private let core: DuallyCore
 
-    init(core: DuallyCore, setup: SetupModel, openSetup: @escaping () -> Void, openLog: @escaping () -> Void) {
+    init(
+        core: DuallyCore,
+        setup: SetupModel,
+        openSetup: @escaping () -> Void,
+        openLog: @escaping () -> Void,
+        openWhatsNew: @escaping () -> Void
+    ) {
         self.core = core
         _model = StateObject(wrappedValue: SettingsModel(core: core))
         self.setup = setup
         self.openSetup = openSetup
         self.openLog = openLog
+        self.openWhatsNew = openWhatsNew
     }
 
     var body: some View {
@@ -41,6 +49,8 @@ struct SettingsView: View {
                 WidgetTile(text: text, model: model)
                 YourDataTile(core: core)
                 LogLinkTile(open: openLog)
+                // The last tile, as on Android: the version and the way into What's new.
+                VersionTile(open: openWhatsNew)
             }
         }
         .task {
