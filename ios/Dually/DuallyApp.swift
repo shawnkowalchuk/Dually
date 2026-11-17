@@ -23,6 +23,9 @@ struct DuallyApp: App {
     @State private var firstStart: String?
     /// Where What's new was opened from: its way back leads there.
     @State private var whatsNewFrom = AppTab.home
+    /// The greeting playing over Home, with its pictures read (2026-11-16, as on Android).
+    @State private var greeting: GreetingPictures?
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
@@ -44,6 +47,7 @@ struct DuallyApp: App {
                     }
                 } else {
                     screen
+                        .overlay(alignment: .bottomLeading) { greetingOverHome }
                 }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -69,6 +73,7 @@ struct DuallyApp: App {
                     whatsNewFrom = .home
                     tab = .whatsNew
                 }
+                await greetIfDue(firstStart: stage)
                 // The online backup follows every change, and StoreKit's late purchases reach
                 // the purchase check, in a build with Firebase's settings (phase 4h).
                 if FirebaseCloud.shared.available {
@@ -98,7 +103,41 @@ struct DuallyApp: App {
                     session.serviceAsked = false
                 }
             }
+            // A greeting is cut, not faded, when Home is left or Dually is put away.
+            .onChange(of: tab) { now in if now != .home { greeting = nil } }
+            .onChange(of: scenePhase) { phase in if phase != .active { greeting = nil } }
         }
+    }
+
+    /// The greeting over Home, its soles on the bottom bar's room.
+    @ViewBuilder private var greetingOverHome: some View {
+        if let greeting, tab == .home {
+            GeometryReader { geometry in
+                MascotGreetingView(player: GreetingPlayer(pictures: greeting, screenWidth: geometry.size.width) {
+                    self.greeting = nil
+                })
+                .frame(width: geometry.size.width, height: geometry.size.height, alignment: .bottomLeading)
+            }
+        }
+    }
+
+    /// One greeting for a start from nothing onto Home, as on Android: not during the first
+    /// start, not over What's new or a screen a notification's tap opened, and not where the
+    /// iPhone asks for less motion. The wave and the moonwalk take turns; a moonwalk whose
+    /// pictures cannot be read gives way to the wave.
+    private func greetIfDue(firstStart stage: String) async {
+        guard stage == "DONE", tab == .home, session.reportAsked == nil, !session.serviceAsked,
+              !UIAccessibility.isReduceMotionEnabled,
+              let kind = try? await session.core.mascot.due()
+        else { return }
+        var pictures = GreetingPictures(kind)
+        if pictures == nil {
+            try? await session.core.mascot.unreadable(kind: kind, why: "The picture could not be read from the app")
+            if kind == .moonwalk { pictures = GreetingPictures(.wave) }
+        }
+        guard let pictures, tab == .home else { return }
+        greeting = pictures
+        try? await session.core.mascot.shown()
     }
 
     /// The screen the bar's choice opened, once the welcome page is behind.

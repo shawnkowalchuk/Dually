@@ -206,6 +206,11 @@ class DuallyCore private constructor(
         )
     }
 
+    /** The mascot's greetings (2026-11-16). */
+    val mascot: IosMascot by lazy {
+        IosMascot(settingsStore, EventLogRepository(database.eventLogDao()), ::nowMs)
+    }
+
     /** The Log screen (2026-11-15): the event log's lines, its chips, and its file to share. */
     val log: IosLog by lazy { IosLog(EventLogRepository(database.eventLogDao())) }
 
