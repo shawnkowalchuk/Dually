@@ -26,6 +26,9 @@
 
 ### 2026-11-16
 
+**`[CHANGE]` The privacy page: Email support and the App Store review link on the iPhone** (held for iPhone 1.0.1)
+The iPhone gets Android's Email support row and a Review on the App Store link in 1.0.1 (built on `app/multi-phone`, FINDINGS_LOG there), and no Buy me a coffee tile (Guideline 3.1.1). The policy said the iPhone had none of these tiles. This pull request stays a draft until 1.0.1 goes to App Review, which reads the policy; at its merge the "last changed" date and the sitemap's date for /privacy are set to that day.
+
 **`[CHANGE]` iPhone 1.0 released; App Store Connect's two China forms answered**
 Apple approved 1.0 (build 6) and Shawn pressed Release at about 20:00. App Compliance then listed two forms for China mainland, both "Missing Info". At Shawn's request ("can you please help me fill the two compiance") both were answered **No** and show Active: Security Assessment ("Does your app include features that require a security assessment in China mainland?", meaning end-to-end encrypted messaging or AI-generated content) and AI Generated or Synthetic Content ("Does your app offer AIGC services in China mainland?", meaning AI chatbots or AI image, video or voice generation). Dually has none of them. Both forms have an Edit link, if a feature like that is ever added.
 
