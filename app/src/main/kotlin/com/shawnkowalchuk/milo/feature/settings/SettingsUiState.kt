@@ -11,7 +11,11 @@ import com.shawnkowalchuk.milo.data.settings.PARKED_LIMIT_CHOICE
 import com.shawnkowalchuk.milo.data.settings.REMINDER_DAY_CHOICE
 import com.shawnkowalchuk.milo.data.settings.SoundChoice
 import com.shawnkowalchuk.milo.data.settings.TripSound
+import com.shawnkowalchuk.milo.data.settings.VehicleJoin
+import com.shawnkowalchuk.milo.data.settings.joinToAsk
+import com.shawnkowalchuk.milo.data.settings.knownVehicleName
 import com.shawnkowalchuk.milo.data.settings.sound
+import com.shawnkowalchuk.milo.data.settings.vehicleNamed
 import java.time.DayOfWeek
 import java.time.LocalTime
 
@@ -87,6 +91,9 @@ data class ReportFields(
     val emailRefused: Boolean,
 )
 
+/** "Is this the Ford from your iPhone?": the pair, and the vehicle's name. */
+data class JoinQuestion(val join: VehicleJoin, val name: String)
+
 /** What the Settings screen shows. */
 sealed interface SettingsUiState {
     /** The settings have not been read yet. */
@@ -121,6 +128,8 @@ sealed interface SettingsUiState {
      * @param canRemindEarlier false on the 1st, and [canRemindLater] on the 31st.
      * @param problem the last press that did not work, until the next one.
      * @param moreVehicles how many vehicles are paired beside the truck (since 2026-10-08).
+     * @param joinToAsk a paired vehicle that has the name of one of the account's iPhone
+     * vehicles (ADR-018): asked once whether they are the same, or null.
      */
     data class Ready(
         val truckPaired: Boolean,
@@ -149,6 +158,7 @@ sealed interface SettingsUiState {
         val canRemindLater: Boolean,
         val problem: SettingsProblem?,
         val moreVehicles: Int = 0,
+        val joinToAsk: JoinQuestion? = null,
     ) : SettingsUiState {
         /** One of the two sounds as the settings have it. */
         fun sound(which: TripSound): SoundChoice = sounds.getValue(which)
@@ -223,4 +233,10 @@ fun settingsUiState(
     canRemindLater = REMINDER_DAY_CHOICE.canStepUp(settings.reminderDay),
     problem = problem,
     moreVehicles = settings.moreVehicles.size,
+    joinToAsk = settings.joinToAsk()?.let { join ->
+        JoinQuestion(
+            join,
+            settings.knownVehicleName(join.iphone) ?: settings.vehicleNamed(join.android),
+        )
+    },
 )

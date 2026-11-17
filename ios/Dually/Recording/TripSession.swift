@@ -122,14 +122,14 @@ final class TripSession: ObservableObject {
         await apply { try await self.core.recorder.endFromLiveActivity() }
     }
 
-    /// The Shortcuts automation says the vehicle connected.
-    func truckConnected() async {
+    /// The Shortcuts automation says the vehicle connected: the one its action names, or nil.
+    func truckConnected(vehicle: String?) async {
         // Where the truck's audio goes, noted for a wake that has to find it (TruckRoute), and
         // said in the Log when it changes.
-        if let noted = TruckRoute.remember() {
+        if let noted = TruckRoute.remember(vehicle: vehicle) {
             try? await core.recorder.noteTruckRoute(name: noted.name)
         }
-        await apply { try await self.core.recorder.truckConnected() }
+        await apply { try await self.core.recorder.truckConnected(vehicle: vehicle) }
     }
 
     /// A wake for a move: a trip or a wait stored before carries on, its GPS on again.
@@ -164,14 +164,14 @@ final class TripSession: ObservableObject {
     /// Driving with no trip open, at a wake: if the iPhone's audio goes to the truck, the
     /// connect the automation missed is recovered and a trip starts. True if it did.
     func drivingWithoutTrip() async -> Bool {
-        guard recording == nil, TruckRoute.connectedNow() else { return false }
-        await apply { try await self.core.recorder.truckReadConnected() }
+        guard recording == nil, let found = TruckRoute.vehicleNow() else { return false }
+        await apply { try await self.core.recorder.truckReadConnected(vehicle: found.vehicle) }
         return recording != nil
     }
 
-    /// The Shortcuts automation says the vehicle disconnected.
-    func truckDisconnected() async {
-        await apply { try await self.core.recorder.truckDisconnected() }
+    /// The Shortcuts automation says the vehicle disconnected: the one its action names, or nil.
+    func truckDisconnected(vehicle: String?) async {
+        await apply { try await self.core.recorder.truckDisconnected(vehicle: vehicle) }
     }
 
     private var widgetDrawnAt = Date.distantPast

@@ -18,6 +18,7 @@ import com.shawnkowalchuk.milo.data.settings.REMINDER_DAY_CHOICE
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.SteppedChoice
 import com.shawnkowalchuk.milo.data.settings.TripSound
+import com.shawnkowalchuk.milo.data.settings.answerJoin
 import com.shawnkowalchuk.milo.data.settings.isEmailAddress
 import com.shawnkowalchuk.milo.data.settings.reportTextOrNull
 import com.shawnkowalchuk.milo.data.settings.setDistanceAdjustSteps
@@ -123,6 +124,21 @@ class SettingsViewModel(
             SharingStarted.WhileSubscribed(KEEP_WATCHING_MS),
             SettingsUiState.Reading,
         )
+
+    /**
+     * The answer to "Is this the Ford from your iPhone?" (ADR-018): yes joins the two, so the
+     * odometer counts both phones' trips; no is remembered and not asked again.
+     */
+    fun onJoinAnswer(question: JoinQuestion, same: Boolean) = change {
+        settings.answerJoin(question.join.iphone, question.join.android, same)
+        val answer = if (same) "is" else "is not"
+        eventLog.add(
+            clock(),
+            EventCategory.PAIRING,
+            "The iPhone's vehicle ${question.name} $answer the paired vehicle " +
+                question.join.android,
+        )
+    }
 
     fun onGraceStep(longer: Boolean) = change {
         settings.setGracePeriodSeconds(GRACE_PERIOD_CHOICE.step(it.gracePeriodSeconds, longer))

@@ -24,6 +24,17 @@
 
 ## Log
 
+### 2026-11-17
+
+**`[CHANGE]` Several vehicles across the two phones (ADR-018, now Accepted)**
+Shawn chose "Match by name, ask once" on 2026-11-16, and asked to resume the build. Three steps on `app/multi-phone`. **One: the account's vehicles** (`KnownVehiclesStorage.kt`): every phone's vehicles, names, joins and the joins said no to, in a fourth shared document of the backup, `shared/vehicles`, merged as a set (a phone never takes away what another has) and kept in the settings file. A join is read wherever trips and readings are added up (`sameVehicle`, passed as `alsoAs` to `ofVehicle`, `drivenIn`, `odometerNow` and the report's odometers): **no trip is rewritten**, which keeps ADR-017's rule that a trip's home folder is for life. **Two: the iPhone** (`IosVehicles`, Settings' Vehicles tile, the Shortcuts actions' optional Vehicle, `TruckRoute` per vehicle, an odometer per vehicle on Home and in Settings, Setup's "Several vehicles" tile). An Android vehicle the iPhone picks is kept under Android's Bluetooth address, so the two phones need no join for it; only a vehicle added on the iPhone by name gets an `iphone:` id. **Three: Android asks once** in Settings, "Is this the Ford from your iPhone?" (`joinToAsk`, `ConfirmDialog`).
+*Why the End for another vehicle changes nothing:* with a pair of automations per vehicle, the van's car kit dropping out of range while the phone is in the truck runs the van's End; Android's rule for the same case (a disconnect of another vehicle is not trusted) is kept. *Why a removed vehicle's action counts for the first:* its automation in the Shortcuts app goes on running after Remove, and a trip naming a vehicle no longer in the list would count for no odometer.
+*Before any build carrying this is installed, the rules must be published* (`vehicles` added to the allow-list in `firebase/firestore.rules`; 40 of 40 emulator tests pass). Both phones upload their shared documents in one all-or-nothing write, so a refused `vehicles` would stop every upload. Shawn publishes rules (`firebase/README.md`).
+Tests: `KnownVehiclesTest` (merge, the join both ways, the question asked once), `IosVehiclesTest` (pick, add, remove), `IosTripRecorderTest` (the trip in the connect's vehicle, another vehicle's End ignored, a removed vehicle's trip in none). Not yet run on a phone or the simulator's screens.
+
+**`[DEBT]` Several vehicles: two corners left**
+(1) Setup's two checks ("Start a trip has run", "End a trip has run") are for any pair of automations, not one per vehicle: the "Several vehicles" tile only says to make a pair for each. A check per vehicle needs the heard times stored per vehicle and Setup's rows made per vehicle (`IosSetup.kt`). (2) The iPhone's service form names no vehicle, so a new service item goes by the first vehicle's odometer (`IosService.kt`, `// TODO(debt):`); Android's form has the vehicle. Both cost a small screen change each.
+
 ### 2026-11-16
 
 **`[FIX]` The independent check of the iPhone's trip detection, and what it changed**

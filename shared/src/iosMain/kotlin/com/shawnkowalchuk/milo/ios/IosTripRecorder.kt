@@ -2,6 +2,7 @@ package com.shawnkowalchuk.milo.ios
 
 import com.shawnkowalchuk.milo.core.trip.TripEffect
 import com.shawnkowalchuk.milo.core.trip.TripEvent
+import com.shawnkowalchuk.milo.core.trip.TripStartCause
 import com.shawnkowalchuk.milo.core.trip.TripState
 import com.shawnkowalchuk.milo.core.trip.TripStateMachine
 import com.shawnkowalchuk.milo.core.trip.TripTransition
@@ -9,6 +10,8 @@ import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.point.RawPoint
 import com.shawnkowalchuk.milo.data.settings.TripSound
+import com.shawnkowalchuk.milo.data.settings.pairedVehicles
+import com.shawnkowalchuk.milo.data.settings.vehicleNamed
 import com.shawnkowalchuk.milo.platform.address.TripUnderWay
 import com.shawnkowalchuk.milo.platform.trip.TripLedger
 import com.shawnkowalchuk.milo.platform.trip.TripRuleSettings
@@ -206,14 +209,19 @@ class IosTripRecorder internal constructor(
      * The user's Shortcuts automation says the truck connected (its Bluetooth or CarPlay): a new
      * link, as Android's Bluetooth connect. A trip starts unless one is open or the rules hold
      * automatic start off.
+     *
+     * @param vehicle the vehicle the automation's action names (ADR-018), or null where it
+     * names none: the trip then names none either, and counts for the first vehicle.
      */
-    suspend fun truckConnected(): RecordingNow? = lock.withLock {
+    suspend fun truckConnected(vehicle: String? = null): RecordingNow? = lock.withLock {
         // What was stored is picked up as it was, before the news: the trip is the connect's.
         pickUp()
         truck.connected = true
         truck.connectedByReading = false
         truck.connectHeardAtMs = clock()
-        advance(AUTOMATION_CONNECTED, TripEvent.TruckLinkConnected(clock()))
+        truck.vehicle = listed(vehicle)
+        advance(AUTOMATION_CONNECTED + inVehicle(vehicle), TripEvent.TruckLinkConnected(clock()))
+        noticeVehicle()
         snapshot()
     }
 
@@ -226,11 +234,13 @@ class IosTripRecorder internal constructor(
      * on as the rules have it. The connect the automation missed is recovered, a few hundred
      * metres into the drive, where iOS woke Dually.
      */
-    suspend fun truckReadConnected(): RecordingNow? = lock.withLock {
+    suspend fun truckReadConnected(vehicle: String? = null): RecordingNow? = lock.withLock {
         pickUp()
         truck.connected = true
         truck.connectedByReading = true
-        advance(WAKE_READ_CONNECTED, TripEvent.TruckConnection(true, clock()))
+        truck.vehicle = listed(vehicle)
+        advance(WAKE_READ_CONNECTED + inVehicle(vehicle), TripEvent.TruckConnection(true, clock()))
+        noticeVehicle()
         snapshot()
     }
 
@@ -277,9 +287,27 @@ class IosTripRecorder internal constructor(
     /**
      * The user's Shortcuts automation says the truck disconnected. An open trip's grace period
      * starts: it closes unless the truck connects again first.
+     *
+     * @param vehicle the vehicle the action names, or null. One that is not the vehicle the
+     * truck connected as changes nothing (ADR-018): with a pair of automations for each vehicle,
+     * another vehicle's Bluetooth going (a second car kit in range) does not end this trip.
      */
-    suspend fun truckDisconnected(): RecordingNow? = lock.withLock {
+    suspend fun truckDisconnected(vehicle: String? = null): RecordingNow? = lock.withLock {
         pickUp()
+        val connectedAs = truck.vehicle
+        if (truck.connected && vehicle != null && connectedAs != null &&
+            !vehicle.equals(connectedAs, ignoreCase = true)
+        ) {
+            truck.disconnectHeardAtMs = clock()
+            val names = ruleSettings.read()
+            eventLog.add(
+                clock(),
+                EventCategory.TRIGGER,
+                "The Shortcuts automation said ${names.vehicleNamed(vehicle)} disconnected, but " +
+                    "the truck connected as ${names.vehicleNamed(connectedAs)}: nothing changes",
+            )
+            return@withLock snapshot()
+        }
         truck.connected = false
         truck.connectedByReading = false
         truck.disconnectHeardAtMs = clock()
@@ -483,6 +511,31 @@ class IosTripRecorder internal constructor(
         if (open.fromParked) tripStartsDue = true
     }
 
+    /**
+     * The open trip in the truck is given the vehicle its connect named, once, as Android's
+     * `TripWorker.noticeVehicle`: a trip the truck started, or one it was seen in. A trip
+     * started with Start that no vehicle joined has none.
+     */
+    private suspend fun noticeVehicle() {
+        val trip = known?.trip ?: return
+        if (!trip.truckSeen && trip.startedBy != TripStartCause.TRUCK) return
+        val vehicle = truck.vehicle?.takeIf { truck.connected } ?: return
+        val line = ledger.noteVehicle(vehicle) ?: return
+        eventLog.add(clock(), line.category, line.message)
+    }
+
+    /**
+     * [vehicle] if it is one of the vehicles, or null: an action that names a vehicle since
+     * removed counts its trip for the first, as one that names none.
+     */
+    private suspend fun listed(vehicle: String?): String? = vehicle?.takeIf { named ->
+        ruleSettings.read().pairedVehicles().any { it.address.equals(named, ignoreCase = true) }
+    }
+
+    /** The Log's words for the vehicle an automation or a wake named, if one. */
+    private suspend fun inVehicle(vehicle: String?): String =
+        vehicle?.let { " (the vehicle ${ruleSettings.read().vehicleNamed(it)})" }.orEmpty()
+
     private fun snapshot(): RecordingNow? {
         noticeDrivingOff()
         wantsGps = ledger.open != null || known?.waitingToMove == true
@@ -548,6 +601,9 @@ internal interface TruckBelief {
 
     /** When the automation last ran End a trip, or null if it never has. */
     var disconnectHeardAtMs: Long?
+
+    /** The vehicle the last connect named (ADR-018), or null for none. */
+    var vehicle: String?
 }
 
 /** [TruckBelief] in the app's own defaults (NSUserDefaults). */
@@ -570,6 +626,14 @@ internal class StoredTruckBelief : TruckBelief {
         get() = timeAt(DISCONNECT_HEARD_KEY)
         set(value) = defaults.setDouble(value?.toDouble() ?: 0.0, DISCONNECT_HEARD_KEY)
 
+    override var vehicle: String?
+        get() = defaults.stringForKey(VEHICLE_KEY)
+        set(value) = if (value == null) {
+            defaults.removeObjectForKey(VEHICLE_KEY)
+        } else {
+            defaults.setObject(value, VEHICLE_KEY)
+        }
+
     /** A stored time; 0, what the defaults give for a key never set, is none. */
     private fun timeAt(key: String): Long? = defaults.doubleForKey(key).toLong().takeIf { it > 0 }
 
@@ -578,6 +642,7 @@ internal class StoredTruckBelief : TruckBelief {
         const val BY_READING_KEY = "truck_connected_by_reading"
         const val CONNECT_HEARD_KEY = "automation_connect_heard_at_ms"
         const val DISCONNECT_HEARD_KEY = "automation_disconnect_heard_at_ms"
+        const val VEHICLE_KEY = "truck_connected_vehicle"
     }
 }
 

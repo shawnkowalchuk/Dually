@@ -31,6 +31,25 @@ class KnownVehiclesTest {
     }
 
     @Test
+    fun `Android asks once about a paired vehicle named as an iPhone's`() {
+        val paired = MiloSettings(truckAddress = ford, truckName = "ford")
+        val iphones = KnownVehicles(listOf(KnownVehicle(iphoneFord, "Ford")))
+        val join = VehicleJoin(iphoneFord, ford)
+
+        assertEquals(join, paired.copy(knownVehicles = iphones).joinToAsk())
+        assertEquals(
+            null,
+            paired.copy(knownVehicles = iphones.copy(joins = listOf(join))).joinToAsk(),
+        )
+        assertEquals(
+            null,
+            paired.copy(knownVehicles = iphones.copy(declined = listOf(join))).joinToAsk(),
+            "a no is not asked again",
+        )
+        assertEquals(null, paired.copy(truckName = "Chevy", knownVehicles = iphones).joinToAsk())
+    }
+
+    @Test
     fun `a joined iPhone vehicle's trips count for the Android vehicle and back`() {
         val settings =
             MiloSettings(

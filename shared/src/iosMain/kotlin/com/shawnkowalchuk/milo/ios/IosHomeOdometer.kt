@@ -8,6 +8,7 @@ import com.shawnkowalchuk.milo.core.util.formatDistance
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.trip.TripRepository
 import com.shawnkowalchuk.milo.data.trip.TripSoFar
+import com.shawnkowalchuk.milo.feature.home.HomeOdometer
 import com.shawnkowalchuk.milo.feature.home.homeOdometers
 import com.shawnkowalchuk.milo.feature.service.englishServiceFormat
 import com.shawnkowalchuk.milo.feature.service.englishServiceText
@@ -18,8 +19,8 @@ import kotlinx.coroutines.flow.first
 // Android's Home odometer tile (feature/home/HomeOdometerTile.kt): a row of wheels standing on
 // the figure Settings shows, and while a trip moves it, the last wheel turning on to the next
 // digit. Which odometer a trip moves and how far its wheel has turned are the shared code's
-// (`homeOdometers`, `OdometerFigure.wheels`); this words them in English. The iPhone pairs no
-// vehicles, so it has the one odometer, as an Android phone with none or one paired.
+// (`homeOdometers`, `OdometerFigure.wheels`); this words them in English. With several vehicles
+// (ADR-018, 2026-11-17) there is one for each, named, as on Android.
 
 class IosHomeOdometer internal constructor(
     private val settings: SettingsStore,
@@ -33,13 +34,27 @@ class IosHomeOdometer internal constructor(
      * @param trip the trip being recorded, or null. It moves the odometer once the truck has
      * been seen in it, as on Android.
      */
-    suspend fun read(trip: RecordingNow?, nowMs: Long): HomeOdometerText {
+    suspend fun read(trip: RecordingNow?, nowMs: Long): HomeOdometerText =
+        readAll(trip, nowMs).first()
+
+    /** Every vehicle's odometer, the first first: one with no vehicle or one vehicle. */
+    suspend fun readAll(trip: RecordingNow?, nowMs: Long): List<HomeOdometerText> {
         val stored = settings.current()
         val finished = trips.observeFinishedTrips().first()
         val locale = locale()
         val soFar = trip?.let { TripSoFar(it.tripId, it.startedAtMs, it.metres, it.truckSeen) }
-        val odometer = homeOdometers(stored, finished, nowMs, zone(), soFar).first()
+        return homeOdometers(stored, finished, nowMs, zone(), soFar).map {
+            textOf(it, stored.distanceUnit, locale)
+        }
+    }
+
+    private fun textOf(
+        odometer: HomeOdometer,
+        unit: DistanceUnit,
+        locale: Locale,
+    ): HomeOdometerText {
         val title = englishServiceText("home_odometer_title")
+        val name = odometer.odometer.shownName
         val wheels = odometer.wheels
             ?: return HomeOdometerText(
                 title = title,
@@ -47,9 +62,10 @@ class IosHomeOdometer internal constructor(
                 whole = 0,
                 turn = 0.0,
                 counting = false,
-                unit = unitWord(stored.distanceUnit),
+                unit = unitWord(unit),
                 spoken = "",
                 caption = englishServiceText("home_odometer_none"),
+                name = name,
             )
         val miles = wheels.unit == DistanceUnit.MILES
         val figure = formatOdometer(wheels.whole, locale)
@@ -74,6 +90,7 @@ class IosHomeOdometer internal constructor(
                 figure,
             ),
             caption = caption,
+            name = name,
         )
     }
 }
@@ -101,4 +118,6 @@ data class HomeOdometerText(
     val unit: String,
     val spoken: String,
     val caption: String,
+    /** The vehicle's name, with several vehicles; null with one or none. */
+    val name: String?,
 )

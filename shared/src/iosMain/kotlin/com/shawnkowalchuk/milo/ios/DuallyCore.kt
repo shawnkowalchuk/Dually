@@ -91,6 +91,9 @@ class DuallyCore private constructor(
      */
     fun timeAtElapsed(elapsedMs: Long): Long = IosClock.atElapsed(elapsedMs)
 
+    /** The vehicles (ADR-018): the Vehicles tile and the Shortcuts actions' vehicle. */
+    val vehicles: IosVehicles by lazy { IosVehicles(settingsStore, ::nowMs) }
+
     /** Dually's time now (ADR-006): what Swift hands the shared code as "now". */
     fun timeNow(): Long = nowMs()
 

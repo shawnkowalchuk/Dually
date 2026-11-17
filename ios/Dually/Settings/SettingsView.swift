@@ -12,6 +12,8 @@ struct SettingsView: View {
     let openLog: () -> Void
     let openWhatsNew: () -> Void
     private let core: DuallyCore
+    /// Counts the changes to the vehicles: the odometers are read again after each.
+    @State private var vehiclesChanged = 0
 
     init(
         core: DuallyCore,
@@ -40,7 +42,8 @@ struct SettingsView: View {
                 DrivingAlertTile(on: text.drivingAlert) { on in Task { await model.setDrivingAlert(on) } }
                 // As on Android since 2026-11-12: the online backup stands open under Units.
                 CloudBackupTile(core: core)
-                OdometerTile(core: core, miles: text.miles)
+                VehiclesTile(core: core, changed: { vehiclesChanged += 1 })
+                OdometerTiles(core: core, miles: text.miles, vehiclesChanged: vehiclesChanged)
                 ReportDetailsTile(text: text, model: model)
                 ReminderTile(text: text, model: model)
                 WorkHoursTile(text: text, model: model)
@@ -121,14 +124,37 @@ private struct SetupLinkTile: View {
     }
 }
 
-/// The truck's odometer, as Android's tile in Settings (2026-11-14 on the iPhone, for Service):
+/// The odometers, one tile for each vehicle (ADR-018, 2026-11-17), as Android's Settings.
+private struct OdometerTiles: View {
+    let core: DuallyCore
+    /// The unit chosen: the tiles are read again when it changes.
+    let miles: Bool
+    /// The tiles are read again when a vehicle is added or removed.
+    let vehiclesChanged: Int
+    @State private var texts: [OdometerText] = []
+
+    var body: some View {
+        VStack(spacing: 12) {
+            ForEach(texts, id: \.vehicle) { text in
+                OdometerTile(core: core, text: text) { await read() }
+            }
+        }
+        .task(id: "\(miles)-\(vehiclesChanged)") { await read() }
+    }
+
+    private func read() async {
+        texts = (try? await core.service.odometers()) ?? []
+    }
+}
+
+/// A vehicle's odometer, as Android's tile in Settings (2026-11-14 on the iPhone, for Service):
 /// the figure Dually works out from the last reading and the trips since, and the way to type a
 /// new reading. A reading is never changed: a new one is added beside it, with its date.
 private struct OdometerTile: View {
     let core: DuallyCore
-    /// The unit chosen: the tile is read again when it changes.
-    let miles: Bool
-    @State private var text: OdometerText?
+    let text: OdometerText
+    /// Reads every tile again, after a reading is stored.
+    let reread: () async -> Void
     @State private var editing = false
     @State private var typed = ""
     @State private var refused = false
@@ -136,60 +162,57 @@ private struct OdometerTile: View {
 
     var body: some View {
         Tile {
-            if let text {
-                Text(text.title)
-                    .font(Typography.body(17, weight: .semibold))
+            Text(text.name.map { "\(text.title) · \($0)" } ?? text.title)
+                .font(Typography.body(17, weight: .semibold))
+                .foregroundStyle(Palette.text)
+            if let figure = text.figure {
+                Text(figure)
+                    .font(Typography.display(28))
                     .foregroundStyle(Palette.text)
-                if let figure = text.figure {
-                    Text(figure)
-                        .font(Typography.display(28))
-                        .foregroundStyle(Palette.text)
-                }
-                Text(text.madeOf)
+            }
+            Text(text.madeOf)
+                .font(Typography.body(14))
+                .foregroundStyle(Palette.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            if failed {
+                Text(serviceWords("settings_could_not_save"))
                     .font(Typography.body(14))
-                    .foregroundStyle(Palette.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                if failed {
-                    Text(serviceWords("settings_could_not_save"))
+                    .foregroundStyle(Palette.amber)
+            }
+            if editing {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(text.field)
+                        .font(Typography.body(13, weight: .semibold))
+                        .foregroundStyle(Palette.textSecondary)
+                    TextField(text.example, text: $typed)
+                        .keyboardType(.numberPad)
+                        .font(Typography.body(16))
+                        .padding(12)
+                        .background(Palette.controlFill, in: RoundedRectangle(cornerRadius: 12))
+                        .foregroundStyle(Palette.text)
+                        .accessibilityLabel(text.field)
+                }
+                if refused {
+                    Text(text.refused)
                         .font(Typography.body(14))
                         .foregroundStyle(Palette.amber)
                 }
-                if editing {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(text.field)
-                            .font(Typography.body(13, weight: .semibold))
-                            .foregroundStyle(Palette.textSecondary)
-                        TextField(text.example, text: $typed)
-                            .keyboardType(.numberPad)
-                            .font(Typography.body(16))
-                            .padding(12)
-                            .background(Palette.controlFill, in: RoundedRectangle(cornerRadius: 12))
-                            .foregroundStyle(Palette.text)
-                            .accessibilityLabel(text.field)
+                HStack(spacing: 8) {
+                    WideButton(title: serviceWords("action_cancel"), filled: false) {
+                        editing = false
+                        refused = false
                     }
-                    if refused {
-                        Text(text.refused)
-                            .font(Typography.body(14))
-                            .foregroundStyle(Palette.amber)
+                    WideButton(title: text.save, filled: true) {
+                        Task { await save() }
                     }
-                    HStack(spacing: 8) {
-                        WideButton(title: serviceWords("action_cancel"), filled: false) {
-                            editing = false
-                            refused = false
-                        }
-                        WideButton(title: text.save, filled: true) {
-                            Task { await save() }
-                        }
-                    }
-                } else {
-                    WideButton(title: text.button, filled: false) {
-                        typed = ""
-                        editing = true
-                    }
+                }
+            } else {
+                WideButton(title: text.button, filled: false) {
+                    typed = ""
+                    editing = true
                 }
             }
         }
-        .task(id: miles) { text = try? await core.service.odometer() }
     }
 
     private func save() async {
@@ -197,11 +220,12 @@ private struct OdometerTile: View {
             refused = true
             return
         }
-        let stored = (try? await core.service.saveReading(typed: typed))?.boolValue ?? false
+        let stored = (try? await core.service.saveReading(typed: typed, vehicle: text.vehicle))?
+            .boolValue ?? false
         failed = !stored
         refused = false
         editing = !stored
-        text = try? await core.service.odometer()
+        await reread()
     }
 }
 

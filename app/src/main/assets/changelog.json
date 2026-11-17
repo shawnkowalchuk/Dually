@@ -8,6 +8,11 @@
           "kind": "improved",
           "title": "Where the online backup is kept, said plainly",
           "body": "The Online backup tile, the welcome page and Setup's location note now say what the backup is: a copy in Google's Firebase, in its Montréal data centre in Canada."
+        },
+        {
+          "kind": "new",
+          "title": "Your iPhone's vehicles",
+          "body": "With the online backup on an iPhone too, Dually asks once whether a vehicle you pair is the one of the same name on your iPhone. If it is, its odometer counts the trips from both phones."
         }
       ]
     },

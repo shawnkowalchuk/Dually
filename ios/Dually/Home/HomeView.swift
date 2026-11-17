@@ -66,8 +66,8 @@ struct HomeView: View {
             if let truck = model.truck {
                 TruckTile(truck: truck)
             }
-            if let odometer = model.odometer {
-                OdometerTile(odometer: odometer)
+            if !model.odometers.isEmpty {
+                OdometerTile(odometers: model.odometers)
             }
             // What service is soon or due, as Android's Home tiles: not while a trip records,
             // when there is nothing to read while driving.
@@ -385,30 +385,41 @@ private struct FigureTile: View {
 /// The odometer, as Android's Home tile: the wheels standing on the figure Settings shows, and
 /// while a trip with the truck in it is driven, a dot that pulses and the last wheel turning.
 /// Nothing to press: a reading is typed in Settings, and the tile says so before the first.
+/// With several vehicles (ADR-018) each has its own, under its name, in the one tile.
 private struct OdometerTile: View {
-    let odometer: HomeOdometerText
+    let odometers: [HomeOdometerText]
 
     var body: some View {
         Tile {
             HStack(spacing: 8) {
-                if odometer.counting { LiveDot() }
-                Text(odometer.title)
+                if odometers.contains(where: \.counting) { LiveDot() }
+                Text(odometers[0].title)
                     .font(Typography.body(13))
                     .foregroundStyle(Palette.textSecondary)
             }
-            if odometer.hasReading {
-                DashboardWheels(
-                    whole: odometer.whole,
-                    turn: odometer.counting ? odometer.turn : nil,
-                    unit: odometer.unit,
-                    spoken: odometer.spoken
-                )
-                .padding(.vertical, 4)
+            ForEach(Array(odometers.enumerated()), id: \.offset) { _, odometer in
+                VStack(alignment: .leading, spacing: 4) {
+                    if let name = odometer.name {
+                        Text(name)
+                            .font(Typography.body(17))
+                            .foregroundStyle(Palette.text)
+                    }
+                    if odometer.hasReading {
+                        DashboardWheels(
+                            whole: odometer.whole,
+                            turn: odometer.counting ? odometer.turn : nil,
+                            unit: odometer.unit,
+                            spoken: odometer.spoken
+                        )
+                        .padding(.vertical, 4)
+                    }
+                    Text(odometer.caption)
+                        .font(Typography.body(13))
+                        .foregroundStyle(Palette.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .accessibilityElement(children: .combine)
             }
-            Text(odometer.caption)
-                .font(Typography.body(13))
-                .foregroundStyle(Palette.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }

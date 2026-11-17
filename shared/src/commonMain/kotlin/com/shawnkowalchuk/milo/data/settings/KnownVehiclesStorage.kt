@@ -139,6 +139,32 @@ fun MiloSettings.sameVehicle(id: String): Set<String> {
 }
 
 /**
+ * The question Android asks once (ADR-018): a paired vehicle that has the name of an iPhone's own
+ * vehicle joined to none, the pair not said no to. Null when there is nothing to ask.
+ */
+fun MiloSettings.joinToAsk(): VehicleJoin? {
+    val joined = knownVehicles.joins.map { it.iphone.lowercase() }.toSet()
+    val declined = knownVehicles.declined.map {
+        it.iphone.lowercase() to it.android.lowercase()
+    }.toSet()
+    val iphones = knownVehicles.vehicles.filter { it.ofIphone && it.id.lowercase() !in joined }
+    for (vehicle in pairedVehicles().filterNot { it.address.startsWith(IPHONE_VEHICLE_PREFIX) }) {
+        val name = vehicle.name ?: continue
+        val match =
+            iphones.firstOrNull {
+                it.name.equals(name, ignoreCase = true) &&
+                    (it.id.lowercase() to vehicle.address.lowercase()) !in declined
+            } ?: continue
+        return VehicleJoin(match.id, vehicle.address)
+    }
+    return null
+}
+
+/** The name of the account's vehicle [id], or null where it has none. */
+fun MiloSettings.knownVehicleName(id: String): String? =
+    knownVehicles.vehicles.firstOrNull { it.id.equals(id, ignoreCase = true) }?.name
+
+/**
  * The account's vehicles as this phone uploads them: its own paired vehicles, with their names,
  * and what it knows of the others'.
  */

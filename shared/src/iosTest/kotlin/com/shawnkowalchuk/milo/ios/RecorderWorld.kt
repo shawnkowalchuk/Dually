@@ -37,6 +37,7 @@ internal class RecorderWorld {
             override var connectedByReading = false
             override var connectHeardAtMs: Long? = null
             override var disconnectHeardAtMs: Long? = null
+            override var vehicle: String? = null
         }
 
     fun truckBelief(connected: Boolean) {

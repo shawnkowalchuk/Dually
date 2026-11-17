@@ -11,6 +11,11 @@
         },
         {
           "kind": "new",
+          "title": "Several vehicles",
+          "body": "Settings has a Vehicles tile: add each vehicle you drive, or pick the ones your Android phone has. Each gets its own odometer, the report says which vehicle each trip was in, and the Shortcuts actions Start a trip and End a trip let you pick the vehicle each automation is for."
+        },
+        {
+          "kind": "new",
           "title": "A light look",
           "body": "Settings has a new Look choice: Dark, as before, or Light, with white tiles on a warm page."
         },

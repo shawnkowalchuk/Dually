@@ -9,8 +9,9 @@ import Foundation
 @MainActor
 final class HomeModel: ObservableObject {
     @Published private(set) var figures: HomeFigures?
-    /// The odometer as its wheels show it, counting while a trip with the truck is driven.
-    @Published private(set) var odometer: HomeOdometerText?
+    /// The odometers as their wheels show them, one for each vehicle (ADR-018), the one a trip
+    /// with the truck is driven in counting.
+    @Published private(set) var odometers: [HomeOdometerText] = []
     /// Today's finished trips, newest first, as Android's Home lists them.
     @Published private(set) var today: TodayText?
     /// What the last Shortcuts automation said of the truck, or nil before any has run.
@@ -99,7 +100,7 @@ final class HomeModel: ObservableObject {
 
     private func readOdometer(_ trip: RecordingNow?) async {
         do {
-            odometer = try await session.core.homeOdometer.read(
+            odometers = try await session.core.homeOdometer.readAll(
                 trip: trip,
                 nowMs: session.core.timeNow()
             )

@@ -5,6 +5,7 @@ import com.shawnkowalchuk.milo.core.trip.TripStartCause
 import com.shawnkowalchuk.milo.core.trip.TripStatus
 import com.shawnkowalchuk.milo.core.trip.driveNorth
 import com.shawnkowalchuk.milo.core.trip.fixAt
+import com.shawnkowalchuk.milo.data.settings.storeVehicle
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -160,7 +161,29 @@ class IosTripRecorderTest {
             assertNotEquals(first.tripId, next.tripId)
         }
 
+    @Test
+    fun `a connect naming a vehicle puts the trip in it and another vehicle's End is ignored`() =
+        runTest {
+            world.settings.storeVehicle(FORD, "Ford", associationId = null, pairedAtMs = 1)
+            val recorder = world.recorder()
+            val started = assertNotNull(recorder.truckConnected(vehicle = FORD))
+            assertEquals(FORD, world.trips.findTrip(started.tripId)?.vehicleAddress)
+            world.drive(recorder, driveNorth(fixCount = 12, metresPerFix = 75.0))
+
+            world.nowMs = at(second = 60)
+            val other = assertNotNull(recorder.truckDisconnected(vehicle = "$FORD-other"))
+            assertFalse(other.waitingForTruck, "the Ford is still connected")
+            assertTrue(recorder.truckDisconnected(vehicle = FORD)?.waitingForTruck == true)
+        }
+
+    @Test
+    fun `a connect naming a vehicle no longer in the list puts the trip in none`() = runTest {
+        val started = assertNotNull(world.recorder().truckConnected(vehicle = FORD))
+        assertNull(world.trips.findTrip(started.tripId)?.vehicleAddress)
+    }
+
     private companion object {
+        const val FORD = "iphone:ford"
         const val GRACE_SECONDS = 120
 
         fun at(second: Int): Long = TRACK_START_WALL_CLOCK_MS + second * 1000L

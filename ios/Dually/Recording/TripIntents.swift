@@ -9,6 +9,47 @@ import AppIntents
 // Apple refuses a build whose App Intent title or description names its devices: build 1 was
 // rejected (ITMS-90626) for "iPhone" in these two descriptions. The build step "Check the
 // Shortcuts actions' words" stops a build that says it again.
+//
+// With several vehicles (ADR-018, 2026-11-17) each has its own pair of automations, and each
+// action names its vehicle: an optional Vehicle, picked in the action from the ones in
+// Settings. An automation made before, which names none, goes on working: its trip counts for
+// the first vehicle.
+
+/// A vehicle as the Shortcuts actions offer it: one of Settings' Vehicles tile.
+struct VehicleEntity: AppEntity {
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Vehicle"
+    static let defaultQuery = VehicleQuery()
+
+    let id: String
+    let name: String
+
+    var displayRepresentation: DisplayRepresentation {
+        DisplayRepresentation(title: "\(name)")
+    }
+}
+
+struct VehicleQuery: EntityQuery {
+    /// Every id asked for is given back, a vehicle since removed under its id, so that its
+    /// automation still runs (its trip then counts for the first vehicle).
+    @MainActor
+    func entities(for identifiers: [String]) async throws -> [VehicleEntity] {
+        let listed = await Self.vehicles()
+        return identifiers.map { id in
+            listed.first { $0.id == id } ?? VehicleEntity(id: id, name: id)
+        }
+    }
+
+    @MainActor
+    func suggestedEntities() async throws -> [VehicleEntity] {
+        await Self.vehicles()
+    }
+
+    @MainActor
+    private static func vehicles() async -> [VehicleEntity] {
+        let listed = (try? await TripSession.shared.core.vehicles.list()) ?? []
+        return listed.map { VehicleEntity(id: $0.id, name: $0.name) }
+    }
+}
 
 struct StartTripIntent: AppIntent {
     static let title: LocalizedStringResource = "Start a trip"
@@ -17,9 +58,16 @@ struct StartTripIntent: AppIntent {
     )
     static let openAppWhenRun = false
 
+    @Parameter(title: "Vehicle")
+    var vehicle: VehicleEntity?
+
+    static var parameterSummary: some ParameterSummary {
+        Summary("Start a trip in \(\.$vehicle)")
+    }
+
     @MainActor
     func perform() async throws -> some IntentResult {
-        await TripSession.shared.truckConnected()
+        await TripSession.shared.truckConnected(vehicle: vehicle?.id)
         return .result()
     }
 }
@@ -39,9 +87,16 @@ struct EndTripIntent: AppIntent {
     )
     static let openAppWhenRun = false
 
+    @Parameter(title: "Vehicle")
+    var vehicle: VehicleEntity?
+
+    static var parameterSummary: some ParameterSummary {
+        Summary("End a trip in \(\.$vehicle)")
+    }
+
     @MainActor
     func perform() async throws -> some IntentResult {
-        await TripSession.shared.truckDisconnected()
+        await TripSession.shared.truckDisconnected(vehicle: vehicle?.id)
         return .result()
     }
 }

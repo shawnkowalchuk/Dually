@@ -1,7 +1,7 @@
 # ADR-018: Several vehicles on the iPhone, matched with Android's by name
 
 Date: 2026-11-16
-Status: Proposed. Shawn's choice of the matching is below; nothing of it is built yet.
+Status: Accepted, built 2026-11-17 on `app/multi-phone` (FINDINGS_LOG of that day), not yet proven on a phone. Its rule for `vehicles` waits for Shawn to publish it.
 
 ## Context
 
@@ -24,4 +24,5 @@ Shawn, 2026-11-16, asked how a start on the iPhone and a later Android phone wou
 
 - Better: one Ford on both phones, its odometer counting every trip whichever phone recorded it; an iPhone-only fleet keeps its vehicles apart.
 - Costs: a fourth shared document and its rule (`vehicles` added to the allow-list in `firestore.rules`), which **Shawn publishes**, as every rule change; Android's question at a pairing and the join in `Odometer.kt`; on the iPhone the vehicle list, an App Intent parameter (an `AppEntity` of the vehicles), Setup's rows per vehicle, each odometer, and the report. An export file carries the first vehicle only today (`[DEBT]`, 2026-10-08); the shared list does not change that.
+- Built as decided, with two corners left (`[DEBT]`, FINDINGS_LOG 2026-11-17): Setup checks one pair of automations, not one per vehicle; the iPhone's service form names no vehicle.
 - Open: names that differ ("Ford" and "F-150"): Android's vehicle list could offer "This is a vehicle from your iPhone…" to join by hand. To be asked when it is built.
