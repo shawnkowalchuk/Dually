@@ -4,12 +4,16 @@ import com.shawnkowalchuk.milo.core.schedule.TripCategory
 import com.shawnkowalchuk.milo.core.text.Locale
 import com.shawnkowalchuk.milo.core.time.ZoneId
 import com.shawnkowalchuk.milo.core.time.compareDates
+import com.shawnkowalchuk.milo.core.time.yearMonth
 import com.shawnkowalchuk.milo.core.time.yearMonthOf
 import com.shawnkowalchuk.milo.core.trip.labelChoices
+import com.shawnkowalchuk.milo.core.util.CHART_GRID_STEPS
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
+import com.shawnkowalchuk.milo.core.util.chartStep
 import com.shawnkowalchuk.milo.core.util.daySpan
 import com.shawnkowalchuk.milo.core.util.formatDistance
 import com.shawnkowalchuk.milo.core.util.formatMonthAndYear
+import com.shawnkowalchuk.milo.core.util.formatMonthName
 import com.shawnkowalchuk.milo.core.util.formatShortDay
 import com.shawnkowalchuk.milo.core.util.formatTenths
 import com.shawnkowalchuk.milo.core.util.formatTimeOfDay
@@ -27,12 +31,17 @@ import com.shawnkowalchuk.milo.data.trip.ByHandMark
 import com.shawnkowalchuk.milo.data.trip.TripCorrections
 import com.shawnkowalchuk.milo.data.trip.TripRepository
 import com.shawnkowalchuk.milo.data.trip.todayTrips
+import com.shawnkowalchuk.milo.feature.tripgraph.yearFigures
 import com.shawnkowalchuk.milo.feature.trips.TripKind
 import com.shawnkowalchuk.milo.feature.trips.TripLine
 import com.shawnkowalchuk.milo.feature.trips.monthSummary
 import com.shawnkowalchuk.milo.platform.address.OpenTripStart
 import com.shawnkowalchuk.milo.platform.address.TripPlace
 import kotlinx.coroutines.flow.first
+
+/** The months of a year, and tenths in one unit: the graph's figures. */
+private const val MONTHS_IN_YEAR = 12
+private const val TENTHS = 10.0
 
 /**
  * The Trips screen's door to the shared code on the iPhone (phase 4c). A month is worked out by
@@ -201,6 +210,53 @@ class IosTrips internal constructor(
         )
     }
 
+    /**
+     * The graph of a year's months, as Android's (`TripGraphScreen`; on the iPhone since
+     * 2026-11-16): each month's Business and Personal distance added up as Trips adds a month
+     * ([yearFigures]), the scale's top as Android's chart rounds it ([chartStep]), and each
+     * begun month's line in words, "March: Business 412.3 km · Personal 88.0 km".
+     */
+    suspend fun yearGraph(year: Int): YearGraphText {
+        val zoneNow = zone()
+        val localeNow = locale()
+        val unitNow = unit()
+        val current = localDateOf(clock(), zoneNow).yearMonth()
+        val from = monthSpan(yearMonthOf(year, 1), zoneNow).fromMs
+        val until = monthSpan(yearMonthOf(year, MONTHS_IN_YEAR), zoneNow).untilMs
+        val figures =
+            yearFigures(
+                trips.observeTripsStartedBetween(from, until).first(),
+                year,
+                current,
+                zoneNow,
+                unitNow,
+            )
+        val word = unitWord(unitNow)
+        val highest =
+            figures.flatMap { listOfNotNull(it.businessTenths, it.personalTenths) }.maxOrNull()
+        return YearGraphText(
+            year = year,
+            canStepForward = year < current.year,
+            currentIndex = if (year == current.year) current.monthNumber - 1 else -1,
+            scaleTop = chartStep((highest ?: 0L) / TENTHS) * CHART_GRID_STEPS,
+            gridSteps = CHART_GRID_STEPS,
+            months =
+                figures.map { figure ->
+                    val business = figure.businessTenths
+                    val personal = figure.personalTenths
+                    MonthGraphText(
+                        begun = business != null,
+                        business = (business ?: 0L) / TENTHS,
+                        personal = (personal ?: 0L) / TENTHS,
+                        line =
+                            formatMonthName(figure.month, localeNow) + ": Business " +
+                                formatTenths(business ?: 0L, localeNow) + " $word · Personal " +
+                                formatTenths(personal ?: 0L, localeNow) + " $word",
+                    )
+                },
+        )
+    }
+
     /** Marks a finished trip Business or Personal by hand. */
     suspend fun mark(tripId: Long, business: Boolean): Boolean =
         corrections.mark(tripId, if (business) TripCategory.BUSINESS else TripCategory.PERSONAL)
@@ -331,6 +387,31 @@ data class MonthText(
     val unit: String,
     val inProgress: TripText?,
     val days: List<DayText>,
+)
+
+/**
+ * The graph of a year (see [IosTrips.yearGraph]): [currentIndex] is the running month's place,
+ * 0 to 11, or -1 for a year gone by; [scaleTop] is the grid's highest figure, cut into
+ * [gridSteps] steps.
+ */
+data class YearGraphText(
+    val year: Int,
+    val canStepForward: Boolean,
+    val currentIndex: Int,
+    val scaleTop: Double,
+    val gridSteps: Int,
+    val months: List<MonthGraphText>,
+)
+
+/**
+ * One month of the graph: whether it has begun (a month to come has no point), its Business and
+ * Personal distance in the unit of Settings, and its figures in words.
+ */
+data class MonthGraphText(
+    val begun: Boolean,
+    val business: Double,
+    val personal: Double,
+    val line: String,
 )
 
 /** Home's tile of today's finished trips (see [IosTrips.today]). */

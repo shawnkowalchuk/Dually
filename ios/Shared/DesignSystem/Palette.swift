@@ -43,6 +43,14 @@ enum Palette {
     static let errorTagFill = Color(dark: 0x3A1C1F, light: 0xFADBDC)
     static let errorTagText = Color(dark: 0xFFB3B3, light: 0x8E1F27)
 
+    // ---- The graph's lines, as Android's chartColors ----
+
+    /// The graph's Business line, and its Personal line.
+    static let chartBusiness = Color(dark: 0xE8692E, light: 0xD9561A)
+    static let chartPersonal = Color(dark: 0x4C9ED0, light: 0x2F7FB5)
+    /// The line over a picked month (Android's Ring).
+    static let chartGuide = Color(dark: 0x7A6858, light: 0x8E7C6C)
+
     // ---- The same in both looks ----
 
     /// Hi-Vis Orange as a ground: the trip card, the mark, the odometer's last window.

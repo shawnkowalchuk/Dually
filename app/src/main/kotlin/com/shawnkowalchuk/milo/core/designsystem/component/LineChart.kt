@@ -32,9 +32,8 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import com.shawnkowalchuk.milo.core.designsystem.theme.MiloTheme
-import kotlin.math.floor
-import kotlin.math.log10
-import kotlin.math.pow
+import com.shawnkowalchuk.milo.core.util.CHART_GRID_STEPS
+import com.shawnkowalchuk.milo.core.util.chartStep
 import kotlin.math.round
 
 /** How high the plot is drawn, its axis labels included. */
@@ -62,9 +61,6 @@ private val HairLine = 1.dp
 private val NameGap = 8.dp
 private val LabelGap = 4.dp
 
-/** How many steps the scale is cut into: four lines of the grid above its zero. */
-private const val GRID_STEPS = 4
-
 /**
  * One line of a [LineChart].
  *
@@ -74,22 +70,6 @@ private const val GRID_STEPS = 4
  */
 @Immutable
 data class ChartLine(val name: String, val values: List<Double?>)
-
-/** The steps a scale may take, times a power of ten: each a figure one reads at a glance. */
-private val NICE_STEPS = listOf(1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0)
-
-/**
- * One step of a chart's scale for a highest value of [max]: the smallest round step, at least 1
- * and a whole number, whose [GRID_STEPS] steps reach [max]. The grid's lines then stand on
- * whole, round figures ("0, 150, 300, 450, 600"); a chart with nothing on it counts 0 to 4.
- */
-fun chartStep(max: Double): Double {
-    val wanted = (max / GRID_STEPS).coerceAtLeast(1.0)
-    val magnitude = 10.0.pow(floor(log10(wanted)))
-    return NICE_STEPS
-        .map { it * magnitude }
-        .first { it >= wanted && it == floor(it) }
-}
 
 /**
  * A chart of a few lines over the same points (since 2026-10-16, the Trips screen's graph of a
@@ -141,7 +121,7 @@ fun LineChart(
                     },
         ) {
             val max = lines.flatMap { it.values }.filterNotNull().maxOrNull() ?: 0.0
-            val top = chartStep(max) * GRID_STEPS
+            val top = chartStep(max) * CHART_GRID_STEPS
             val plot =
                 Plot(
                     left = StartRoom.toPx(),
@@ -216,8 +196,8 @@ private fun DrawScope.drawGrid(
     formatValue: (Double) -> String,
     grid: Color,
 ) {
-    for (step in 0..GRID_STEPS) {
-        val value = plot.scaleTop * step / GRID_STEPS
+    for (step in 0..CHART_GRID_STEPS) {
+        val value = plot.scaleTop * step / CHART_GRID_STEPS
         val y = plot.y(value)
         drawLine(grid, Offset(plot.left, y), Offset(plot.right, y), HairLine.toPx())
         val text = measurer.measure(formatValue(value), style)

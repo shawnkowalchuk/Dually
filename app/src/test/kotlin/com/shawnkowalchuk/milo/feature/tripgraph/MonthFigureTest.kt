@@ -1,10 +1,10 @@
 package com.shawnkowalchuk.milo.feature.tripgraph
 
-import com.shawnkowalchuk.milo.core.designsystem.component.chartStep
 import com.shawnkowalchuk.milo.core.schedule.TripCategory
 import com.shawnkowalchuk.milo.core.trip.TripStartCause
 import com.shawnkowalchuk.milo.core.trip.TripStatus
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
+import com.shawnkowalchuk.milo.core.util.chartStep
 import com.shawnkowalchuk.milo.data.trip.Trip
 import java.time.LocalDateTime
 import java.time.YearMonth

@@ -13,9 +13,12 @@ struct TripsView: View {
 
     /// Opens the report for the accountant for a month: (year, month 1 to 12).
     let openReport: (Int, Int) -> Void
+    /// Opens the graph of the year's months.
+    let openGraph: () -> Void
 
-    init(core: DuallyCore, openReport: @escaping (Int, Int) -> Void) {
+    init(core: DuallyCore, openReport: @escaping (Int, Int) -> Void, openGraph: @escaping () -> Void) {
         self.openReport = openReport
+        self.openGraph = openGraph
         _model = StateObject(wrappedValue: TripsModel(core: core))
     }
 
@@ -30,6 +33,8 @@ struct TripsView: View {
                 WideButton(title: EnglishFormWordsKt.englishFormText(name: "trip_add_title"), filled: false) {
                     addingMissed = true
                 }
+                // The year's months as a graph, as on Android since 2026-10-16.
+                WideButton(title: "Graph of the year", filled: false, action: openGraph)
                 if let live = month.inProgress {
                     TripRow(trip: live, recording: true)
                 }
