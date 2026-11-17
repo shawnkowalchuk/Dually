@@ -34,6 +34,7 @@ One reviewer read the sound moments in the recorder, Dually's clock and the wake
 4. **Earbuds noted as the truck.** The route is noted only when it holds exactly one Bluetooth output, and what was noted is said in the Log when it changes, also when nothing can be (a hands-free-only car kit).
 5. **A fix's age measured on the phone's clock** could date it a day off when the date jumped between its stamp and its delivery: an age outside an hour is taken as none.
 6. **Swift still handed the shared code the phone's time** in Home, the reminders' plan, the widget's dollars and the Log's file name: now `DuallyCore.timeNow()`.
+**`[FIX]` found by the full test run after these fixes:** the clock's anchor was stored as four values one by one, and a test process that ended at once had stored only the first; read back, the half anchor (no time, no elapsed) was taken as whole and Dually's time came out 94 days after 1970. The anchor is now one value, stored whole or not at all, and one that is not whole is refused (a fresh start on probation, as on Android with no stored anchor).
 Left for a device: that Darwin's `CLOCK_MONOTONIC` does not move when the date is set (the reviewer was about 80 % sure, from Apple's source), and that the "no boot number" line never appears.
 
 **`[CHANGE]` The iPhone's missing features, groups 3 and 4: the daily upload, a cut-off import, Dually's own clock, the wake for a drive** (APP_ENCYCLOPEDIA, iPhone app)

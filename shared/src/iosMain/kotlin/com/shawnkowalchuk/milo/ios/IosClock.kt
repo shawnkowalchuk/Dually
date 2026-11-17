@@ -37,10 +37,16 @@ import platform.posix.size_tVar
 object IosClock {
     private const val NANOS_PER_MILLI = 1_000_000L
     private const val MILLIS_PER_SECOND = 1000.0
-    private const val ANCHOR_BOOT = "clock_anchor_boot"
-    private const val ANCHOR_WALL = "clock_anchor_wall_ms"
-    private const val ANCHOR_ELAPSED = "clock_anchor_elapsed_ms"
-    private const val ANCHOR_PROBATION = "clock_anchor_probation_since_ms"
+
+    /**
+     * The anchor, in one value, "boot,wall,elapsed,probation" ("-" for none), so that it is
+     * stored whole or not at all: four values written one by one were found half stored by a
+     * process that ended at once (2026-11-16), and a half anchor read as a whole one would date
+     * everything wrong.
+     */
+    private const val ANCHOR = "clock_anchor"
+    private const val NONE = "-"
+    private const val PARTS = 4
 
     private val defaults = NSUserDefaults.standardUserDefaults
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -99,27 +105,20 @@ object IosClock {
     }
 
     private fun storedAnchor(): ClockAnchor? {
-        if (defaults.objectForKey(ANCHOR_BOOT) == null) return null
-        return ClockAnchor(
-            bootCount = defaults.integerForKey(ANCHOR_BOOT).toInt(),
-            wallMs = defaults.doubleForKey(ANCHOR_WALL).toLong(),
-            elapsedMs = defaults.doubleForKey(ANCHOR_ELAPSED).toLong(),
-            onProbationSinceMs =
-                defaults.objectForKey(ANCHOR_PROBATION)?.let {
-                    defaults.doubleForKey(ANCHOR_PROBATION).toLong()
-                },
-        )
+        val parts = defaults.stringForKey(ANCHOR)?.split(',') ?: return null
+        if (parts.size != PARTS) return null
+        val boot = parts[0].toIntOrNull() ?: return null
+        val wall = parts[1].toLongOrNull()?.takeIf { it > 0 } ?: return null
+        val elapsed = parts[2].toLongOrNull()?.takeIf { it >= 0 } ?: return null
+        val probation = if (parts[3] == NONE) null else parts[3].toLongOrNull() ?: return null
+        return ClockAnchor(boot, wall, elapsed, probation)
     }
 
     private fun store(anchor: ClockAnchor) {
-        defaults.setInteger(anchor.bootCount.toLong(), ANCHOR_BOOT)
-        defaults.setDouble(anchor.wallMs.toDouble(), ANCHOR_WALL)
-        defaults.setDouble(anchor.elapsedMs.toDouble(), ANCHOR_ELAPSED)
-        val probation = anchor.onProbationSinceMs
-        if (probation == null) {
-            defaults.removeObjectForKey(ANCHOR_PROBATION)
-        } else {
-            defaults.setDouble(probation.toDouble(), ANCHOR_PROBATION)
-        }
+        val probation = anchor.onProbationSinceMs?.toString() ?: NONE
+        defaults.setObject(
+            "${anchor.bootCount},${anchor.wallMs},${anchor.elapsedMs},$probation",
+            ANCHOR,
+        )
     }
 }
