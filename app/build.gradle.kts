@@ -123,6 +123,17 @@ val firebaseSettings: Map<String, String> =
 
 val firebaseKeys = listOf("projectId", "applicationId", "apiKey", "webClientId")
 
+// The version and build number, one pair for Android and the iPhone (2026-11-17): the two lines
+// of AppVersion.xcconfig at the top of the repository, which the Xcode project reads too. A file
+// without either line stops the build, rather than ship a version nobody chose.
+val appVersion: Map<String, String> =
+    rootProject.file("AppVersion.xcconfig").readLines()
+        .mapNotNull { Regex("""^\s*([A-Z_]+)\s*=\s*(\S+)\s*$""").find(it)?.destructured }
+        .associate { (key, value) -> key to value }
+
+fun appVersionValue(key: String): String =
+    appVersion[key] ?: throw GradleException("AppVersion.xcconfig has no $key line")
+
 /** One value as a Java string literal for BuildConfig, or an empty one when there is no file. */
 fun firebaseValue(key: String): String = "\"${firebaseSettings[key].orEmpty()}\""
 
@@ -176,8 +187,10 @@ android {
         // Build 14 (2026-11-14), with step 3 too: shared report details, service book, odometer.
         // Build 15 (2026-11-14), with a replaced change's history, its notice and Put back.
         // Build 16 (2026-11-15), with main merged in, and a sync each time Dually is opened.
-        versionCode = 16
-        versionName = "0.3.6"
+        // From build 17 (2026-11-17) both numbers are in AppVersion.xcconfig, shared with the
+        // iPhone: the same version and the same build number on both phones.
+        versionCode = appVersionValue("CURRENT_PROJECT_VERSION").toInt()
+        versionName = appVersionValue("MARKETING_VERSION")
 
         // The Firebase settings (above), empty in a build without the file.
         buildConfigField("String", "FIREBASE_PROJECT_ID", firebaseValue("projectId"))

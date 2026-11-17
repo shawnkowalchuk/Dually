@@ -17,8 +17,9 @@ The rules, beyond the form the app reads (data/changelog/Changelog.kt):
 - versions are three numbers ("0.1.0"), each named once, newest first;
 - only the newest version may be without a date (not released yet), and dates go back in time
   down the list;
-- the newest version is the build's versionName in app/build.gradle.kts, so the app always
-  finds its own version in the list.
+- the newest version is the version in AppVersion.xcconfig (Android's versionName and the
+  iPhone's version, one number since 2026-11-17), so the app always finds its own version in
+  the list; the iPhone's own list (ios/Dually/changelog.json) has it as its newest too.
 
 It needs nothing but the Python 3 standard library, and it writes the same bytes every time.
 """
@@ -32,14 +33,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CHANGELOG = ROOT / "app/src/main/assets/changelog.json"
-GRADLE = ROOT / "app/build.gradle.kts"
+VERSION_FILE = ROOT / "AppVersion.xcconfig"
+IPHONE_CHANGELOG = ROOT / "ios/Dually/changelog.json"
 PAGE = ROOT / "website/changes.html"
 
 # The four kinds of change, with the word the app's tag and the page's tag show.
 KINDS = {"new": "New", "improved": "Improved", "fixed": "Fixed", "security": "Security"}
 
 VERSION = re.compile(r"^\d+\.\d+\.\d+$")
-VERSION_NAME = re.compile(r'^\s*versionName\s*=\s*"([^"]+)"', re.MULTILINE)
+VERSION_NAME = re.compile(r"^\s*MARKETING_VERSION\s*=\s*(\S+)\s*$", re.MULTILINE)
 
 
 def problems_in(changelog, version_name):
@@ -64,8 +66,8 @@ def problems_in(changelog, version_name):
         found.append("Dates must go back in time down the list")
     if releases[0]["version"] != version_name:
         found.append(
-            f'The newest version, {releases[0]["version"]}, is not the build\'s versionName, '
-            f"{version_name} (app/build.gradle.kts)"
+            f'The newest version, {releases[0]["version"]}, is not the build\'s version, '
+            f"{version_name} (AppVersion.xcconfig)"
         )
     return found
 
@@ -211,11 +213,18 @@ def main(argv):
     except ValueError as broken:
         print(f"{CHANGELOG.relative_to(ROOT)} is not valid JSON: {broken}", file=sys.stderr)
         return 1
-    found = VERSION_NAME.search(GRADLE.read_text(encoding="utf-8"))
+    found = VERSION_NAME.search(VERSION_FILE.read_text(encoding="utf-8"))
     if found is None:
-        print(f"No versionName in {GRADLE.relative_to(ROOT)}", file=sys.stderr)
+        print(f"No MARKETING_VERSION in {VERSION_FILE.relative_to(ROOT)}", file=sys.stderr)
         return 1
     problems = problems_in(changelog, found.group(1))
+    iphone_newest = json.loads(IPHONE_CHANGELOG.read_text(encoding="utf-8"))["releases"][0]
+    if iphone_newest["version"] != found.group(1):
+        problems.append(
+            f'The iPhone\'s newest version, {iphone_newest["version"]} '
+            f"({IPHONE_CHANGELOG.relative_to(ROOT)}), is not the build's version, "
+            f"{found.group(1)} (AppVersion.xcconfig)"
+        )
     if problems:
         print(f"{CHANGELOG.relative_to(ROOT)} breaks a rule:", file=sys.stderr)
         for problem in problems:

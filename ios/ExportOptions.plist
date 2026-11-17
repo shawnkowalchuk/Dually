@@ -20,6 +20,10 @@
 	<string>automatic</string>
 	<key>uploadSymbols</key>
 	<true/>
+	<!-- The build number is AppVersion.xcconfig's, as built: Xcode must not raise it on its own
+	     at the upload, or the iPhone's number would drift from Android's. -->
+	<key>manageAppVersionAndBuildNumber</key>
+	<false/>
 	<key>testFlightInternalTestingOnly</key>
 	<false/>
 </dict>

@@ -1,0 +1,15 @@
+// Dually's version and build number: one pair for both phones (Shawn, 2026-11-17: "we need the
+// ios and android app to match. it would be also nice to match build numbers").
+//
+// The iPhone's Xcode project takes this file as its base configuration, so the app and its Live
+// Activity extension both build with these two values. Android's app/build.gradle.kts reads the
+// same two lines as its versionName and versionCode, and tools/changes_page.py checks the newest
+// version of the list of changes against MARKETING_VERSION. Change them here and nowhere else.
+//
+// MARKETING_VERSION is the version people see, three numbers. Raise it only when Shawn says so.
+// CURRENT_PROJECT_VERSION is the build number: up by one for every build sent to Google Play or
+// to App Store Connect, whichever phone it is for. Neither store takes a number twice, and
+// Android never installs a lower one over a higher one. Build 17 is the first both phones share
+// (Android had used 1 to 16, the iPhone 1 to 11).
+MARKETING_VERSION = 1.0.1
+CURRENT_PROJECT_VERSION = 17
