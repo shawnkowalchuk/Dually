@@ -211,6 +211,7 @@ class IosTripRecorder internal constructor(
         // What was stored is picked up as it was, before the news: the trip is the connect's.
         pickUp()
         truck.connected = true
+        truck.connectedByReading = false
         truck.connectHeardAtMs = clock()
         advance(AUTOMATION_CONNECTED, TripEvent.TruckLinkConnected(clock()))
         snapshot()
@@ -228,8 +229,49 @@ class IosTripRecorder internal constructor(
     suspend fun truckReadConnected(): RecordingNow? = lock.withLock {
         pickUp()
         truck.connected = true
+        truck.connectedByReading = true
         advance(WAKE_READ_CONNECTED, TripEvent.TruckConnection(true, clock()))
         snapshot()
+    }
+
+    /**
+     * Whether the truck is believed connected because a wake read it in the audio route, not
+     * because the automation said so. While it is, Swift reads the route again with every fix,
+     * as Android reads the truck through a trip, and its going ends the belief
+     * ([truckReadGone]): the disconnect automation, which is likely the one that failed, is
+     * not waited for.
+     */
+    val connectedByReading: Boolean get() = truck.connected && truck.connectedByReading
+
+    /**
+     * The audio route no longer goes to a truck that a wake read as connected: Android's reading
+     * of a disconnect, `TruckConnection(false)`. An open trip's grace period starts; a wait
+     * beside the parked truck ends.
+     */
+    suspend fun truckReadGone(): RecordingNow? = lock.withLock {
+        pickUp()
+        if (!(truck.connected && truck.connectedByReading)) return@withLock snapshot()
+        truck.connected = false
+        truck.connectedByReading = false
+        advance(READ_GONE, TripEvent.TruckConnection(false, clock()))
+        snapshot()
+    }
+
+    /**
+     * Notes in the Log where the iPhone's audio went when the automation said the truck
+     * connected: the name a wake will look for, or none, when a wake cannot find this truck by
+     * its audio (a hands-free-only car kit, or more than one Bluetooth output).
+     */
+    suspend fun noteTruckRoute(name: String?) {
+        val line =
+            if (name == null) {
+                "At the automation's connect the iPhone's audio went to no single Bluetooth " +
+                    "device: a wake for a drive cannot find this truck by its audio"
+            } else {
+                "At the automation's connect the iPhone's audio went to \"$name\": a wake for a " +
+                    "drive that finds it there finds the truck"
+            }
+        eventLog.add(clock(), EventCategory.TRIGGER, line)
     }
 
     /**
@@ -239,6 +281,7 @@ class IosTripRecorder internal constructor(
     suspend fun truckDisconnected(): RecordingNow? = lock.withLock {
         pickUp()
         truck.connected = false
+        truck.connectedByReading = false
         truck.disconnectHeardAtMs = clock()
         advance(AUTOMATION_DISCONNECTED, TripEvent.TruckConnection(false, clock()))
         snapshot()
@@ -324,17 +367,29 @@ class IosTripRecorder internal constructor(
         val heldOffSinceMs = settingsNow.autoStartHeldOffSinceMs
         val somethingStored = stored != null || parkedSinceMs != null || heldOffSinceMs != null
         val connected = truck.connected && somethingStored
+        fun restoreWith(truckConnected: Boolean) = TripStateMachine.restore(
+            storedTrip = stored?.trip,
+            lastRecordedAtMs = stored?.lastRecordedAtMs,
+            autoStartHeldOffSinceMs = heldOffSinceMs,
+            truckConnected = truckConnected,
+            androidAutoConnected = false,
+            atMs = atMs,
+            rules = rules,
+            parkedSinceMs = parkedSinceMs,
+        )
+        // The belief is what the last automation said, not a reading of the truck: it carries
+        // on what was stored, but never starts a trip here. Where the rules would start one (a
+        // stored trip or wait that had run out, closed, then the truck "connected"), they are
+        // given the truck as not connected instead (2026-11-16, after the independent check:
+        // every wake for a move now picks up).
         val transition =
-            TripStateMachine.restore(
-                storedTrip = stored?.trip,
-                lastRecordedAtMs = stored?.lastRecordedAtMs,
-                autoStartHeldOffSinceMs = heldOffSinceMs,
-                truckConnected = connected,
-                androidAutoConnected = false,
-                atMs = atMs,
-                rules = rules,
-                parkedSinceMs = parkedSinceMs,
-            )
+            restoreWith(connected).let { first ->
+                if (connected && first.effects.any { it is TripEffect.StartTrip }) {
+                    restoreWith(false)
+                } else {
+                    first
+                }
+            }
         val found = if (stored == null) "no trip open" else "trip ${ledger.open?.id} open"
         val belief =
             when {
@@ -485,6 +540,9 @@ internal data class DrivingFacts(
 internal interface TruckBelief {
     var connected: Boolean
 
+    /** Whether [connected] came from a wake's reading of the audio route (see IosTripRecorder). */
+    var connectedByReading: Boolean
+
     /** When the automation last ran Start a trip, or null if it never has: Setup's check. */
     var connectHeardAtMs: Long?
 
@@ -500,6 +558,10 @@ internal class StoredTruckBelief : TruckBelief {
         get() = defaults.boolForKey(KEY)
         set(value) = defaults.setBool(value, KEY)
 
+    override var connectedByReading: Boolean
+        get() = defaults.boolForKey(BY_READING_KEY)
+        set(value) = defaults.setBool(value, BY_READING_KEY)
+
     override var connectHeardAtMs: Long?
         get() = timeAt(CONNECT_HEARD_KEY)
         set(value) = defaults.setDouble(value?.toDouble() ?: 0.0, CONNECT_HEARD_KEY)
@@ -513,6 +575,7 @@ internal class StoredTruckBelief : TruckBelief {
 
     private companion object {
         const val KEY = "truck_connected_by_automation"
+        const val BY_READING_KEY = "truck_connected_by_reading"
         const val CONNECT_HEARD_KEY = "automation_connect_heard_at_ms"
         const val DISCONNECT_HEARD_KEY = "automation_disconnect_heard_at_ms"
     }
@@ -521,6 +584,10 @@ internal class StoredTruckBelief : TruckBelief {
 private const val AUTOMATION_CONNECTED = "The Shortcuts automation said the truck connected"
 
 /** The Log's line for a wake that read the truck as connected. */
+private const val READ_GONE =
+    "The iPhone's audio no longer goes to the truck a wake found connected: it is taken as " +
+        "disconnected"
+
 private val WAKE_READ_CONNECTED =
     "A wake for a drive found the truck connected (the iPhone's audio goes to it); the " +
         "automation's connect was missed"

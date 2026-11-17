@@ -96,7 +96,7 @@ struct LogView: View {
     }
 
     private func share() async {
-        let now = Int64(Date().timeIntervalSince1970 * 1000)
+        let now = core.timeNow()
         guard let text = try? await core.log.fileText(nowMs: now) else {
             shareFailed = true
             return

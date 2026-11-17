@@ -124,14 +124,41 @@ final class TripSession: ObservableObject {
 
     /// The Shortcuts automation says the vehicle connected.
     func truckConnected() async {
-        // Where the truck's audio goes, noted for a wake that has to find it (TruckRoute).
-        TruckRoute.remember()
+        // Where the truck's audio goes, noted for a wake that has to find it (TruckRoute), and
+        // said in the Log when it changes.
+        if let noted = TruckRoute.remember() {
+            try? await core.recorder.noteTruckRoute(name: noted.name)
+        }
         await apply { try await self.core.recorder.truckConnected() }
     }
 
     /// A wake for a move: a trip or a wait stored before carries on, its GPS on again.
     func wokenByMove() async {
         await apply { try await self.core.recorder.now() }
+        await checkReadTruck()
+    }
+
+    /// When was the truck a wake read as connected last missing from the audio route, or nil.
+    private var routeMissingSince: Date?
+
+    /// While the truck is believed connected because a wake read it (not because the
+    /// automation said so), its route is read again with every fix, as Android reads the truck
+    /// through a trip: gone for a minute, it is taken as disconnected, and the rules' grace
+    /// period or the end of the wait follows.
+    private func checkReadTruck() async {
+        guard core.recorder.connectedByReading else {
+            routeMissingSince = nil
+            return
+        }
+        if TruckRoute.connectedNow() {
+            routeMissingSince = nil
+            return
+        }
+        let since = routeMissingSince ?? Date()
+        routeMissingSince = since
+        guard Date().timeIntervalSince(since) >= 60 else { return }
+        routeMissingSince = nil
+        await apply { try await self.core.recorder.truckReadGone() }
     }
 
     /// Driving with no trip open, at a wake: if the iPhone's audio goes to the truck, the
@@ -159,7 +186,7 @@ final class TripSession: ObservableObject {
         guard force || changed || Date().timeIntervalSince(widgetDrawnAt) >= 60 else { return }
         widgetRecording = isRecording
         widgetDrawnAt = Date()
-        let dollars = try? await core.widget.dollars(nowMs: Int64(Date().timeIntervalSince1970 * 1000))
+        let dollars = try? await core.widget.dollars(nowMs: core.timeNow())
         WidgetSnapshot(
             recording: isRecording,
             startedAt: recording.map { Date(timeIntervalSince1970: Double($0.startedAtMs) / 1000) },
@@ -183,6 +210,7 @@ final class TripSession: ObservableObject {
     }
 
     private func add(_ fix: Fix) async {
+        await checkReadTruck()
         await apply {
             // Dated by Dually's own clock at the fix's moment, not the phone's (ADR-006), so a
             // fix taken while the date is set ahead is dated when it was taken.

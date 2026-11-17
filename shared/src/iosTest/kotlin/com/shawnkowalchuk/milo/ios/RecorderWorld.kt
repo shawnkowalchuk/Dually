@@ -34,6 +34,7 @@ internal class RecorderWorld {
     private val truck =
         object : TruckBelief {
             override var connected = false
+            override var connectedByReading = false
             override var connectHeardAtMs: Long? = null
             override var disconnectHeardAtMs: Long? = null
         }

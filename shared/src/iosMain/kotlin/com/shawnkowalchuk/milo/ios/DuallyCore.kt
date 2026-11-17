@@ -91,6 +91,9 @@ class DuallyCore private constructor(
      */
     fun timeAtElapsed(elapsedMs: Long): Long = IosClock.atElapsed(elapsedMs)
 
+    /** Dually's time now (ADR-006): what Swift hands the shared code as "now". */
+    fun timeNow(): Long = nowMs()
+
     /** "km" or "mi", as Settings has it now: every distance the iPhone writes follows it. */
     fun unitWord(): String = unitWord(shownUnit.unit.value)
 

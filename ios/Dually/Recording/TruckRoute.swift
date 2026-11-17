@@ -11,12 +11,20 @@ import Foundation
 enum TruckRoute {
     private static let nameKey = "truck_route_name"
 
-    /// Notes the truck's Bluetooth route at the automation's connect. Nothing for CarPlay, which
-    /// the route names by its kind.
-    static func remember() {
-        guard let port = AVAudioSession.sharedInstance().currentRoute.outputs.first(where: { bluetooth.contains($0.portType) })
-        else { return }
-        UserDefaults.standard.set(port.portName, forKey: nameKey)
+    /// Notes the truck's Bluetooth route at the automation's connect, for a Bluetooth truck:
+    /// the one Bluetooth output there is then. None, or more than one (earbuds beside the car
+    /// kit), notes nothing, since it cannot be told which is the truck. Returns what was noted
+    /// when it differs from before, to be said in the Log; nil when nothing changed, and always
+    /// for a CarPlay truck, which the route names by its kind.
+    static func remember() -> NotedRoute? {
+        guard UserDefaults.standard.string(forKey: SetupModel.vehicleKey) == VehicleLink.bluetooth.name
+        else { return nil }
+        let ports = AVAudioSession.sharedInstance().currentRoute.outputs.filter { bluetooth.contains($0.portType) }
+        let name = ports.count == 1 ? ports[0].portName : nil
+        let before = UserDefaults.standard.string(forKey: nameKey)
+        if let name { UserDefaults.standard.set(name, forKey: nameKey) }
+        if name == before || (name == nil && before != nil) { return nil }
+        return NotedRoute(name: name)
     }
 
     /// Whether the iPhone's audio goes to the truck now: CarPlay for a CarPlay truck, the noted
@@ -32,6 +40,11 @@ enum TruckRoute {
         default:
             return false
         }
+    }
+
+    /// What [remember] noted: a Bluetooth name, or none to be found.
+    struct NotedRoute {
+        let name: String?
     }
 
     private static let bluetooth: [AVAudioSession.Port] = [.bluetoothA2DP, .bluetoothHFP, .bluetoothLE]

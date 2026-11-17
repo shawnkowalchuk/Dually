@@ -26,6 +26,16 @@
 
 ### 2026-11-16
 
+**`[FIX]` The independent check of the iPhone's trip detection, and what it changed**
+One reviewer read the sound moments in the recorder, Dually's clock and the wake for a drive, with Android's code beside them. Nothing crashed or deadlocked (the recorder's lock is never taken twice; `TrustedClock`'s lock is recursive). Six findings, all acted on:
+1. **A missed connect was recovered only where the driving alert would show** (in work hours, its switch on, half an hour after the last): evening and weekend drives lost. The wake now reads the truck first, whenever Core Motion says the iPhone is driving and no trip is open, before the alert's rules, which then neither show nor count an alert for a drive that has its trip.
+2. **A reading stuck as "connected".** Only the disconnect automation, likely the one failing, cleared it, and the parked rule would then wait beside the truck for up to 72 hours. A belief that came from a reading is marked (`connectedByReading`), and while it stands the route is read again with every fix; gone for a minute, it is Android's reading of a disconnect (`truckReadGone`). An automation's connect or disconnect clears the mark.
+3. **A pick-up could open a trip from the belief alone.** Every wake for a move now picks up, and the rules, given a stored trip run out and the truck "connected", close it and open a new one. The belief is not a reading: where the rules would start a trip at a pick-up, they are given the truck as not connected (`IosTripRecorder.pickUp`). What was stored still carries on.
+4. **Earbuds noted as the truck.** The route is noted only when it holds exactly one Bluetooth output, and what was noted is said in the Log when it changes, also when nothing can be (a hands-free-only car kit).
+5. **A fix's age measured on the phone's clock** could date it a day off when the date jumped between its stamp and its delivery: an age outside an hour is taken as none.
+6. **Swift still handed the shared code the phone's time** in Home, the reminders' plan, the widget's dollars and the Log's file name: now `DuallyCore.timeNow()`.
+Left for a device: that Darwin's `CLOCK_MONOTONIC` does not move when the date is set (the reviewer was about 80 % sure, from Apple's source), and that the "no boot number" line never appears.
+
 **`[CHANGE]` The iPhone's missing features, groups 3 and 4: the daily upload, a cut-off import, Dually's own clock, the wake for a drive** (APP_ENCYCLOPEDIA, iPhone app)
 - **Moved to the shared code:** the clock's Log lines (`ClockLogText`), unchanged.
 - **`[FINDING]` The iPhone's boot number.** iOS has no boot count; every boot has its own `kern.bootsessionuuid`, whose hash stands for Android's `BOOT_COUNT` in the stored anchor. Darwin's `CLOCK_MONOTONIC` counts on through sleep, as `elapsedRealtime` does; `CLOCK_UPTIME_RAW` would not. The Swift side already dated a fix's moment on the same clock.

@@ -81,7 +81,7 @@ final class HomeModel: ObservableObject {
 
     private func readFigures() async {
         do {
-            figures = try await session.core.homeFigures(nowMs: Int64(Date().timeIntervalSince1970 * 1000))
+            figures = try await session.core.homeFigures(nowMs: session.core.timeNow())
             failure = nil
         } catch {
             failure = error.localizedDescription
@@ -92,8 +92,8 @@ final class HomeModel: ObservableObject {
 
     private func readTodayAndTruck() async {
         today = try? await session.core.trips.today()
-        truck = try? await session.core.truckTile(nowMs: Int64(Date().timeIntervalSince1970 * 1000))
-        let reminder = try? await session.core.reminders.reminderPlan(nowMs: Int64(Date().timeIntervalSince1970 * 1000))
+        truck = try? await session.core.truckTile(nowMs: session.core.timeNow())
+        let reminder = try? await session.core.reminders.reminderPlan(nowMs: session.core.timeNow())
         reportWaiting = reminder?.dueNow == true ? reminder : nil
     }
 
@@ -101,7 +101,7 @@ final class HomeModel: ObservableObject {
         do {
             odometer = try await session.core.homeOdometer.read(
                 trip: trip,
-                nowMs: Int64(Date().timeIntervalSince1970 * 1000)
+                nowMs: session.core.timeNow()
             )
         } catch {
             failure = error.localizedDescription

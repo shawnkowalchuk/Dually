@@ -17,7 +17,7 @@ enum Reminders {
     private static let monthKey = "month"
 
     static func plan(core: DuallyCore) async {
-        let now = Int64(Date().timeIntervalSince1970 * 1000)
+        let now = core.timeNow()
         guard let reminder = try? await core.reminders.reminderPlan(nowMs: now),
               let check = try? await core.reminders.dailyCheckPlan(nowMs: now) else { return }
         let center = UNUserNotificationCenter.current()
