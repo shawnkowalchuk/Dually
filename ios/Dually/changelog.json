@@ -65,6 +65,11 @@
           "body": "When Mail sends your report, the mascot runs across the Report screen, spins his wheels and slides out. And one year after your first trip, on that date every year, he holds a party over Home, and that day's trips start with the pop of a party popper."
         },
         {
+          "kind": "improved",
+          "title": "The online backup syncs once a day too",
+          "body": "Besides after each change, the online backup now also runs about once a day by itself, so a change that could not be sent while the iPhone was offline goes up without opening Dually."
+        },
+        {
           "kind": "new",
           "title": "What's new",
           "body": "This list. It opens by itself once after each update, and any time from the Version tile at the end of Settings."

@@ -31,6 +31,11 @@ struct DuallyApp: App {
     @State private var partyAsked = false
     @Environment(\.scenePhase) private var scenePhase
 
+    init() {
+        // The online backup once a day, as on Android: registered before launching ends.
+        DailyBackup.register()
+    }
+
     var body: some Scene {
         WindowGroup {
             // Android's bottom bar, not iOS's tab bar (Shawn, 2026-11-13: "the app need to be more
@@ -90,7 +95,10 @@ struct DuallyApp: App {
                 // (an import brings the look of the file).
                 if let text = try? await session.core.settings.read() { look.follow(text) }
                 await session.appStarted()
+                // An import the app was ended in the middle of is finished now, as on Android.
+                _ = try? await session.core.transfer.finishCutOff()
                 await Reminders.plan(core: session.core)
+                DailyBackup.schedule()
             }
             // Google's sign-in comes back to Dually through its web address.
             .onOpenURL { GIDSignIn.sharedInstance.handle($0) }
