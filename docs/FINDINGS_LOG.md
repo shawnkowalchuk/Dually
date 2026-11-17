@@ -26,6 +26,9 @@
 
 ### 2026-11-16
 
+**`[CHANGE]` iPhone 1.0 released; App Store Connect's two China forms answered**
+Apple approved 1.0 (build 6) and Shawn pressed Release at about 20:00. App Compliance then listed two forms for China mainland, both "Missing Info". At Shawn's request ("can you please help me fill the two compiance") both were answered **No** and show Active: Security Assessment ("Does your app include features that require a security assessment in China mainland?", meaning end-to-end encrypted messaging or AI-generated content) and AI Generated or Synthetic Content ("Does your app offer AIGC services in China mainland?", meaning AI chatbots or AI image, video or voice generation). Dually has none of them. Both forms have an Edit link, if a feature like that is ever added.
+
 **`[DECISION]` The website keeps no GitHub link and no APK route**
 Shawn asked when he had decided to take Dually off GitHub as a free open-source app. He had not: the repository is public with no licence, all rights reserved, since 2026-10-08 (never open source), and the APK is still a free GitHub Release (0.3.4 is Latest). What changed is the website, whose GitHub links and APK route went on 2026-11-13 by my call, since the account's address holds his name. Told so, he confirmed it: "ok leave it off the website im fine with this." The README keeps its APK button. A later change to the site does not bring a GitHub or APK link back without asking him.
 
