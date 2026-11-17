@@ -3,10 +3,10 @@
 <p align="center">
   <a href="https://github.com/shawnkowalchuk/Dually/releases/latest"><img src="https://img.shields.io/badge/%E2%AC%87%EF%B8%8F%20Download%20latest%20APK-FF5A12?style=for-the-badge&logo=android&logoColor=15120F" height="48" alt="Download latest APK"></a>
   <br>
-  <a href="https://github.com/shawnkowalchuk/Dually/releases/latest"><b>⬇️ Download Latest APK</b></a> · Android 14 or newer · <a href="#installing-the-apk">How to install</a> · <a href="https://dually.top">dually.top</a> · <a href="mailto:support@dually.top">Support</a>
+  <a href="https://github.com/shawnkowalchuk/Dually/releases/latest"><b>⬇️ Download Latest APK</b></a> · Android 14 or newer · <a href="#installing-the-apk">How to install</a> · <a href="https://apps.apple.com/app/id6834196352">iPhone: App Store</a> · <a href="https://dually.top">dually.top</a> · <a href="mailto:support@dually.top">Support</a>
 </p>
 
-**An Android app that logs business kilometres by itself: Dually Trip Tracker, Dually for short** (called MilO until 2026-10-13: `docs/adr/ADR-010-rebrand-dually.md`). When the phone connects to the work truck's Bluetooth, Dually starts a trip, records the drive with GPS, sorts it into Business or Personal by the work hours, and at the end of the month makes the mileage report for the accountant, as a PDF and a CSV file.
+**An app for Android and iPhone that logs business kilometres by itself: Dually Trip Tracker, Dually for short** (called MilO until 2026-10-13: `docs/adr/ADR-010-rebrand-dually.md`). When the phone connects to the work truck's Bluetooth, Dually starts a trip, records the drive with GPS, sorts it into Business or Personal by the work hours, and at the end of the month makes the mileage report for the accountant, as a PDF and a CSV file. On the iPhone (iOS 16 or newer, [on the App Store](https://apps.apple.com/app/id6834196352)), two Shortcuts automations that Setup walks you through start and end the trip when the iPhone connects to the truck's Bluetooth or CarPlay; the list below is the Android app's.
 
 <p align="center">
   <img src="website/screenshots/dually-home.jpg" width="200" alt="Home: Start trip, today's and the month's kilometres, the truck not connected, the odometer, and today's trips">
@@ -15,7 +15,7 @@
   <img src="website/screenshots/dually-log.jpg" width="200" alt="Log: what Dually did and when, one kind of line at a time">
 </p>
 
-> **A personal project, public to read.** Dually was built by Shawn Kowalchuk for one phone (a Xiaomi POCO X5 Pro 5G on Android 14 and HyperOS 2.0) and one truck. It runs on Android 14 and newer. It is not on the Play Store. For a question or a problem, write to [support@dually.top](mailto:support@dually.top): there is no support desk, and one person answers when he has time. The code has no license: it is public to read, and all rights are reserved (see [License](#license)). Everything after [License](#license) is the owner's own guide to running it on that phone.
+> **A personal project, public to read.** Dually was built by Shawn Kowalchuk for one phone (a Xiaomi POCO X5 Pro 5G on Android 14 and HyperOS 2.0) and one truck. It runs on Android 14 and newer, from [Google Play](https://play.google.com/store/apps/details?id=top.dually.triptracker) or the APK above, and on the iPhone with iOS 16 or newer, from the [App Store](https://apps.apple.com/app/id6834196352). For a question or a problem, write to [support@dually.top](mailto:support@dually.top): there is no support desk, and one person answers when he has time. The code has no license: it is public to read, and all rights are reserved (see [License](#license)). Everything after [License](#license) is the owner's own guide to running it on that phone.
 
 ## What it does
 

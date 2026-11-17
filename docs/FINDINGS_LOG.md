@@ -24,7 +24,22 @@
 
 ## Log
 
+### 2026-11-16
+
+**`[CHANGE]` iPhone 1.0 released; App Store Connect's two China forms answered**
+Apple approved 1.0 (build 6) and Shawn pressed Release at about 20:00. App Compliance then listed two forms for China mainland, both "Missing Info". At Shawn's request ("can you please help me fill the two compiance") both were answered **No** and show Active: Security Assessment ("Does your app include features that require a security assessment in China mainland?", meaning end-to-end encrypted messaging or AI-generated content) and AI Generated or Synthetic Content ("Does your app offer AIGC services in China mainland?", meaning AI chatbots or AI image, video or voice generation). Dually has none of them. Both forms have an Edit link, if a feature like that is ever added.
+
+**`[DECISION]` The website keeps no GitHub link and no APK route**
+Shawn asked when he had decided to take Dually off GitHub as a free open-source app. He had not: the repository is public with no licence, all rights reserved, since 2026-10-08 (never open source), and the APK is still a free GitHub Release (0.3.4 is Latest). What changed is the website, whose GitHub links and APK route went on 2026-11-13 by my call, since the account's address holds his name. Told so, he confirmed it: "ok leave it off the website im fine with this." The README keeps its APK button. A later change to the site does not bring a GitHub or APK link back without asking him.
+
 ### 2026-11-15
+
+**`[CHANGE]` The website and the README for the iPhone, ready for when Apple approves 1.0** (APP_ENCYCLOPEDIA, Website)
+Shawn: "please prepare github and the website for once the review passes." His choices: both phones everywhere on the site, the Android screenshots kept, the privacy policy at once (the entry below), and the README with a draft GitHub release. The pull request stays a draft until the App Store shows the app: merged sooner, the site's App Store buttons would lead to a page that is not there.
+- **What the iPhone does, checked in its code, not taken from the plan:** the report is one month (`ReportView`); no year graph, no What's new, no report or work-day reminder, no sounds, one vehicle; labels are suggested as on Android (`IosTrips.labelChoicesFor`); the widget's Start and End need iOS 17 (`TripWidget`). The home page keeps Android's two lists and says so, and a card On iPhone says what differs, so neither app's list is mixed into the other's.
+- **The share picture got a new name,** `og-dually.png`, by the rule that a changed picture does (`og-image.png` leaves the site with the merge; a preview a social site made before keeps its own copy).
+- **On GitHub:** the iPhone 1.0 release is a draft with notes and no file, and is published with `--latest=false`: the README's "Download latest APK" opens `releases/latest`, which must stay an Android release.
+- **At the merge:** the sitemap's dates for the changed pages.
 
 **`[CHANGE]` The privacy policy covers the iPhone app** (APP_ENCYCLOPEDIA, Website)
 Shawn chose to publish it at once, ahead of the rest of the website's iPhone change, because App Review can read the policy while 1.0 waits. It described only Android: Android's Geocoder, Android's backup, Android's permissions. Checked against the iPhone code before writing: `AppleGeocoder.swift` (CLGeocoder); the database and the GPS points in Application Support, which iCloud backup includes (only `cloud/` is left out, `IosCloudFiles`); StoreKit's `displayPrice`; Motion only in `DrivingWatch`; no review card, coffee or support tile on the iPhone. Also fixed in passing: the website section said the download button leads to GitHub; it has led to Google Play since 0.3.1.
