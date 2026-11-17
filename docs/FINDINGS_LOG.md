@@ -24,6 +24,11 @@
 
 ## Log
 
+### 2026-11-16
+
+**`[DECISION]` The website keeps no GitHub link and no APK route**
+Shawn asked when he had decided to take Dually off GitHub as a free open-source app. He had not: the repository is public with no licence, all rights reserved, since 2026-10-08 (never open source), and the APK is still a free GitHub Release (0.3.4 is Latest). What changed is the website, whose GitHub links and APK route went on 2026-11-13 by my call, since the account's address holds his name. Told so, he confirmed it: "ok leave it off the website im fine with this." The README keeps its APK button. A later change to the site does not bring a GitHub or APK link back without asking him.
+
 ### 2026-11-15
 
 **`[CHANGE]` The website and the README for the iPhone, ready for when Apple approves 1.0** (APP_ENCYCLOPEDIA, Website)
