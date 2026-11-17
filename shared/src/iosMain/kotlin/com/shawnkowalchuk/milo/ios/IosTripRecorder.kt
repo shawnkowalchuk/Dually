@@ -8,6 +8,7 @@ import com.shawnkowalchuk.milo.core.trip.TripTransition
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.point.RawPoint
+import com.shawnkowalchuk.milo.data.settings.TripSound
 import com.shawnkowalchuk.milo.platform.address.TripUnderWay
 import com.shawnkowalchuk.milo.platform.trip.TripLedger
 import com.shawnkowalchuk.milo.platform.trip.TripRuleSettings
@@ -46,6 +47,18 @@ class IosTripRecorder internal constructor(
 ) {
     private val lock = Mutex()
     private var known: TripState? = null
+
+    /**
+     * The trip whose drive-off has been told, so that its trip-start sound plays once (2026-11-16,
+     * as Android's `TripWorker.noticeDrivingOff`).
+     */
+    private var drivingOffToldFor: Long? = null
+
+    /** The sounds due since Swift last asked ([takeSounds]), in the order they are to play. */
+    private val soundsDue = mutableListOf<TripSound>()
+
+    /** Whether [soundsDue] holds the trip's first sound (see [TripSounds.tripStarts]). */
+    private var tripStartsDue = false
     private val mutableUnderWay = MutableStateFlow<TripUnderWay?>(null)
 
     /**
@@ -324,6 +337,8 @@ class IosTripRecorder internal constructor(
         if (carriesOn && transition.state.waitingToMove) {
             ledger.resumeWaiting(settingsNow.parkedTruck)
         }
+        // A trip picked up that had driven off already plays no second trip-start sound.
+        ledger.open?.takeIf { it.progress.drivenAtMs != null }?.let { drivingOffToldFor = it.id }
     }
 
     /**
@@ -349,6 +364,13 @@ class IosTripRecorder internal constructor(
         val before = checkNotNull(known) { "The stored state was picked up a moment ago" }
         val transition = TripStateMachine.step(before, event, ruleSettings.rules)
         commit(source, transition, quiet)
+        // The connect sound, once per trip, when it has really begun: not at a pick-up after a
+        // restart, and not for a trip a parked truck's moving started (that one has the
+        // trip-start sound at once), as on Android.
+        if (transition.tripReallyBegan(before = before)) {
+            soundsDue += TripSound.CONNECT
+            tripStartsDue = true
+        }
     }
 
     private suspend fun commit(what: String, transition: TripTransition, quiet: Boolean = false) {
@@ -362,7 +384,36 @@ class IosTripRecorder internal constructor(
         known = transition.state
     }
 
+    /**
+     * The sounds due since the last time, cleared as they are handed over: the connect sound
+     * when a trip has really begun, then the trip-start sound the first time the trip is seen
+     * driving (Android's moments, `TripRecorder.record`). Swift plays them by the settings
+     * (`IosSounds.toPlay`). Null when none is due.
+     */
+    suspend fun takeSounds(): TripSounds? = lock.withLock {
+        if (soundsDue.isEmpty()) return@withLock null
+        val due = TripSounds(soundsDue.map { it.name }, tripStartsDue)
+        soundsDue.clear()
+        tripStartsDue = false
+        due
+    }
+
+    /**
+     * The open trip has been seen driving for the first time (`TripProgress.drivenAtMs`): the
+     * moment for the trip-start sound, once per trip. A trip a parked truck's moving started
+     * shows it from its first points, and its sound is then the trip's first.
+     */
+    private fun noticeDrivingOff() {
+        val open = ledger.open ?: return
+        val unconfirmed = known?.trip?.confirmByMs != null
+        if (open.id == drivingOffToldFor || unconfirmed || open.progress.drivenAtMs == null) return
+        drivingOffToldFor = open.id
+        soundsDue += TripSound.DRIVING_OFF
+        if (open.fromParked) tripStartsDue = true
+    }
+
     private fun snapshot(): RecordingNow? {
+        noticeDrivingOff()
         wantsGps = ledger.open != null || known?.waitingToMove == true
         mutableUnderWay.value =
             ledger.open?.let { open ->
@@ -394,6 +445,13 @@ data class TruckTileText(
     /** "Your Shortcuts automation said so today at 3:45 PM.", filled in by [DuallyCore.truckTile]. */
     val heard: String = "",
 )
+
+/**
+ * Sounds due at one moment, in their order: "CONNECT" and "DRIVING_OFF" ([TripSound]).
+ * [tripStarts] is whether they hold the trip's first sound, which on the day of the one-year
+ * party gives way to its pop.
+ */
+data class TripSounds(val sounds: List<String>, val tripStarts: Boolean)
 
 /** See [IosTripRecorder.drivingFacts]. */
 internal data class DrivingFacts(

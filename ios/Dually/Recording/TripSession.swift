@@ -176,6 +176,15 @@ final class TripSession: ObservableObject {
         }
     }
 
+    /// The connect and trip-start sounds the last step made due, played by the settings
+    /// (2026-11-16, as on Android).
+    private func playDueSounds() async {
+        guard let due = try? await core.recorder.takeSounds(),
+              let sounds = try? await core.sounds.toPlay(due: due)
+        else { return }
+        TripSoundPlayer.shared.play(sounds, core: core)
+    }
+
     /// One step of the recorder, then the GPS on or off as the trip rules now want it: on while a
     /// trip is open, and while they wait beside a parked truck for it to move.
     private func apply(_ step: @escaping () async throws -> RecordingNow?) async {
@@ -198,6 +207,7 @@ final class TripSession: ObservableObject {
         } catch {
             failure = error.localizedDescription
         }
+        await playDueSounds()
         // A trip has begun, however it began: the alert's "tap to start one" is no longer true.
         if recording != nil { drivingWatch.withdraw() }
         if #available(iOS 16.1, *) {

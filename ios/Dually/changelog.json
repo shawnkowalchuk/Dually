@@ -51,6 +51,16 @@
         },
         {
           "kind": "new",
+          "title": "The mascot says hello",
+          "body": "When you open Dually, its mascot walks along the top of the bottom bar and waves, or moonwalks in his hat: the two take turns."
+        },
+        {
+          "kind": "new",
+          "title": "Connect and trip-start sounds",
+          "body": "A sound when a trip begins and another when the truck drives off, heard even on silent or in a Focus, and through CarPlay when it is connected. Settings has a switch for each, twelve sounds to choose from, and your own sounds."
+        },
+        {
+          "kind": "new",
           "title": "What's new",
           "body": "This list. It opens by itself once after each update, and any time from the Version tile at the end of Settings."
         }

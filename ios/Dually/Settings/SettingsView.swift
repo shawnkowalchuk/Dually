@@ -46,6 +46,7 @@ struct SettingsView: View {
                 WorkHoursTile(text: text, model: model)
                 DailyCheckTile(text: text, model: model)
                 TripNumbersTile(text: text, model: model)
+                SoundsTile(core: core)
                 WidgetTile(text: text, model: model)
                 YourDataTile(core: core)
                 LogLinkTile(open: openLog)

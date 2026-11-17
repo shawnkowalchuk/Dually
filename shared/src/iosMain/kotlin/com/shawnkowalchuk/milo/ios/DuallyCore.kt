@@ -206,6 +206,11 @@ class DuallyCore private constructor(
         )
     }
 
+    /** The connect and trip-start sounds (2026-11-16). */
+    val sounds: IosSounds by lazy {
+        IosSounds(settingsStore, EventLogRepository(database.eventLogDao()), ::nowMs)
+    }
+
     /** The mascot's greetings (2026-11-16). */
     val mascot: IosMascot by lazy {
         IosMascot(settingsStore, EventLogRepository(database.eventLogDao()), ::nowMs)

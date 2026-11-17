@@ -2,24 +2,20 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>UIAppFonts</key>
-	<array>
-		<string>archivo.ttf</string>
-		<string>ibm_plex_mono_semibold.ttf</string>
-	</array>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Dually uses your location to measure each trip's distance and where it started and ended. Your trips stay on this iPhone unless you turn on the optional online backup. A trip's start and end are sent to Apple to find their street addresses.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Dually uses your location to record each trip, including trips that start by themselves when your iPhone connects to your vehicle, even when the app is closed. Your trips stay on this iPhone unless you turn on the optional online backup. A trip's start and end are sent to Apple to find their street addresses.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Dually uses your location to measure each trip's distance and where it started and ended. Your trips stay on this iPhone unless you turn on the optional online backup. A trip's start and end are sent to Apple to find their street addresses.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>Dually uses motion to notice when you drive during your work hours with no trip being recorded, and reminds you to start one. Motion data stays on this iPhone.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>UIBackgroundModes</key>
+	<key>UIAppFonts</key>
 	<array>
-		<string>location</string>
+		<string>archivo.ttf</string>
+		<string>ibm_plex_mono_semibold.ttf</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
@@ -40,6 +36,11 @@
 			</array>
 		</dict>
 	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>audio</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>
