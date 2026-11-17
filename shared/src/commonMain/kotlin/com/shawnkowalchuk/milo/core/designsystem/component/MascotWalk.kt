@@ -29,7 +29,7 @@ import kotlin.math.max
  *  as long as the wave is on the screen, where a greeting's sheet took about 12. See
  *  docs/FINDINGS_LOG.md, 2026-10-11.
  */
-internal object MascotPicture {
+object MascotPicture {
     /** Every frame of the wave's two pictures is this wide and this high. */
     const val WIDTH = 216f
     const val HEIGHT = 176f
@@ -98,7 +98,7 @@ internal object MascotPicture {
  * How long an animated picture is waited for past the time it should have taken, if it does not
  * say it has ended. Android moves such a picture on by itself, and only while it is being drawn.
  */
-internal const val PICTURE_PATIENCE_MS = 1_000L
+const val PICTURE_PATIENCE_MS = 1_000L
 
 /**
  * The wave's two walks across a screen: in from wholly beyond the left edge to the middle of
@@ -128,7 +128,7 @@ internal const val PICTURE_PATIENCE_MS = 1_000L
  * @param reachBehind how far he reaches to the left of it while he walks off, in dp.
  * @param frameMillis how long one frame of a walk is shown.
  */
-internal class MascotWalk(
+class MascotWalk(
     screenWidth: Float,
     stride: Float = MascotPicture.STRIDE,
     reachAhead: Float = MascotPicture.REACH_AHEAD,
@@ -190,7 +190,7 @@ internal class MascotWalk(
 }
 
 /** How far a greeting has come. Each of the greetings goes through the same stages. */
-internal enum class GreetingStage {
+enum class GreetingStage {
     /** The pictures are being read. Nothing is drawn. */
     READING,
 
@@ -213,7 +213,7 @@ internal enum class GreetingStage {
  * @property from the stage the event belongs to, or null for one that belongs to every stage.
  * @property to the stage it leads to.
  */
-internal enum class GreetingEvent(val from: GreetingStage?, val to: GreetingStage) {
+enum class GreetingEvent(val from: GreetingStage?, val to: GreetingStage) {
     /** The mascot is about to be drawn for the first time: from here on he has been shown. */
     PICTURES_READ(GreetingStage.READING, GreetingStage.COMING),
     ARRIVED(GreetingStage.COMING, GreetingStage.IN_THE_MIDDLE),
@@ -236,7 +236,7 @@ internal enum class GreetingEvent(val from: GreetingStage?, val to: GreetingStag
  * @param onDone called when the greeting is over: **once, whatever happens and in whatever
  * order.**
  */
-internal class GreetingCourse(
+class GreetingCourse(
     private val onStage: (GreetingStage) -> Unit,
     private val onDone: () -> Unit,
 ) {

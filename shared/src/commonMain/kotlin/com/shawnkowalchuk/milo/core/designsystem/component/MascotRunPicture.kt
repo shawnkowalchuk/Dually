@@ -30,7 +30,7 @@ import kotlin.math.max
  *  him there is often the lime button "Email the report": over it the halo is an orange mist
  *  that darkens the lime. See docs/FINDINGS_LOG.md, 2026-10-11.
  */
-internal object RunPicture {
+object RunPicture {
     /** A frame of the sheet: he, on the spot, with the dust his feet have kicked up behind him. */
     const val SHEET_WIDTH = 260f
     const val SHEET_HEIGHT = 172f
@@ -150,7 +150,7 @@ internal object RunPicture {
  *
  * @param screenWidth the width he runs across, in dp.
  */
-internal class RunWay(screenWidth: Float) {
+class RunWay(screenWidth: Float) {
     /** Where he runs on the spot. */
     val spot: Float = max(screenWidth / 2, screenWidth - RunPicture.SLIDE_REACH)
 
@@ -201,7 +201,7 @@ internal class RunWay(screenWidth: Float) {
 }
 
 /** How far a run has come. */
-internal enum class RunStage {
+enum class RunStage {
     /** The pictures are being read. Nothing is drawn. */
     READING,
 
@@ -224,7 +224,7 @@ internal enum class RunStage {
  * @property from the stage the event belongs to, or null for one that belongs to every stage.
  * @property to the stage it leads to.
  */
-internal enum class RunEvent(val from: RunStage?, val to: RunStage) {
+enum class RunEvent(val from: RunStage?, val to: RunStage) {
     /** The mascot is about to be drawn for the first time. */
     PICTURES_READ(RunStage.READING, RunStage.RUNNING_IN),
 
@@ -255,7 +255,7 @@ internal enum class RunEvent(val from: RunStage?, val to: RunStage) {
  * @param onDone called when the run is over: **once, whatever happens and in whatever order.**
  * It is told whether the run was played to its end, or cut short.
  */
-internal class RunCourse(
+class RunCourse(
     private val onStage: (RunStage) -> Unit,
     private val onDone: (whole: Boolean) -> Unit,
 ) {

@@ -27,7 +27,7 @@ package com.shawnkowalchuk.milo.core.designsystem.component
  *  they are now, the pictures would weigh 0.56 MB more with him 450 pixels high, and 0.98 MB
  *  more at the film's own 600. See docs/FINDINGS_LOG.md, 2026-10-10.
  */
-internal object MascotPartyPicture {
+object MascotPartyPicture {
     /** A frame of either file, in pixels. */
     const val PIXELS_WIDE = 675
     const val PIXELS_HIGH = 800
@@ -126,7 +126,7 @@ internal object MascotPartyPicture {
  *
  * @param screenWidth and [screenHeight] the whole screen, with the room Android's own bars take.
  */
-internal class MascotPartyPlace(screenWidth: Float, screenHeight: Float) {
+class MascotPartyPlace(screenWidth: Float, screenHeight: Float) {
     /** How many times as large as [MascotPartyPicture] says the party is drawn: 1 at most. */
     val scale: Float =
         minOf(
@@ -154,7 +154,7 @@ internal class MascotPartyPlace(screenWidth: Float, screenHeight: Float) {
 }
 
 /** How far a party has come. */
-internal enum class PartyStage {
+enum class PartyStage {
     /** The pictures are being read. Nothing is drawn. */
     READING,
 
@@ -174,7 +174,7 @@ internal enum class PartyStage {
  * @property from the stage the event belongs to, or null for one that belongs to every stage.
  * @property to the stage it leads to.
  */
-internal enum class PartyEvent(val from: PartyStage?, val to: PartyStage) {
+enum class PartyEvent(val from: PartyStage?, val to: PartyStage) {
     /** The mascot is about to be drawn for the first time: from here on he has been shown. */
     PICTURES_READ(PartyStage.READING, PartyStage.BEFORE_THE_POP),
 
@@ -199,7 +199,7 @@ internal enum class PartyEvent(val from: PartyStage?, val to: PartyStage) {
  * @param onDone called when the party is over: **once, whatever happens and in whatever
  * order.** It is told whether the popper went off before the end.
  */
-internal class PartyCourse(
+class PartyCourse(
     private val onStage: (PartyStage) -> Unit,
     private val onDone: (popped: Boolean) -> Unit,
 ) {

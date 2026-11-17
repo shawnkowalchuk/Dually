@@ -23,7 +23,7 @@ import kotlin.math.max
  *  the lime tile with the phone on its side and in a window about 280 dp wide. See
  *  docs/FINDINGS_LOG.md, 2026-10-10.
  */
-internal object MoonwalkPicture {
+object MoonwalkPicture {
     /** Every frame of both pictures is this wide and this high. */
     const val WIDTH = 192f
     const val HEIGHT = 192f
@@ -96,7 +96,7 @@ internal object MoonwalkPicture {
  * @param reachBehind how far he reaches to the right of it, in dp.
  * @param frameMillis how long one frame of the glide is shown.
  */
-internal class MascotGlide(
+class MascotGlide(
     screenWidth: Float,
     stride: Float = MoonwalkPicture.STRIDE,
     reachAhead: Float = MoonwalkPicture.REACH_AHEAD,

@@ -26,18 +26,18 @@ enum class MascotGreetingKind {
     ;
 
     /** The greeting that plays if this one's pictures cannot be read, or null if none does. */
-    internal val instead: MascotGreetingKind?
+    val instead: MascotGreetingKind?
         get() = if (this == MOONWALK) WAVE else null
 
     /** What this greeting's two pictures are like. */
-    internal val frames: MascotFrames
+    val frames: MascotFrames
         get() = when (this) {
             WAVE -> MascotPicture.FRAMES
             MOONWALK -> MoonwalkPicture.FRAMES
         }
 
     /** This greeting's way across a screen [screenWidth] dp wide. */
-    internal fun wayAcross(screenWidth: Float): MascotWay = when (this) {
+    fun wayAcross(screenWidth: Float): MascotWay = when (this) {
         WAVE -> MascotWalk(screenWidth).let { MascotWay(it.coming, it.going) }
         MOONWALK -> MascotGlide(screenWidth).let { MascotWay(it.coming, it.going) }
     }
@@ -57,7 +57,7 @@ enum class MascotGreetingKind {
  * @property sheetColumns how many of them lie side by side in a row of the sheet.
  * @property playedFrames how many frames long the animated picture is.
  */
-internal class MascotFrames(
+class MascotFrames(
     val width: Float,
     val height: Float,
     val axis: Float,
@@ -84,14 +84,14 @@ internal class MascotFrames(
  * Android plays it.
  * @property axis where the mascot stands, in dp from the screen's left edge.
  */
-internal data class MascotPose(val sheetFrame: Int?, val axis: Float)
+data class MascotPose(val sheetFrame: Int?, val axis: Float)
 
 /**
  * A stretch of a greeting that the app plays itself: it steps through the sheet's frames by
  * its own clock and moves the mascot with every one. Moments are milliseconds since the stretch
  * began.
  */
-internal interface MascotLeg {
+interface MascotLeg {
     /** How many frames it shows, one after the other. */
     val frames: Int
 
@@ -108,7 +108,7 @@ internal interface MascotLeg {
  *
  * @param pose what is drawn in a frame from 0 to [frames], and where.
  */
-internal class SteppedLeg(
+class SteppedLeg(
     override val frames: Int,
     private val frameMillis: Int,
     private val pose: (Int) -> MascotPose,
@@ -124,4 +124,4 @@ internal class SteppedLeg(
  * the animated picture, and the leg that takes him out again at the other edge. No greeting
  * fades: it is over when the last of him has left the screen.
  */
-internal class MascotWay(val coming: MascotLeg, val going: MascotLeg)
+class MascotWay(val coming: MascotLeg, val going: MascotLeg)
