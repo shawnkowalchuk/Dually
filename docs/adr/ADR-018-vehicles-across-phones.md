@@ -1,7 +1,7 @@
 # ADR-018: Several vehicles on the iPhone, matched with Android's by name
 
 Date: 2026-11-16
-Status: Accepted, built 2026-11-17 on `app/multi-phone` (FINDINGS_LOG of that day), not yet proven on a phone. Its rule for `vehicles` waits for Shawn to publish it.
+Status: Accepted, built 2026-11-17 on `app/multi-phone` (FINDINGS_LOG of that day), not yet proven on a phone. Its rule for `vehicles` published 2026-11-17.
 
 ## Context
 
