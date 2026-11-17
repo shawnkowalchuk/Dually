@@ -26,7 +26,7 @@ final class ReportModel: ObservableObject {
     /// What became of the last press on that offer.
     @Published private(set) var pointsNote: String?
 
-    private let core: DuallyCore
+    let core: DuallyCore
     private let fonts = ReportFonts()
 
     init(core: DuallyCore, year: Int, month: Int) {
@@ -143,6 +143,10 @@ struct ReportView: View {
     let openSettings: () -> Void
     @State private var mailing = false
     @State private var sentByMail = false
+    /// The run across the foot of the screen after Mail sent the report (2026-11-16, as on
+    /// Android after "I sent it"), with whether its sounds are heard.
+    @State private var run: (pictures: RunPictures, heard: Bool)?
+    @Environment(\.scenePhase) private var scenePhase
 
     init(core: DuallyCore, year: Int, month: Int, back: @escaping () -> Void, openSettings: @escaping () -> Void) {
         _model = StateObject(wrappedValue: ReportModel(core: core, year: year, month: month))
@@ -243,18 +247,42 @@ struct ReportView: View {
             }
         }
         .task { await model.load() }
+        .overlay {
+            if let run {
+                GeometryReader { geometry in
+                    MascotRunView(player: RunPlayer(
+                        pictures: run.pictures,
+                        screenWidth: geometry.size.width,
+                        soundsHeard: run.heard
+                    ) { self.run = nil })
+                }
+            }
+        }
+        // Cut short when Dually is put away, as on Android; leaving the screen ends it too.
+        .onChange(of: scenePhase) { phase in if phase != .active { run = nil } }
         .sheet(isPresented: $mailing) {
             if let made = model.made {
                 MailComposer(made: made) { sent in
                     mailing = false
                     if sent {
                         sentByMail = true
-                        Task { await model.recordSent() }
+                        Task {
+                            await model.recordSent()
+                            await startRun()
+                        }
                     }
                 }
                 .ignoresSafeArea()
             }
         }
+    }
+
+    /// One run for each report Mail sent, where the iPhone does not ask for less motion. Its
+    /// sounds are heard when either of Dually's two sounds is switched on, as the party's pop.
+    private func startRun() async {
+        guard !UIAccessibility.isReduceMotionEnabled, let pictures = RunPictures() else { return }
+        let heard = (try? await model.core.party.popHeard())?.boolValue ?? true
+        run = (pictures, heard)
     }
 
     @ViewBuilder

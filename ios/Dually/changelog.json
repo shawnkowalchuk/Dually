@@ -61,6 +61,11 @@
         },
         {
           "kind": "new",
+          "title": "A run when a report is sent, and the one-year party",
+          "body": "When Mail sends your report, the mascot runs across the Report screen, spins his wheels and slides out. And one year after your first trip, on that date every year, he holds a party over Home, and that day's trips start with the pop of a party popper."
+        },
+        {
+          "kind": "new",
           "title": "What's new",
           "body": "This list. It opens by itself once after each update, and any time from the Version tile at the end of Settings."
         }
