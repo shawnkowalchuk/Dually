@@ -185,13 +185,14 @@ PAGE_TEMPLATE = """<!doctype html>
     </main>
 
     <footer>
+      <p>Apple and the Apple logo are trademarks of Apple Inc., registered in the U.S. and other countries, and App Store is a service mark of Apple Inc. Google Play and the Google Play logo are trademarks of Google LLC.</p>
       <p><a href="/privacy">Privacy</a> · <a href="/delete-account">Delete your online backup</a> · <a href="mailto:support@dually.top?subject=Dually%20Trip%20Tracker%20support">Support</a> · <a href="https://www.buymeacoffee.com/SeaWingman">Buy me a coffee</a> · The typefaces are <a href="/fonts/Archivo-OFL.txt">Archivo</a> and <a href="/fonts/IBMPlexMono-OFL.txt">IBM Plex Mono</a>, each under the SIL Open Font License 1.1.</p>
     </footer>
   </div>
   <div class="dock">
     <div class="dock-inner">
       <p><strong>Free on your phone.</strong> <span class="dock-more">Online backup is one payment, never a subscription.</span></p>
-      <div class="dock-ctas"><a class="cta" href="https://play.google.com/store/apps/details?id=top.dually.triptracker">Google Play</a><a class="cta" href="https://apps.apple.com/app/id6834196352">App Store</a></div>
+      <div class="dock-ctas"><a class="store-badge" href="https://apps.apple.com/app/id6834196352"><img src="/badges/app-store.svg" alt="Download on the App Store" width="120" height="40"></a><a class="store-badge" href="https://play.google.com/store/apps/details?id=top.dually.triptracker"><img src="/badges/google-play.png" alt="Get it on Google Play" width="134" height="40"></a></div>
       <p class="dock-legal">© 2026 Dually Trip Tracker · Dually.top · Owned and operated by 2795748 Alberta Ltd.</p>
     </div>
   </div>
