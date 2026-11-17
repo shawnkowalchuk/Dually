@@ -45,6 +45,8 @@ final class TripSession: ObservableObject {
         }
         drivingWatch.onServiceTap = { [weak self] in self?.serviceAsked = true }
         drivingWatch.onReminderTap = { [weak self] year, month in self?.reportAsked = (year, month) }
+        drivingWatch.onWake = { [weak self] in await self?.wokenByMove() }
+        drivingWatch.onDrivingWithoutTrip = { [weak self] in await self?.drivingWithoutTrip() ?? false }
         drivingWatch.arm()
     }
 
@@ -122,7 +124,22 @@ final class TripSession: ObservableObject {
 
     /// The Shortcuts automation says the vehicle connected.
     func truckConnected() async {
+        // Where the truck's audio goes, noted for a wake that has to find it (TruckRoute).
+        TruckRoute.remember()
         await apply { try await self.core.recorder.truckConnected() }
+    }
+
+    /// A wake for a move: a trip or a wait stored before carries on, its GPS on again.
+    func wokenByMove() async {
+        await apply { try await self.core.recorder.now() }
+    }
+
+    /// Driving with no trip open, at a wake: if the iPhone's audio goes to the truck, the
+    /// connect the automation missed is recovered and a trip starts. True if it did.
+    func drivingWithoutTrip() async -> Bool {
+        guard recording == nil, TruckRoute.connectedNow() else { return false }
+        await apply { try await self.core.recorder.truckReadConnected() }
+        return recording != nil
     }
 
     /// The Shortcuts automation says the vehicle disconnected.

@@ -217,6 +217,22 @@ class IosTripRecorder internal constructor(
     }
 
     /**
+     * A wake for a drive found the truck connected (2026-11-16, ADR-015's second layer): the
+     * iPhone's audio goes to CarPlay, or to the truck's Bluetooth by the name noted when the
+     * automation last ran, while Core Motion says the iPhone is driving and no trip is open. It
+     * is Android's reading of the truck at a process start, `TruckConnection(true)`: a trip
+     * starts unless the rules hold automatic start off; a wait beside the parked truck carries
+     * on as the rules have it. The connect the automation missed is recovered, a few hundred
+     * metres into the drive, where iOS woke Dually.
+     */
+    suspend fun truckReadConnected(): RecordingNow? = lock.withLock {
+        pickUp()
+        truck.connected = true
+        advance(WAKE_READ_CONNECTED, TripEvent.TruckConnection(true, clock()))
+        snapshot()
+    }
+
+    /**
      * The user's Shortcuts automation says the truck disconnected. An open trip's grace period
      * starts: it closes unless the truck connects again first.
      */
@@ -503,6 +519,11 @@ internal class StoredTruckBelief : TruckBelief {
 }
 
 private const val AUTOMATION_CONNECTED = "The Shortcuts automation said the truck connected"
+
+/** The Log's line for a wake that read the truck as connected. */
+private val WAKE_READ_CONNECTED =
+    "A wake for a drive found the truck connected (the iPhone's audio goes to it); the " +
+        "automation's connect was missed"
 private const val AUTOMATION_DISCONNECTED = "The Shortcuts automation said the truck disconnected"
 
 /**

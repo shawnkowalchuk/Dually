@@ -22,6 +22,12 @@ final class DrivingWatch: NSObject {
     var onServiceTap: (() -> Void)?
     /// A tap on the monthly reminder: the month whose report it opens.
     var onReminderTap: ((Int, Int) -> Void)?
+    /// Each wake for a move, first: what was stored (a trip, a wait beside the parked truck) is
+    /// picked up and its GPS started again, as at the app's start.
+    var onWake: (() async -> Void)?
+    /// Driving with no trip open: true when the truck was found connected and a trip started,
+    /// which takes the alert's place (ADR-015's second layer).
+    var onDrivingWithoutTrip: (() async -> Bool)?
 
     private let manager = CLLocationManager()
     private let motion = CMMotionActivityManager()
@@ -65,6 +71,7 @@ final class DrivingWatch: NSObject {
         // iOS gives a wake for a move a few seconds; this asks for the time the look needs.
         let task = UIApplication.shared.beginBackgroundTask(withName: "Driving alert")
         defer { UIApplication.shared.endBackgroundTask(task) }
+        await onWake?()
         let from = Date(timeIntervalSince1970: Double(core.drivingAlert.lookFromMs()) / 1000)
         let records = await history(from: from)
         let allowed = await UNUserNotificationCenter.current().notificationSettings()
@@ -75,7 +82,11 @@ final class DrivingWatch: NSObject {
             notificationsAllowed: allowed
         ) else { return }
         switch step {
-        case DrivingAlertStep.show: await post()
+        case DrivingAlertStep.show:
+            // The truck connected and no trip: the trip starts, as Android's reading of the
+            // truck starts one; the alert is for driving without it.
+            if await onDrivingWithoutTrip?() == true { break }
+            await post()
         case DrivingAlertStep.withdraw: withdraw()
         default: break
         }
