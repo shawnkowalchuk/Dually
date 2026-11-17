@@ -238,7 +238,7 @@ describe('the settings every phone shares (ADR-017, step 3)', () => {
   test('an account with the unlock writes and lists them; without it, it only reads', async () => {
     await unlock(OWNER);
     const db = as(OWNER);
-    for (const name of ['report', 'service', 'odometer']) {
+    for (const name of ['report', 'service', 'odometer', 'vehicles']) {
       await assertSucceeds(setDoc(doc(db, `users/${OWNER}/shared/${name}`), trip));
     }
     await assertSucceeds(getDocs(collection(db, `users/${OWNER}/shared`)));

@@ -11,6 +11,7 @@ import com.shawnkowalchuk.milo.core.util.localDateOf
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.settings.StoredVehicle
 import com.shawnkowalchuk.milo.data.settings.pairedVehicles
+import com.shawnkowalchuk.milo.data.settings.sameVehicle
 
 /**
  * One odometer as it stands now: a paired vehicle's (since 2026-10-08), or, while none is
@@ -50,14 +51,15 @@ fun odometerNow(
     address: String? = null,
     isFirst: Boolean = true,
     soFar: TripSoFar? = null,
+    alsoAs: Set<String> = emptySet(),
 ): OdometerFigure? {
     val driven = drivenTrips(finished, soFar)
     return odometerAt(
         nowMs,
         localDateOf(nowMs, zone),
         zone,
-        if (address == null) readings else readings.ofVehicle(address, isFirst),
-        if (address == null) driven else driven.drivenIn(address, isFirst),
+        if (address == null) readings else readings.ofVehicle(address, isFirst, alsoAs),
+        if (address == null) driven else driven.drivenIn(address, isFirst, alsoAs),
         unit,
     )
 }
@@ -98,6 +100,7 @@ fun vehicleOdometers(
                     address = vehicle.address,
                     isFirst = index == 0,
                     soFar = soFar,
+                    alsoAs = settings.sameVehicle(vehicle.address),
                 ),
         )
     }

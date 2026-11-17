@@ -76,12 +76,28 @@ data class DrivenTrip(
  * typed for it, and if it is the first vehicle, the truck, those typed before there were
  * several, which name none.
  */
-fun List<OdometerReading>.ofVehicle(address: String, isFirst: Boolean): List<OdometerReading> =
-    filter { it.vehicle?.equals(address, ignoreCase = true) ?: isFirst }
+fun List<OdometerReading>.ofVehicle(
+    address: String,
+    isFirst: Boolean,
+    alsoAs: Set<String> = emptySet(),
+): List<OdometerReading> = filter {
+    it.vehicle?.let { named -> named.isOf(address, alsoAs) }
+        ?: isFirst
+}
 
-/** The trips that moved one vehicle's odometer, on the same terms as its readings. */
-fun List<DrivenTrip>.drivenIn(address: String, isFirst: Boolean): List<DrivenTrip> =
-    filter { it.vehicle?.equals(address, ignoreCase = true) ?: isFirst }
+/**
+ * The trips that moved one vehicle's odometer, on the same terms as its readings. [alsoAs] are
+ * the ids joined to [address] (ADR-018): an iPhone's own id for the same vehicle, or the other
+ * way round; a trip naming one counts for it.
+ */
+fun List<DrivenTrip>.drivenIn(
+    address: String,
+    isFirst: Boolean,
+    alsoAs: Set<String> = emptySet(),
+): List<DrivenTrip> = filter { it.vehicle?.let { named -> named.isOf(address, alsoAs) } ?: isFirst }
+
+private fun String.isOf(address: String, alsoAs: Set<String>): Boolean =
+    equals(address, ignoreCase = true) || alsoAs.any { equals(it, ignoreCase = true) }
 
 /**
  * The odometer at one moment.

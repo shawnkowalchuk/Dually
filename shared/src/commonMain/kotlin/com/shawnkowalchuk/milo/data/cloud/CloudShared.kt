@@ -4,10 +4,15 @@ import com.shawnkowalchuk.milo.core.io.IOException
 import com.shawnkowalchuk.milo.core.odometer.OdometerReading
 import com.shawnkowalchuk.milo.core.service.ServiceBook
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
+import com.shawnkowalchuk.milo.data.settings.KnownVehicles
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
+import com.shawnkowalchuk.milo.data.settings.accountVehicles
 import com.shawnkowalchuk.milo.data.settings.addOdometerReading
 import com.shawnkowalchuk.milo.data.settings.changeServiceBook
+import com.shawnkowalchuk.milo.data.settings.knownVehiclesJson
+import com.shawnkowalchuk.milo.data.settings.knownVehiclesOf
+import com.shawnkowalchuk.milo.data.settings.mergeKnownVehicles
 import com.shawnkowalchuk.milo.data.transfer.ExportJson
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
@@ -26,6 +31,12 @@ const val CLOUD_SHARED = "shared"
 const val SHARED_REPORT = "$CLOUD_SHARED/report"
 const val SHARED_SERVICE = "$CLOUD_SHARED/service"
 const val SHARED_ODOMETER = "$CLOUD_SHARED/odometer"
+
+/**
+ * The account's vehicles (ADR-018, 2026-11-16): every phone's paired vehicles, and which of an
+ * iPhone's are the same as one of Android's. Merged as a set, as the odometer readings are.
+ */
+const val SHARED_VEHICLES = "$CLOUD_SHARED/vehicles"
 
 /** The details the report prints, as every phone shares them. */
 @Serializable
@@ -77,6 +88,7 @@ fun sharedDocuments(settings: MiloSettings): List<CloudDocument> = listOf(
         ExportJson.encodeToString(ServiceBook.serializer(), settings.serviceBook),
     ),
     CloudDocument(SHARED_ODOMETER, odometerJson(settings.odometerReadings.map { it.shared() })),
+    CloudDocument(SHARED_VEHICLES, knownVehiclesJson(settings.accountVehicles())),
 )
 
 private fun odometerJson(readings: Collection<SharedReading>): String = ExportJson.encodeToString(
@@ -89,7 +101,7 @@ private fun odometerJson(readings: Collection<SharedReading>): String = ExportJs
  * settings could not be read: then what the cloud holds is neither written nor removed.
  */
 fun CloudSnapshot.withShared(settings: MiloSettings?): CloudSnapshot = if (settings == null) {
-    copy(unknown = unknown + setOf(SHARED_REPORT, SHARED_SERVICE, SHARED_ODOMETER))
+    copy(unknown = unknown + setOf(SHARED_REPORT, SHARED_SERVICE, SHARED_ODOMETER, SHARED_VEHICLES))
 } else {
     copy(documents = documents + sharedDocuments(settings))
 }
@@ -147,6 +159,16 @@ suspend fun syncShared(
             theirs
         ) {
             known[SHARED_ODOMETER] = CloudDocument(SHARED_ODOMETER, json).fingerprint
+        }
+    }
+    cloud[SHARED_VEHICLES]?.let { json ->
+        val theirs = knownVehiclesOf(json) ?: return@let
+        if (settings.mergeKnownVehicles(theirs)) {
+            log("Cloud backup: the account's vehicles came from another phone.")
+        }
+        // Holding everything the cloud has, and no more: nothing of ours is to be sent.
+        if (settings.current().accountVehicles() == theirs.with(KnownVehicles())) {
+            known[SHARED_VEHICLES] = CloudDocument(SHARED_VEHICLES, json).fingerprint
         }
     }
     ledger.write(account, known)
