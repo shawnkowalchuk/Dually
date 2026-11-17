@@ -37,13 +37,13 @@ class IosSounds internal constructor(
      * What to play for [due] (from `IosTripRecorder.takeSounds`), in its order: each a file built
      * into the app, a sound of the user's own with that file to fall back on, or the party's pop.
      */
-    suspend fun toPlay(due: TripSounds): List<SoundToPlay> {
+    suspend fun toPlay(due: TripSounds): SoundsPlan {
         val now = current()
         val sounds = due.sounds.mapNotNull { name ->
             TripSound.entries.firstOrNull { it.name == name }
         }
         val pop = if (due.tripStarts) partyAtTripStart() else PopAtTripStart.NOT_TODAY
-        return soundsToPlay(sounds, pop, now).map { sound ->
+        val played = soundsToPlay(sounds, pop, now).map { sound ->
             when (sound) {
                 is StartSound.Usual ->
                     SoundToPlay(
@@ -53,10 +53,14 @@ class IosSounds internal constructor(
                         own = sound.ownUri,
                     )
 
-                StartSound.PartyPop -> SoundToPlay("Party pop", PARTY_POP_FILE, "party pop", null)
+                StartSound.PartyPop -> partyPop()
             }
         }
+        return SoundsPlan(played, popLeftToAnimation = pop == PopAtTripStart.WITH_THE_ANIMATION)
     }
+
+    /** The party's pop, as a sound to play. */
+    fun partyPop(): SoundToPlay = SoundToPlay("Party pop", PARTY_POP_FILE, "party pop", null)
 
     /** Settings' Sounds tile: each moment's switch and the sound in use. */
     suspend fun tile(): List<SoundMomentText> {
@@ -178,6 +182,13 @@ class IosSounds internal constructor(
         }
     }
 }
+
+/**
+ * What a moment plays: its [sounds], and whether the trip's first sound, the party's pop, was
+ * left to the animation over Home ([popLeftToAnimation]): if no party takes it within two seconds
+ * (`POP_HANDOVER_MS`), the trip's start plays it itself.
+ */
+data class SoundsPlan(val sounds: List<SoundToPlay>, val popLeftToAnimation: Boolean)
 
 /**
  * One sound to play: [label] for the Log ("Connect sound"), the built-in [file] (a `.wav` in the

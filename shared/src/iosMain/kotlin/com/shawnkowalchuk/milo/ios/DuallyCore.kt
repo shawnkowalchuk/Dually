@@ -208,7 +208,20 @@ class DuallyCore private constructor(
 
     /** The connect and trip-start sounds (2026-11-16). */
     val sounds: IosSounds by lazy {
-        IosSounds(settingsStore, EventLogRepository(database.eventLogDao()), ::nowMs)
+        IosSounds(settingsStore, EventLogRepository(database.eventLogDao()), ::nowMs) {
+            party.atTripStart()
+        }
+    }
+
+    /** The one-year party (2026-11-16). */
+    val party: IosParty by lazy {
+        IosParty(
+            TripRepository(database.tripDao()),
+            settingsStore,
+            EventLogRepository(database.eventLogDao()),
+            ::nowMs,
+            ::systemZoneId,
+        )
     }
 
     /** The mascot's greetings (2026-11-16). */

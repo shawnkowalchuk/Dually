@@ -25,6 +25,10 @@ struct DuallyApp: App {
     @State private var whatsNewFrom = AppTab.home
     /// The greeting playing over Home, with its pictures read (2026-11-16, as on Android).
     @State private var greeting: GreetingPictures?
+    /// The one-year party playing over Home (2026-11-16, as on Android).
+    @State private var party: PartyShowing?
+    /// The party asked for by holding the version's heading on What's new.
+    @State private var partyAsked = false
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
@@ -48,6 +52,7 @@ struct DuallyApp: App {
                 } else {
                     screen
                         .overlay(alignment: .bottomLeading) { greetingOverHome }
+                        .overlay { partyOverHome }
                 }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -73,7 +78,8 @@ struct DuallyApp: App {
                     whatsNewFrom = .home
                     tab = .whatsNew
                 }
-                await greetIfDue(firstStart: stage)
+                await checkParty()
+                if party == nil { await greetIfDue(firstStart: stage) }
                 // The online backup follows every change, and StoreKit's late purchases reach
                 // the purchase check, in a build with Firebase's settings (phase 4h).
                 if FirebaseCloud.shared.available {
@@ -103,9 +109,28 @@ struct DuallyApp: App {
                     session.serviceAsked = false
                 }
             }
-            // A greeting is cut, not faded, when Home is left or Dually is put away.
-            .onChange(of: tab) { now in if now != .home { greeting = nil } }
-            .onChange(of: scenePhase) { phase in if phase != .active { greeting = nil } }
+            // A greeting or a party is cut, not faded, when Home is left or Dually is put away.
+            .onChange(of: tab) { now in
+                if now != .home {
+                    greeting = nil
+                    party = nil
+                }
+                homeWatching()
+                if now == .home { Task { await checkParty() } }
+            }
+            .onChange(of: scenePhase) { phase in
+                if phase != .active {
+                    greeting = nil
+                    party = nil
+                }
+                homeWatching()
+                if phase == .active { Task { await checkParty() } }
+            }
+            .onReceive(session.$partyDue) { due in
+                guard due else { return }
+                session.partyDue = false
+                Task { await checkParty() }
+            }
         }
     }
 
@@ -117,6 +142,72 @@ struct DuallyApp: App {
                     self.greeting = nil
                 })
                 .frame(width: geometry.size.width, height: geometry.size.height, alignment: .bottomLeading)
+            }
+        }
+    }
+
+    /// The party over Home, in the middle of the screen.
+    @ViewBuilder private var partyOverHome: some View {
+        if let party, let pictures = party.pictures, tab == .home {
+            GeometryReader { geometry in
+                MascotPartyView(
+                    player: PartyPlayer(pictures: pictures, onPop: { partyPopped(party) }) { popped in
+                        partyOver(party, popped: popped)
+                    },
+                    screen: geometry.size
+                )
+            }
+        }
+    }
+
+    /// Whether Home could play the party now: the trip's start leaves its pop to it then.
+    private func homeWatching() {
+        session.core.party.homeWatching = tab == .home && scenePhase == .active && firstStart == "DONE"
+    }
+
+    /// The party owed by today's trips, or asked for, when Home is in front; it takes the
+    /// greeting's place, as on Android. Not where the iPhone asks for less motion: a pop the
+    /// party was left is then played as it would have been at its end.
+    private func checkParty() async {
+        homeWatching()
+        guard party == nil, tab == .home, scenePhase == .active || firstStart == "DONE", firstStart == "DONE" else { return }
+        let core = session.core
+        var showing: PartyShowing?
+        if let forMs = try? await core.party.owedNow() {
+            let owesPop = (try? await core.party.shown(forMs: forMs.int64Value))?.boolValue ?? false
+            showing = PartyShowing(pictures: nil, onDemand: false, owesPop: owesPop)
+        } else if partyAsked {
+            partyAsked = false
+            showing = PartyShowing(pictures: nil, onDemand: true, owesPop: false)
+        }
+        guard var showing else { return }
+        greeting = nil
+        guard !UIAccessibility.isReduceMotionEnabled, let pictures = PartyPictures() else {
+            if !UIAccessibility.isReduceMotionEnabled { try? await core.party.unreadable() }
+            partyOver(showing, popped: false)
+            return
+        }
+        showing.pictures = pictures
+        party = showing
+    }
+
+    private func partyPopped(_ showing: PartyShowing) {
+        party?.owesPop = false
+        let core = session.core
+        Task {
+            let heard = (try? await core.party.popHeard())?.boolValue ?? true
+            if showing.onDemand || heard { TripSoundPlayer.shared.play([core.sounds.partyPop()], core: core) }
+        }
+    }
+
+    private func partyOver(_ showing: PartyShowing, popped: Bool) {
+        let owed = party?.owesPop ?? showing.owesPop
+        party = nil
+        guard owed, !popped else { return }
+        let core = session.core
+        Task {
+            if (try? await core.party.popHeard())?.boolValue == true {
+                TripSoundPlayer.shared.play([core.sounds.partyPop()], core: core)
             }
         }
     }
@@ -198,7 +289,11 @@ struct DuallyApp: App {
                 }
             )
         case .service: ServiceView(model: service)
-        case .whatsNew: WhatsNewView(core: session.core) { tab = whatsNewFrom }
+        case .whatsNew:
+            WhatsNewView(core: session.core, back: { tab = whatsNewFrom }) {
+                // Held: the party plays when Home is next in front, as on Android.
+                partyAsked = true
+            }
         }
     }
 }
@@ -221,6 +316,14 @@ extension DuallyApp {
         setupOpenedFrom = origin
         tab = .setup
     }
+}
+
+/// A party over Home: its pictures, whether it was asked for, and whether the pop of a trip's
+/// start was left to it.
+struct PartyShowing {
+    var pictures: PartyPictures?
+    let onDemand: Bool
+    var owesPop: Bool
 }
 
 /// The screens: the bar's four, Setup (opened from Settings or Home), the report and the graph

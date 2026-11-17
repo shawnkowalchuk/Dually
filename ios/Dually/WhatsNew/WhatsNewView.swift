@@ -26,6 +26,8 @@ enum InstalledVersion {
 struct WhatsNewView: View {
     let core: DuallyCore
     let back: () -> Void
+    /// The version on this iPhone's heading was held: Android's way to the one-year party.
+    var versionHeld: () -> Void = {}
 
     @State private var list: WhatsNewText?
 
@@ -44,7 +46,12 @@ struct WhatsNewView: View {
                         .font(Typography.body(14, weight: .semibold))
                         .foregroundStyle(Palette.textSecondary)
                         .padding(.top, 8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
                         .accessibilityAddTraits(.isHeader)
+                        .onLongPressGesture {
+                            if release.heading.hasSuffix("on this phone") { versionHeld() }
+                        }
                     Tile {
                         ForEach(Array(release.changes.enumerated()), id: \.offset) { index, change in
                             ChangeRow(change: change)

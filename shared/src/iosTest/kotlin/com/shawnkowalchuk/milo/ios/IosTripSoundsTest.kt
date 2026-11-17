@@ -74,8 +74,8 @@ class IosTripSoundsTest {
 
         val played = sounds.toPlay(TripSounds(listOf("CONNECT", "DRIVING_OFF"), tripStarts = true))
 
-        assertEquals(listOf("sound_coin"), played.map { it.file })
-        assertEquals("Connect sound", played.single().label)
+        assertEquals(listOf("sound_coin"), played.sounds.map { it.file })
+        assertEquals("Connect sound", played.sounds.single().label)
     }
 
     @Test
@@ -87,6 +87,6 @@ class IosTripSoundsTest {
 
         val played = sounds.toPlay(TripSounds(listOf("CONNECT"), tripStarts = true))
 
-        assertEquals(listOf("party_pop"), played.map { it.file })
+        assertEquals(listOf("party_pop"), played.sounds.map { it.file })
     }
 }

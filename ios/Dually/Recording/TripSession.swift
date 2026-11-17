@@ -27,6 +27,8 @@ final class TripSession: ObservableObject {
     @Published var serviceAsked = false
     /// A tap on the monthly reminder asked for that month's report; the app opens it.
     @Published var reportAsked: (year: Int, month: Int)?
+    /// A trip has started on the one-year party's day with Home in front: the party plays now.
+    @Published var partyDue = false
 
     private init() {
         drivingWatch = DrivingWatch(core: core)
@@ -180,9 +182,19 @@ final class TripSession: ObservableObject {
     /// (2026-11-16, as on Android).
     private func playDueSounds() async {
         guard let due = try? await core.recorder.takeSounds(),
-              let sounds = try? await core.sounds.toPlay(due: due)
+              let plan = try? await core.sounds.toPlay(due: due)
         else { return }
-        TripSoundPlayer.shared.play(sounds, core: core)
+        TripSoundPlayer.shared.play(plan.sounds, core: core)
+        // On the one-year party's day, with Home in front, the trip's first sound is the pop of
+        // the party that plays there now; if no party takes it within two seconds, the trip's
+        // start plays it itself (Android's POP_HANDOVER_MS).
+        guard plan.popLeftToAnimation else { return }
+        partyDue = true
+        try? await Task.sleep(nanoseconds: 2_000_000_000)
+        if core.party.takePop(),
+           (try? await core.party.popHeard())?.boolValue == true {
+            TripSoundPlayer.shared.play([core.sounds.partyPop()], core: core)
+        }
     }
 
     /// One step of the recorder, then the GPS on or off as the trip rules now want it: on while a
