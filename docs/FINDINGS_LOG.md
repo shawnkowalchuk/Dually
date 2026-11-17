@@ -24,6 +24,16 @@
 
 ## Log
 
+### 2026-11-16
+
+**`[CHANGE]` The iPhone's missing features, group 1: the graph, What's new, the welcome page, Support and Review** (APP_ENCYCLOPEDIA, iPhone app)
+Apple approved 1.0 and Shawn released it that evening. Asked what the iPhone still lacked, he answered: "we need to complete all the missing features. i didnt know there was a gap this big". Planned with him in four groups, a TestFlight build after each: (1) screens, (2) the mascot and sounds, (3) several vehicles, a cut-off import and a daily backup sync, (4) trip detection (Dually's own clock, the start at the parked place), the last with one independent check. His answers: the next version is **1.0.1** (over 1.1; Apple takes no more 1.0 builds once 1.0 is released), and **CarPlay matches Android Auto** wherever Android Auto shows or plays something. Group 1 is in the encyclopedia's entries of that day.
+- **Moved to the shared code, unchanged in what they do:** `yearFigures` and `MonthFigure` (the graph's figures), `chartStep` (its scale, with `CHART_GRID_STEPS`), `parseChangelog` and its classes (the list of changes; its date check now uses the shared `dateOfText`), `isDue` (when What's new opens). Android imports them from there; its tests pass unchanged but for one import.
+- **The iPhone's list of changes is its own,** `ios/Dually/changelog.json`, versions 1.0 on. Android's `changelog.json` and the website's What's new page are Android's; `tools/changes_page.py` does not read the iPhone's list. A shared test reads the bundled file (`IosWhatsNewTest`): the simulator is told where the repository is through `SIMCTL_CHILD_DUALLY_REPOSITORY` (`shared/build.gradle.kts`), since its own working folder is the simulator's.
+- **`[FINDING]` An iPhone that had 1.0 has no first-start stage stored** (1.0 had no welcome page). Taken as done when it shows earlier use (a trip or a log line) and never stored a version as seen. The first rule tried, earlier use alone, would have skipped the welcome page for a fresh install closed before OK, because the app writes a log line at every start; the stored version settles it.
+- **No Buy me a coffee on the iPhone:** Guideline 3.1.1 wants a tip to the developer through Apple's purchase. Decided here, not asked: Android's copy from Google Play hides the tile for the same kind of rule (ADR-004).
+- **Waiting for 1.0.1:** the privacy page says "The iPhone app has none of these three tiles". It is changed in its own pull request to main before 1.0.1 goes to App Review: Email support (the iOS version and the iPhone's model) and the App Store review link on the iPhone, no coffee tile.
+
 ### 2026-11-15
 
 **`[CHANGE]` Test builds of the iPhone's missing pieces:** TestFlight 1.0 (10) uploaded at 21:09 (the light look, Home's truck and today tiles), and 1.0 (11) at 21:28 with everything of this evening: the Log, Settings' reminder, daily check, each day's hours and widget, and the report's periods, options, sent list and GPS points. Before it: `spotlessCheck lintDebug testDebugUnitTest :shared:testAndroidHostTest :shared:iosSimulatorArm64Test assembleDebug` pass. No Android change but the shared Log grouping, so no Android build.
