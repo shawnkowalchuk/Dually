@@ -49,7 +49,8 @@ struct SettingsView: View {
                 WidgetTile(text: text, model: model)
                 YourDataTile(core: core)
                 LogLinkTile(open: openLog)
-                // The last tile, as on Android: the version and the way into What's new.
+                // Then Support and the review, and last the version, as on Android.
+                FooterLinks()
                 VersionTile(open: openWhatsNew)
             }
         }

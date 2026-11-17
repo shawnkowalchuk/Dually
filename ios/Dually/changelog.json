@@ -46,6 +46,11 @@
         },
         {
           "kind": "new",
+          "title": "Email support and a review",
+          "body": "The end of Settings has Email support, which starts an email to us with your version of Dually and your iPhone's model at the end, and a link to review Dually on the App Store."
+        },
+        {
+          "kind": "new",
           "title": "What's new",
           "body": "This list. It opens by itself once after each update, and any time from the Version tile at the end of Settings."
         }
