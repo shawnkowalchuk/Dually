@@ -5,6 +5,11 @@
       "date": null,
       "changes": [
         {
+          "kind": "new",
+          "title": "One logbook on all your phones",
+          "body": "With the online backup, every phone signed in to the same account now shares one logbook: trips recorded on an Android phone and on your iPhone show up on both, and a change made on one phone reaches the others. A month whose report was sent is locked on all of them."
+        },
+        {
           "kind": "improved",
           "title": "Where the online backup is kept, said plainly",
           "body": "The Online backup tile, the welcome page and Setup's location note now say what the backup is: a copy in Google's Firebase, in its Montréal data centre in Canada."
