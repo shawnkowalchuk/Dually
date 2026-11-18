@@ -424,8 +424,8 @@ main > * {
   line-height: 1.5;
 }
 
-/* The actions, side by side and the same height: the dark Google Play and App Store buttons
-   (the App Store's since the iPhone app's 1.0), and Product Hunt's review badge (2026-11-13:
+/* The actions, side by side and the same height: the App Store's and Google Play's badges
+   (since 2026-11-16; plain buttons before), and Product Hunt's review badge (2026-11-13:
    smaller, and the badge beside the buttons). */
 .actions {
   display: flex;
@@ -434,27 +434,32 @@ main > * {
   gap: 12px;
 }
 
-.hero .button {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 46px;
-  padding: 0 18px;
-  background: var(--ink);
-  color: var(--text);
-  border-radius: var(--cta-radius);
-  font-weight: 700;
-  font-size: 15px;
-  text-decoration: none;
-}
-
-.hero .button:hover,
-.hero .button:focus-visible {
-  color: var(--amber);
-}
-
-.hero .button svg {
+/* The stores' own badges (2026-11-16, Shawn: "can we add this badge instead of the plain one we
+   are using"), in place of the plain buttons: Apple's black "Download on the App Store" and
+   Google's "Get it on Google Play", as each company gives them and unchanged, the App Store's
+   first and both the same height, as Apple's and Google's guidelines ask, with a quarter of their
+   height clear round them. Google's file is cut to the badge's own edge (it comes with a clear
+   margin), so that the two line up; the credit lines are in each page's footer. */
+.store-badge {
+  display: block;
   flex: none;
+  line-height: 0;
+  border-radius: 8px;
+}
+
+.store-badge img {
+  display: block;
+  width: auto;
+  height: 46px;
+}
+
+.store-badge:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+}
+
+.dock .store-badge img {
+  height: 40px;
 }
 
 /* Product Hunt's review badge (2026-11-06), saved on the site so the page loads nothing else,
@@ -1105,7 +1110,7 @@ footer a:hover {
 .dock .dock-ctas {
   grid-area: cta;
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
 .dock .cta,
@@ -1362,6 +1367,29 @@ footer a:hover {
 
   footer {
     padding-bottom: 128px;
+  }
+}
+
+/* A phone's width: the two badges take a row of their own in the pinned bar, under its line,
+   since the line and the badges side by side would not fit, and the hero's are smaller. */
+@media (max-width: 519px) {
+  /* The hero's badges at Apple's smallest, 40 px, so that the two keep to one row; Product
+     Hunt's beside them, at the same height. */
+  .hero .store-badge img,
+  .hero .hero-badge img {
+    height: 40px;
+  }
+
+  .dock-inner {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "pitch"
+      "cta"
+      "legal";
+  }
+
+  footer {
+    padding-bottom: 176px;
   }
 }
 

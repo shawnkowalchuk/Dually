@@ -24,10 +24,15 @@
 
 ## Log
 
+### 2026-11-17
+
+**`[CHANGE]` The privacy page: Email support and the App Store review link on the iPhone** (merged 2026-11-17, the day iPhone 1.0.1 went to App Review)
+The iPhone gets Android's Email support row and a Review on the App Store link in 1.0.1 (built on `app/multi-phone`, FINDINGS_LOG there), and no Buy me a coffee tile (Guideline 3.1.1). The policy said the iPhone had none of these tiles. This pull request stays a draft until 1.0.1 goes to App Review, which reads the policy; at its merge the "last changed" date and the sitemap's date for /privacy are set to that day.
+
 ### 2026-11-16
 
-**`[CHANGE]` The privacy page: Email support and the App Store review link on the iPhone** (held for iPhone 1.0.1)
-The iPhone gets Android's Email support row and a Review on the App Store link in 1.0.1 (built on `app/multi-phone`, FINDINGS_LOG there), and no Buy me a coffee tile (Guideline 3.1.1). The policy said the iPhone had none of these tiles. This pull request stays a draft until 1.0.1 goes to App Review, which reads the policy; at its merge the "last changed" date and the sitemap's date for /privacy are set to that day.
+**`[CHANGE]` The website: the App Store's and Google Play's own badges in place of the plain buttons** (APP_ENCYCLOPEDIA, Website)
+Shawn sent a picture of the two badges from an image site ("Licensable") with "can we add this badge instead of the plain one we are using". Not that picture: both companies want their own artwork, unchanged. Asked first, he approved the two downloads (Apple's SVG, 10.8 KB, from toolbox.marketingtools.apple.com; Google's PNG, 4.9 KB, from play.google.com's badge page). **Apple's guidelines put the App Store badge first in a lineup**, so the order is the reverse of his picture; Google's ask that its badge be the same size or larger, and the two are the same height. Google's file comes with a clear margin of 41 px all round its 646 by 250; it was cut to the badge's edge (564 by 168) with `sips`, so that the two line up at one height. Looked at in a browser at 375 px and on a desktop: the home page, the pinned bar and a footer.
 
 **`[CHANGE]` iPhone 1.0 released; App Store Connect's two China forms answered**
 Apple approved 1.0 (build 6) and Shawn pressed Release at about 20:00. App Compliance then listed two forms for China mainland, both "Missing Info". At Shawn's request ("can you please help me fill the two compiance") both were answered **No** and show Active: Security Assessment ("Does your app include features that require a security assessment in China mainland?", meaning end-to-end encrypted messaging or AI-generated content) and AI Generated or Synthetic Content ("Does your app offer AIGC services in China mainland?", meaning AI chatbots or AI image, video or voice generation). Dually has none of them. Both forms have an Edit link, if a feature like that is ever added.
