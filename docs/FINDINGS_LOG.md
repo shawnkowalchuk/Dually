@@ -40,6 +40,9 @@ Tests: `KnownVehiclesTest` (merge, the join both ways, the question asked once),
 **`[DEBT]` Several vehicles: two corners left**
 (1) Setup's two checks ("Start a trip has run", "End a trip has run") are for any pair of automations, not one per vehicle: the "Several vehicles" tile only says to make a pair for each. A check per vehicle needs the heard times stored per vehicle and Setup's rows made per vehicle (`IosSetup.kt`). (2) The iPhone's service form names no vehicle, so a new service item goes by the first vehicle's odometer (`IosService.kt`, `// TODO(debt):`); Android's form has the vehicle. Both cost a small screen change each.
 
+**`[CHANGE]` The privacy page: Email support and the App Store review link on the iPhone** (merged 2026-11-17, the day iPhone 1.0.1 went to App Review)
+The iPhone gets Android's Email support row and a Review on the App Store link in 1.0.1 (built on `app/multi-phone`, FINDINGS_LOG there), and no Buy me a coffee tile (Guideline 3.1.1). The policy said the iPhone had none of these tiles. This pull request stays a draft until 1.0.1 goes to App Review, which reads the policy; at its merge the "last changed" date and the sitemap's date for /privacy are set to that day.
+
 ### 2026-11-16
 
 **`[FIX]` The independent check of the iPhone's trip detection, and what it changed**
