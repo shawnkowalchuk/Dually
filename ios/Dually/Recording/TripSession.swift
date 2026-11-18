@@ -1,5 +1,8 @@
 import DuallyShared
 import Foundation
+import UIKit
+import UserNotifications
+import WidgetKit
 
 // The trip being recorded, for all of the iPhone app (phase 4d). Home's Start and End, the
 // Shortcuts automation's "Start a trip" and "End a trip" (TripIntents.swift) and the GPS all go
@@ -10,32 +13,66 @@ final class TripSession: ObservableObject {
     static let shared = TripSession()
 
     /// The shared code's door, opened once: it opens the database.
-    let core = DuallyCore.companion.open(placeFinder: AppleGeocoder())
+    let core = DuallyCore.companion.open(placeFinder: AppleGeocoder(), cloud: FirebaseCloud.shared)
     let location = LocationRecorder()
     /// The driving alert (phase 4d, third part).
     let drivingWatch: DrivingWatch
+    /// The trip on the Lock Screen and in the Dynamic Island (phase 4e), iOS 16.1 and later.
+    private let liveTrip: AnyObject?
 
     /// The trip being recorded, or nil.
     @Published private(set) var recording: RecordingNow?
     @Published private(set) var failure: String?
+    /// A tap on the service reminder asked for Service; the app opens it and sets this back.
+    @Published var serviceAsked = false
 
     private init() {
         drivingWatch = DrivingWatch(core: core)
+        if #available(iOS 16.1, *) {
+            liveTrip = LiveTrip()
+        } else {
+            liveTrip = nil
+        }
         location.onFix = { [weak self] fix in
             Task { await self?.add(fix) }
         }
         drivingWatch.onTap = { [weak self] in
             Task { await self?.startFromAlert() }
         }
+        drivingWatch.onServiceTap = { [weak self] in self?.serviceAsked = true }
         drivingWatch.arm()
     }
 
     /// The app has started: a trip or a wait left from before is picked up, and its GPS starts
     /// again; the addresses that are due are looked up.
     func appStarted() async {
+        defer { Task { await self.updateWidget(force: true) } }
         await apply {
             try await self.core.appStarted()
             return try await self.core.recorder.now()
+        }
+    }
+
+    /// Dually came to the front: a trip that started in the background gets its Live Activity,
+    /// and the online backup sends what an earlier upload could not.
+    func cameToFront() async {
+        if #available(iOS 16.1, *) { (liveTrip as? LiveTrip)?.cameToFront() }
+        await refresh()
+        uploadBackup("the app came to the front")
+    }
+
+    /// One upload of the online backup (phase 4h), with the time iOS gives an app that is going
+    /// to sleep to finish it. Nothing at all where nobody is signed in to the backup.
+    func uploadBackup(_ reason: String) {
+        guard FirebaseCloud.shared.available, core.cloud.account() != nil else { return }
+        var task = UIBackgroundTaskIdentifier.invalid
+        task = UIApplication.shared.beginBackgroundTask(withName: "Online backup") {
+            UIApplication.shared.endBackgroundTask(task)
+            task = .invalid
+        }
+        Task {
+            _ = try? await core.cloud.upload(reason: reason)
+            if task != .invalid { UIApplication.shared.endBackgroundTask(task) }
         }
     }
 
@@ -48,6 +85,11 @@ final class TripSession: ObservableObject {
         await apply { try await self.core.recorder.start() }
     }
 
+    /// Start on the home-screen widget.
+    func startFromWidget() async {
+        await apply { try await self.core.recorder.startFromWidget() }
+    }
+
     /// A tap on the driving alert: a trip started by hand, as on Android.
     func startFromAlert() async {
         await apply { try await self.core.recorder.startFromAlert() }
@@ -55,6 +97,21 @@ final class TripSession: ObservableObject {
 
     func end() async {
         await apply { try await self.core.recorder.end() }
+    }
+
+    /// Start trip on the CarPlay screen (phase 4f).
+    func startFromCar() async {
+        await apply { try await self.core.recorder.startFromCar() }
+    }
+
+    /// End trip on the CarPlay screen (phase 4f).
+    func endFromCar() async {
+        await apply { try await self.core.recorder.endFromCar() }
+    }
+
+    /// End trip on the Live Activity.
+    func endFromLiveActivity() async {
+        await apply { try await self.core.recorder.endFromLiveActivity() }
     }
 
     /// The Shortcuts automation says the vehicle connected.
@@ -65,6 +122,40 @@ final class TripSession: ObservableObject {
     /// The Shortcuts automation says the vehicle disconnected.
     func truckDisconnected() async {
         await apply { try await self.core.recorder.truckDisconnected() }
+    }
+
+    private var widgetDrawnAt = Date.distantPast
+    private var widgetRecording: Bool?
+
+    /// Leaves the widget's figures where it reads them and asks for a new drawing: at once when
+    /// a trip starts or ends, and while one is recorded at most every minute, since iOS limits
+    /// how often a widget is redrawn and the Live Activity has the running figures.
+    func updateWidget(force: Bool = false) async {
+        let isRecording = recording != nil
+        let changed = isRecording != widgetRecording
+        guard force || changed || Date().timeIntervalSince(widgetDrawnAt) >= 60 else { return }
+        widgetRecording = isRecording
+        widgetDrawnAt = Date()
+        let dollars = try? await core.widget.dollars(nowMs: Int64(Date().timeIntervalSince1970 * 1000))
+        WidgetSnapshot(
+            recording: isRecording,
+            startedAt: recording.map { Date(timeIntervalSince1970: Double($0.startedAtMs) / 1000) },
+            distance: recording.map { core.distanceText(metres: $0.metres) },
+            unit: core.unitWord(),
+            dollars: dollars
+        ).save()
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    /// The service reminder, as Android's: the items soon or due that were not told yet.
+    private func remindOfService() async {
+        guard let reminder = try? await core.service.reminder() else { return }
+        let content = UNMutableNotificationContent()
+        content.title = reminder.title
+        content.body = reminder.text
+        content.sound = .default
+        let request = UNNotificationRequest(identifier: DrivingWatch.serviceId, content: content, trigger: nil)
+        try? await UNUserNotificationCenter.current().add(request)
     }
 
     private func add(_ fix: Fix) async {
@@ -83,6 +174,15 @@ final class TripSession: ObservableObject {
     /// One step of the recorder, then the GPS on or off as the trip rules now want it: on while a
     /// trip is open, and while they wait beside a parked truck for it to move.
     private func apply(_ step: @escaping () async throws -> RecordingNow?) async {
+        let wasRecording = recording != nil
+        defer {
+            // A trip has ended: the service items that came due are told now, never during one,
+            // and the online backup uploads it before iOS puts the app to sleep.
+            if wasRecording && recording == nil {
+                Task { await self.remindOfService() }
+                uploadBackup("a trip ended")
+            }
+        }
         do {
             recording = try await step()
             failure = nil
@@ -91,6 +191,11 @@ final class TripSession: ObservableObject {
         }
         // A trip has begun, however it began: the alert's "tap to start one" is no longer true.
         if recording != nil { drivingWatch.withdraw() }
+        if #available(iOS 16.1, *) {
+            let distance = recording.map { core.distanceText(metres: $0.metres) } ?? ""
+            (liveTrip as? LiveTrip)?.show(recording, distance: distance, unit: core.unitWord())
+        }
+        await updateWidget()
         // TODO(debt): the wait beside a parked truck runs the GPS as a trip does, for up to 72
         //  hours. See docs/FINDINGS_LOG.md (2026-11-13, phase 4d, first part).
         if core.recorder.wantsGps {

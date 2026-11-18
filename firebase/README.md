@@ -44,6 +44,13 @@ Then, after the pull request that changes `functions/` is merged:
 cd firebase/functions && npm ci && cd .. && npx firebase deploy --only functions
 ```
 
+## What Apple needs (2026-11-14, ADR-016)
+
+- **The product:** App Store Connect, Dually Trip Tracker, In-App Purchases: `cloud_backup`, non-consumable, US$19.99. Its review screenshot is the iPhone's Online backup tile.
+- **The purchase check needs no Apple key.** The iPhone sends Apple's signed transaction; `apple.js` checks it with Apple's own library (`@apple/app-store-server-library`) against `apple/AppleRootCA-G3.cer`, Apple's public root certificate (SHA-256 `63:34:3A:BF:…:3E:91:79`, from https://www.apple.com/certificateauthority/). Production transactions name the app's App Store id, 6834196352; sandbox ones (TestFlight) are accepted too.
+- **Refunds:** `appleNotifications` (https://northamerica-northeast1-dually-trip-tracker.cloudfunctions.net/appleNotifications) takes App Store Server Notifications, version 2. Its address is entered in App Store Connect, the app, App Information, App Store Server Notifications, for Production and Sandbox (done 2026-11-14; first deployed the same day).
+- **Sign in with Apple:** switched on in Firebase Authentication, with the key `46NB688HYN` (in `~/keys`, pasted into the provider's "OAuth code flow configuration" by Shawn) and the Services ID `top.dually.triptracker.signin` that Firebase asks for beside it. The key lets Firebase revoke an account's Apple tokens when the account is deleted.
+
 ## What Google Play needs (done once, 2026-11)
 
 - **The product:** Play Console (account shawn.seawingman@gmail.com), Dually Trip Tracker, Monetize, One-time products: `cloud_backup`, "Cloud backup", US$19.99. Play Console only allows products once a build with the billing library has been uploaded to a track.

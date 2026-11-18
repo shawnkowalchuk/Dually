@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Free Automatic Mileage Tracker for Android | Dually Trip Tracker</title>
-  <meta name="description" content="Dually is a free Android mileage tracker that starts trips on your vehicle&#39;s Bluetooth, exports PDF and CSV mileage reports, and keeps your data private.">
+  <title>Free Automatic Mileage Tracker for Android and iPhone | Dually Trip Tracker</title>
+  <meta name="description" content="Dually is a free mileage tracker for Android and iPhone that starts trips when your phone connects to your vehicle, exports PDF and CSV mileage reports, and keeps your data private.">
   <link rel="canonical" href="https://dually.top/">
   <link rel="icon" href="/mark.svg" type="image/svg+xml">
   <link rel="preload" href="/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
@@ -13,11 +13,11 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://dually.top/">
   <meta property="og:title" content="Dually Trip Tracker: business mileage that logs itself">
-  <meta property="og:description" content="A free Android app that starts a trip when your phone connects to a work vehicle, and makes the monthly mileage report for you, each trip's purpose included.">
-  <meta property="og:image" content="https://dually.top/og-image.png">
+  <meta property="og:description" content="A free app for Android and iPhone that starts a trip when your phone connects to a work vehicle, and makes the monthly mileage report for you, each trip's purpose included.">
+  <meta property="og:image" content="https://dually.top/og-dually.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Dually Trip Tracker's mark, a dark D on an orange square, beside the words: Fire up the truck. Dually's already counting. Free for Android.">
+  <meta property="og:image:alt" content="Dually Trip Tracker's mark, a dark D on an orange square, beside the words: Fire up the truck. Dually's already counting. Free for Android and iPhone.">
   <meta name="twitter:card" content="summary_large_image">
   <script type="application/ld+json">
   {
@@ -25,14 +25,14 @@
     "@type": "SoftwareApplication",
     "name": "Dually Trip Tracker",
     "alternateName": "Dually",
-    "description": "A mileage tracker for Android that starts a trip when the phone connects to the Bluetooth of one of your work vehicles, records the drive with GPS, sorts it into Business or Personal by the work hours, and makes the monthly mileage report as a PDF and a CSV file, with each trip's purpose.",
+    "description": "A mileage tracker for Android and iPhone that starts a trip when the phone connects to your work vehicle (on Android, to the Bluetooth of any vehicle you paired; on the iPhone, through a Shortcuts automation on its Bluetooth or CarPlay), records the drive with GPS, sorts it into Business or Personal by the work hours, and makes the monthly mileage report as a PDF and a CSV file, with each trip's purpose.",
     "featureList": [
       "Starts a trip by itself when the phone connects to a paired vehicle's Bluetooth",
-      "Several work vehicles, each with its own odometer",
+      "Several work vehicles, each with its own odometer (Android)",
       "Business or Personal by your work hours",
       "A label for each trip, suggested by where it ended, printed as its purpose",
       "Monthly mileage report as a PDF and a CSV file, in kilometres or miles",
-      "Home-screen widget and Android Auto screen",
+      "Home-screen widget, and the Android Auto and CarPlay screens",
       "No account needed; trips stay on the phone unless you buy the optional online backup"
     ],
     "url": "https://dually.top/",
@@ -40,8 +40,8 @@
       "https://www.wikidata.org/wiki/Q141683130"
     ],
     "applicationCategory": "BusinessApplication",
-    "operatingSystem": "Android 14 or newer",
-    "installUrl": "https://play.google.com/store/apps/details?id=top.dually.triptracker",
+    "operatingSystem": "Android 14 or newer, iOS 16 or newer",
+    "installUrl": ["https://play.google.com/store/apps/details?id=top.dually.triptracker", "https://apps.apple.com/app/id6834196352"],
     "screenshot": "https://dually.top/screenshots/dually-home.jpg",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CAD" },
     "author": { "@type": "Organization", "name": "2795748 Alberta Ltd." }
@@ -65,7 +65,7 @@
       "name": "How does Dually start a trip by itself?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "You pair your vehicle's Bluetooth once, in Setup. From then on Android wakes Dually when the phone connects to it, even with the app closed, and Dually records the drive with GPS. The trip ends two minutes after the vehicle disconnects, or when it has stood still for ten minutes."
+        "text": "You pair your vehicle's Bluetooth once, in Setup. From then on Android wakes Dually when the phone connects to it, even with the app closed, and Dually records the drive with GPS. The trip ends two minutes after the vehicle disconnects, or when it has stood still for ten minutes. On the iPhone, Setup walks you through two Shortcuts automations instead, which start a trip when the iPhone connects to the truck's Bluetooth or CarPlay and end it when it disconnects."
       }
     },
     {
@@ -73,7 +73,7 @@
       "name": "Does Dually need an account or the internet?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "No. Every feature works without an account, and your trips stay on your phone: Dually comes with its online backup off, and with it off the app connects to nothing of its own. Only the street addresses are looked up by the phone's own address service, which on most phones uses the internet. If you buy the optional online backup, you sign in with Google, and a copy of your trips, without their GPS points, is kept in Google's Firebase, in Montréal, Canada, until you delete it."
+        "text": "No. Every feature works without an account, and your trips stay on your phone: Dually comes with its online backup off, and with it off the app connects to nothing of its own. Only the street addresses are looked up by the phone's own address service, which on most phones uses the internet. If you buy the optional online backup, you sign in with Google (on the iPhone, with Apple or Google), and a copy of your trips, without their GPS points, is kept in Google's Firebase, in Montréal, Canada, until you delete it."
       }
     },
     {
@@ -89,7 +89,7 @@
       "name": "Does Dually work on iPhone?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "No. Dually is for Android 14 or newer only."
+        "text": "Yes. Dually Trip Tracker is on the App Store and needs iOS 16 or newer. Setup walks you through two Shortcuts automations that start and end a trip when the iPhone connects to the truck's Bluetooth or CarPlay. A few things are on Android only for now: several vehicles, the sounds, the year's graph, reports for more than one month, and the reminders to send the report or about a work day without a trip."
       }
     },
     {
@@ -105,7 +105,7 @@
       "name": "Is there a home-screen widget?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. It shows the trip as it is recorded, with Start and End buttons, and this month's and this year's Business kilometres in dollars, at a rate per kilometre you set in Settings (70 cents to start). The dollars are for your reference only; the report for your accountant shows none. A switch in Settings turns the whole widget off."
+        "text": "Yes. It shows the trip as it is recorded, with Start and End buttons, and this month's and this year's Business kilometres in dollars, at a rate per kilometre you set in Settings (70 cents to start). The dollars are for your reference only; the report for your accountant shows none. On Android, a switch in Settings turns the whole widget off; on the iPhone, the widget's Start and End need iOS 17 or newer."
       }
     },
     {
@@ -113,7 +113,7 @@
       "name": "Can Dually track more than one vehicle?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. Pair each work vehicle in Setup, and any of them starts a trip by itself. Each trip records which vehicle it was in, each vehicle has its own odometer, and the report names the vehicle when the period had more than one. A drive in a vehicle that is not paired can be started with the Start button, or added by hand afterwards, and Dually can remind you when the phone notices you driving during work hours with nothing being recorded."
+        "text": "On Android, yes. Pair each work vehicle in Setup, and any of them starts a trip by itself. Each trip records which vehicle it was in, each vehicle has its own odometer, and the report names the vehicle when the period had more than one. A drive in a vehicle that is not paired can be started with the Start button, or added by hand afterwards, and Dually can remind you when the phone notices you driving during work hours with nothing being recorded. The iPhone app has one vehicle for now."
       }
     },
     {
@@ -126,10 +126,10 @@
     },
     {
       "@type": "Question",
-      "name": "Is Dually on Google Play?",
+      "name": "Is Dually on Google Play and the App Store?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. Dually Trip Tracker is on Google Play, which installs it and keeps it up to date."
+        "text": "Yes. Dually Trip Tracker is on Google Play and on the App Store, which install it and keep it up to date."
       }
     }
   ]
@@ -160,40 +160,57 @@
     <main>
       <section class="hero">
         <div class="hero-copy">
-          <p class="label">Free automatic mileage tracker · Android</p>
+          <p class="label">Free automatic mileage tracker · Android · iPhone</p>
           <h1>Tired of paying subscriptions?</h1>
           <p class="subhead">I was. That's why I built Dually.</p>
-          <p class="lead">Dually runs free on your phone, with every feature and no ads. It starts a trip when your phone connects to your truck's Bluetooth, and makes the monthly mileage report for your accountant. Want an online backup, for safety? Pay once, US$19.99, and never again.</p>
+          <p class="lead">Dually runs free on your phone, with every feature and no ads. It starts a trip when your phone connects to your truck, and makes the monthly mileage report for your accountant. Want an online backup, for safety? Pay once, US$19.99, and never again.</p>
           <div class="actions">
-            <a class="button" href="https://play.google.com/store/apps/details?id=top.dually.triptracker"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5v17l14-8.5z"/></svg>Get it on Google Play</a>
+            <a class="store-badge" href="https://apps.apple.com/app/id6834196352"><img src="/badges/app-store.svg" alt="Download on the App Store" width="138" height="46"></a>
+            <a class="store-badge" href="https://play.google.com/store/apps/details?id=top.dually.triptracker"><img src="/badges/google-play.png" alt="Get it on Google Play" width="154" height="46"></a>
             <a class="hero-badge" href="https://www.producthunt.com/products/dually-trip-tracker/reviews/new?utm_source=badge-product_review&amp;utm_medium=badge&amp;utm_source=badge-dually&#0045;trip&#0045;tracker" target="_blank" rel="noopener"><img src="/product-hunt-review.svg" alt="Leave a review of Dually Trip Tracker on Product Hunt" width="250" height="54"></a>
           </div>
         </div>
         <div class="mascot"><img src="/mascot/dually-standing.webp" width="360" height="304" alt="Dually's mascot: an orange block with two dials for eyes and a D on his chest"><span class="dial dial-speed"></span><span class="dial dial-rpm"></span></div>
       </section>
 
-      <div class="shots" role="list">
-        <figure role="listitem">
-          <img src="/screenshots/dually-home.jpg" loading="lazy" decoding="async" width="900" height="2000" alt="Home: Start trip, today's and the month's kilometres, the truck not connected, the odometer, and today's trips">
-          <figcaption>Home: today, this month, and the truck</figcaption>
-        </figure>
-        <figure role="listitem">
-          <img src="/screenshots/dually-trips.jpg" loading="lazy" decoding="async" width="900" height="2000" alt="Trips: September 2026, 1192.1 km of Business, and one tile for each day">
-          <figcaption>Trips: one month at a time</figcaption>
-        </figure>
-        <figure role="listitem">
-          <img src="/screenshots/dually-settings.jpg" loading="lazy" decoding="async" width="900" height="2000" alt="Settings: Setup 10 of 10 ready, the truck, the driving alert, the odometer and the name on the report">
-          <figcaption>Settings, with Setup at the top</figcaption>
-        </figure>
-        <figure role="listitem">
-          <img src="/screenshots/dually-log.jpg" loading="lazy" decoding="async" width="900" height="2000" alt="Log: what Dually did and when, one kind of line at a time">
-          <figcaption>The Log: everything it did, and when</figcaption>
-        </figure>
+      <div class="showcase">
+        <section class="tile screens" id="screens">
+          <h2>On your phone</h2>
+          <input class="dot-input" type="radio" name="screen" id="screen-1" aria-label="Show Home">
+          <input class="dot-input" type="radio" name="screen" id="screen-2" aria-label="Show Trips">
+          <input class="dot-input" type="radio" name="screen" id="screen-3" aria-label="Show Settings">
+          <input class="dot-input" type="radio" name="screen" id="screen-4" aria-label="Show the Log">
+          <div class="slides">
+            <figure class="slide">
+              <button class="zoom" type="button" popovertarget="big-home" aria-label="Home: open a larger picture"><img src="/screenshots/dually-home.jpg" decoding="async" width="900" height="2000" alt="Home: Start trip, today's and the month's kilometres, the truck not connected, the odometer, and today's trips"></button>
+              <figcaption>Home: today, this month, and the truck</figcaption>
+            </figure>
+            <figure class="slide">
+              <button class="zoom" type="button" popovertarget="big-trips" aria-label="Trips: open a larger picture"><img src="/screenshots/dually-trips.jpg" decoding="async" width="900" height="2000" alt="Trips: September 2026, 1192.1 km of Business, and one tile for each day"></button>
+              <figcaption>Trips: one month at a time</figcaption>
+            </figure>
+            <figure class="slide">
+              <button class="zoom" type="button" popovertarget="big-settings" aria-label="Settings: open a larger picture"><img src="/screenshots/dually-settings.jpg" decoding="async" width="900" height="2000" alt="Settings: Setup 10 of 10 ready, the truck, the driving alert, the odometer and the name on the report"></button>
+              <figcaption>Settings, with Setup at the top</figcaption>
+            </figure>
+            <figure class="slide">
+              <button class="zoom" type="button" popovertarget="big-log" aria-label="Log: open a larger picture"><img src="/screenshots/dually-log.jpg" decoding="async" width="900" height="2000" alt="Log: what Dually did and when, one kind of line at a time"></button>
+              <figcaption>The Log: everything it did, and when</figcaption>
+            </figure>
+          </div>
+          <div class="dots" aria-hidden="true"><label for="screen-1"></label><label for="screen-2"></label><label for="screen-3"></label><label for="screen-4"></label></div>
+        </section>
+        <section class="tile report" id="report">
+          <h2>The report for your accountant</h2>
+          <button class="zoom" type="button" popovertarget="big-report" aria-label="The sample report: open a larger picture"><img src="/screenshots/dually-report-sample.png" decoding="async" width="1224" height="1584" alt="A sample report: the Business and Personal kilometres at the top, then each day's trips with their times, addresses and kilometres, the total, and lines to sign"></button>
+          <p class="secondary">A sample page, drawn by the app's own layout code from made-up trips.</p>
+        </section>
       </div>
 
       <div class="pair">
         <section class="tile">
           <h2>By itself</h2>
+          <p class="secondary">On Android. What the iPhone does differently is <a href="#iphone">below</a>.</p>
           <ul>
             <li>Starts a trip when the phone connects to a work vehicle's Bluetooth, even with Dually closed, notes which vehicle it was, and ends it two minutes after the vehicle disconnects. Pair as many vehicles as you drive.</li>
             <li>Ends a trip when the truck has stood still for ten minutes, then starts the next one when it drives off.</li>
@@ -206,6 +223,7 @@
         </section>
         <section class="tile">
           <h2>With you</h2>
+          <p class="secondary">On Android, and most of it on the iPhone too.</p>
           <ul>
             <li>Start and End by hand on the phone, on the Android Auto screen, or on the home-screen widget.</li>
             <li>A home-screen widget: the trip as it runs, Start and End, and this month's and this year's Business kilometres in dollars, at a rate you set.</li>
@@ -223,22 +241,24 @@
         </section>
       </div>
 
-      <section class="tile report" id="report">
-        <h2>The report for your accountant</h2>
-        <img src="/screenshots/dually-report-sample.png" loading="lazy" decoding="async" width="1224" height="1584" alt="A sample report: the Business and Personal kilometres at the top, then each day's trips with their times, addresses and kilometres, the total, and lines to sign">
-        <p class="secondary">A sample page, drawn by the app's own layout code from made-up trips.</p>
+      <section class="tile split" id="iphone">
+        <h2>On iPhone</h2>
+        <p>Dually for iPhone needs iOS 16 or newer. An iPhone app cannot see the truck connect by itself, so Setup walks you through two Shortcuts automations, once. From then on a trip starts when the iPhone connects to the truck's Bluetooth or CarPlay, records the drive with the app closed, and ends when the truck disconnects or has stood still for a while.</p>
+        <p>A trip in progress shows on the Lock Screen and in the Dynamic Island, with End trip, and the truck's CarPlay screen has Start trip and End trip. The work hours, the labels, the month's report, Service and the odometer, kilometres or miles, the home-screen widget, the reminder when you seem to drive with no trip recorded, and the optional online backup (Sign in with Apple or Google) work as on Android. An export from one imports on the other.</p>
+        <p class="secondary">On Android only, for now: several vehicles, the sounds, the year's graph, reports for more than one month, and the reminders to send the report or about a work day without a trip.</p>
       </section>
 
       <section class="tile split" id="install">
         <h2>Installing Dually</h2>
         <p><a href="https://play.google.com/store/apps/details?id=top.dually.triptracker">Get Dually Trip Tracker on Google Play</a>. It needs Android 14 or newer, and Google Play keeps it up to date.</p>
-        <p>Open Dually once it is installed. A first page says what it does; OK leads to Setup, which asks for the permissions and pairs your vehicles. Never uninstall Dually to fix a problem or to update it, because that deletes every trip.</p>
-        <p class="secondary">Dually is built and tested on one Xiaomi phone. On other phones the automatic start depends on how hard the maker stops apps in the background; Setup shows what it can check.</p>
+        <p>On an iPhone, <a href="https://apps.apple.com/app/id6834196352">download Dually Trip Tracker on the App Store</a>. It needs iOS 16 or newer.</p>
+        <p>Open Dually once it is installed. A first page says what it does; OK leads to Setup, which asks for the permissions and pairs your vehicles (on the iPhone, walks you through the two Shortcuts automations). Never uninstall Dually to fix a problem or to update it, because that deletes every trip.</p>
+        <p class="secondary">Dually for Android is built and tested on one Xiaomi phone. On other Android phones the automatic start depends on how hard the maker stops apps in the background; Setup shows what it can check.</p>
       </section>
 
       <section class="tile split" id="privacy">
         <h2>Your trips stay on your phone</h2>
-        <p>Dually is private by default: it needs no account, and with its optional online backup off it connects to nothing of its own. Your trips leave the phone only in files you send or save yourself, in your own Android backup, as positions handed to Android's own address lookup and, only if you buy the optional online backup, as a copy of your trips, without their GPS points, in Google's Firebase, in Montréal, Canada.</p>
+        <p>Dually is private by default: it needs no account, and with its optional online backup off it connects to nothing of its own. Your trips leave the phone only in files you send or save yourself, in your phone's own backup (Android's, or iCloud on the iPhone), as positions handed to the phone's own address lookup (Android's, or Apple's) and, only if you buy the optional online backup, as a copy of your trips, without their GPS points, in Google's Firebase, in Montréal, Canada.</p>
         <p><a href="/privacy">Read the privacy policy</a></p>
       </section>
 
@@ -250,11 +270,11 @@
           </details>
           <details>
             <summary>How does Dually start a trip by itself?</summary>
-            <p>You pair your vehicle&#x27;s Bluetooth once, in Setup. From then on Android wakes Dually when the phone connects to it, even with the app closed, and Dually records the drive with GPS. The trip ends two minutes after the vehicle disconnects, or when it has stood still for ten minutes.</p>
+            <p>You pair your vehicle&#x27;s Bluetooth once, in Setup. From then on Android wakes Dually when the phone connects to it, even with the app closed, and Dually records the drive with GPS. The trip ends two minutes after the vehicle disconnects, or when it has stood still for ten minutes. On the iPhone, Setup walks you through two Shortcuts automations instead, which start a trip when the iPhone connects to the truck&#x27;s Bluetooth or CarPlay and end it when it disconnects.</p>
           </details>
           <details>
             <summary>Does Dually need an account or the internet?</summary>
-            <p>No. Every feature works without an account, and your trips stay on your phone: Dually comes with its online backup off, and with it off the app connects to nothing of its own. Only the street addresses are looked up by the phone&#x27;s own address service, which on most phones uses the internet. If you buy the optional online backup, you sign in with Google, and a copy of your trips, without their GPS points, is kept in Google&#x27;s Firebase, in Montréal, Canada, until you <a href="/delete-account">delete it</a>.</p>
+            <p>No. Every feature works without an account, and your trips stay on your phone: Dually comes with its online backup off, and with it off the app connects to nothing of its own. Only the street addresses are looked up by the phone&#x27;s own address service, which on most phones uses the internet. If you buy the optional online backup, you sign in with Google (on the iPhone, with Apple or Google), and a copy of your trips, without their GPS points, is kept in Google&#x27;s Firebase, in Montréal, Canada, until you <a href="/delete-account">delete it</a>.</p>
           </details>
           <details>
             <summary>Is the report enough for the CRA or the IRS?</summary>
@@ -262,7 +282,7 @@
           </details>
           <details>
             <summary>Does Dually work on iPhone?</summary>
-            <p>No. Dually is for Android 14 or newer only.</p>
+            <p>Yes. <a href="https://apps.apple.com/app/id6834196352">Dually Trip Tracker on the App Store</a> needs iOS 16 or newer. Setup walks you through two Shortcuts automations that start and end a trip when the iPhone connects to the truck's Bluetooth or CarPlay. A few things are on Android only for now: see <a href="#iphone">On iPhone</a>.</p>
           </details>
           <details>
             <summary>Kilometres or miles?</summary>
@@ -270,25 +290,25 @@
           </details>
           <details>
             <summary>Is there a home-screen widget?</summary>
-            <p>Yes. It shows the trip as it is recorded, with Start and End buttons, and this month&#x27;s and this year&#x27;s Business kilometres in dollars, at a rate per kilometre you set in Settings (70 cents to start). The dollars are for your reference only; the report for your accountant shows none. A switch in Settings turns the whole widget off.</p>
+            <p>Yes. It shows the trip as it is recorded, with Start and End buttons, and this month&#x27;s and this year&#x27;s Business kilometres in dollars, at a rate per kilometre you set in Settings (70 cents to start). The dollars are for your reference only; the report for your accountant shows none. On Android, a switch in Settings turns the whole widget off; on the iPhone, the widget&#x27;s Start and End need iOS 17 or newer.</p>
           </details>
           <details>
             <summary>Can Dually track more than one vehicle?</summary>
-            <p>Yes. Pair each work vehicle in Setup, and any of them starts a trip by itself. Each trip records which vehicle it was in, each vehicle has its own odometer, and the report names the vehicle when the period had more than one. A drive in a vehicle that is not paired can be started with the Start button, or added by hand afterwards, and Dually can remind you when the phone notices you driving during work hours with nothing being recorded.</p>
+            <p>On Android, yes. Pair each work vehicle in Setup, and any of them starts a trip by itself. Each trip records which vehicle it was in, each vehicle has its own odometer, and the report names the vehicle when the period had more than one. A drive in a vehicle that is not paired can be started with the Start button, or added by hand afterwards, and Dually can remind you when the phone notices you driving during work hours with nothing being recorded. The iPhone app has one vehicle for now.</p>
           </details>
           <details>
             <summary>Can I note what each trip was for?</summary>
             <p>Yes. Press a trip on the Trips screen, then Label, and pick a label you used before or type a new one. The label last used where the trip ended, within 200 m, is listed first and already chosen, so a regular stop takes one press of Save. The report prints the label as the trip&#x27;s purpose.</p>
           </details>
           <details>
-            <summary>Is Dually on Google Play?</summary>
-            <p>Yes: <a href="https://play.google.com/store/apps/details?id=top.dually.triptracker">Dually Trip Tracker on Google Play</a>, which installs it and keeps it up to date.</p>
+            <summary>Is Dually on Google Play and the App Store?</summary>
+            <p>Yes: <a href="https://play.google.com/store/apps/details?id=top.dually.triptracker">Dually Trip Tracker on Google Play</a> and <a href="https://apps.apple.com/app/id6834196352">on the App Store</a>, which install it and keep it up to date.</p>
           </details>
       </section>
 
       <section class="tile split">
         <h2>How Dually compares</h2>
-        <p>TripLog, MileIQ, Driversnote and Everlance are complete services, with an account, a cloud and an iPhone app. Dually is narrower: free, Android only, no account needed, and your trips stay on your phone. <a href="/compare">See the comparison</a>.</p>
+        <p>TripLog, MileIQ, Driversnote and Everlance are complete services, with an account, a cloud and a web dashboard. Dually is narrower: free, on Android and iPhone, no account needed, and your trips stay on your phone. <a href="/compare">See the comparison</a>.</p>
       </section>
 
       <section class="tile split">
@@ -300,16 +320,38 @@
     </main>
 
     <footer>
-      <p>Owned and operated by 2795748 Alberta Ltd.</p>
-      <p>© 2026 2795748 Alberta Ltd. All rights reserved. Google Play is a trademark of Google LLC.</p>
+      <p>Apple, the Apple logo, iPhone and CarPlay are trademarks of Apple Inc., registered in the U.S. and other countries, and App Store is a service mark of Apple Inc. Google Play, the Google Play logo and Android Auto are trademarks of Google LLC.</p>
       <p>Guides: <a href="/bluetooth-mileage-tracking">Bluetooth mileage tracking</a> · <a href="/canada-mileage-logbook">A mileage logbook for the CRA</a> · <a href="/private-mileage-tracker">A private mileage tracker</a></p>
       <p><a href="/changes">What's new</a> · <a href="/privacy">Privacy</a> · <a href="/delete-account">Delete your online backup</a> · <a href="mailto:support@dually.top?subject=Dually%20Trip%20Tracker%20support">Support</a> · <a href="https://www.buymeacoffee.com/SeaWingman">Buy me a coffee</a> · The typefaces are <a href="/fonts/Archivo-OFL.txt">Archivo</a> and <a href="/fonts/IBMPlexMono-OFL.txt">IBM Plex Mono</a>, each under the SIL Open Font License 1.1.</p>
     </footer>
   </div>
+  <!-- The larger pictures (2026-11-14): HTML popovers, opened by the pictures above and closed
+       by Close, Esc or a press outside. No script: the site's security header allows none. -->
+  <div class="bigshot" id="big-home" popover>
+    <img src="/screenshots/dually-home.jpg" loading="lazy" decoding="async" width="900" height="2000" alt="Home: Start trip, today's and the month's kilometres, the truck not connected, the odometer, and today's trips">
+    <button class="bigshot-close" type="button" popovertarget="big-home" popovertargetaction="hide">Close</button>
+  </div>
+  <div class="bigshot" id="big-trips" popover>
+    <img src="/screenshots/dually-trips.jpg" loading="lazy" decoding="async" width="900" height="2000" alt="Trips: September 2026, 1192.1 km of Business, and one tile for each day">
+    <button class="bigshot-close" type="button" popovertarget="big-trips" popovertargetaction="hide">Close</button>
+  </div>
+  <div class="bigshot" id="big-settings" popover>
+    <img src="/screenshots/dually-settings.jpg" loading="lazy" decoding="async" width="900" height="2000" alt="Settings: Setup 10 of 10 ready, the truck, the driving alert, the odometer and the name on the report">
+    <button class="bigshot-close" type="button" popovertarget="big-settings" popovertargetaction="hide">Close</button>
+  </div>
+  <div class="bigshot" id="big-log" popover>
+    <img src="/screenshots/dually-log.jpg" loading="lazy" decoding="async" width="900" height="2000" alt="Log: what Dually did and when, one kind of line at a time">
+    <button class="bigshot-close" type="button" popovertarget="big-log" popovertargetaction="hide">Close</button>
+  </div>
+  <div class="bigshot" id="big-report" popover>
+    <img src="/screenshots/dually-report-sample.png" loading="lazy" decoding="async" width="1224" height="1584" alt="A sample report: the Business and Personal kilometres at the top, then each day's trips with their times, addresses and kilometres, the total, and lines to sign">
+    <button class="bigshot-close" type="button" popovertarget="big-report" popovertargetaction="hide">Close</button>
+  </div>
   <div class="dock">
     <div class="dock-inner">
       <p><strong>Free on your phone.</strong> <span class="dock-more">Online backup is one payment, never a subscription.</span></p>
-      <a class="cta" href="https://play.google.com/store/apps/details?id=top.dually.triptracker">Get it on Google Play</a>
+      <div class="dock-ctas"><a class="store-badge" href="https://apps.apple.com/app/id6834196352"><img src="/badges/app-store.svg" alt="Download on the App Store" width="120" height="40"></a><a class="store-badge" href="https://play.google.com/store/apps/details?id=top.dually.triptracker"><img src="/badges/google-play.png" alt="Get it on Google Play" width="134" height="40"></a></div>
+      <p class="dock-legal">© 2026 Dually Trip Tracker · Dually.top · Owned and operated by 2795748 Alberta Ltd.</p>
     </div>
   </div>
 </body>

@@ -30,6 +30,13 @@ final class HomeModel: ObservableObject {
         await readFigures()
     }
 
+    /// Dually came to the front: as [refresh], and a trip that started in the background gets
+    /// its Live Activity.
+    func cameToFront() async {
+        await session.cameToFront()
+        await readFigures()
+    }
+
     func start() async {
         await session.start()
     }
@@ -38,6 +45,9 @@ final class HomeModel: ObservableObject {
         await session.end()
         await readFigures()
     }
+
+    /// "km" or "mi", as Settings has it.
+    var unitWord: String { session.core.unitWord() }
 
     /// The running trip's distance as Home writes it: "12.3".
     func distanceText(_ trip: RecordingNow) -> String {

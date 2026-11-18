@@ -42,7 +42,7 @@ private data class LedgerFile(
  *
  * @param directory where the file goes: see [buildCloudLedger].
  */
-class CloudLedger(private val directory: File) {
+class CloudLedger(private val directory: File) : CloudLedgerStore {
     private val file = File(directory, LEDGER_FILE)
 
     /**
@@ -50,7 +50,7 @@ class CloudLedger(private val directory: File) {
      * of another layout, or one that cannot be read. None is a full answer: the next run then
      * uploads every document again, which writes over what the cloud has with the same content.
      */
-    fun read(account: String): Map<String, String> {
+    override fun read(account: String): Map<String, String> {
         val text =
             try {
                 file.readText()
@@ -79,7 +79,7 @@ class CloudLedger(private val directory: File) {
      *
      * @throws IOException if the file cannot be written.
      */
-    fun write(account: String, documents: Map<String, String>) {
+    override fun write(account: String, documents: Map<String, String>) {
         if (!directory.isDirectory && !directory.mkdirs() && !directory.isDirectory) {
             throw IOException("Cannot create the folder of the cloud ledger, $directory")
         }

@@ -69,6 +69,12 @@ class IosTripRecorder internal constructor(
     /** A tap on the driving alert (phase 4d, third part): a trip started by hand, as on Android. */
     suspend fun startFromAlert(): RecordingNow? = startByHand("tap on the driving alert")
 
+    /** Start on the home-screen widget (phase 4i): a trip started by hand, as Android's widget. */
+    suspend fun startFromWidget(): RecordingNow? = startByHand("Start on the home-screen widget")
+
+    /** Start trip on the CarPlay screen (phase 4f), as Android Auto's Start button. */
+    suspend fun startFromCar(): RecordingNow? = startByHand("Start trip on the CarPlay screen")
+
     private suspend fun startByHand(source: String): RecordingNow? = lock.withLock {
         val atMs = clock()
         advance(source, TripEvent.ManualStart(truck.connected, atMs))
@@ -98,9 +104,20 @@ class IosTripRecorder internal constructor(
      * believed connected, automatic start is then held off until it connects again, as on
      * Android.
      */
-    suspend fun end(): RecordingNow? = lock.withLock {
+    suspend fun end(): RecordingNow? = endByHand("End pressed in the app")
+
+    /**
+     * End trip on the trip's Live Activity (phase 4e): the same as End in the app, told apart in
+     * the event log, as Android tells its phone's and its car's buttons apart.
+     */
+    suspend fun endFromLiveActivity(): RecordingNow? = endByHand("End trip on the Live Activity")
+
+    /** End trip on the CarPlay screen (phase 4f), as Android Auto's End button. */
+    suspend fun endFromCar(): RecordingNow? = endByHand("End trip on the CarPlay screen")
+
+    private suspend fun endByHand(source: String): RecordingNow? = lock.withLock {
         val atMs = clock()
-        advance("End pressed in the app", TripEvent.ManualEnd(truck.connected, atMs))
+        advance(source, TripEvent.ManualEnd(truck.connected, atMs))
         snapshot()
     }
 
@@ -179,6 +196,15 @@ class IosTripRecorder internal constructor(
         pickUp()
         checkIfDue()
         snapshot()
+    }
+
+    /**
+     * Whether the trip rules wait beside the parked truck for it to move, as Android's
+     * "Truck parked. A trip starts when it moves" on the car screen says (CarPlay, 2026-11-14).
+     */
+    suspend fun parkedWaiting(): Boolean = lock.withLock {
+        pickUp()
+        known?.waitingToMove == true
     }
 
     /**
@@ -282,6 +308,7 @@ class IosTripRecorder internal constructor(
             startedAtMs = open.startedAtMs,
             metres = metres,
             fixCount = open.progress.fixCount,
+            waitingForTruck = known?.trip?.grace != null,
         )
     }
 }
@@ -341,10 +368,14 @@ private const val AUTOMATION_DISCONNECTED = "The Shortcuts automation said the t
 /**
  * The trip being recorded: its id, when it started, how far it has gone so far in metres (with
  * the user's distance adjustment, as Android's Home shows it), and how many fixes it has.
+ * [waitingForTruck] is true while the grace period runs: the truck has gone and the trip ends
+ * unless it comes back, which Android's trip notification says ("Waiting for the truck to
+ * reconnect") and so does the iPhone's Live Activity (phase 4e).
  */
 data class RecordingNow(
     val tripId: Long,
     val startedAtMs: Long,
     val metres: Double,
     val fixCount: Int,
+    val waitingForTruck: Boolean,
 )

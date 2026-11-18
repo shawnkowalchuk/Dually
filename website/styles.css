@@ -424,8 +424,9 @@ main > * {
   line-height: 1.5;
 }
 
-/* The two actions, side by side and the same height: the dark Google Play button, and
-   Product Hunt's review badge (2026-11-13: smaller, and the badge beside the button). */
+/* The actions, side by side and the same height: the App Store's and Google Play's badges
+   (since 2026-11-16; plain buttons before), and Product Hunt's review badge (2026-11-13:
+   smaller, and the badge beside the buttons). */
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -433,27 +434,32 @@ main > * {
   gap: 12px;
 }
 
-.hero .button {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 46px;
-  padding: 0 18px;
-  background: var(--ink);
-  color: var(--text);
-  border-radius: var(--cta-radius);
-  font-weight: 700;
-  font-size: 15px;
-  text-decoration: none;
-}
-
-.hero .button:hover,
-.hero .button:focus-visible {
-  color: var(--amber);
-}
-
-.hero .button svg {
+/* The stores' own badges (2026-11-16, Shawn: "can we add this badge instead of the plain one we
+   are using"), in place of the plain buttons: Apple's black "Download on the App Store" and
+   Google's "Get it on Google Play", as each company gives them and unchanged, the App Store's
+   first and both the same height, as Apple's and Google's guidelines ask, with a quarter of their
+   height clear round them. Google's file is cut to the badge's own edge (it comes with a clear
+   margin), so that the two line up; the credit lines are in each page's footer. */
+.store-badge {
+  display: block;
   flex: none;
+  line-height: 0;
+  border-radius: 8px;
+}
+
+.store-badge img {
+  display: block;
+  width: auto;
+  height: 46px;
+}
+
+.store-badge:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+}
+
+.dock .store-badge img {
+  height: 40px;
 }
 
 /* Product Hunt's review badge (2026-11-06), saved on the site so the page loads nothing else,
@@ -757,35 +763,260 @@ main > * {
   }
 }
 
-/* Four phone screenshots: two across on a phone, four on a wide screen, in a narrower band
-   than the cards (2026-11-13: "the screens are a bit heavy on the page"). */
-.shots {
+/*
+ * The app's four screens and the report, side by side from a tablet's width up (2026-11-14:
+ * "the app screenshots and report i want side by side"). The screens take turns, six seconds
+ * each, with a dot for each under them; a press on a screen or on the report opens it larger.
+ * The screen is drawn as tall as the report beside it: 300 by 667 pixels, and the report 515
+ * wide.
+ */
+.showcase {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--gap);
-  width: 100%;
-  max-width: 440px;
-  margin: 0 auto;
 }
 
-.shots figure {
-  margin: 0;
-  background: var(--tile);
-  border-radius: var(--small-radius);
-  padding: 10px 10px 12px;
+.showcase .tile {
+  display: flex;
+  flex-direction: column;
 }
 
-.shots img {
+/* A picture that opens larger: the picture is the button. */
+.zoom {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  border-radius: var(--row-radius);
+}
+
+.zoom img {
   display: block;
   width: 100%;
   border-radius: var(--row-radius);
 }
 
-.shots figcaption {
-  margin-top: 8px;
+/* The four screens in one place, one shown at a time: the first, or the one whose dot was
+   pressed. Each dot is the label of a radio button, kept out of sight but there for the
+   keyboard and a screen reader (the site runs no script). */
+.screens {
+  position: relative;
+}
+
+/* Beside the dots: the browser brings what has the focus into view, and a pressed dot gives
+   the focus to its radio button, so one at the card's top made the page jump up. */
+.dot-input {
+  position: absolute;
+  bottom: 34px;
+  left: 50%;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.slides {
+  display: grid;
+  width: 100%;
+  max-width: 300px;
+  margin: 4px auto 0;
+}
+
+.slide {
+  grid-area: 1 / 1;
+  margin: 0;
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Once a dot is pressed, its screen alone: the first gives way like the others. */
+.dot-input:checked ~ .slides .slide {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.slide:first-child,
+#screen-1:checked ~ .slides .slide:nth-child(1),
+#screen-2:checked ~ .slides .slide:nth-child(2),
+#screen-3:checked ~ .slides .slide:nth-child(3),
+#screen-4:checked ~ .slides .slide:nth-child(4) {
+  opacity: 1;
+  visibility: visible;
+}
+
+
+.slide figcaption {
+  margin-top: 10px;
   font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.4;
+  text-align: center;
+}
+
+.dots {
+  display: flex;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+/* A dot, with room round it for a finger: the press lands on the whole label. */
+.dots label {
+  padding: 12px 9px;
+  cursor: pointer;
+}
+
+.dots label::before {
+  content: "";
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--outline-strong);
+}
+
+.dots label:hover::before {
+  background: var(--text-secondary);
+}
+
+.dot-input:checked ~ .dots label::before {
+  width: 8px;
+  background: var(--outline-strong);
+}
+
+.dots label:first-child::before,
+#screen-1:checked ~ .dots label:nth-child(1)::before,
+#screen-2:checked ~ .dots label:nth-child(2)::before,
+#screen-3:checked ~ .dots label:nth-child(3)::before,
+#screen-4:checked ~ .dots label:nth-child(4)::before {
+  width: 22px;
+  background: var(--accent);
+}
+
+#screen-1:focus-visible ~ .dots label:nth-child(1)::before,
+#screen-2:focus-visible ~ .dots label:nth-child(2)::before,
+#screen-3:focus-visible ~ .dots label:nth-child(3)::before,
+#screen-4:focus-visible ~ .dots label:nth-child(4)::before {
+  outline: 3px solid var(--amber);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Until a dot is pressed, the screens take turns: 16 seconds round, so each holds for
+     four and fades into the next (2026-11-14: "the cycling needs to be a little faster"; it
+     was six). A pointer on them, or the keyboard among them, holds the one shown. Each starts
+     a second into its turn, so the page opens on the first screen alone, not on the fourth
+     fading out over it. A pressed dot stops the turns on its screen. */
+  .slide {
+    animation: slide-turn 16s -1s infinite;
+    transition:
+      opacity 0.4s,
+      visibility 0.4s;
+  }
+
+  .dots label::before {
+    animation: dot-turn 16s -1s infinite;
+    transition:
+      width 0.3s,
+      background-color 0.3s;
+  }
+
+  .slide:nth-child(2),
+  .dots label:nth-child(2)::before {
+    animation-delay: -13s;
+  }
+
+  .slide:nth-child(3),
+  .dots label:nth-child(3)::before {
+    animation-delay: -9s;
+  }
+
+  .slide:nth-child(4),
+  .dots label:nth-child(4)::before {
+    animation-delay: -5s;
+  }
+
+  .dot-input:checked ~ .slides .slide,
+  .dot-input:checked ~ .dots label::before {
+    animation: none;
+  }
+
+  .screens:hover .slide,
+  .screens:hover .dots label::before,
+  .screens:focus-within .slide,
+  .screens:focus-within .dots label::before {
+    animation-play-state: paused;
+  }
+}
+
+/* Hidden, a screen cannot be pressed: the one on top of the four is always the one shown. */
+@keyframes slide-turn {
+  0%,
+  25% {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  30%,
+  95% {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  100% {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+@keyframes dot-turn {
+  0%,
+  25% {
+    width: 22px;
+    background-color: var(--accent);
+  }
+
+  27%,
+  98% {
+    width: 8px;
+    background-color: var(--outline-strong);
+  }
+
+  100% {
+    width: 22px;
+    background-color: var(--accent);
+  }
+}
+
+/* A picture opened larger: as large as the window allows, on a darkened page. */
+.bigshot {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  overflow: visible;
+}
+
+.bigshot::backdrop {
+  background: rgb(10 8 6 / 0.88);
+}
+
+.bigshot img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 94vw;
+  max-height: calc(100vh - 96px);
+  border-radius: var(--row-radius);
+}
+
+.bigshot-close {
+  display: block;
+  margin: 12px auto 0;
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 .pair {
@@ -793,16 +1024,15 @@ main > * {
   gap: var(--gap);
 }
 
-.report img {
-  display: block;
+.report .zoom {
   width: 100%;
-  max-width: 620px;
+  max-width: 515px;
   margin: 4px auto 10px;
-  border-radius: var(--row-radius);
 }
 
 .report .secondary {
   max-width: none;
+  margin-top: auto;
   font-size: 14px;
   text-align: center;
 }
@@ -810,7 +1040,7 @@ main > * {
 footer {
   margin-top: 28px;
   /* Room under the last line for the bar pinned to the window's foot. */
-  padding: 20px 4px 96px;
+  padding: 20px 4px 104px;
   border-top: 1px solid var(--outline);
   font-size: 14px;
   color: var(--text-secondary);
@@ -830,8 +1060,9 @@ footer a:hover {
 
 /*
  * The bar pinned to the foot of the window (2026-11-13: "please add a pinned footer"): what
- * Dually costs, and the one action. The page's footer, with its links and the company's name,
- * is still the last thing on the page, above it.
+ * Dually costs, and the one action. Under them, since 2026-11-14, the copyright and the owner
+ * ("it should be in the footer"): this bar is the footer as it is seen. The page's footer, with
+ * its links, is still the last thing on the page, above it.
  */
 .dock {
   position: fixed;
@@ -844,10 +1075,13 @@ footer a:hover {
 }
 
 .dock-inner {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "pitch cta"
+    "legal cta";
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 2px 12px;
   max-width: 1280px;
   margin: 0 auto;
   padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
@@ -864,8 +1098,23 @@ footer a:hover {
   color: var(--text);
 }
 
-.dock .cta {
-  flex: none;
+.dock-inner > p:first-child {
+  grid-area: pitch;
+}
+
+.dock .dock-legal {
+  grid-area: legal;
+  font-size: 12px;
+}
+
+.dock .dock-ctas {
+  grid-area: cta;
+  display: flex;
+  gap: 10px;
+}
+
+.dock .cta,
+.bigshot-close {
   padding: 9px 14px;
   background: var(--accent);
   color: var(--on-accent);
@@ -876,12 +1125,15 @@ footer a:hover {
 }
 
 .dock .cta:hover,
-.dock .cta:focus-visible {
+.dock .cta:focus-visible,
+.bigshot-close:hover,
+.bigshot-close:focus-visible {
   background: var(--amber);
   color: var(--on-accent);
 }
 
-.dock .cta:active {
+.dock .cta:active,
+.bigshot-close:active {
   background: var(--ember);
   color: var(--text);
 }
@@ -1102,21 +1354,42 @@ footer a:hover {
     font-size: 13.5px;
   }
 
-  .shots {
-    display: flex;
-    max-width: none;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    padding-bottom: 4px;
-  }
-
-  .shots figure {
-    flex: 0 0 44%;
-    scroll-snap-align: start;
-  }
-
   .dock .dock-more {
     display: none;
+  }
+
+  .dock-inner {
+    grid-template-areas:
+      "pitch cta"
+      "legal legal";
+    row-gap: 6px;
+  }
+
+  footer {
+    padding-bottom: 128px;
+  }
+}
+
+/* A phone's width: the two badges take a row of their own in the pinned bar, under its line,
+   since the line and the badges side by side would not fit, and the hero's are smaller. */
+@media (max-width: 519px) {
+  /* The hero's badges at Apple's smallest, 40 px, so that the two keep to one row; Product
+     Hunt's beside them, at the same height. */
+  .hero .store-badge img,
+  .hero .hero-badge img {
+    height: 40px;
+  }
+
+  .dock-inner {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "pitch"
+      "cta"
+      "legal";
+  }
+
+  footer {
+    padding-bottom: 176px;
   }
 }
 
@@ -1152,9 +1425,8 @@ footer a:hover {
     color: var(--text);
   }
 
-  .shots {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    max-width: 820px;
+  .showcase {
+    grid-template-columns: 1fr 1fr;
   }
 
   .dock-inner {
