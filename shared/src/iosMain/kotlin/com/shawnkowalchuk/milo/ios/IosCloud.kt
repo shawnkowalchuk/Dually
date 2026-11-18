@@ -3,38 +3,47 @@ package com.shawnkowalchuk.milo.ios
 import com.shawnkowalchuk.milo.core.io.IOException
 import com.shawnkowalchuk.milo.core.text.Locale
 import com.shawnkowalchuk.milo.core.time.ZoneId
+import com.shawnkowalchuk.milo.core.trip.TripStatus
+import com.shawnkowalchuk.milo.core.util.formatDate
 import com.shawnkowalchuk.milo.data.appFolderPath
+import com.shawnkowalchuk.milo.data.cloud.CLOUD_BACKUP
 import com.shawnkowalchuk.milo.data.cloud.CLOUD_OWNER
 import com.shawnkowalchuk.milo.data.cloud.CloudAccount
 import com.shawnkowalchuk.milo.data.cloud.CloudBackup
-import com.shawnkowalchuk.milo.data.cloud.CloudCopy
 import com.shawnkowalchuk.milo.data.cloud.CloudDocument
 import com.shawnkowalchuk.milo.data.cloud.CloudRefusedException
-import com.shawnkowalchuk.milo.data.cloud.CloudRestoreException
-import com.shawnkowalchuk.milo.data.cloud.CloudStart
 import com.shawnkowalchuk.milo.data.cloud.CloudStartResult
 import com.shawnkowalchuk.milo.data.cloud.CloudStore
 import com.shawnkowalchuk.milo.data.cloud.CloudUnlockResult
 import com.shawnkowalchuk.milo.data.cloud.CloudUnlockServer
 import com.shawnkowalchuk.milo.data.cloud.CloudUnreachableException
 import com.shawnkowalchuk.milo.data.cloud.CloudUploadOutcome
+import com.shawnkowalchuk.milo.data.cloud.ReplacedNotice
 import com.shawnkowalchuk.milo.data.cloud.appleUnlockRequestBody
 import com.shawnkowalchuk.milo.data.cloud.cloudAppleAccountToken
+import com.shawnkowalchuk.milo.data.cloud.cloudAsksToMerge
 import com.shawnkowalchuk.milo.data.cloud.cloudCopyOf
-import com.shawnkowalchuk.milo.data.cloud.cloudLedgerOf
-import com.shawnkowalchuk.milo.data.cloud.cloudOwnerDocument
 import com.shawnkowalchuk.milo.data.cloud.cloudOwnerOf
+import com.shawnkowalchuk.milo.data.cloud.cloudPhoneDocument
+import com.shawnkowalchuk.milo.data.cloud.cloudPhoneFolder
+import com.shawnkowalchuk.milo.data.cloud.cloudRemovableBy
 import com.shawnkowalchuk.milo.data.cloud.cloudRestoreExport
-import com.shawnkowalchuk.milo.data.cloud.cloudStart
+import com.shawnkowalchuk.milo.data.cloud.inFolder
+import com.shawnkowalchuk.milo.data.cloud.putBackReplaced
+import com.shawnkowalchuk.milo.data.cloud.readOtherPhones
 import com.shawnkowalchuk.milo.data.cloud.restoreFrom
+import com.shawnkowalchuk.milo.data.cloud.syncLogbook
+import com.shawnkowalchuk.milo.data.cloud.syncShared
 import com.shawnkowalchuk.milo.data.cloud.unlockAnswer
 import com.shawnkowalchuk.milo.data.cloud.uploadUntilQuiet
+import com.shawnkowalchuk.milo.data.cloud.withEdits
+import com.shawnkowalchuk.milo.data.cloud.withShared
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.transferred
 import com.shawnkowalchuk.milo.data.transfer.MainTransferDao
-import com.shawnkowalchuk.milo.feature.cloud.englishCloudCount
+import com.shawnkowalchuk.milo.data.trip.TripDao
 import com.shawnkowalchuk.milo.feature.cloud.englishCloudFormat
 import com.shawnkowalchuk.milo.feature.cloud.englishCloudText
 import com.shawnkowalchuk.milo.feature.service.englishServiceText
@@ -100,10 +109,11 @@ interface AppleCloud {
     )
 
     /**
-     * The documents of the account's backup, read from the server: every one under `trips/` and
-     * `backup/` when [path] is null, or only the one at [path].
+     * Every document of the [collections] of the account's folder (`phones`,
+     * `phones/{install}/trips`, `trips`, `backup`), read from the server, by its path under the
+     * account's folder: `phones/{install}`, `phones/{install}/trips/17` (ADR-017).
      */
-    fun read(account: String, path: String?, reply: CloudReadReply)
+    fun readCollections(account: String, collections: List<String>, reply: CloudReadReply)
 
     /** Whether `unlocks/[account]` exists, read from the server. */
     fun holdsUnlock(account: String, reply: CloudHoldsReply)
@@ -158,6 +168,7 @@ class IosCloud internal constructor(
     private val apple: AppleCloud,
     private val files: IosCloudFiles,
     private val mainRows: MainTransferDao,
+    private val trips: TripDao,
     private val settings: SettingsStore,
     private val transfer: IosTransfer,
     private val eventLog: EventLogRepository,
@@ -167,6 +178,7 @@ class IosCloud internal constructor(
     private val clock: () -> Long,
     private val zone: () -> ZoneId,
     private val locale: () -> Locale,
+    private val notify: (title: String, text: String) -> Unit = { _, _ -> },
 ) {
     private val store = AppleCloudStore()
     private val server = CloudUnlockServer { signed -> callUnlock(signed) }
@@ -182,6 +194,21 @@ class IosCloud internal constructor(
             },
             ledger = files,
             store = store,
+            shape = { snapshot ->
+                val phone = files.install()
+                snapshot.inFolder(
+                    cloudPhoneFolder(phone),
+                    cloudPhoneDocument(phone, IPHONE_NAME, "iphone"),
+                ).withEdits(trips.findFromOtherPhones())
+                    .withShared(
+                        try {
+                            settings.current()
+                        } catch (unreadable: IOException) {
+                            null
+                        },
+                    )
+            },
+            removable = { path -> cloudRemovableBy(files.install(), path) },
         )
     private val uploading = Mutex()
     private var watching: Job? = null
@@ -265,13 +292,8 @@ class IosCloud internal constructor(
                 cancel = cancel,
             )
         }
-        val other =
-            when (val standing = startBackup()) {
-                is CloudStartResult.Choose -> standing.trips to false
-                is CloudStartResult.Moved -> standing.trips to true
-                else -> null
-            }
-        if (other == null) {
+        val merge = startBackup() as? CloudStartResult.Merge
+        if (merge == null) {
             return CloudTile(
                 title = title,
                 text = englishCloudFormat("settings_cloud_signed_in", words, email),
@@ -282,29 +304,24 @@ class IosCloud internal constructor(
                 cancel = cancel,
             )
         }
-        val (trips, moved) = other
+        // ADR-017: a phone with trips of its own asks once before it joins the logbook.
         return CloudTile(
             title = title,
             text =
-                if (moved) {
-                    englishCloudFormat("settings_cloud_moved", words, email)
-                } else {
-                    englishCloudCount("settings_cloud_other_phone", trips, words, email, trips)
-                },
-            restoreHere =
-                CloudQuestion(
-                    button = englishCloudText("settings_cloud_restore_here"),
-                    title = englishCloudText("settings_cloud_restore_title"),
-                    text = englishCloudCount("settings_cloud_restore_text", trips, words, trips),
-                    confirm = englishCloudText("settings_cloud_restore_confirm"),
+                englishCloudFormat(
+                    "settings_cloud_merge_question",
+                    words,
+                    email,
+                    merge.own,
+                    merge.others,
                 ),
-            backUpHere =
+            merge = englishCloudText("settings_cloud_merge"),
+            useBackup =
                 CloudQuestion(
-                    button = englishCloudText("settings_cloud_back_up_here"),
-                    title = englishCloudText("settings_cloud_back_up_here_title"),
-                    text =
-                        englishCloudCount("settings_cloud_back_up_here_text", trips, words, trips),
-                    confirm = englishCloudText("settings_cloud_back_up_here_confirm"),
+                    button = englishCloudText("settings_cloud_use_backup"),
+                    title = englishCloudText("settings_cloud_use_backup_title"),
+                    text = englishCloudText("settings_cloud_use_backup_text"),
+                    confirm = englishCloudText("settings_cloud_use_backup_confirm"),
                 ),
             signOut = englishCloudText("settings_cloud_sign_out"),
             deleteAccount = delete,
@@ -396,87 +413,63 @@ class IosCloud internal constructor(
     suspend fun restorePurchases(signed: List<String>): CloudNote? =
         noteOf(afterUnlock(restoreFrom(signed, server)))
 
-    // ---- One phone per account, restore, deletion ----------------------------------------------
+    // ---- The logbook of every phone, deletion (ADR-017) -----------------------------------------
+
+    /** "Merge": this iPhone's trips join the logbook, and it backs up from now on. */
+    suspend fun merge(): CloudNote {
+        val account = files.account()?.takeIf { it.unlocked }
+            ?: return bad(englishCloudText("settings_cloud_backup_offline"))
+        keep(account.copy(backingUp = true))
+        log("Cloud backup: this phone's trips were merged into the logbook of the account.")
+        scope.launch { upload("Merge") }
+        return good(englishCloudText("settings_cloud_merged"))
+    }
 
     /**
-     * "Restore my trips here": the backup replaces what this iPhone holds, through the import (a
-     * safety copy first), and this iPhone backs up from then on.
+     * "Use only the backup's trips": this iPhone's own trips are taken off it, through the
+     * import (a safety copy first) of a logbook with none, and it holds the other phones' trips
+     * from then on. Asked first on the tile.
      */
-    suspend fun restoreHere(): CloudNote {
-        val account = files.account()?.takeIf { it.unlocked }
-            ?: return bad(englishCloudText("settings_cloud_restore_failed"))
-        val copy =
-            try {
-                cloudCopyOf(read(account.id, null))
-            } catch (unreachable: IOException) {
-                return bad(englishCloudText("settings_cloud_backup_offline"))
-            }
-        val export =
-            try {
-                cloudRestoreExport(copy, clock(), zone(), appVersion)
-            } catch (wrong: CloudRestoreException) {
-                log("Cloud backup: restore refused. ${wrong.message}")
-                return bad(englishCloudText("settings_cloud_restore_failed"))
-            }
-        val path = restoreFolder() + "/Online-backup.json"
+    suspend fun useBackupOnly(): CloudNote {
+        val failed = bad(englishCloudText("settings_cloud_restore_failed"))
+        val account = files.account()?.takeIf { it.unlocked } ?: return failed
+        val empty = cloudRestoreExport(cloudCopyOf(emptyMap()), clock(), zone(), appVersion)
+        val path = restoreFolder() + "/Logbook-without-this-phone.json"
         try {
-            FileSystem.SYSTEM.write(path.toPath()) { writeUtf8(export) }
+            FileSystem.SYSTEM.write(path.toPath()) { writeUtf8(empty) }
         } catch (unwritable: okio.IOException) {
-            log("Cloud backup: restore failed. ${unwritable.message}")
-            return bad(englishCloudText("settings_cloud_restore_failed"))
+            log("Cloud backup: this phone's trips could not be set aside. ${unwritable.message}")
+            return failed
         }
         try {
             val check = transfer.check(path)
-            if (check.problem != null) {
-                log("Cloud backup: restore refused. ${check.problem}")
-                return bad(englishCloudText("settings_cloud_restore_failed"))
-            }
-            val outcome = transfer.replaceWith(path, check, "Restored from the online backup")
-            return when (outcome) {
+            if (check.problem != null) return failed
+            val said = "Set aside for the online backup's logbook"
+            return when (transfer.replaceWith(path, check, said)) {
                 is ImportOutcome.Done -> {
-                    files.write(account.id, cloudLedgerOf(copy))
-                    claim(account)
-                    log("Cloud backup: ${outcome.trips} trips restored from the online backup.")
-                    val trips = outcome.trips
-                    good(englishCloudCount("settings_cloud_restored_trips", trips, locale(), trips))
+                    files.write(account.id, emptyMap())
+                    keep(account.copy(backingUp = true))
+                    log(
+                        "Cloud backup: this phone's own trips were set aside; it holds the logbook's.",
+                    )
+                    scope.launch { upload("Use only the backup's trips") }
+                    good(englishCloudText("settings_cloud_using_backup"))
                 }
 
                 ImportOutcome.TripRecording ->
                     bad(englishCloudText("settings_cloud_trip_in_progress"))
 
-                ImportOutcome.NothingChecked, is ImportOutcome.Failed ->
-                    bad(englishCloudText("settings_cloud_restore_failed"))
+                ImportOutcome.NothingChecked, is ImportOutcome.Failed -> failed
             }
-        } catch (failed: IOException) {
-            log("Cloud backup: restore failed. ${failed.message}")
-            return bad(englishCloudText("settings_cloud_restore_failed"))
+        } catch (unwritable: IOException) {
+            log("Cloud backup: this phone's trips could not be set aside. ${unwritable.message}")
+            return failed
         } finally {
             try {
                 FileSystem.SYSTEM.delete(path.toPath())
             } catch (stays: okio.IOException) {
-                // Left in the exports folder; the next restore writes over it.
+                // Left in the exports folder; the next one writes over it.
             }
-        }
-    }
-
-    /**
-     * "Back up this phone instead": this iPhone takes the backup over, and its next upload
-     * replaces what another phone left there with this iPhone's own trips.
-     */
-    suspend fun backUpHere(): CloudNote {
-        val account = files.account()?.takeIf { it.unlocked }
-            ?: return bad(englishCloudText("settings_cloud_backup_offline"))
-        return try {
-            val copy = cloudCopyOf(read(account.id, null))
-            // The ledger says what the backup holds, so that the upload removes the documents
-            // of the other phone that this one does not have.
-            files.write(account.id, cloudLedgerOf(copy))
-            claim(account)
-            log("Cloud backup: this phone backs up to the account now, in place of another.")
-            scope.launch { upload("Back up this phone instead") }
-            good(englishCloudText("settings_cloud_backing_up_here"))
-        } catch (unreachable: IOException) {
-            bad(englishCloudText("settings_cloud_backup_offline"))
         }
     }
 
@@ -523,33 +516,43 @@ class IosCloud internal constructor(
                 log("Cloud backup: not signed in to Firebase as the account kept here. Not sent.")
                 return false
             }
-            val start =
+            // Every phone backs up into its own folder (ADR-017), once it has joined the logbook.
+            val phone = files.install()
+            val others =
                 try {
-                    look(account).first
+                    readOtherPhones(store, account.id, phone)
                 } catch (unreachable: IOException) {
                     tryAgainLater()
                     return false
                 }
-            when (start) {
-                CloudStart.BACK_UP -> if (account.backingUp != true) claim(account)
-
-                CloudStart.ASK -> {
-                    if (account.backingUp != false) keep(account.copy(backingUp = false))
-                    return true
-                }
-
-                CloudStart.MOVED -> {
-                    keep(account.copy(backingUp = false))
-                    log(
-                        "Cloud backup: another phone backs up to this account now. This phone " +
-                            "stopped.",
+            if (cloudAsksToMerge(ownFinished(), others, account.backingUp)) {
+                if (account.backingUp != false) keep(account.copy(backingUp = false))
+                return true
+            }
+            if (account.backingUp != true) keep(account.copy(backingUp = true))
+            try {
+                val notices =
+                    syncLogbook(
+                        store,
+                        account.id,
+                        phone,
+                        IPHONE_NAME,
+                        clock(),
+                        others,
+                        trips,
+                        files,
+                        ::log,
                     )
-                    return true
-                }
+                syncShared(store, account.id, settings, files, ::log)
+                if (notices.isNotEmpty()) tellReplaced(notices)
+            } catch (unreachable: IOException) {
+                tryAgainLater()
+                return false
             }
             return when (uploadUntilQuiet(backup, account.id, ::log)) {
                 CloudUploadOutcome.DONE -> {
                     retryWaitMs = RETRY_FIRST_MS
+                    forgetEarlierOwner(account, phone)
                     true
                 }
 
@@ -586,6 +589,45 @@ class IosCloud internal constructor(
         }
     }
 
+    /**
+     * "Put back" on a trip whose history holds a change another phone's replaced (ADR-017): the
+     * trip takes that change again, and the upload that follows the change sends it to every
+     * phone.
+     *
+     * @return false if there was nothing to put back, or it could not be done.
+     */
+    suspend fun putBack(tripId: Long): Boolean = try {
+        putBackReplaced(trips, tripId, clock(), IPHONE_NAME).also { done ->
+            if (done) log("Cloud backup: trip $tripId: the change that was replaced was put back.")
+        }
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (failure: Exception) {
+        // Swift cannot be handed an exception it was not told of: it would end the app.
+        eventLog.add(
+            clock(),
+            EventCategory.ERROR,
+            "Putting back a trip's change failed",
+            failure.stackTraceToString(),
+        )
+        false
+    }
+
+    /** "A change of yours was replaced", as Android's notification says it. */
+    private fun tellReplaced(notices: List<ReplacedNotice>) {
+        val localeNow = locale()
+        val text =
+            notices.joinToString("\n") {
+                englishCloudFormat(
+                    "settings_cloud_replaced_text",
+                    localeNow,
+                    formatDate(it.tripStartedAtMs, zone(), localeNow),
+                    it.keptOn,
+                )
+            }
+        notify(englishCloudText("settings_cloud_replaced_title"), text)
+    }
+
     private fun tryAgainLater() {
         if (retry?.isActive == true) return
         val wait = retryWaitMs
@@ -599,76 +641,60 @@ class IosCloud internal constructor(
     // ---- What the backup holds -----------------------------------------------------------------
 
     /**
-     * How the backup stands for the account signed in, as Android's tile asks it
-     * (`CloudObjects.startBackup`).
+     * How the backup stands for the account signed in (ADR-017), as Android's tile asks it
+     * (`CloudObjects.startBackup`): this iPhone backs up and holds the other phones' trips, or it
+     * asks once whether to merge its own with theirs. It uploads when nothing is to be asked.
      */
     private suspend fun startBackup(): CloudStartResult {
         val account = files.account()?.takeIf { it.unlocked } ?: return CloudStartResult.Offline
-        val (start, copy) =
+        val others =
             try {
-                look(account)
+                readOtherPhones(store, account.id, files.install())
             } catch (unreachable: IOException) {
                 return CloudStartResult.Offline
             }
-        return try {
-            when (start) {
-                CloudStart.BACK_UP -> {
-                    if (account.backingUp != true) claim(account)
-                    CloudStartResult.BackingUp
-                }
-
-                CloudStart.ASK -> {
-                    if (account.backingUp != false) keep(account.copy(backingUp = false))
-                    CloudStartResult.Choose(copy?.trips ?: 0)
-                }
-
-                CloudStart.MOVED -> {
-                    keep(account.copy(backingUp = false))
-                    CloudStartResult.Moved(copy?.trips ?: 0)
-                }
-            }
-        } catch (unreachable: IOException) {
-            CloudStartResult.Offline
+        val own = ownFinished()
+        if (cloudAsksToMerge(own, others, account.backingUp)) {
+            if (account.backingUp != false) keep(account.copy(backingUp = false))
+            return CloudStartResult.Merge(own, others.tripCount)
         }
+        if (account.backingUp != true) keep(account.copy(backingUp = true))
+        scope.launch { upload("the tile") }
+        return CloudStartResult.BackingUp
     }
+
+    /** How many finished trips of its own this iPhone holds. */
+    private suspend fun ownFinished(): Int =
+        trips.findOwn().count { it.status == TripStatus.FINISHED }
 
     /**
-     * What this iPhone is to do about the backup, and the backup itself when it had to be read.
-     * The owner document is read first: when it names this iPhone, that settles it without
-     * reading every trip in the backup (`cloudStart` answers BACK_UP whatever else it is told).
+     * The backup an older version kept at the account's top named this iPhone as its owner: the
+     * run that just ended moved it into this iPhone's folder, so the owner document goes too.
      */
-    private suspend fun look(account: CloudAccount): Pair<CloudStart, CloudCopy?> {
-        val install = files.install()
-        val owner = read(account.id, CLOUD_OWNER)[CLOUD_OWNER]?.let(::cloudOwnerOf)
-        if (owner == install) return CloudStart.BACK_UP to null
-        val all = read(account.id, null)
-        val copy = cloudCopyOf(all)
-        val start =
-            cloudStart(
-                owner = owner,
-                install = install,
-                backingUp = account.backingUp,
-                cloudHasTrips = copy.trips > 0,
-                uploadedHere = files.read(account.id).isNotEmpty(),
-            )
-        return start to copy
-    }
-
-    /** Names this iPhone in the backup's owner document, and marks it backing up. */
-    private suspend fun claim(account: CloudAccount) {
-        store.apply(account.id, listOf(cloudOwnerDocument(files.install())), emptyList())
-        keep(account.copy(backingUp = true))
+    private suspend fun forgetEarlierOwner(account: CloudAccount, phone: String) {
+        try {
+            val earlier = readCollections(account.id, listOf(CLOUD_BACKUP))
+            if (earlier[CLOUD_OWNER]?.let(::cloudOwnerOf) == phone) {
+                store.apply(account.id, emptyList(), listOf(CLOUD_OWNER))
+                log("Cloud backup: this phone's backup moved into its own folder.")
+            }
+        } catch (unreachable: IOException) {
+            // Tried again after the next upload.
+        }
     }
 
     // ---- Asking Swift --------------------------------------------------------------------------
 
-    private suspend fun read(account: String, path: String?): Map<String, String> {
+    private suspend fun readCollections(
+        account: String,
+        collections: List<String>,
+    ): Map<String, String> {
         val answer: ReadAnswer =
             withTimeoutOrNull(ANSWER_TIMEOUT_MS) {
                 suspendCancellableCoroutine { continuation ->
-                    apple.read(
+                    apple.readCollections(
                         account,
-                        path,
+                        collections,
                         CloudReadReply { documents, failure ->
                             if (continuation.isActive) {
                                 continuation.resume(ReadAnswer(documents, failure))
@@ -711,6 +737,11 @@ class IosCloud internal constructor(
 
     /** Firestore through Swift, as the backup's run writes to it. */
     private inner class AppleCloudStore : CloudStore {
+        override suspend fun readCollections(
+            account: String,
+            collections: List<String>,
+        ): Map<String, String> = this@IosCloud.readCollections(account, collections)
+
         override suspend fun apply(
             account: String,
             documents: List<CloudDocument>,
@@ -803,6 +834,9 @@ class IosCloud internal constructor(
     }
 }
 
+/** What this iPhone is called in the backup: its phone record, and the trips' history. */
+private const val IPHONE_NAME = "iPhone"
+
 /** The email the tile names: Apple may have hidden it. */
 private fun shown(account: CloudAccount): String = account.email.ifEmpty { "your Apple account" }
 
@@ -853,8 +887,8 @@ data class CloudTile(
     val on: String? = null,
     val purchase: String? = null,
     val restorePurchase: String? = null,
-    val restoreHere: CloudQuestion? = null,
-    val backUpHere: CloudQuestion? = null,
+    val merge: String? = null,
+    val useBackup: CloudQuestion? = null,
     val signOut: String? = null,
     val deleteAccount: CloudQuestion? = null,
     val signIn: CloudSignIn? = null,

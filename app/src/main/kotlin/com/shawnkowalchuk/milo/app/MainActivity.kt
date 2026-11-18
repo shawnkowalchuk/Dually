@@ -123,8 +123,8 @@ class MainActivity : ComponentActivity() {
 
     /**
      * ADR-002's reconcile at app launch, the check that Android still watches for the truck,
-     * a look at the monthly reminder and one at the daily check that a work day has a trip.
-     * All run every time MilO comes to the front, not only when the activity is first created:
+     * a look at the monthly reminder and one at the daily check that a work day has a trip,
+     * and the online backup's sync. All run every time MilO comes to the front, not only when the activity is first created:
      * Android keeps an activity for days, and opening MilO is what Shawn does when a trip did
      * not start by itself. Each call only queues work; nothing here waits.
      */
@@ -140,6 +140,9 @@ class MainActivity : ComponentActivity() {
         // service when the truck turns out to be connected: the trip is stored a moment later.
         // The check gives it that moment by itself before it says "no trip" (its second look).
         container.checks.nothingRecorded.look(APP_OPENED)
+        // The online backup syncs whenever MilO is opened, so what another phone changed is
+        // here when it is looked at (ADR-017). It asks for nothing unless an account is on.
+        container.cloud.appOpened()
     }
 
     /**

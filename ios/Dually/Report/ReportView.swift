@@ -15,29 +15,79 @@ final class ReportModel: ObservableObject {
     @Published var failure: String?
     @Published private(set) var year: Int
     @Published private(set) var monthNumber: Int
+    /// Android's three periods (2026-11-15 on the iPhone): 0 a month, 1 a date range, 2 a year.
+    @Published var kind = 0
+    @Published var rangeFirst: Date
+    @Published var rangeLast: Date
+    /// Every report recorded as sent, newest first.
+    @Published private(set) var sentList: [SentReportText] = []
+    /// The offer to delete the shown month's GPS points, or nil.
+    @Published private(set) var points: MonthPointsText?
+    /// What became of the last press on that offer.
+    @Published private(set) var pointsNote: String?
 
-    private let core: DuallyCore
+    let core: DuallyCore
     private let fonts = ReportFonts()
 
     init(core: DuallyCore, year: Int, month: Int) {
         self.core = core
         self.year = year
         self.monthNumber = month
+        let first = Calendar.current.date(from: DateComponents(year: year, month: month, day: 1)) ?? Date()
+        let end = Calendar.current.date(byAdding: DateComponents(month: 1, day: -1), to: first) ?? first
+        rangeFirst = first
+        rangeLast = min(end, Date())
     }
 
     func load() async {
         made = nil
-        month = try? await core.report.month(year: Int32(year), month: Int32(monthNumber))
+        month = try? await core.report.month(
+            kind: Int32(kind), year: Int32(year), month: Int32(monthNumber),
+            firstDay: epochDay(rangeFirst), lastDay: epochDay(rangeLast)
+        )
+        sentList = (try? await core.report.sentList()) ?? []
+        points = kind == 0 ? try? await core.report.monthPoints(year: Int32(year), month: Int32(monthNumber)) : nil
     }
 
-    /// A later month than the shown one has begun: the forward arrow works.
+    /// A day as the shared code counts it: days since 1 January 1970, in the iPhone's calendar.
+    private func epochDay(_ date: Date) -> Int64 {
+        let parts = Calendar.current.dateComponents([.year, .month, .day], from: date)
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = TimeZone(identifier: "UTC")!
+        let midnight = utc.date(from: parts) ?? date
+        return Int64((midnight.timeIntervalSince1970 / 86_400).rounded(.down))
+    }
+
+    func setOption(_ change: @escaping () async throws -> Void) async {
+        try? await change()
+        await load()
+    }
+
+    func deletePoints() async {
+        guard let shown = points else { return }
+        if let freed = try? await core.report.deleteMonthPoints(year: Int32(year), month: Int32(monthNumber)) {
+            let size = ByteCountFormatter.string(fromByteCount: freed.int64Value, countStyle: .file)
+            pointsNote = "\(size) of GPS points deleted. Every trip and the report are as they were."
+        } else {
+            pointsNote = "The GPS points of \(shown.monthName) could not be deleted. They are as they were. The Log says why."
+        }
+        await load()
+    }
+
+    func keepPoints() async {
+        try? await core.report.keepMonthPoints(year: Int32(year), month: Int32(monthNumber))
+        await load()
+    }
+
+    /// A later month (or for a whole year, a later year) than the shown one has begun.
     var canGoForward: Bool {
         let now = Calendar.current.dateComponents([.year, .month], from: Date())
+        if kind == 2 { return year < (now.year ?? year) }
         return (year, monthNumber) < (now.year ?? year, now.month ?? monthNumber)
     }
 
     func step(by months: Int) async {
-        let index = year * 12 + (monthNumber - 1) + months
+        let index = year * 12 + (monthNumber - 1) + (kind == 2 ? months * 12 : months)
         let now = Calendar.current.dateComponents([.year, .month], from: Date())
         guard index <= (now.year ?? year) * 12 + (now.month ?? monthNumber) - 1 else { return }
         year = index / 12
@@ -48,7 +98,10 @@ final class ReportModel: ObservableObject {
     /// Makes the two files in the app's temporary folder.
     func make() async {
         do {
-            let files = try await core.report.files(year: Int32(year), month: Int32(monthNumber), measure: fonts)
+            let files = try await core.report.files(
+                kind: Int32(kind), year: Int32(year), month: Int32(monthNumber),
+                firstDay: epochDay(rangeFirst), lastDay: epochDay(rangeLast), measure: fonts
+            )
             let folder = FileManager.default.temporaryDirectory.appendingPathComponent("reports", isDirectory: true)
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             let pdf = folder.appendingPathComponent(files.pdfName)
@@ -64,8 +117,13 @@ final class ReportModel: ObservableObject {
     }
 
     func recordSent() async {
-        try? await core.report.recordSent(year: Int32(year), month: Int32(monthNumber))
+        try? await core.report.recordSent(
+            kind: Int32(kind), year: Int32(year), month: Int32(monthNumber),
+            firstDay: epochDay(rangeFirst), lastDay: epochDay(rangeLast)
+        )
         await load()
+        // A month sent takes its reminder away.
+        await Reminders.plan(core: core)
     }
 }
 
@@ -85,6 +143,10 @@ struct ReportView: View {
     let openSettings: () -> Void
     @State private var mailing = false
     @State private var sentByMail = false
+    /// The run across the foot of the screen after Mail sent the report (2026-11-16, as on
+    /// Android after "I sent it"), with whether its sounds are heard.
+    @State private var run: (pictures: RunPictures, heard: Bool)?
+    @Environment(\.scenePhase) private var scenePhase
 
     init(core: DuallyCore, year: Int, month: Int, back: @escaping () -> Void, openSettings: @escaping () -> Void) {
         _model = StateObject(wrappedValue: ReportModel(core: core, year: year, month: month))
@@ -94,18 +156,52 @@ struct ReportView: View {
 
     var body: some View {
         PinnedScreen(title: "Report", onBack: back) {
+            // Android's three periods: a month, any days, a whole year.
+            Picker("Period", selection: $model.kind) {
+                Text("Month").tag(0)
+                Text("Date range").tag(1)
+                Text("Year").tag(2)
+            }
+            .pickerStyle(.segmented)
+            .onChange(of: model.kind) { _ in Task { await model.load() } }
+            if model.kind == 2 {
+                Text("1 January to 31 December. The report opens with a page of the year's months, Business and Personal, then lists the trips. Like a date range, it never marks a month as submitted.")
+                    .font(Typography.body(13))
+                    .foregroundStyle(Palette.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if model.kind == 1 {
+                Tile {
+                    DatePicker("From", selection: $model.rangeFirst, in: ...model.rangeLast, displayedComponents: .date)
+                    DatePicker("To", selection: $model.rangeLast, in: model.rangeFirst...Date(), displayedComponents: .date)
+                    Text("Any days you choose. Such a report is kept in the list of sent reports, and never marks a month as submitted.")
+                        .font(Typography.body(13))
+                        .foregroundStyle(Palette.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .font(Typography.body(15))
+                .foregroundStyle(Palette.text)
+                .onChange(of: model.rangeFirst) { _ in Task { await model.load() } }
+                .onChange(of: model.rangeLast) { _ in Task { await model.load() } }
+            }
             if let month = model.month {
                 HStack {
                     Text(month.title)
                         .font(Typography.display(26))
                         .foregroundStyle(Palette.text)
                     Spacer()
-                    MonthArrow(systemName: "chevron.left", label: "Month before") { Task { await model.step(by: -1) } }
-                    MonthArrow(systemName: "chevron.right", label: "Month after") { Task { await model.step(by: 1) } }
+                    if model.kind != 1 {
+                        MonthArrow(systemName: "chevron.left", label: model.kind == 2 ? "Year before" : "Month before") {
+                            Task { await model.step(by: -1) }
+                        }
+                        MonthArrow(systemName: "chevron.right", label: model.kind == 2 ? "Year after" : "Month after") {
+                            Task { await model.step(by: 1) }
+                        }
                         .disabled(!model.canGoForward)
                         .opacity(model.canGoForward ? 1 : 0.35)
+                    }
                 }
-                Tile(ground: Palette.accent) {
+                Tile(ground: Palette.accentTile) {
                     Text("Business").font(Typography.body(13, weight: .semibold))
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text(month.distance).font(Typography.figure(30))
@@ -138,21 +234,55 @@ struct ReportView: View {
                 if let failure = model.failure {
                     Text(failure).font(Typography.body(14)).foregroundStyle(Palette.amber)
                 }
+                if let points = model.points {
+                    PointsTile(points: points, delete: { Task { await model.deletePoints() } }, keep: {
+                        Task { await model.keepPoints() }
+                    })
+                }
+                if let note = model.pointsNote {
+                    Text(note).font(Typography.body(14)).foregroundStyle(Palette.textSecondary)
+                }
+                OptionsTile(month: month, model: model)
+                SentListTile(sent: model.sentList)
             }
         }
         .task { await model.load() }
+        .overlay {
+            if let run {
+                GeometryReader { geometry in
+                    MascotRunView(player: RunPlayer(
+                        pictures: run.pictures,
+                        screenWidth: geometry.size.width,
+                        soundsHeard: run.heard
+                    ) { self.run = nil })
+                }
+            }
+        }
+        // Cut short when Dually is put away, as on Android; leaving the screen ends it too.
+        .onChange(of: scenePhase) { phase in if phase != .active { run = nil } }
         .sheet(isPresented: $mailing) {
             if let made = model.made {
                 MailComposer(made: made) { sent in
                     mailing = false
                     if sent {
                         sentByMail = true
-                        Task { await model.recordSent() }
+                        Task {
+                            await model.recordSent()
+                            await startRun()
+                        }
                     }
                 }
                 .ignoresSafeArea()
             }
         }
+    }
+
+    /// One run for each report Mail sent, where the iPhone does not ask for less motion. Its
+    /// sounds are heard when either of Dually's two sounds is switched on, as the party's pop.
+    private func startRun() async {
+        guard !UIAccessibility.isReduceMotionEnabled, let pictures = RunPictures() else { return }
+        let heard = (try? await model.core.party.popHeard())?.boolValue ?? true
+        run = (pictures, heard)
     }
 
     @ViewBuilder
@@ -173,6 +303,106 @@ struct ReportView: View {
             }
         } else if month.missingForPdf == nil {
             WideButton(title: "Make the report", filled: true) { Task { await model.make() } }
+        }
+    }
+}
+
+/// Android's Report options: what a report holds beyond the Business trips, kept for every report.
+private struct OptionsTile: View {
+    let month: ReportMonthText
+    @ObservedObject var model: ReportModel
+    private var report: IosReport { TripSession.shared.core.report }
+
+    var body: some View {
+        Tile {
+            Text("Report options")
+                .font(Typography.body(17, weight: .semibold))
+                .foregroundStyle(Palette.text)
+            option("List Personal trips too", month.listPersonal) { on in try await report.setListPersonal(on: on) }
+            option("Show the Business use percentage", month.businessShare) { on in try await report.setBusinessShare(on: on) }
+            option("Show each trip's odometer", month.tripOdometer) { on in try await report.setTripOdometer(on: on) }
+            Text("Kept for every report you make, the PDF and the CSV.")
+                .font(Typography.body(13))
+                .foregroundStyle(Palette.textSecondary)
+        }
+    }
+
+    private func option(_ title: String, _ on: Bool, _ set: @escaping (Bool) async throws -> Void) -> some View {
+        Toggle(title, isOn: Binding(get: { on }, set: { value in Task { await model.setOption { try await set(value) } } }))
+            .font(Typography.body(15))
+            .foregroundStyle(Palette.text)
+            .tint(Palette.accent)
+    }
+}
+
+/// Android's offer to delete a sent month's GPS points: the routes, never the trips.
+private struct PointsTile: View {
+    let points: MonthPointsText
+    let delete: () -> Void
+    let keep: () -> Void
+
+    private var words: String {
+        let size = ByteCountFormatter.string(fromByteCount: points.bytes, countStyle: .file)
+        let count = Int(points.tripCount)
+        return count == 1
+            ? "Your \(points.monthName) report is sent, and its 1 trip keeps its distance, times and addresses. Its GPS points, the route it drove, take \(size) on this phone. Delete them to free the room?"
+            : "Your \(points.monthName) report is sent, and its \(count) trips keep their distance, times and addresses. Their GPS points, the route of each drive, take \(size) on this phone. Delete them to free the room?"
+    }
+
+    var body: some View {
+        Tile {
+            Text(points.title)
+                .font(Typography.body(17, weight: .semibold))
+                .foregroundStyle(Palette.text)
+            Text(words)
+                .font(Typography.body(14))
+                .foregroundStyle(Palette.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 8) {
+                WideButton(title: "Delete GPS points", filled: false, action: delete)
+                WideButton(title: "Keep", filled: false, action: keep)
+            }
+        }
+    }
+}
+
+/// Android's list of sent reports, newest first.
+private struct SentListTile: View {
+    let sent: [SentReportText]
+
+    var body: some View {
+        Tile {
+            Text("Sent reports")
+                .font(Typography.body(17, weight: .semibold))
+                .foregroundStyle(Palette.text)
+            if sent.isEmpty {
+                Text("No report has been sent yet.")
+                    .font(Typography.body(14))
+                    .foregroundStyle(Palette.textSecondary)
+            }
+            ForEach(Array(sent.enumerated()), id: \.element.id) { index, report in
+                if index > 0 { Divider().overlay(Palette.controlFill) }
+                HStack(alignment: .firstTextBaseline) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(report.period)
+                            .font(Typography.body(15, weight: .semibold))
+                            .foregroundStyle(Palette.text)
+                        Text(report.line)
+                            .font(Typography.body(13))
+                            .foregroundStyle(Palette.textSecondary)
+                        if let revision = report.revision {
+                            Text(revision)
+                                .font(Typography.body(13))
+                                .foregroundStyle(Palette.textSecondary)
+                        }
+                    }
+                    Spacer()
+                    Text(report.distance)
+                        .font(Typography.figure(15))
+                        .foregroundStyle(Palette.text)
+                }
+                .padding(.vertical, 4)
+            }
         }
     }
 }

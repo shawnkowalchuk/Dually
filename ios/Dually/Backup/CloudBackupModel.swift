@@ -69,12 +69,14 @@ final class CloudBackupModel: ObservableObject {
         }
     }
 
-    func restoreHere() {
-        work { self.note = try? await self.core.cloud.restoreHere() }
+    /// "Merge": this iPhone's trips join the logbook (ADR-017).
+    func merge() {
+        work { self.note = try? await self.core.cloud.merge() }
     }
 
-    func backUpHere() {
-        work { self.note = try? await self.core.cloud.backUpHere() }
+    /// "Use only the backup's trips", once the person said yes.
+    func useBackupOnly() {
+        work { self.note = try? await self.core.cloud.useBackupOnly() }
     }
 
     /// "Delete my online backup and account", once the person said yes. An account made with

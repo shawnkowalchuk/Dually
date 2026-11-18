@@ -4,6 +4,7 @@ import androidx.room3.Dao
 import androidx.room3.Insert
 import androidx.room3.Query
 import androidx.room3.Transaction
+import androidx.room3.Update
 import com.shawnkowalchuk.milo.core.party.TripStart
 import com.shawnkowalchuk.milo.core.schedule.TripCategory
 import com.shawnkowalchuk.milo.core.trip.TripStatus
@@ -95,7 +96,10 @@ interface TripDao {
     suspend fun setVehicle(tripId: Long, address: String, open: TripStatus): Int
 
     /** A closed trip's label, or none with null (since 2026-10-08). Not an open trip's. */
-    @Query("UPDATE trips SET label = :label WHERE id = :tripId AND status != :open")
+    @Query(
+        "UPDATE trips SET label = :label WHERE id = :tripId AND status != :open " +
+            "AND (homePhone IS NULL OR homePhone NOT LIKE 'earlier-backup%')",
+    )
     suspend fun setLabel(tripId: Long, label: String?, open: TripStatus): Int
 
     /** Every trip that has a label, for the labels to pick from. */
@@ -108,7 +112,8 @@ interface TripDao {
      */
     @Query(
         "UPDATE trips SET vehicleAddress = :address " +
-            "WHERE vehicleAddress IS NULL AND (truckSeen = 1 OR addedByHand = 1)",
+            "WHERE vehicleAddress IS NULL AND (truckSeen = 1 OR addedByHand = 1) " +
+            "AND homePhone IS NULL",
     )
     suspend fun fillVehicle(address: String): Int
 
@@ -156,7 +161,7 @@ interface TripDao {
         "SELECT * FROM trips WHERE status = :finished " +
             "AND ((startAddress IS NULL AND startAddressByHand = 0) " +
             "OR (endAddress IS NULL AND endAddressByHand = 0)) " +
-            "AND addressAttempts < :maxAttempts ORDER BY id DESC",
+            "AND addressAttempts < :maxAttempts AND homePhone IS NULL ORDER BY id DESC",
     )
     suspend fun findLackingAddress(finished: TripStatus, maxAttempts: Int): List<Trip>
 
@@ -178,7 +183,7 @@ interface TripDao {
             "ELSE COALESCE(endAddress, :endAddress) END, " +
             "addressAttempts = addressAttempts + :failedAttempts, " +
             "addressLastAttemptAtMs = :atMs " +
-            "WHERE id = :tripId AND status = :finished",
+            "WHERE id = :tripId AND status = :finished AND homePhone IS NULL",
     )
     suspend fun recordAddressLookup(
         tripId: Long,
@@ -194,8 +199,47 @@ interface TripDao {
      * does not have the status [from] is left alone, so a second call, or a call for a trip
      * that is still open, changes nothing.
      */
-    @Query("UPDATE trips SET status = :to WHERE id = :tripId AND status = :from")
+    @Query(
+        "UPDATE trips SET status = :to WHERE id = :tripId AND status = :from " +
+            "AND (homePhone IS NULL OR homePhone NOT LIKE 'earlier-backup%')",
+    )
     suspend fun changeStatus(tripId: Long, from: TripStatus, to: TripStatus): Int
+
+    /** The trips that came from other phones on the online backup account (ADR-017). */
+    @Query("SELECT * FROM trips WHERE homePhone IS NOT NULL")
+    suspend fun findFromOtherPhones(): List<Trip>
+
+    /** This phone's own trips: all but those that came from other phones. */
+    @Query("SELECT * FROM trips WHERE homePhone IS NULL")
+    suspend fun findOwn(): List<Trip>
+
+    @Insert
+    suspend fun insertAll(trips: List<Trip>)
+
+    @Update
+    suspend fun updateAll(trips: List<Trip>)
+
+    /** Removes rows of other phones' trips; this phone's own trips are never matched. */
+    @Query("DELETE FROM trips WHERE id IN (:ids) AND homePhone IS NOT NULL")
+    suspend fun deleteFromOtherPhones(ids: List<Long>): Int
+
+    /**
+     * Makes this phone's rows of other phones' trips what the backup holds (`logbookChange`),
+     * in one transaction, so that a list or a total never shows half of it.
+     */
+    @Transaction
+    suspend fun replaceFromOtherPhones(insert: List<Trip>, update: List<Trip>, delete: List<Long>) {
+        if (delete.isNotEmpty()) deleteFromOtherPhones(delete)
+        if (update.isNotEmpty()) updateAll(update.filter { it.homePhone != null })
+        if (insert.isNotEmpty()) insertAll(insert.filter { it.homePhone != null })
+    }
+
+    /**
+     * "Use only the backup's trips" (ADR-017): removes this phone's own closed trips, once a
+     * safety copy of them is written. The trip being recorded is kept.
+     */
+    @Query("DELETE FROM trips WHERE homePhone IS NULL AND status != :open")
+    suspend fun deleteOwnClosed(open: TripStatus): Int
 
     /**
      * Removes a trip that is still open, row and all: the one delete of the table, for a drive
@@ -212,7 +256,7 @@ interface TripDao {
      */
     @Query(
         "SELECT * FROM trips WHERE status != :open AND category IS NULL " +
-            "AND categorySetByHand = 0 ORDER BY id",
+            "AND categorySetByHand = 0 AND homePhone IS NULL ORDER BY id",
     )
     suspend fun findUnsorted(open: TripStatus): List<Trip>
 
@@ -225,7 +269,7 @@ interface TripDao {
     @Query(
         "UPDATE trips SET category = :category, ranPastSchedule = :ranPastSchedule " +
             "WHERE id = :tripId AND status != :open AND category IS NULL " +
-            "AND categorySetByHand = 0",
+            "AND categorySetByHand = 0 AND homePhone IS NULL",
     )
     suspend fun sortUnsorted(
         tripId: Long,
@@ -244,7 +288,8 @@ interface TripDao {
     @Query(
         "UPDATE trips SET category = :category, categorySetByHand = 1 " +
             "WHERE id = :tripId AND status = :finished " +
-            "AND (category IS NULL OR category != :category)",
+            "AND (category IS NULL OR category != :category) " +
+            "AND (homePhone IS NULL OR homePhone NOT LIKE 'earlier-backup%')",
     )
     suspend fun setCategoryByHand(tripId: Long, category: TripCategory, finished: TripStatus): Int
 
@@ -269,7 +314,8 @@ interface TripDao {
             "recordedStartedAtMs = :recordedStartedAtMs, " +
             "recordedEndedAtMs = :recordedEndedAtMs, " +
             "recordedDistanceMetres = :recordedDistanceMetres " +
-            "WHERE id = :tripId AND status = :finished",
+            "WHERE id = :tripId AND status = :finished " +
+            "AND (homePhone IS NULL OR homePhone NOT LIKE 'earlier-backup%')",
     )
     suspend fun writeByHand(
         tripId: Long,
@@ -308,7 +354,10 @@ interface TripDao {
         rewrite: TripRewrite,
     ): ByHandOutcome {
         val stored = findById(tripId)
-        if (stored == null || stored.status != finished) return ByHandOutcome.Refused(stored)
+        val earlierBackup = stored?.homePhone?.startsWith("earlier-backup") == true
+        if (stored == null || stored.status != finished || earlierBackup) {
+            return ByHandOutcome.Refused(stored)
+        }
         val wanted = rewrite.of(stored) ?: return ByHandOutcome.Refused(stored)
         if (wanted == stored) return ByHandOutcome.Unchanged(stored)
         val written =

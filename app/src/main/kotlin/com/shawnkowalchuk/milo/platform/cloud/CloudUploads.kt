@@ -85,6 +85,22 @@ class CloudUploads(
         }
     }
 
+    /**
+     * An upload as soon as the network allows, which also brings in the other phones' trips
+     * (ADR-017): after a sign-in, a merge, or the tile's look at the backup.
+     */
+    fun uploadNow() = request()
+
+    /**
+     * Dually came to the front: an upload, which brings in what the other phones changed since
+     * (ADR-017), as the iPhone does. Android keeps the app running for days, so [start]'s
+     * upload at each start of the app is not one at each opening. Nothing while no account
+     * holding the unlock is signed in.
+     */
+    fun appOpened() {
+        if (account.value?.unlocked == true) request()
+    }
+
     private fun request() {
         WorkManager.getInstance(context).enqueueUniqueWork(
             UPLOAD_NOW,

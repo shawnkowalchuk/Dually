@@ -36,16 +36,18 @@ sealed interface MainReplacement {
 /** The SQL for exporting and replacing the main database's two tables of Shawn's own data. */
 @Dao
 interface MainTransferDao {
-    @Query("SELECT COUNT(*) FROM trips WHERE status = :status")
+    @Query("SELECT COUNT(*) FROM trips WHERE status = :status AND homePhone IS NULL")
     suspend fun countTripsWith(status: TripStatus): Int
 
-    @Query("SELECT COUNT(*) FROM trips")
+    @Query("SELECT COUNT(*) FROM trips WHERE homePhone IS NULL")
     suspend fun countTrips(): Int
 
     @Query("SELECT COUNT(*) FROM sent_reports")
     suspend fun countSentReports(): Int
 
-    @Query("SELECT * FROM trips ORDER BY id")
+    // This phone's own trips only (since 2026-11-14, ADR-017): an export, an import and the
+    // backup's upload are this phone's; other phones' trips come from their own folders.
+    @Query("SELECT * FROM trips WHERE homePhone IS NULL ORDER BY id")
     suspend fun allTrips(): List<Trip>
 
     @Query("SELECT * FROM sent_reports ORDER BY id")

@@ -1,12 +1,17 @@
 package com.shawnkowalchuk.milo.ios
 
+import com.shawnkowalchuk.milo.core.allowance.MAX_CENTS_PER_KM
+import com.shawnkowalchuk.milo.core.allowance.MIN_CENTS_PER_KM
+import com.shawnkowalchuk.milo.core.allowance.parseCentsPerKm
 import com.shawnkowalchuk.milo.core.schedule.WorkSchedule
+import com.shawnkowalchuk.milo.core.schedule.areValidHours
 import com.shawnkowalchuk.milo.core.text.Locale
 import com.shawnkowalchuk.milo.core.time.DayOfWeek
 import com.shawnkowalchuk.milo.core.time.secondsIntoDay
 import com.shawnkowalchuk.milo.core.time.timeOfSecondOfDay
 import com.shawnkowalchuk.milo.core.trip.MAX_ADJUST_STEPS
 import com.shawnkowalchuk.milo.core.trip.shownAdjustPercent
+import com.shawnkowalchuk.milo.core.util.AppLook
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.formatClockTime
 import com.shawnkowalchuk.milo.core.util.formatShortDayOfWeek
@@ -16,12 +21,18 @@ import com.shawnkowalchuk.milo.data.settings.GRACE_PERIOD_CHOICE
 import com.shawnkowalchuk.milo.data.settings.MINIMUM_TRIP_DISTANCE_CHOICE
 import com.shawnkowalchuk.milo.data.settings.MiloSettings
 import com.shawnkowalchuk.milo.data.settings.PARKED_LIMIT_CHOICE
+import com.shawnkowalchuk.milo.data.settings.REMINDER_DAYS
 import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.isEmailAddress
 import com.shawnkowalchuk.milo.data.settings.isReportText
 import com.shawnkowalchuk.milo.data.settings.reportTextOrNull
 import com.shawnkowalchuk.milo.data.settings.setDistanceAdjustSteps
 import com.shawnkowalchuk.milo.data.settings.setDistanceUnit
+import com.shawnkowalchuk.milo.data.settings.setHomeWidgetCentsPerKm
+import com.shawnkowalchuk.milo.data.settings.setHomeWidgetEnabled
+import com.shawnkowalchuk.milo.data.settings.setLook
+import com.shawnkowalchuk.milo.data.settings.setNothingRecordedEnabled
+import com.shawnkowalchuk.milo.data.settings.setNothingRecordedTime
 import com.shawnkowalchuk.milo.data.settings.setParkedLimitSeconds
 
 /**
@@ -58,6 +69,63 @@ class IosSettings internal constructor(
 
     suspend fun setMiles(miles: Boolean) = change {
         settings.setDistanceUnit(if (miles) DistanceUnit.MILES else DistanceUnit.KILOMETRES)
+    }
+
+    /** The look, as Android's Look tile: the screens and the widget follow it, never the phone's. */
+    suspend fun setLight(light: Boolean) =
+        change { settings.setLook(if (light) AppLook.LIGHT else AppLook.DARK) }
+
+    /** The monthly reminder's switch, as Android's ("Remind me to send the report"). */
+    suspend fun setReminder(on: Boolean) = change { settings.setReminderEnabled(on) }
+
+    /** The reminder's day a day earlier or later, between the 1st and the 31st. */
+    suspend fun stepReminderDay(later: Boolean) = change {
+        settings.setReminderDay(
+            (it.reminderDay + if (later) 1 else -1).coerceIn(
+                REMINDER_DAYS.first,
+                REMINDER_DAYS.last,
+            ),
+        )
+    }
+
+    /** The daily check's switch ("Tell me when no trip has been recorded"). */
+    suspend fun setDailyCheck(on: Boolean) = change { settings.setNothingRecordedEnabled(on) }
+
+    /** The daily check's time, in minutes from midnight. */
+    suspend fun setDailyCheckTime(minute: Int) = change {
+        settings.setNothingRecordedTime(timeOfSecondOfDay(minute * SECONDS_PER_MINUTE.toLong()))
+    }
+
+    /** The home-screen widget's switch: off, it says so and has no button. */
+    suspend fun setWidget(on: Boolean) = change { settings.setHomeWidgetEnabled(on) }
+
+    /**
+     * The widget's rate as typed in dollars a kilometre ("0.70"), as Android's field takes it.
+     * Returns false, storing nothing, for what is not a rate between its limits.
+     */
+    suspend fun setWidgetRate(typed: String): Boolean {
+        val cents = parseCentsPerKm(typed) ?: return false
+        if (cents !in MIN_CENTS_PER_KM..MAX_CENTS_PER_KM) return false
+        change { settings.setHomeWidgetCentsPerKm(cents) }
+        return true
+    }
+
+    /**
+     * One day's own hours (2026-11-15 on the iPhone), as Android's week shown day by day: the
+     * start and end of [dayIndex] (0 is Monday) in minutes from midnight. Returns false,
+     * storing nothing, if the end is not after the start.
+     */
+    suspend fun setDayHours(dayIndex: Int, startMinute: Int, endMinute: Int): Boolean {
+        val start = timeOfSecondOfDay(startMinute * SECONDS_PER_MINUTE.toLong())
+        val end = timeOfSecondOfDay(endMinute * SECONDS_PER_MINUTE.toLong())
+        if (!areValidHours(start, end)) return false
+        val day = DayOfWeek.entries[dayIndex]
+        change { now ->
+            settings.setSchedule(
+                now.schedule.with(day, now.schedule.on(day).copy(start = start, end = end)),
+            )
+        }
+        return true
     }
 
     suspend fun setDrivingAlert(on: Boolean) = change { settings.setDrivingAlertEnabled(on) }
@@ -160,10 +228,20 @@ class IosSettings internal constructor(
             reportVehicle = now.reportVehicle.orEmpty(),
             accountantEmail = now.accountantEmail.orEmpty(),
             miles = unit == DistanceUnit.MILES,
+            light = now.look == AppLook.LIGHT,
             drivingAlert = now.drivingAlertEnabled,
             days =
                 DayOfWeek.entries.map {
-                    WorkDayText(formatShortDayOfWeek(it, localeNow), schedule.on(it).tracked)
+                    val day = schedule.on(it)
+                    WorkDayText(
+                        name = formatShortDayOfWeek(it, localeNow),
+                        tracked = day.tracked,
+                        startMinute = day.start.secondsIntoDay() / SECONDS_PER_MINUTE,
+                        endMinute = day.end.secondsIntoDay() / SECONDS_PER_MINUTE,
+                        hours =
+                            formatClockTime(day.start, localeNow, twentyFour) + " – " +
+                                formatClockTime(day.end, localeNow, twentyFour),
+                    )
                 },
             startMinute = first.start.secondsIntoDay() / SECONDS_PER_MINUTE,
             endMinute = first.end.secondsIntoDay() / SECONDS_PER_MINUTE,
@@ -194,8 +272,38 @@ class IosSettings internal constructor(
             adjustment = adjustText(now.distanceAdjustSteps),
             adjustUp = now.distanceAdjustSteps < MAX_ADJUST_STEPS,
             adjustDown = now.distanceAdjustSteps > -MAX_ADJUST_STEPS,
+            reminderOn = now.reminderEnabled,
+            reminderDay = "Day ${now.reminderDay}",
+            reminderLine = "Daily from the ${ordinal(now.reminderDay)} until the report is sent",
+            reminderEarlier = now.reminderDay > REMINDER_DAYS.first,
+            reminderLater = now.reminderDay < REMINDER_DAYS.last,
+            dailyCheckOn = now.nothingRecorded.enabled,
+            dailyCheckMinute = now.nothingRecorded.checkAt.secondsIntoDay() / SECONDS_PER_MINUTE,
+            dailyCheckTime = formatClockTime(now.nothingRecorded.checkAt, localeNow, twentyFour),
+            widgetOn = now.homeWidgetEnabled,
+            widgetRate = dollars(now.homeWidgetCentsPerKm) + "/km",
+            widgetRateTyped = dollars(now.homeWidgetCentsPerKm).removePrefix("$"),
+            widgetRateLimits = "Type the dollars a kilometre, such as 0.70: from " +
+                dollars(MIN_CENTS_PER_KM) + " to " + dollars(MAX_CENTS_PER_KM) + ".",
         )
     }
+
+    /** "1st", "2nd", "3rd", "4th", "11th", "21st", as Android's four reminder strings pick. */
+    private fun ordinal(day: Int): String {
+        val suffix =
+            when {
+                day % 100 in 11..13 -> "th"
+                day % 10 == 1 -> "st"
+                day % 10 == 2 -> "nd"
+                day % 10 == 3 -> "rd"
+                else -> "th"
+            }
+        return "$day$suffix"
+    }
+
+    /** "$0.70": cents written as dollars, as Android's rate tile writes them. */
+    private fun dollars(cents: Int): String =
+        "$" + (cents / 100) + "." + (cents % 100).toString().padStart(2, '0')
 
     private companion object {
         const val SECONDS_PER_MINUTE = 60
@@ -234,8 +342,15 @@ fun unitWord(unit: DistanceUnit): String = if (unit == DistanceUnit.MILES) "mi" 
 private fun com.shawnkowalchuk.milo.data.settings.SteppedChoice.next(value: Int, up: Boolean) =
     if (up) stepUp(value) else stepDown(value)
 
-/** One day of the work schedule, as its button says it. */
-data class WorkDayText(val name: String, val tracked: Boolean)
+/** One day of the work schedule, as its button says it, and its own hours. */
+data class WorkDayText(
+    val name: String,
+    val tracked: Boolean,
+    val startMinute: Int = 0,
+    val endMinute: Int = 0,
+    /** "8:00 AM – 4:30 PM". */
+    val hours: String = "",
+)
 
 /** The Settings screen's values, worded, and which steps are left. */
 data class SettingsText(
@@ -245,6 +360,8 @@ data class SettingsText(
     val reportVehicle: String,
     val accountantEmail: String,
     val miles: Boolean,
+    /** The light look picked in Settings; dark until it is (since 2026-11-15 on the iPhone). */
+    val light: Boolean,
     val drivingAlert: Boolean,
     /** Monday first. */
     val days: List<WorkDayText>,
@@ -270,4 +387,19 @@ data class SettingsText(
     val adjustment: String,
     val adjustUp: Boolean,
     val adjustDown: Boolean,
+    /** The monthly reminder (2026-11-15 on the iPhone): its switch, "Day 1", Android's line. */
+    val reminderOn: Boolean,
+    val reminderDay: String,
+    val reminderLine: String,
+    val reminderEarlier: Boolean,
+    val reminderLater: Boolean,
+    /** The daily check: its switch and its time, in minutes from midnight and as shown. */
+    val dailyCheckOn: Boolean,
+    val dailyCheckMinute: Int,
+    val dailyCheckTime: String,
+    /** The home-screen widget: its switch, "$0.70/km", "0.70" for the field, and its limits. */
+    val widgetOn: Boolean,
+    val widgetRate: String,
+    val widgetRateTyped: String,
+    val widgetRateLimits: String,
 )

@@ -1,6 +1,6 @@
 import SwiftUI
 
-// A card, as Android's Tile draws one: the dark ground, round corners, even padding.
+// A card, as Android's Tile draws one: the card's ground of the look in force, round corners, even padding.
 struct Tile<Content: View>: View {
     var ground: Color = Palette.tile
     @ViewBuilder var content: Content
@@ -22,7 +22,7 @@ struct DuallyMark: View {
 
     var body: some View {
         RoundedRectangle(cornerRadius: size * 34 / 150, style: .continuous)
-            .fill(Palette.accent)
+            .fill(Palette.accentTile)
             .overlay(MarkLetterShape().fill(Palette.markLetter, style: FillStyle(eoFill: true)))
             .frame(width: size, height: size)
             .accessibilityHidden(true)

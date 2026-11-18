@@ -81,9 +81,24 @@ import com.shawnkowalchuk.milo.core.trip.TripStatus
  * truck's address once (`TripVehicleCatchUp`). It decides whose odometer a trip moves.
  * @param label what Shawn called the trip ("Work", "Supplier"), picked from the labels used
  * before or typed new (since 2026-10-08), or null while it has none. The report prints it.
+ * @param homePhone the phone that recorded the trip, when it was another phone on the same
+ * online backup account (since 2026-11-14, ADR-017): its install number. Null for this phone's
+ * own trips, which are all trips before then. Another phone's trip comes from the backup,
+ * is never uploaded from here, and is not changed here until editing from any phone is built.
+ * @param homeTripId the trip's id on [homePhone]; null for this phone's own trips.
+ * @param changeHistory the versions of the trip that two phones' changes at once replaced
+ * (since 2026-11-14, ADR-017): the JSON of a list of `ReplacedChange`, newest last, at most ten;
+ * null while there are none. It travels with the trip to every phone.
  */
-// The index is for the Trips screen, which reads the trips that started in a span of time.
-@Entity(tableName = "trips", indices = [Index("startedAtMs")])
+// The first index is for the Trips screen, which reads the trips that started in a span of
+// time; the second finds another phone's trip by its phone and its id there.
+@Entity(
+    tableName = "trips",
+    indices = [
+        Index("startedAtMs"),
+        Index(value = ["homePhone", "homeTripId"], unique = true),
+    ],
+)
 data class Trip(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val startedAtMs: Long,
@@ -120,4 +135,7 @@ data class Trip(
     val recordedDistanceMetres: Double? = null,
     val vehicleAddress: String? = null,
     val label: String? = null,
+    val homePhone: String? = null,
+    val homeTripId: Long? = null,
+    val changeHistory: String? = null,
 )

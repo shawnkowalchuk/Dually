@@ -390,7 +390,7 @@ private struct PresetButton: View {
                 .font(Typography.body(15, weight: .bold))
                 .frame(maxWidth: .infinity, minHeight: 42)
                 .background(on ? Palette.accent : Palette.controlFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .foregroundStyle(on ? Palette.markLetter : Palette.text)
+                .foregroundStyle(on ? Palette.onAccent : Palette.text)
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(on ? .isSelected : [])

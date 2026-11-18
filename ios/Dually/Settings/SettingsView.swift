@@ -3,42 +3,91 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 // Settings on the iPhone (phase 4g), laid out as Android's Settings screen: Setup first, then
-// Units and Driving alert side by side, the work hours, and the trip numbers. Each press is stored
+// Units and Look side by side, the driving alert, the work hours, and the trip numbers. Each press is stored
 // at once and applies from the next trip; there is no Save, as on Android.
 struct SettingsView: View {
     @StateObject private var model: SettingsModel
     @ObservedObject var setup: SetupModel
     let openSetup: () -> Void
+    let openLog: () -> Void
+    let openWhatsNew: () -> Void
     private let core: DuallyCore
+    /// Counts the changes to the vehicles: the odometers are read again after each.
+    @State private var vehiclesChanged = 0
 
-    init(core: DuallyCore, setup: SetupModel, openSetup: @escaping () -> Void) {
+    init(
+        core: DuallyCore,
+        setup: SetupModel,
+        openSetup: @escaping () -> Void,
+        openLog: @escaping () -> Void,
+        openWhatsNew: @escaping () -> Void
+    ) {
         self.core = core
         _model = StateObject(wrappedValue: SettingsModel(core: core))
         self.setup = setup
         self.openSetup = openSetup
+        self.openLog = openLog
+        self.openWhatsNew = openWhatsNew
     }
 
     var body: some View {
         PinnedScreen(title: "Settings") {
             SetupLinkTile(screen: setup.screen, open: openSetup)
             if let text = model.text {
+                // Units and Look side by side, the first of the settings, as on Android.
                 HStack(alignment: .top, spacing: 12) {
                     UnitsTile(miles: text.miles) { Task { await model.setMiles(!text.miles) } }
-                    DrivingAlertTile(on: text.drivingAlert) { on in Task { await model.setDrivingAlert(on) } }
+                    LookTile(light: text.light) { Task { await model.setLight(!text.light) } }
                 }
+                DrivingAlertTile(on: text.drivingAlert) { on in Task { await model.setDrivingAlert(on) } }
                 // As on Android since 2026-11-12: the online backup stands open under Units.
                 CloudBackupTile(core: core)
-                OdometerTile(core: core, miles: text.miles)
+                VehiclesTile(core: core, changed: { vehiclesChanged += 1 })
+                OdometerTiles(core: core, miles: text.miles, vehiclesChanged: vehiclesChanged)
                 ReportDetailsTile(text: text, model: model)
+                ReminderTile(text: text, model: model)
                 WorkHoursTile(text: text, model: model)
+                DailyCheckTile(text: text, model: model)
                 TripNumbersTile(text: text, model: model)
+                SoundsTile(core: core)
+                WidgetTile(text: text, model: model)
                 YourDataTile(core: core)
+                LogLinkTile(open: openLog)
+                // Then Support and the review, and last the version, as on Android.
+                FooterLinks()
+                VersionTile(open: openWhatsNew)
             }
         }
         .task {
             setup.refresh()
             await model.load()
         }
+    }
+}
+
+/// The way to the Log, as Android's tile, in its words.
+private struct LogLinkTile: View {
+    let open: () -> Void
+
+    var body: some View {
+        Button(action: open) {
+            Tile {
+                HStack {
+                    Text("Log")
+                        .font(Typography.body(17, weight: .semibold))
+                        .foregroundStyle(Palette.text)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(Palette.textSecondary)
+                }
+                Text("What Dually did and when: every trip, connection and error. Support may ask for it.")
+                    .font(Typography.body(14))
+                    .foregroundStyle(Palette.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -75,14 +124,37 @@ private struct SetupLinkTile: View {
     }
 }
 
-/// The truck's odometer, as Android's tile in Settings (2026-11-14 on the iPhone, for Service):
+/// The odometers, one tile for each vehicle (ADR-018, 2026-11-17), as Android's Settings.
+private struct OdometerTiles: View {
+    let core: DuallyCore
+    /// The unit chosen: the tiles are read again when it changes.
+    let miles: Bool
+    /// The tiles are read again when a vehicle is added or removed.
+    let vehiclesChanged: Int
+    @State private var texts: [OdometerText] = []
+
+    var body: some View {
+        VStack(spacing: 12) {
+            ForEach(texts, id: \.vehicle) { text in
+                OdometerTile(core: core, text: text) { await read() }
+            }
+        }
+        .task(id: "\(miles)-\(vehiclesChanged)") { await read() }
+    }
+
+    private func read() async {
+        texts = (try? await core.service.odometers()) ?? []
+    }
+}
+
+/// A vehicle's odometer, as Android's tile in Settings (2026-11-14 on the iPhone, for Service):
 /// the figure Dually works out from the last reading and the trips since, and the way to type a
 /// new reading. A reading is never changed: a new one is added beside it, with its date.
 private struct OdometerTile: View {
     let core: DuallyCore
-    /// The unit chosen: the tile is read again when it changes.
-    let miles: Bool
-    @State private var text: OdometerText?
+    let text: OdometerText
+    /// Reads every tile again, after a reading is stored.
+    let reread: () async -> Void
     @State private var editing = false
     @State private var typed = ""
     @State private var refused = false
@@ -90,60 +162,57 @@ private struct OdometerTile: View {
 
     var body: some View {
         Tile {
-            if let text {
-                Text(text.title)
-                    .font(Typography.body(17, weight: .semibold))
+            Text(text.name.map { "\(text.title) · \($0)" } ?? text.title)
+                .font(Typography.body(17, weight: .semibold))
+                .foregroundStyle(Palette.text)
+            if let figure = text.figure {
+                Text(figure)
+                    .font(Typography.display(28))
                     .foregroundStyle(Palette.text)
-                if let figure = text.figure {
-                    Text(figure)
-                        .font(Typography.display(28))
-                        .foregroundStyle(Palette.text)
-                }
-                Text(text.madeOf)
+            }
+            Text(text.madeOf)
+                .font(Typography.body(14))
+                .foregroundStyle(Palette.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            if failed {
+                Text(serviceWords("settings_could_not_save"))
                     .font(Typography.body(14))
-                    .foregroundStyle(Palette.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                if failed {
-                    Text(serviceWords("settings_could_not_save"))
+                    .foregroundStyle(Palette.amber)
+            }
+            if editing {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(text.field)
+                        .font(Typography.body(13, weight: .semibold))
+                        .foregroundStyle(Palette.textSecondary)
+                    TextField(text.example, text: $typed)
+                        .keyboardType(.numberPad)
+                        .font(Typography.body(16))
+                        .padding(12)
+                        .background(Palette.controlFill, in: RoundedRectangle(cornerRadius: 12))
+                        .foregroundStyle(Palette.text)
+                        .accessibilityLabel(text.field)
+                }
+                if refused {
+                    Text(text.refused)
                         .font(Typography.body(14))
                         .foregroundStyle(Palette.amber)
                 }
-                if editing {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(text.field)
-                            .font(Typography.body(13, weight: .semibold))
-                            .foregroundStyle(Palette.textSecondary)
-                        TextField(text.example, text: $typed)
-                            .keyboardType(.numberPad)
-                            .font(Typography.body(16))
-                            .padding(12)
-                            .background(Palette.controlFill, in: RoundedRectangle(cornerRadius: 12))
-                            .foregroundStyle(Palette.text)
-                            .accessibilityLabel(text.field)
+                HStack(spacing: 8) {
+                    WideButton(title: serviceWords("action_cancel"), filled: false) {
+                        editing = false
+                        refused = false
                     }
-                    if refused {
-                        Text(text.refused)
-                            .font(Typography.body(14))
-                            .foregroundStyle(Palette.amber)
+                    WideButton(title: text.save, filled: true) {
+                        Task { await save() }
                     }
-                    HStack(spacing: 8) {
-                        WideButton(title: serviceWords("action_cancel"), filled: false) {
-                            editing = false
-                            refused = false
-                        }
-                        WideButton(title: text.save, filled: true) {
-                            Task { await save() }
-                        }
-                    }
-                } else {
-                    WideButton(title: text.button, filled: false) {
-                        typed = ""
-                        editing = true
-                    }
+                }
+            } else {
+                WideButton(title: text.button, filled: false) {
+                    typed = ""
+                    editing = true
                 }
             }
         }
-        .task(id: miles) { text = try? await core.service.odometer() }
     }
 
     private func save() async {
@@ -151,11 +220,12 @@ private struct OdometerTile: View {
             refused = true
             return
         }
-        let stored = (try? await core.service.saveReading(typed: typed))?.boolValue ?? false
+        let stored = (try? await core.service.saveReading(typed: typed, vehicle: text.vehicle))?
+            .boolValue ?? false
         failed = !stored
         refused = false
         editing = !stored
-        text = try? await core.service.odometer()
+        await reread()
     }
 }
 
@@ -174,6 +244,30 @@ private struct UnitsTile: View {
                     .font(Typography.body(18, weight: .semibold))
                     .foregroundStyle(Palette.text)
                 Text(miles ? "Tap for kilometres" : "Tap for miles")
+                    .font(Typography.body(13))
+                    .foregroundStyle(Palette.textSecondary)
+            }
+        }
+        .buttonStyle(.plain)
+        .frame(maxHeight: .infinity)
+    }
+}
+
+/// Dark or light: one button, as Android's Look tile ("Tap for light").
+private struct LookTile: View {
+    let light: Bool
+    let toggle: () -> Void
+
+    var body: some View {
+        Button(action: toggle) {
+            Tile {
+                Text("Look")
+                    .font(Typography.body(14))
+                    .foregroundStyle(Palette.textSecondary)
+                Text(light ? "Light" : "Dark")
+                    .font(Typography.body(18, weight: .semibold))
+                    .foregroundStyle(Palette.text)
+                Text(light ? "Tap for dark" : "Tap for light")
                     .font(Typography.body(13))
                     .foregroundStyle(Palette.textSecondary)
             }
@@ -210,6 +304,8 @@ private struct DrivingAlertTile: View {
 private struct WorkHoursTile: View {
     let text: SettingsText
     @ObservedObject var model: SettingsModel
+    /// Each day shown by itself, while all days still have the same hours.
+    @State private var eachDay = false
 
     var body: some View {
         Tile {
@@ -226,7 +322,7 @@ private struct WorkHoursTile: View {
                             .frame(maxWidth: .infinity, minHeight: 38)
                             .background(day.tracked ? Palette.accent : Palette.controlFill,
                                         in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                            .foregroundStyle(day.tracked ? Palette.markLetter : Palette.text)
+                            .foregroundStyle(day.tracked ? Palette.onAccent : Palette.text)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("\(day.name), \(day.tracked ? "work day" : "not a work day")")
@@ -253,10 +349,33 @@ private struct WorkHoursTile: View {
             Text(text.week)
                 .font(Typography.body(14))
                 .foregroundStyle(Palette.textSecondary)
-            if !text.sameHoursEveryDay {
-                Text("Your work days have hours of their own. Changing the hours here gives every day these.")
-                    .font(Typography.body(13))
-                    .foregroundStyle(Palette.amber)
+            // Each work day with hours of its own, as Android's week shown day by day: once the
+            // days differ they stay shown each by itself, and the line above gives them one set.
+            Toggle("Each day its own hours", isOn: Binding(get: { eachDay || !text.sameHoursEveryDay }, set: { eachDay = $0 }))
+                .font(Typography.body(15, weight: .semibold))
+                .foregroundStyle(Palette.text)
+                .tint(Palette.accent)
+                .disabled(!text.sameHoursEveryDay)
+            if eachDay || !text.sameHoursEveryDay {
+                ForEach(Array(text.days.enumerated()), id: \.offset) { index, day in
+                    if day.tracked {
+                        HStack {
+                            Text(day.name)
+                                .font(Typography.body(14, weight: .semibold))
+                                .foregroundStyle(Palette.text)
+                                .frame(width: 44, alignment: .leading)
+                            TimeField(label: "\(day.name) start", minute: Int(day.startMinute)) { start in
+                                Task { await model.setDayHours(index, start: start, end: Int(day.endMinute)) }
+                            }
+                            Spacer()
+                            Text("to").font(Typography.body(14)).foregroundStyle(Palette.textSecondary)
+                            Spacer()
+                            TimeField(label: "\(day.name) end", minute: Int(day.endMinute)) { end in
+                                Task { await model.setDayHours(index, start: Int(day.startMinute), end: end) }
+                            }
+                        }
+                    }
+                }
             }
             Text("Trips outside the work hours")
                 .font(Typography.body(15, weight: .semibold))
@@ -275,6 +394,136 @@ private struct WorkHoursTile: View {
                  : "Recorded and saved as Personal.")
                 .font(Typography.body(13))
                 .foregroundStyle(Palette.textSecondary)
+        }
+    }
+}
+
+/// The monthly reminder, as Android's tile, in its words: the switch, the day it starts on, and
+/// when it comes.
+private struct ReminderTile: View {
+    let text: SettingsText
+    @ObservedObject var model: SettingsModel
+
+    var body: some View {
+        Tile {
+            Text("Monthly reminder")
+                .font(Typography.body(17, weight: .semibold))
+                .foregroundStyle(Palette.text)
+            Toggle("Remind me to send the report", isOn: Binding(get: { text.reminderOn }, set: { on in
+                Task { await model.setReminder(on) }
+            }))
+            .font(Typography.body(15))
+            .foregroundStyle(Palette.text)
+            .tint(Palette.accent)
+            if text.reminderOn {
+                StepperRow(
+                    name: "Start on this day of the month",
+                    value: text.reminderDay,
+                    canLower: text.reminderEarlier,
+                    canRaise: text.reminderLater,
+                    lower: { Task { await model.stepReminderDay(later: false) } },
+                    raise: { Task { await model.stepReminderDay(later: true) } }
+                )
+                Text(text.reminderLine)
+                    .font(Typography.body(14, weight: .semibold))
+                    .foregroundStyle(Palette.text)
+                Text("In a month that has fewer days, the reminder starts on its last day. A month without a Business trip brings no reminder. Tap it to open that report.")
+                    .font(Typography.body(13))
+                    .foregroundStyle(Palette.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+/// The daily check, as Android's tile: on a work day with no trip by the time set, one
+/// notification.
+private struct DailyCheckTile: View {
+    let text: SettingsText
+    @ObservedObject var model: SettingsModel
+
+    var body: some View {
+        Tile {
+            Text("Daily check")
+                .font(Typography.body(17, weight: .semibold))
+                .foregroundStyle(Palette.text)
+            Toggle("Tell me when no trip has been recorded", isOn: Binding(get: { text.dailyCheckOn }, set: { on in
+                Task { await model.setDailyCheck(on) }
+            }))
+            .font(Typography.body(15))
+            .foregroundStyle(Palette.text)
+            .tint(Palette.accent)
+            if text.dailyCheckOn {
+                HStack {
+                    Text("Check at")
+                        .font(Typography.body(15))
+                        .foregroundStyle(Palette.text)
+                    Spacer()
+                    TimeField(label: "Daily check: time", minute: Int(text.dailyCheckMinute)) { minute in
+                        Task { await model.setDailyCheckTime(minute) }
+                    }
+                }
+                Text("On a work day, if no trip has been recorded by this time, Dually sends one notification. It catches the day Dually has quietly stopped noticing the truck. If a work day's hours start later, Dually checks from their start. A trip you add by hand does not count.")
+                    .font(Typography.body(13))
+                    .foregroundStyle(Palette.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+/// The home-screen widget, as Android's tile: its switch and the rate it prices Business
+/// kilometres at, for reference.
+private struct WidgetTile: View {
+    let text: SettingsText
+    @ObservedObject var model: SettingsModel
+    @State private var typed = ""
+    @State private var refused = false
+
+    var body: some View {
+        Tile {
+            Text("Home-screen widget")
+                .font(Typography.body(17, weight: .semibold))
+                .foregroundStyle(Palette.text)
+            Toggle("The trip, Start and End, and business kilometres in dollars", isOn: Binding(get: { text.widgetOn }, set: { on in
+                Task { await model.setWidget(on) }
+            }))
+            .font(Typography.body(15))
+            .foregroundStyle(Palette.text)
+            .tint(Palette.accent)
+            HStack {
+                Text("Rate")
+                    .font(Typography.body(15))
+                    .foregroundStyle(Palette.text)
+                Spacer()
+                Text(text.widgetRate)
+                    .font(Typography.figure(16))
+                    .foregroundStyle(Palette.text)
+            }
+            HStack(spacing: 8) {
+                TextField("0.70", text: $typed)
+                    .keyboardType(.decimalPad)
+                    .font(Typography.figure(16))
+                    .padding(.horizontal, 12)
+                    .frame(minHeight: 46)
+                    .background(Palette.controlFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .accessibilityLabel("Dollars a kilometre")
+                WideButton(title: "Save rate", filled: false) {
+                    Task {
+                        refused = !(await model.setWidgetRate(typed))
+                        if !refused { typed = "" }
+                    }
+                }
+            }
+            if refused {
+                Text(text.widgetRateLimits)
+                    .font(Typography.body(13))
+                    .foregroundStyle(Palette.amber)
+            }
+            Text("Home, the widget and the CarPlay screen show your Business kilometres in dollars at this rate, for reference. The report itself stays in kilometres. To add the widget: touch and hold the Home Screen, tap Edit, then Add Widget, then Dually.")
+                .font(Typography.body(13))
+                .foregroundStyle(Palette.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }
@@ -449,7 +698,7 @@ struct YourDataTile: View {
                         .font(Typography.body(16, weight: .bold))
                         .frame(maxWidth: .infinity, minHeight: 46)
                         .background(Palette.accent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .foregroundStyle(Palette.markLetter)
+                        .foregroundStyle(Palette.onAccent)
                 }
             } else {
                 WideButton(title: "Export all data", filled: false) {

@@ -476,8 +476,8 @@ What the app's What's new screen (Settings, Version) and the website's `/changes
 ```
 
 - **With every change you will notice,** a line goes into the newest version, in the same pull request, and `python3 tools/changes_page.py` writes the website's page again.
-- **After a release,** the next such pull request opens a new version above it: the next number, `"date": null`, and in `app/build.gradle.kts` `versionName` set to that number and `versionCode` up by one.
-- **CI refuses** a list that breaks its rules (newest first, only the newest undated, the newest equal to `versionName`) or a page that is not the one the list makes; the error says what to fix.
+- **After a release,** the next such pull request opens a new version above it: the next number, `"date": null`, and in `AppVersion.xcconfig` (one version and build number for both phones since 2026-11-17) `MARKETING_VERSION` set to that number. The build number there, `CURRENT_PROJECT_VERSION`, goes up by one for every build sent to Google Play or App Store Connect, whichever phone it is for.
+- **CI refuses** a list that breaks its rules (newest first, only the newest undated, the newest equal to `MARKETING_VERSION`, on Android's list and the iPhone's) or a page that is not the one the list makes; the error says what to fix.
 - After an update to a new version, the phone opens What's new once by itself.
 
 ### The website

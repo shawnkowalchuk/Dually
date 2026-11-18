@@ -20,6 +20,14 @@ final class DrivingWatch: NSObject {
     var onTap: (() -> Void)?
     /// What a tap on the service reminder does: open Service.
     var onServiceTap: (() -> Void)?
+    /// A tap on the monthly reminder: the month whose report it opens.
+    var onReminderTap: ((Int, Int) -> Void)?
+    /// Each wake for a move, first: what was stored (a trip, a wait beside the parked truck) is
+    /// picked up and its GPS started again, as at the app's start.
+    var onWake: (() async -> Void)?
+    /// Driving with no trip open: true when the truck was found connected and a trip started,
+    /// which takes the alert's place (ADR-015's second layer).
+    var onDrivingWithoutTrip: (() async -> Bool)?
 
     private let manager = CLLocationManager()
     private let motion = CMMotionActivityManager()
@@ -63,8 +71,14 @@ final class DrivingWatch: NSObject {
         // iOS gives a wake for a move a few seconds; this asks for the time the look needs.
         let task = UIApplication.shared.beginBackgroundTask(withName: "Driving alert")
         defer { UIApplication.shared.endBackgroundTask(task) }
+        await onWake?()
         let from = Date(timeIntervalSince1970: Double(core.drivingAlert.lookFromMs()) / 1000)
         let records = await history(from: from)
+        // Driving now with no trip open: the truck's audio in the route starts the trip the
+        // automation missed, as Android's reading of the truck does, whatever the alert's own
+        // rules (its hours, its switch, its half hour) would say. Asked before them, so an
+        // alert is neither shown nor counted for a drive that has its trip.
+        if await drivingNow(records) { _ = await onDrivingWithoutTrip?() }
         let allowed = await UNUserNotificationCenter.current().notificationSettings()
             .authorizationStatus == .authorized
         guard let step = try? await core.drivingAlert.motion(
@@ -77,6 +91,17 @@ final class DrivingWatch: NSObject {
         case DrivingAlertStep.withdraw: withdraw()
         default: break
         }
+    }
+
+    /// Whether Core Motion says the iPhone is in a vehicle now: the newest of its reports that
+    /// knows, in this wake's history or, where it has none (the drive began before the last
+    /// look), in the last hour's.
+    private func drivingNow(_ records: [MotionRecord]) async -> Bool {
+        if let known = records.last(where: { $0.inVehicle != nil }) {
+            return known.inVehicle?.boolValue == true
+        }
+        let hour = await history(from: Date(timeIntervalSinceNow: -3600))
+        return hour.last(where: { $0.inVehicle != nil })?.inVehicle?.boolValue == true
     }
 
     /// Core Motion's history from [from] to now, as the shared code reads it.
@@ -149,6 +174,7 @@ extension DrivingWatch: UNUserNotificationCenterDelegate {
         Task { @MainActor in
             if identifier == Self.alertId { self.onTap?() }
             if identifier == Self.serviceId { self.onServiceTap?() }
+            if let month = Reminders.month(of: response) { self.onReminderTap?(month.year, month.month) }
             completionHandler()
         }
     }

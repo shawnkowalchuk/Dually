@@ -61,11 +61,17 @@ class FirestoreCloudStore(private val firebase: CloudFirebase) : CloudStore {
      *
      * @throws CloudUnreachableException or [CloudRefusedException], as [apply] does.
      */
-    suspend fun readAll(account: String): Map<String, String> {
+    suspend fun readAll(account: String): Map<String, String> =
+        readCollections(account, listOf(CLOUD_TRIPS, "backup"))
+
+    override suspend fun readCollections(
+        account: String,
+        collections: List<String>,
+    ): Map<String, String> {
         val firestore = firebase.firestore()
         return try {
             withTimeout(BATCH_TIMEOUT_MS) {
-                listOf(CLOUD_TRIPS, "backup").flatMap { folder ->
+                collections.flatMap { folder ->
                     firestore
                         .collection("users/$account/$folder")
                         .get(Source.SERVER)

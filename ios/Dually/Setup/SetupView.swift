@@ -9,6 +9,9 @@ struct SetupView: View {
     @ObservedObject var model: SetupModel
     /// Back to where Setup was opened from.
     let back: () -> Void
+    /// The first start's Setup, after the welcome page: Done at the end ends it, as on Android.
+    var firstStart = false
+    var done: () -> Void = {}
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -18,6 +21,13 @@ struct SetupView: View {
                 ForEach(Array(screen.rows.enumerated()), id: \.offset) { _, row in
                     SetupRowTile(row: row, model: model)
                 }
+                if model.vehicles.count > 1 {
+                    SeveralVehiclesTile(vehicles: model.vehicles)
+                }
+            }
+            if firstStart {
+                WideButton(title: "Done", filled: true, action: done)
+                    .padding(.top, 8)
             }
         }
         .task { model.refresh() }
@@ -25,6 +35,25 @@ struct SetupView: View {
             // Back from the Shortcuts app or Settings: an automation may have run, a permission
             // may have changed.
             if phase == .active { model.refresh() }
+        }
+    }
+}
+
+/// With several vehicles (ADR-018): each needs its own pair of automations, its vehicle picked
+/// in each action. The rows above check the first pair to run.
+/// TODO(debt): one check for every pair, not one per vehicle (FINDINGS_LOG, 2026-11-17).
+private struct SeveralVehiclesTile: View {
+    let vehicles: [IosVehicle]
+
+    var body: some View {
+        Tile {
+            Text("Several vehicles")
+                .font(Typography.body(17, weight: .semibold))
+                .foregroundStyle(Palette.text)
+            Text("Make a Start a trip and an End a trip automation for each of \(vehicles.map(\.name).joined(separator: ", ")), the same way, and tap Vehicle in each action to pick the vehicle it is for. An action with no vehicle counts its trips for \(vehicles[0].name).")
+                .font(Typography.body(15))
+                .foregroundStyle(Palette.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }
@@ -44,7 +73,7 @@ private struct ReadyTile: View {
     }
 
     var body: some View {
-        Tile(ground: screen.complete ? Palette.tile : Palette.accent) {
+        Tile(ground: screen.complete ? Palette.tile : Palette.accentTile) {
             Text("\(screen.ready) of \(screen.total) ready")
                 .font(Typography.display(24))
                 .foregroundStyle(screen.complete ? Palette.text : Palette.markLetter)

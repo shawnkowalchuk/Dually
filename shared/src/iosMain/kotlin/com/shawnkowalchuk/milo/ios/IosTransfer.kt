@@ -14,8 +14,10 @@ import com.shawnkowalchuk.milo.data.transfer.DataExport
 import com.shawnkowalchuk.milo.data.transfer.DataImport
 import com.shawnkowalchuk.milo.data.transfer.ExportReading
 import com.shawnkowalchuk.milo.data.transfer.ExportWritten
+import com.shawnkowalchuk.milo.data.transfer.ImportBegun
 import com.shawnkowalchuk.milo.data.transfer.MainReplacement
 import com.shawnkowalchuk.milo.data.transfer.exportFileName
+import com.shawnkowalchuk.milo.data.transfer.importBegunOf
 import kotlin.coroutines.cancellation.CancellationException
 import okio.BufferedSink
 import okio.FileSystem
@@ -23,16 +25,19 @@ import okio.Path.Companion.toPath
 import okio.buffer
 import okio.use
 
+/** How many starts set about finishing a cut-off import before it is left as it is. */
+private const val MAX_TRIES = 2
+
 /**
  * "Export all data" and "Import data" on the iPhone (phase 4g, third part): the export file both
  * phones write and read (DataExport, DataImport and the reader, shared since 2026-11-13), so an
  * export from Android imports on the iPhone and back.
  *
  * An import replaces every trip, sent report and raw point, and the settings the file holds, as on
- * Android. It writes a safety copy of what the phone holds first, as Android does. Not on the
- * iPhone: Android's finishing of an import the phone was switched off during (ImportBegun);
- * `[DEBT]` in the findings log. The truck's pairing is the phone's own and is kept: an iPhone has
- * no Bluetooth pairing.
+ * Android. It writes a safety copy of what the phone holds first, as Android does. Since
+ * 2026-11-16 an import the app is ended in the middle of is finished at the next start, as on
+ * Android ([finishCutOff], `ImportBegun`). The truck's pairing is the phone's own and is kept: an
+ * iPhone has no Bluetooth pairing.
  */
 class IosTransfer internal constructor(
     private val export: DataExport,
@@ -111,8 +116,9 @@ class IosTransfer internal constructor(
         val checked = check.checked ?: return ImportOutcome.NothingChecked
         try {
             // A copy of what is replaced, as on Android, before anything is.
+            val safetyCopyAtMs = clock()
             if (write(
-                    folder() + "/Before-import-" + exportFileName(clock(), zone()),
+                    folder() + "/Before-import-" + exportFileName(safetyCopyAtMs, zone()),
                 ) !is ExportWritten.Done
             ) {
                 return ImportOutcome.TripRecording
@@ -125,10 +131,28 @@ class IosTransfer internal constructor(
                         "$said: ${checked.trips.size} trips replace the " +
                             "${check.storedTrips} that were here",
                 )
+            // Dually's own copy of the file and the note, as on Android, before the trips are
+            // replaced: the trips and the points are in two databases, and an app ended
+            // between the two is finished from them at its next start.
+            FileSystem.SYSTEM.createDirectories(importFolder().toPath())
+            FileSystem.SYSTEM.delete(keptCopy().toPath())
+            FileSystem.SYSTEM.copy(path.toPath(), keptCopy().toPath())
+            val begun =
+                ImportBegun(
+                    import.highestTripIdWith(checked),
+                    safetyCopyAtMs,
+                    line.atMs,
+                    line.message,
+                )
+            writeNote(begun)
             val replaced = import.replaceMain(checked, line)
-            if (replaced !is MainReplacement.Done) return ImportOutcome.TripRecording
-            import.replacePoints({ IosFileReader(path) }, checked, replaced.highestTripId)
+            if (replaced !is MainReplacement.Done) {
+                clearCutOff()
+                return ImportOutcome.TripRecording
+            }
+            import.replacePoints({ IosFileReader(keptCopy()) }, checked, replaced.highestTripId)
             checked.settings?.let { settings.replaceTransferred(it, TruckChange.Keep) }
+            clearCutOff()
             return ImportOutcome.Done(checked.trips.size, checked.settings != null)
         } catch (cancelled: CancellationException) {
             throw cancelled
@@ -142,6 +166,111 @@ class IosTransfer internal constructor(
             return ImportOutcome.Failed(failure.message.orEmpty())
         }
     }
+
+    /**
+     * Finishes an import the app was ended in the middle of, at its next start, as Android does
+     * (`ImportResume`), and returns the Log's line, or null when none was cut off. The note says
+     * whether the trips were replaced (the Log's line written with them); from Dually's copy of
+     * the file the points and the settings are stored, or else the points of the trips that are
+     * gone are removed. Two starts that could not finish it leave it as it is.
+     */
+    suspend fun finishCutOff(): String? {
+        val notePath = note().toPath()
+        if (!FileSystem.SYSTEM.exists(notePath)) {
+            FileSystem.SYSTEM.delete(keptCopy().toPath())
+            return null
+        }
+        val begun = importBegunOf(FileSystem.SYSTEM.read(notePath) { readUtf8() })
+        if (begun == null) {
+            clearCutOff()
+            return null
+        }
+        val replaced = begun.tries > 0 || import.wasReplaced(begun)
+        val line =
+            when {
+                !replaced -> {
+                    clearCutOff()
+                    say(
+                        "Dually was ended just as an import began, before the trips were " +
+                            "replaced. Everything on this iPhone is as it was; the file has to " +
+                            "be imported again",
+                    )
+                }
+
+                begun.tries >= MAX_TRIES -> {
+                    clearCutOff()
+                    say(
+                        "Dually was ended in the middle of an import, and two later starts " +
+                            "could not finish it. It is left as it is: the trips and the sent " +
+                            "reports are the file's, and raw GPS points of the trips that are " +
+                            "gone may still be stored under their trip ids. Importing the file " +
+                            "again puts that right",
+                        problem = true,
+                    )
+                }
+
+                else -> finishFrom(begun)
+            }
+        return line
+    }
+
+    private suspend fun finishFrom(begun: ImportBegun): String {
+        // Counted before anything is tried, so a start ended in the middle of this is counted.
+        writeNote(begun.copy(tries = begun.tries + 1))
+        val copy = keptCopy()
+        val checked =
+            if (begun.tries == 0 && FileSystem.SYSTEM.exists(copy.toPath())) {
+                runCatching {
+                    (import.check { IosFileReader(copy) } as? ExportReading.Good)?.export
+                }.getOrNull()
+            } else {
+                null
+            }
+        val line =
+            if (checked != null) {
+                val points = import.replacePoints({
+                    IosFileReader(copy)
+                }, checked, begun.highestTripId)
+                checked.settings?.let { settings.replaceTransferred(it, TruckChange.Keep) }
+                say(
+                    "Dually was ended in the middle of an import, and has finished it at this " +
+                        "start from its copy of the file: the ${checked.trips.size} trips were " +
+                        "stored before Dually was ended, and $points raw GPS points with them now" +
+                        if (checked.settings != null) ". The file's settings are in force" else "",
+                )
+            } else {
+                val removed = import.removePoints(begun.highestTripId)
+                say(
+                    "Dually was ended in the middle of an import, after the trips and the sent " +
+                        "reports were replaced and before the file's raw GPS points were all " +
+                        "stored. Its copy of the file could not be used to finish, so the " +
+                        "$removed raw GPS points of the trips that are gone were removed: the " +
+                        "imported trips have none. Importing the file again makes it whole",
+                )
+            }
+        clearCutOff()
+        return line
+    }
+
+    private suspend fun say(line: String, problem: Boolean = false): String {
+        eventLog.add(clock(), if (problem) EventCategory.ERROR else EventCategory.REPORT, line)
+        return line
+    }
+
+    private fun writeNote(begun: ImportBegun) {
+        FileSystem.SYSTEM.write(note().toPath()) { writeUtf8(begun.asText()) }
+    }
+
+    private fun clearCutOff() {
+        FileSystem.SYSTEM.delete(note().toPath())
+        FileSystem.SYSTEM.delete(keptCopy().toPath())
+    }
+
+    private fun importFolder(): String = appFolderPath() + "/import"
+
+    private fun keptCopy(): String = importFolder() + "/incoming.json"
+
+    private fun note(): String = importFolder() + "/begun.txt"
 
     private suspend fun write(path: String): ExportWritten =
         FileSystem.SYSTEM.sink(path.toPath()).buffer().use { sink ->

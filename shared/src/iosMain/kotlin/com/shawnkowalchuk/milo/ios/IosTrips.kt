@@ -4,29 +4,44 @@ import com.shawnkowalchuk.milo.core.schedule.TripCategory
 import com.shawnkowalchuk.milo.core.text.Locale
 import com.shawnkowalchuk.milo.core.time.ZoneId
 import com.shawnkowalchuk.milo.core.time.compareDates
+import com.shawnkowalchuk.milo.core.time.yearMonth
 import com.shawnkowalchuk.milo.core.time.yearMonthOf
 import com.shawnkowalchuk.milo.core.trip.labelChoices
+import com.shawnkowalchuk.milo.core.util.CHART_GRID_STEPS
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
+import com.shawnkowalchuk.milo.core.util.chartStep
+import com.shawnkowalchuk.milo.core.util.daySpan
 import com.shawnkowalchuk.milo.core.util.formatDistance
 import com.shawnkowalchuk.milo.core.util.formatMonthAndYear
+import com.shawnkowalchuk.milo.core.util.formatMonthName
 import com.shawnkowalchuk.milo.core.util.formatShortDay
 import com.shawnkowalchuk.milo.core.util.formatTenths
 import com.shawnkowalchuk.milo.core.util.formatTimeOfDay
 import com.shawnkowalchuk.milo.core.util.formatTimeSpan
 import com.shawnkowalchuk.milo.core.util.localDateOf
+import com.shawnkowalchuk.milo.core.util.monthOf
 import com.shawnkowalchuk.milo.core.util.monthSpan
 import com.shawnkowalchuk.milo.core.util.usesTwelveHourClock
+import com.shawnkowalchuk.milo.core.util.wholeHoursAndMinutes
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
+import com.shawnkowalchuk.milo.data.report.SentReport
+import com.shawnkowalchuk.milo.data.report.monthSubmission
 import com.shawnkowalchuk.milo.data.trip.ByHandMark
 import com.shawnkowalchuk.milo.data.trip.TripCorrections
 import com.shawnkowalchuk.milo.data.trip.TripRepository
+import com.shawnkowalchuk.milo.data.trip.todayTrips
+import com.shawnkowalchuk.milo.feature.tripgraph.yearFigures
 import com.shawnkowalchuk.milo.feature.trips.TripKind
 import com.shawnkowalchuk.milo.feature.trips.TripLine
 import com.shawnkowalchuk.milo.feature.trips.monthSummary
 import com.shawnkowalchuk.milo.platform.address.OpenTripStart
 import com.shawnkowalchuk.milo.platform.address.TripPlace
 import kotlinx.coroutines.flow.first
+
+/** The months of a year, and tenths in one unit: the graph's figures. */
+private const val MONTHS_IN_YEAR = 12
+private const val TENTHS = 10.0
 
 /**
  * The Trips screen's door to the shared code on the iPhone (phase 4c). A month is worked out by
@@ -46,6 +61,7 @@ class IosTrips internal constructor(
     private val clock: () -> Long,
     private val openTripStart: () -> OpenTripStart?,
     private val unit: () -> DistanceUnit,
+    private val sentReports: suspend () -> List<SentReport> = { emptyList() },
 ) {
     /**
      * The trips started in [month] (1 to 12) of [year]. Deleted and discarded trips are listed
@@ -74,41 +90,12 @@ class IosTrips internal constructor(
                 liveDistanceMetres = liveMetres,
                 liveStart = openTripStart(),
                 unit = unit,
+                // Locked once sent, on every phone (ADR-017, 2026-11-14).
+                locked = monthSubmission(shown, sentReports()) != null,
             )
         val twentyFourHour = !usesTwelveHourClock(localeNow)
         val today = localDateOf(clock(), zoneNow)
-        fun lineText(line: TripLine) = TripText(
-            tripId = line.id,
-            time =
-                line.endedAtMs?.let { end ->
-                    val (start, ending) =
-                        formatTimeSpan(line.startedAtMs, end, zoneNow, localeNow, twentyFourHour)
-                    "$start – $ending"
-                } ?: formatTimeOfDay(line.startedAtMs, zoneNow, localeNow, twentyFourHour),
-            route = routeText(line),
-            distance = line.distanceMetres?.let { formatDistance(it, unit, localeNow) },
-            category =
-                when (line.category) {
-                    TripCategory.BUSINESS -> "Business"
-                    TripCategory.PERSONAL -> "Personal"
-                    null -> null
-                },
-            note = noteText(line),
-            label = line.label,
-            canMarkBusiness = TripCategory.BUSINESS in line.markableAs,
-            canMarkPersonal = TripCategory.PERSONAL in line.markableAs,
-            correction = line.kind.correction?.name,
-            correctionWords =
-                when (line.kind) {
-                    TripKind.COUNTED -> "Delete"
-                    TripKind.DELETED -> "Restore"
-                    TripKind.DISCARDED -> "Count it"
-                    TripKind.IN_PROGRESS -> null
-                },
-            canLabel = line.kind == TripKind.COUNTED,
-            canEdit = line.editable,
-            unit = unitWord(unit),
-        )
+        fun lineText(line: TripLine) = tripText(line, zoneNow, localeNow, twentyFourHour, unit)
         return MonthText(
             title = formatMonthAndYear(shown, localeNow),
             business = formatTenths(summary.totals.business.tenths, localeNow),
@@ -130,6 +117,141 @@ class IosTrips internal constructor(
                             },
                         business = formatTenths(day.businessTenths, localeNow),
                         trips = day.trips.map(::lineText),
+                    )
+                },
+        )
+    }
+
+    private fun tripText(
+        line: TripLine,
+        zoneNow: ZoneId,
+        localeNow: Locale,
+        twentyFourHour: Boolean,
+        unit: DistanceUnit,
+    ) = TripText(
+        tripId = line.id,
+        time =
+            line.endedAtMs?.let { end ->
+                val (start, ending) =
+                    formatTimeSpan(line.startedAtMs, end, zoneNow, localeNow, twentyFourHour)
+                "$start – $ending"
+            } ?: formatTimeOfDay(line.startedAtMs, zoneNow, localeNow, twentyFourHour),
+        route = routeText(line),
+        distance = line.distanceMetres?.let { formatDistance(it, unit, localeNow) },
+        category =
+            when (line.category) {
+                TripCategory.BUSINESS -> "Business"
+                TripCategory.PERSONAL -> "Personal"
+                null -> null
+            },
+        note = noteText(line),
+        label = line.label,
+        canMarkBusiness = TripCategory.BUSINESS in line.markableAs,
+        canMarkPersonal = TripCategory.PERSONAL in line.markableAs,
+        correction = line.kind.correction?.name?.takeIf { !line.readOnly },
+        correctionWords =
+            when (line.kind) {
+                TripKind.COUNTED -> "Delete"
+                TripKind.DELETED -> "Restore"
+                TripKind.DISCARDED -> "Count it"
+                TripKind.IN_PROGRESS -> null
+            }.takeIf { !line.readOnly },
+        canLabel = line.kind == TripKind.COUNTED && !line.readOnly,
+        canEdit = line.editable,
+        canPutBack = line.canPutBack,
+        unit = unitWord(unit),
+    )
+
+    /**
+     * Home's list of today's finished trips, newest first, as Android's (`TodayListTile`; on the
+     * iPhone since 2026-11-15): the rows Trips shows for today, and the label "Today", or
+     * "Today · 3 trips · 1 h 5 min driving" once there is one. The trip in progress is left out
+     * until it ends, as on Android.
+     */
+    suspend fun today(): TodayText {
+        val zoneNow = zone()
+        val localeNow = locale()
+        val unit = unit()
+        val nowMs = clock()
+        val span = daySpan(localDateOf(nowMs, zoneNow), zoneNow)
+        val rows = trips.observeTripsStartedBetween(span.fromMs, span.untilMs).first()
+        val counted = todayTrips(rows)
+        val summary =
+            monthSummary(
+                trips = rows,
+                zone = zoneNow,
+                showLeftOut = false,
+                liveTripId = null,
+                liveDistanceMetres = null,
+                liveStart = null,
+                unit = unit,
+                locked = monthSubmission(monthOf(nowMs, zoneNow), sentReports()) != null,
+            )
+        val twentyFourHour = !usesTwelveHourClock(localeNow)
+        val time = wholeHoursAndMinutes(counted.driveTimeMs)
+        val driving = if (time.hours ==
+            0L
+        ) {
+            "${time.minutes} min"
+        } else {
+            "${time.hours} h ${time.minutes} min"
+        }
+        return TodayText(
+            title =
+                when (counted.count) {
+                    0 -> "Today"
+                    1 -> "Today · 1 trip · $driving driving"
+                    else -> "Today · ${counted.count} trips · $driving driving"
+                },
+            trips =
+                summary.days.flatMap { it.trips }.map {
+                    tripText(it, zoneNow, localeNow, twentyFourHour, unit)
+                },
+        )
+    }
+
+    /**
+     * The graph of a year's months, as Android's (`TripGraphScreen`; on the iPhone since
+     * 2026-11-16): each month's Business and Personal distance added up as Trips adds a month
+     * ([yearFigures]), the scale's top as Android's chart rounds it ([chartStep]), and each
+     * begun month's line in words, "March: Business 412.3 km · Personal 88.0 km".
+     */
+    suspend fun yearGraph(year: Int): YearGraphText {
+        val zoneNow = zone()
+        val localeNow = locale()
+        val unitNow = unit()
+        val current = localDateOf(clock(), zoneNow).yearMonth()
+        val from = monthSpan(yearMonthOf(year, 1), zoneNow).fromMs
+        val until = monthSpan(yearMonthOf(year, MONTHS_IN_YEAR), zoneNow).untilMs
+        val figures =
+            yearFigures(
+                trips.observeTripsStartedBetween(from, until).first(),
+                year,
+                current,
+                zoneNow,
+                unitNow,
+            )
+        val word = unitWord(unitNow)
+        val highest =
+            figures.flatMap { listOfNotNull(it.businessTenths, it.personalTenths) }.maxOrNull()
+        return YearGraphText(
+            year = year,
+            canStepForward = year < current.year,
+            currentIndex = if (year == current.year) current.monthNumber - 1 else -1,
+            scaleTop = chartStep((highest ?: 0L) / TENTHS) * CHART_GRID_STEPS,
+            gridSteps = CHART_GRID_STEPS,
+            months =
+                figures.map { figure ->
+                    val business = figure.businessTenths
+                    val personal = figure.personalTenths
+                    MonthGraphText(
+                        begun = business != null,
+                        business = (business ?: 0L) / TENTHS,
+                        personal = (personal ?: 0L) / TENTHS,
+                        line =
+                            formatMonthName(figure.month, localeNow) + ": Business " +
+                                formatTenths(business ?: 0L, localeNow) + " $word · Personal " +
+                                formatTenths(personal ?: 0L, localeNow) + " $word",
                     )
                 },
         )
@@ -211,6 +333,15 @@ class IosTrips internal constructor(
     }
 
     private fun noteText(line: TripLine): String? = when {
+        // ADR-017: another phone's later change replaced one, kept in the trip's history.
+        line.canPutBack ->
+            "A change to this trip was replaced by a later one. Put back brings it back."
+
+        // ADR-017: recorded by another phone on the backup account.
+        line.fromOtherPhone -> "From your other phone"
+
+        line.readOnly -> "Sent to your accountant. Locked."
+
         line.kind == TripKind.DELETED -> "Deleted by you. Not counted."
 
         line.kind == TripKind.DISCARDED && line.ignored ->
@@ -258,6 +389,34 @@ data class MonthText(
     val days: List<DayText>,
 )
 
+/**
+ * The graph of a year (see [IosTrips.yearGraph]): [currentIndex] is the running month's place,
+ * 0 to 11, or -1 for a year gone by; [scaleTop] is the grid's highest figure, cut into
+ * [gridSteps] steps.
+ */
+data class YearGraphText(
+    val year: Int,
+    val canStepForward: Boolean,
+    val currentIndex: Int,
+    val scaleTop: Double,
+    val gridSteps: Int,
+    val months: List<MonthGraphText>,
+)
+
+/**
+ * One month of the graph: whether it has begun (a month to come has no point), its Business and
+ * Personal distance in the unit of Settings, and its figures in words.
+ */
+data class MonthGraphText(
+    val begun: Boolean,
+    val business: Double,
+    val personal: Double,
+    val line: String,
+)
+
+/** Home's tile of today's finished trips (see [IosTrips.today]). */
+data class TodayText(val title: String, val trips: List<TripText>)
+
 /** One day: "Today · Fri, Nov 13", its Business kilometres, and its trips, newest first. */
 data class DayText(val title: String, val business: String, val trips: List<TripText>)
 
@@ -285,6 +444,8 @@ data class TripText(
     val canLabel: Boolean,
     /** A finished trip: its times, addresses and distance can be changed by hand. */
     val canEdit: Boolean,
+    /** Its history holds a change another phone's replaced, for [IosCloud.putBack] (ADR-017). */
+    val canPutBack: Boolean,
     /** "km" or "mi". */
     val unit: String,
 )

@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest
 // The code both phones share (ADR-014, phase 3). Kotlin Multiplatform: the same rules compiled
 // for Android, where the app uses them, and for iOS, where the iPhone app will. It is moved here
 // from the app a package at a time, unchanged, with its tests; the first is the trip rules
@@ -84,4 +85,12 @@ dependencies {
     add("kspAndroid", libs.androidx.room3.compiler)
     add("kspIosArm64", libs.androidx.room3.compiler)
     add("kspIosSimulatorArm64", libs.androidx.room3.compiler)
+}
+
+// The iPhone tests run inside a simulator, whose working folder is the simulator's own. They
+// are told where the repository is, to check the files the iPhone app bundles (its list of
+// changes, `IosWhatsNewTest`); simctl hands a SIMCTL_CHILD_ variable to the test without the
+// prefix.
+tasks.withType<KotlinNativeSimulatorTest>().configureEach {
+    environment("SIMCTL_CHILD_DUALLY_REPOSITORY", rootDir.absolutePath)
 }

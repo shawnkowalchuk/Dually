@@ -18,9 +18,12 @@ struct DuallyLiveActivityBundle: WidgetBundle {
 struct TripLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: TripActivityAttributes.self) { context in
+            // Dark in both looks, as it was: the Lock Screen's trip is the phone's, like Android's
+            // notification, and not one of the app's screens.
             LockScreenTrip(context: context)
-                .activityBackgroundTint(Palette.page)
-                .activitySystemActionForegroundColor(Palette.text)
+                .environment(\.colorScheme, .dark)
+                .activityBackgroundTint(Palette.asphalt)
+                .activitySystemActionForegroundColor(Palette.bone)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
@@ -31,9 +34,11 @@ struct TripLiveActivity: Widget {
                             .foregroundStyle(Palette.text)
                             .lineLimit(1)
                     }
+                    .environment(\.colorScheme, .dark)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     DistanceText(state: context.state, size: 26)
+                        .environment(\.colorScheme, .dark)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     HStack {
@@ -41,17 +46,18 @@ struct TripLiveActivity: Widget {
                         Spacer()
                         EndTripButton()
                     }
+                    .environment(\.colorScheme, .dark)
                 }
             } compactLeading: {
                 DuallyMark(size: 20)
             } compactTrailing: {
                 Text(context.state.distance)
                     .font(Typography.figure(15))
-                    .foregroundStyle(Palette.accent)
+                    .foregroundStyle(Palette.accentTile)
             } minimal: {
                 DuallyMark(size: 20)
             }
-            .keylineTint(Palette.accent)
+            .keylineTint(Palette.accentTile)
         }
     }
 }

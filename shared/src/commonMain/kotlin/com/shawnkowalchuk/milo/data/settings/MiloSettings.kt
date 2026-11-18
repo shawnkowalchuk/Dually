@@ -204,6 +204,8 @@ data class MiloSettings(
     val reportCompany: String? = null,
     val reportVehicle: String? = null,
     val odometerReadings: List<OdometerReading> = emptyList(),
+    /** The account's vehicles and their joins, as the backup last said (ADR-018). */
+    val knownVehicles: KnownVehicles = KnownVehicles(),
     val accountantEmail: String? = null,
     val reportHandOver: ReportHandOver? = null,
     val reminderEnabled: Boolean = true,

@@ -32,6 +32,7 @@ import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.addOdometerReading
 import com.shawnkowalchuk.milo.data.settings.changeServiceBook
 import com.shawnkowalchuk.milo.data.trip.TripRepository
+import com.shawnkowalchuk.milo.data.trip.VehicleOdometer
 import com.shawnkowalchuk.milo.data.trip.markServiceDone
 import com.shawnkowalchuk.milo.data.trip.serviceAlertsOf
 import com.shawnkowalchuk.milo.data.trip.serviceOdometersKm
@@ -49,8 +50,9 @@ import kotlinx.datetime.number
 // service button at the bottom"), as Android's Service screen (feature/service/), Home's service
 // tile and Settings' odometer tile. The book, when an item is due, the alerts and the odometer
 // are the shared code's; this words them in English and checks what is typed by Android's rules
-// (ServiceDialogs.kt). The iPhone pairs no vehicles, so it has one list and one odometer, as an
-// Android phone with none or one paired.
+// (ServiceDialogs.kt). An item goes by the vehicle it names, or the first; the iPhone's form
+// names none yet, so a new item goes by the first vehicle's odometer.
+// TODO(debt): no vehicle to pick on the iPhone's service form (FINDINGS_LOG, 2026-11-17).
 
 /** The longest interval in months: ten years, as Android's form. */
 private const val MAX_MONTHS = 120
@@ -228,15 +230,33 @@ class IosService internal constructor(
         }
     }
 
-    /** Settings' odometer tile. */
-    suspend fun odometer(): OdometerText {
+    /** Settings' odometer tile: the first vehicle's, or the one odometer with none. */
+    suspend fun odometer(): OdometerText = odometers().first()
+
+    /**
+     * Settings' odometer tiles: one for each vehicle (ADR-018, 2026-11-17), the first first, or
+     * the one odometer with no vehicle.
+     */
+    suspend fun odometers(): List<OdometerText> {
         val stored = settings.current()
         val finished = trips.observeFinishedTrips().first()
         val zone = zone()
         val locale = locale()
-        val unit = stored.distanceUnit
-        val figure = vehicleOdometers(stored, finished, clock(), zone).firstOrNull()?.figure
+        return vehicleOdometers(stored, finished, clock(), zone).map {
+            odometerText(it, stored.distanceUnit, zone, locale)
+        }
+    }
+
+    private fun odometerText(
+        odometer: VehicleOdometer,
+        unit: DistanceUnit,
+        zone: ZoneId,
+        locale: Locale,
+    ): OdometerText {
+        val figure = odometer.figure
         return OdometerText(
+            vehicle = odometer.vehicle?.address,
+            name = odometer.shownName,
             title = englishServiceText("settings_odometer_title"),
             figure = figure?.let { "${formatOdometer(it.value, locale)} ${unitWord(it.unit)}" },
             madeOf = figure?.let { madeOf(it, unit, zone, locale) }
@@ -271,13 +291,15 @@ class IosService internal constructor(
      * recorded, the reading keeps which trip and how far it had gone, as on Android, so only
      * what the trip drives after it is added.
      *
+     * @param vehicle the vehicle whose odometer it is (its tile's [OdometerText.vehicle]), or
+     * null for the one odometer with no vehicle.
      * @return false, and nothing stored, if it is not a reading or storage failed.
      */
-    suspend fun saveReading(typed: String): Boolean {
+    suspend fun saveReading(typed: String, vehicle: String? = null): Boolean {
         val value = parseOdometer(typed) ?: return false
         val unit = settings.current().distanceUnit
         val open = recorder.now()?.let { TripAtReading(it.tripId, it.metres) }
-        val reading = OdometerReading(clock(), value, unit, null, open)
+        val reading = OdometerReading(clock(), value, unit, vehicle, open)
         return guarded("store an odometer reading") { settings.addOdometerReading(reading) }
     }
 
@@ -495,6 +517,10 @@ data class ReminderText(val title: String, val text: String)
  * @param madeOf what it is made of, or the sentence that asks for the first reading.
  */
 data class OdometerText(
+    /** The vehicle it is the odometer of, for its reading; null with no vehicle. */
+    val vehicle: String?,
+    /** Its name, with several vehicles; null with one or none. */
+    val name: String?,
     val title: String,
     val figure: String?,
     val madeOf: String,

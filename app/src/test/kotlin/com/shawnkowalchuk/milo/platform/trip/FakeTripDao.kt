@@ -153,6 +153,33 @@ class FakeTripDao : TripDao {
     private fun kept(stored: String?, byHand: Boolean, found: String?): String? =
         if (byHand) stored else stored ?: found
 
+    override suspend fun findFromOtherPhones(): List<Trip> = rows.filter { it.homePhone != null }
+
+    override suspend fun findOwn(): List<Trip> = rows.filter { it.homePhone == null }
+
+    override suspend fun insertAll(trips: List<Trip>) {
+        for (trip in trips) insert(trip)
+    }
+
+    override suspend fun updateAll(trips: List<Trip>) {
+        for (trip in trips) {
+            val at = rows.indexOfFirst { it.id == trip.id }
+            if (at >= 0) rows[at] = trip
+        }
+    }
+
+    override suspend fun deleteFromOtherPhones(ids: List<Long>): Int {
+        val before = rows.size
+        rows.removeAll { it.id in ids && it.homePhone != null }
+        return before - rows.size
+    }
+
+    override suspend fun deleteOwnClosed(open: TripStatus): Int {
+        val before = rows.size
+        rows.removeAll { it.homePhone == null && it.status != open }
+        return before - rows.size
+    }
+
     override suspend fun deleteOpen(tripId: Long, open: TripStatus): Int =
         if (rows.removeAll { it.id == tripId && it.status == open }) 1 else 0
 

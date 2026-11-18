@@ -10,10 +10,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.designsystem.component.AppHeader
+import com.shawnkowalchuk.milo.core.designsystem.component.ConfirmDialog
 import com.shawnkowalchuk.milo.core.designsystem.component.PinnedHeaderColumn
 import com.shawnkowalchuk.milo.core.designsystem.component.RowStatus
 import com.shawnkowalchuk.milo.core.designsystem.component.StatusRow
@@ -124,6 +128,7 @@ fun SettingsScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val widget by widgetViewModel.state.collectAsState()
+    VehicleJoinQuestion(state, viewModel::onJoinAnswer)
 
     val actions =
         SettingsActions(
@@ -401,6 +406,30 @@ private fun MainSettings(
                 modifier = half,
             )
         },
+    )
+}
+
+/**
+ * "Is this the Ford from your iPhone?" (ADR-018), once for each paired vehicle that has the name
+ * of one of the account's iPhone vehicles. A stray tap outside puts it off until Settings is
+ * opened again; Same vehicle and Not the same are answers, and stored.
+ */
+@Composable
+private fun VehicleJoinQuestion(
+    state: SettingsUiState,
+    onAnswer: (JoinQuestion, Boolean) -> Unit,
+) {
+    val question = (state as? SettingsUiState.Ready)?.joinToAsk ?: return
+    var putOff by rememberSaveable(question.join) { mutableStateOf(false) }
+    if (putOff) return
+    ConfirmDialog(
+        title = stringResource(R.string.vehicle_join_title, question.name),
+        text = stringResource(R.string.vehicle_join_text, question.name),
+        confirmLabel = stringResource(R.string.vehicle_join_same),
+        dismissLabel = stringResource(R.string.vehicle_join_not_same),
+        onConfirm = { onAnswer(question, true) },
+        onDismiss = { onAnswer(question, false) },
+        onPutOff = { putOff = true },
     )
 }
 

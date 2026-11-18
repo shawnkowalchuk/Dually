@@ -1,0 +1,106 @@
+{
+  "releases": [
+    {
+      "version": "1.0.1",
+      "date": null,
+      "changes": [
+        {
+          "kind": "new",
+          "title": "One logbook on all your phones",
+          "body": "With the online backup, every phone signed in to the same account now shares one logbook: trips recorded on your iPhone and on an Android phone show up on both, and a change made on one phone reaches the others."
+        },
+        {
+          "kind": "new",
+          "title": "Several vehicles",
+          "body": "Settings has a Vehicles tile: add each vehicle you drive, or pick the ones your Android phone has. Each gets its own odometer, the report says which vehicle each trip was in, and the Shortcuts actions Start a trip and End a trip let you pick the vehicle each automation is for."
+        },
+        {
+          "kind": "new",
+          "title": "A light look",
+          "body": "Settings has a new Look choice: Dark, as before, or Light, with white tiles on a warm page."
+        },
+        {
+          "kind": "new",
+          "title": "The truck and today's trips on Home",
+          "body": "Home now shows whether your truck is connected, when your Shortcuts automation last said so, and a list of today's finished trips."
+        },
+        {
+          "kind": "new",
+          "title": "Monthly reminder and daily check",
+          "body": "Dually can remind you each month to send last month's report until you do, and can tell you on a work day when no trip was recorded. Both are in Settings."
+        },
+        {
+          "kind": "new",
+          "title": "Each day its own hours",
+          "body": "Work hours can now be set for each day of the week on its own, for a day that starts or ends at a different time."
+        },
+        {
+          "kind": "new",
+          "title": "More report choices",
+          "body": "The report can cover a month, any date range or a whole year, can list Personal trips and the odometer of each trip, and keeps a list of the reports you have sent. After a month is sent, Dually offers to delete its GPS points to free space."
+        },
+        {
+          "kind": "new",
+          "title": "The Log",
+          "body": "Settings has a link to the Log: every trip, every message from your Shortcuts automation and every error, day by day, with a button to share the whole log."
+        },
+        {
+          "kind": "new",
+          "title": "A graph of the year",
+          "body": "Trips has a new Graph of the year: your Business and Personal distance for each month, side by side, with each month's figures under it."
+        },
+        {
+          "kind": "new",
+          "title": "Email support and a review",
+          "body": "The end of Settings has Email support, which starts an email to us with your version of Dually and your iPhone's model at the end, and a link to review Dually on the App Store."
+        },
+        {
+          "kind": "new",
+          "title": "The mascot says hello",
+          "body": "When you open Dually, its mascot walks along the top of the bottom bar and waves, or moonwalks in his hat: the two take turns."
+        },
+        {
+          "kind": "new",
+          "title": "Connect and trip-start sounds",
+          "body": "A sound when a trip begins and another when the truck drives off, heard even on silent or in a Focus, and through CarPlay when it is connected. Settings has a switch for each, twelve sounds to choose from, and your own sounds."
+        },
+        {
+          "kind": "new",
+          "title": "A run when a report is sent, and the one-year party",
+          "body": "When Mail sends your report, the mascot runs across the Report screen, spins his wheels and slides out. And one year after your first trip, on that date every year, he holds a party over Home, and that day's trips start with the pop of a party popper."
+        },
+        {
+          "kind": "improved",
+          "title": "The online backup syncs once a day too",
+          "body": "Besides after each change, the online backup now also runs about once a day by itself, so a change that could not be sent while the iPhone was offline goes up without opening Dually."
+        },
+        {
+          "kind": "new",
+          "title": "What's new",
+          "body": "This list. It opens by itself once after each update, and any time from the Version tile at the end of Settings."
+        }
+      ]
+    },
+    {
+      "version": "1.0",
+      "date": "2026-11-16",
+      "changes": [
+        {
+          "kind": "new",
+          "title": "Dually on the iPhone",
+          "body": "The first version on the App Store. A Shortcuts automation on CarPlay or your truck's Bluetooth starts and ends each trip, Dually records it with GPS and sorts it into Business or Personal by your work hours, and each month it makes the report for your accountant."
+        },
+        {
+          "kind": "new",
+          "title": "On the Lock Screen, in CarPlay and on the Home Screen",
+          "body": "The trip being recorded shows on the Lock Screen and in the Dynamic Island, CarPlay has its own screen with Start and End, and a widget shows the trip and your month at a glance."
+        },
+        {
+          "kind": "new",
+          "title": "Optional online backup",
+          "body": "Buy it once (no subscription) and your trips are copied to Google's Firebase, in its Montréal data centre in Canada. Everything else is free, with no ads."
+        }
+      ]
+    }
+  ]
+}

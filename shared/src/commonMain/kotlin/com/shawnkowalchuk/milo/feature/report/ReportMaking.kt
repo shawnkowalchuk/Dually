@@ -35,6 +35,7 @@ import com.shawnkowalchuk.milo.data.settings.MissingDetail
 import com.shawnkowalchuk.milo.data.settings.missingForPdf
 import com.shawnkowalchuk.milo.data.settings.missingForSending
 import com.shawnkowalchuk.milo.data.settings.pairedVehicles
+import com.shawnkowalchuk.milo.data.settings.sameVehicle
 import com.shawnkowalchuk.milo.data.settings.vehicleNamed
 
 // The report a press on the Report screen would make, and what each kind of press needs of the
@@ -154,14 +155,22 @@ private fun tripOdometer(
     if (vehicles.isEmpty()) {
         return odometerOverTrip(trip.startedAtMs, ended, zone, readings, truckTrips, unit)
     }
-    val address = trip.vehicle ?: vehicles.first().address
+    // The paired vehicle the trip was in, also where it names an id joined to it (ADR-018).
+    val named = trip.vehicle
+    val address =
+        named?.let { id ->
+            vehicles.firstOrNull { vehicle ->
+                settings.sameVehicle(vehicle.address).any { it.equals(id, ignoreCase = true) }
+            }?.address ?: id
+        } ?: vehicles.first().address
     val first = vehicles.first().address.equals(address, ignoreCase = true)
+    val alsoAs = settings.sameVehicle(address)
     return odometerOverTrip(
         trip.startedAtMs,
         ended,
         zone,
-        readings.ofVehicle(address, first),
-        truckTrips.drivenIn(address, first),
+        readings.ofVehicle(address, first, alsoAs),
+        truckTrips.drivenIn(address, first, alsoAs),
         unit,
     )
 }
@@ -187,9 +196,10 @@ private fun odometersOver(
     }
     return vehicles.mapIndexedNotNull { index, vehicle ->
         val first = index == 0
+        val alsoAs = settings.sameVehicle(vehicle.address)
         over(
-            readings.ofVehicle(vehicle.address, first),
-            truckTrips.drivenIn(vehicle.address, first),
+            readings.ofVehicle(vehicle.address, first, alsoAs),
+            truckTrips.drivenIn(vehicle.address, first, alsoAs),
         )
             ?.let { VehicleOdometer(vehicle.name ?: vehicle.address, it) }
     }

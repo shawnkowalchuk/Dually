@@ -11,6 +11,8 @@ import UserNotifications
 @MainActor
 final class SetupModel: ObservableObject {
     @Published private(set) var screen: SetupScreen?
+    /// The vehicles in Settings (ADR-018): with several, Setup says each needs its automations.
+    @Published private(set) var vehicles: [IosVehicle] = []
     /// Whether iOS shows Dually's notifications, read again at each refresh.
     private var notifications = Permission.notAsked
 
@@ -55,6 +57,7 @@ final class SetupModel: ObservableObject {
             let status = await UNUserNotificationCenter.current().notificationSettings()
                 .authorizationStatus
             notifications = Self.permission(status)
+            vehicles = (try? await session.core.vehicles.list()) ?? []
             compute()
         }
     }

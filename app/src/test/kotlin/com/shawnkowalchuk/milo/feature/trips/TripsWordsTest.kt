@@ -236,6 +236,24 @@ class TripsWordsTest {
     }
 
     @Test
+    fun `a trip whose change another phone replaced says so and offers Put back`() {
+        val replaced = line(1).copy(canPutBack = true)
+
+        assertEquals(
+            listOf(
+                TripAction.Edit,
+                TripAction.Label,
+                TripAction.Mark(TripCategory.PERSONAL),
+                TripAction.PutBack,
+                TripAction.Correct(TripCorrection.DELETE),
+            ),
+            replaced.actions(pressed = true),
+        )
+        assertTrue(R.string.trips_note_replaced in replaced.notesRes())
+        assertEquals(R.string.trips_button_put_back, TripAction.PutBack.wordsRes())
+    }
+
+    @Test
     fun `a deleted trip shows Restore straight away, and nothing else`() {
         val deleted = line(1, kind = TripKind.DELETED)
 

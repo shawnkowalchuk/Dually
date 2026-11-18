@@ -25,6 +25,10 @@ final class TripSession: ObservableObject {
     @Published private(set) var failure: String?
     /// A tap on the service reminder asked for Service; the app opens it and sets this back.
     @Published var serviceAsked = false
+    /// A tap on the monthly reminder asked for that month's report; the app opens it.
+    @Published var reportAsked: (year: Int, month: Int)?
+    /// A trip has started on the one-year party's day with Home in front: the party plays now.
+    @Published var partyDue = false
 
     private init() {
         drivingWatch = DrivingWatch(core: core)
@@ -40,6 +44,9 @@ final class TripSession: ObservableObject {
             Task { await self?.startFromAlert() }
         }
         drivingWatch.onServiceTap = { [weak self] in self?.serviceAsked = true }
+        drivingWatch.onReminderTap = { [weak self] year, month in self?.reportAsked = (year, month) }
+        drivingWatch.onWake = { [weak self] in await self?.wokenByMove() }
+        drivingWatch.onDrivingWithoutTrip = { [weak self] in await self?.drivingWithoutTrip() ?? false }
         drivingWatch.arm()
     }
 
@@ -59,6 +66,7 @@ final class TripSession: ObservableObject {
         if #available(iOS 16.1, *) { (liveTrip as? LiveTrip)?.cameToFront() }
         await refresh()
         uploadBackup("the app came to the front")
+        await Reminders.plan(core: core)
     }
 
     /// One upload of the online backup (phase 4h), with the time iOS gives an app that is going
@@ -114,14 +122,56 @@ final class TripSession: ObservableObject {
         await apply { try await self.core.recorder.endFromLiveActivity() }
     }
 
-    /// The Shortcuts automation says the vehicle connected.
-    func truckConnected() async {
-        await apply { try await self.core.recorder.truckConnected() }
+    /// The Shortcuts automation says the vehicle connected: the one its action names, or nil.
+    func truckConnected(vehicle: String?) async {
+        // Where the truck's audio goes, noted for a wake that has to find it (TruckRoute), and
+        // said in the Log when it changes.
+        if let noted = TruckRoute.remember(vehicle: vehicle) {
+            try? await core.recorder.noteTruckRoute(name: noted.name)
+        }
+        await apply { try await self.core.recorder.truckConnected(vehicle: vehicle) }
     }
 
-    /// The Shortcuts automation says the vehicle disconnected.
-    func truckDisconnected() async {
-        await apply { try await self.core.recorder.truckDisconnected() }
+    /// A wake for a move: a trip or a wait stored before carries on, its GPS on again.
+    func wokenByMove() async {
+        await apply { try await self.core.recorder.now() }
+        await checkReadTruck()
+    }
+
+    /// When was the truck a wake read as connected last missing from the audio route, or nil.
+    private var routeMissingSince: Date?
+
+    /// While the truck is believed connected because a wake read it (not because the
+    /// automation said so), its route is read again with every fix, as Android reads the truck
+    /// through a trip: gone for a minute, it is taken as disconnected, and the rules' grace
+    /// period or the end of the wait follows.
+    private func checkReadTruck() async {
+        guard core.recorder.connectedByReading else {
+            routeMissingSince = nil
+            return
+        }
+        if TruckRoute.connectedNow() {
+            routeMissingSince = nil
+            return
+        }
+        let since = routeMissingSince ?? Date()
+        routeMissingSince = since
+        guard Date().timeIntervalSince(since) >= 60 else { return }
+        routeMissingSince = nil
+        await apply { try await self.core.recorder.truckReadGone() }
+    }
+
+    /// Driving with no trip open, at a wake: if the iPhone's audio goes to the truck, the
+    /// connect the automation missed is recovered and a trip starts. True if it did.
+    func drivingWithoutTrip() async -> Bool {
+        guard recording == nil, let found = TruckRoute.vehicleNow() else { return false }
+        await apply { try await self.core.recorder.truckReadConnected(vehicle: found.vehicle) }
+        return recording != nil
+    }
+
+    /// The Shortcuts automation says the vehicle disconnected: the one its action names, or nil.
+    func truckDisconnected(vehicle: String?) async {
+        await apply { try await self.core.recorder.truckDisconnected(vehicle: vehicle) }
     }
 
     private var widgetDrawnAt = Date.distantPast
@@ -136,13 +186,14 @@ final class TripSession: ObservableObject {
         guard force || changed || Date().timeIntervalSince(widgetDrawnAt) >= 60 else { return }
         widgetRecording = isRecording
         widgetDrawnAt = Date()
-        let dollars = try? await core.widget.dollars(nowMs: Int64(Date().timeIntervalSince1970 * 1000))
+        let dollars = try? await core.widget.dollars(nowMs: core.timeNow())
         WidgetSnapshot(
             recording: isRecording,
             startedAt: recording.map { Date(timeIntervalSince1970: Double($0.startedAtMs) / 1000) },
             distance: recording.map { core.distanceText(metres: $0.metres) },
             unit: core.unitWord(),
-            dollars: dollars
+            dollars: dollars,
+            light: Look.shared.light
         ).save()
         WidgetCenter.shared.reloadAllTimelines()
     }
@@ -159,15 +210,37 @@ final class TripSession: ObservableObject {
     }
 
     private func add(_ fix: Fix) async {
+        await checkReadTruck()
         await apply {
+            // Dated by Dually's own clock at the fix's moment, not the phone's (ADR-006), so a
+            // fix taken while the date is set ahead is dated when it was taken.
             try await self.core.recorder.addFix(
-                wallClockMs: fix.wallClockMs,
+                wallClockMs: self.core.timeAtElapsed(elapsedMs: fix.elapsedMs),
                 elapsedMs: fix.elapsedMs,
                 latitude: fix.latitude,
                 longitude: fix.longitude,
                 accuracyMetres: fix.accuracyMetres.map { KotlinFloat(value: $0) },
                 speedMetresPerSecond: fix.speedMetresPerSecond.map { KotlinFloat(value: $0) }
             )
+        }
+    }
+
+    /// The connect and trip-start sounds the last step made due, played by the settings
+    /// (2026-11-16, as on Android).
+    private func playDueSounds() async {
+        guard let due = try? await core.recorder.takeSounds(),
+              let plan = try? await core.sounds.toPlay(due: due)
+        else { return }
+        TripSoundPlayer.shared.play(plan.sounds, core: core)
+        // On the one-year party's day, with Home in front, the trip's first sound is the pop of
+        // the party that plays there now; if no party takes it within two seconds, the trip's
+        // start plays it itself (Android's POP_HANDOVER_MS).
+        guard plan.popLeftToAnimation else { return }
+        partyDue = true
+        try? await Task.sleep(nanoseconds: 2_000_000_000)
+        if core.party.takePop(),
+           (try? await core.party.popHeard())?.boolValue == true {
+            TripSoundPlayer.shared.play([core.sounds.partyPop()], core: core)
         }
     }
 
@@ -182,6 +255,10 @@ final class TripSession: ObservableObject {
                 Task { await self.remindOfService() }
                 uploadBackup("a trip ended")
             }
+            // A trip today takes today's daily check away; the plan follows every start and end.
+            if wasRecording != (recording != nil) {
+                Task { await Reminders.plan(core: self.core) }
+            }
         }
         do {
             recording = try await step()
@@ -189,6 +266,7 @@ final class TripSession: ObservableObject {
         } catch {
             failure = error.localizedDescription
         }
+        await playDueSounds()
         // A trip has begun, however it began: the alert's "tap to start one" is no longer true.
         if recording != nil { drivingWatch.withdraw() }
         if #available(iOS 16.1, *) {

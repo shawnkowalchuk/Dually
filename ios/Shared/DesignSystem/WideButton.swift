@@ -14,7 +14,7 @@ struct WideButton: View {
                 .frame(maxWidth: .infinity, minHeight: 46)
                 .background(filled ? Palette.accent : Palette.controlFill,
                             in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .foregroundStyle(filled ? Palette.markLetter : Palette.text)
+                .foregroundStyle(filled ? Palette.onAccent : Palette.text)
         }
         .buttonStyle(.plain)
     }

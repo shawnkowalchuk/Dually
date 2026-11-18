@@ -63,6 +63,21 @@ class VehicleOdometersTest {
     }
 
     @Test
+    fun `a phone with no paired vehicle counts a reading another phone typed for its truck`() {
+        // The iPhone pairs no vehicle (ADR-015); the online backup brings it the Android phone's
+        // readings, each with the truck's address, and that phone's trips (ADR-017).
+        val iPhone =
+            MiloSettings(
+                odometerReadings =
+                    listOf(
+                        OdometerReading(readAt, 123_456, DistanceUnit.KILOMETRES, vehicle = TRUCK),
+                    ),
+            )
+
+        assertEquals(listOf(123_496L), shown(iPhone, listOf(earlier), soFar = null))
+    }
+
+    @Test
     fun `a trip no paired vehicle has been seen in moves no odometer`() {
         val byButton = driving(12_300.0, truckSeen = false, vehicle = null)
 

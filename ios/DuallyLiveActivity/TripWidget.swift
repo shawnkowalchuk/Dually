@@ -10,8 +10,10 @@ import WidgetKit
 struct TripWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "TripWidget", provider: SnapshotProvider()) { entry in
+            // The look the app left (Settings' Look tile), never the phone's, as on Android.
             TripWidgetView(snapshot: entry.snapshot)
-                .widgetGround()
+                .environment(\.colorScheme, entry.snapshot.light == true ? .light : .dark)
+                .widgetGround(light: entry.snapshot.light == true)
         }
         .configurationDisplayName("Dually trip")
         .description("The trip being recorded, this month's Business dollars, and Start or End.")
@@ -105,18 +107,21 @@ private struct ButtonLabel: View {
             .frame(maxWidth: .infinity, minHeight: 32)
             .background(filled ? Palette.accent : Palette.controlFill,
                         in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .foregroundStyle(filled ? Palette.markLetter : Palette.text)
+            .foregroundStyle(filled ? Palette.onAccent : Palette.text)
     }
 }
 
 private extension View {
-    /// The widget's dark ground: iOS 17's container background, or a plain one before it.
+    /// The widget's ground: Asphalt, or on the light look the white of Android's light widget,
+    /// as iOS 17's container background, or a plain one before it. Named outright rather than
+    /// taken from the look, since iOS draws the container's ground apart from the view.
     @ViewBuilder
-    func widgetGround() -> some View {
+    func widgetGround(light: Bool) -> some View {
+        let ground = light ? Color(hex: 0xFFFFFF) : Palette.asphalt
         if #available(iOS 17.0, *) {
-            containerBackground(Palette.page, for: .widget)
+            containerBackground(ground, for: .widget)
         } else {
-            padding().background(Palette.page)
+            padding().background(ground)
         }
     }
 }

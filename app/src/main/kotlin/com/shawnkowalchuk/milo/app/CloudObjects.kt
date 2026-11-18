@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.work.ListenableWorker
+import com.shawnkowalchuk.milo.core.trip.TripStatus
+import com.shawnkowalchuk.milo.data.cloud.CLOUD_BACKUP
 import com.shawnkowalchuk.milo.data.cloud.CLOUD_OWNER
 import com.shawnkowalchuk.milo.data.cloud.CloudAccount
 import com.shawnkowalchuk.milo.data.cloud.CloudAccountFile
@@ -16,7 +18,6 @@ import com.shawnkowalchuk.milo.data.cloud.CloudLedger
 import com.shawnkowalchuk.milo.data.cloud.CloudRestoreException
 import com.shawnkowalchuk.milo.data.cloud.CloudRestoreResult
 import com.shawnkowalchuk.milo.data.cloud.CloudSignInResult
-import com.shawnkowalchuk.milo.data.cloud.CloudStart
 import com.shawnkowalchuk.milo.data.cloud.CloudStartResult
 import com.shawnkowalchuk.milo.data.cloud.CloudUnlockResult
 import com.shawnkowalchuk.milo.data.cloud.CloudUploadOutcome
@@ -24,18 +25,27 @@ import com.shawnkowalchuk.milo.data.cloud.buildCloudAccountFile
 import com.shawnkowalchuk.milo.data.cloud.buildCloudInstall
 import com.shawnkowalchuk.milo.data.cloud.buildCloudLedger
 import com.shawnkowalchuk.milo.data.cloud.cloudAccountTag
+import com.shawnkowalchuk.milo.data.cloud.cloudAsksToMerge
 import com.shawnkowalchuk.milo.data.cloud.cloudCopyOf
-import com.shawnkowalchuk.milo.data.cloud.cloudLedgerOf
-import com.shawnkowalchuk.milo.data.cloud.cloudOwnerDocument
 import com.shawnkowalchuk.milo.data.cloud.cloudOwnerOf
+import com.shawnkowalchuk.milo.data.cloud.cloudPhoneDocument
+import com.shawnkowalchuk.milo.data.cloud.cloudPhoneFolder
+import com.shawnkowalchuk.milo.data.cloud.cloudRemovableBy
 import com.shawnkowalchuk.milo.data.cloud.cloudRestoreExport
-import com.shawnkowalchuk.milo.data.cloud.cloudStart
+import com.shawnkowalchuk.milo.data.cloud.inFolder
+import com.shawnkowalchuk.milo.data.cloud.putBackReplaced
+import com.shawnkowalchuk.milo.data.cloud.readOtherPhones
 import com.shawnkowalchuk.milo.data.cloud.restoreFrom
+import com.shawnkowalchuk.milo.data.cloud.syncLogbook
+import com.shawnkowalchuk.milo.data.cloud.syncShared
 import com.shawnkowalchuk.milo.data.cloud.unlockAfter
 import com.shawnkowalchuk.milo.data.cloud.uploadUntilQuiet
+import com.shawnkowalchuk.milo.data.cloud.withEdits
+import com.shawnkowalchuk.milo.data.cloud.withShared
 import com.shawnkowalchuk.milo.data.eventlog.EventCategory
 import com.shawnkowalchuk.milo.data.settings.transferred
 import com.shawnkowalchuk.milo.data.transfer.MainTransferDao
+import com.shawnkowalchuk.milo.data.trip.TripDao
 import com.shawnkowalchuk.milo.feature.settings.CloudBackupViewModel
 import com.shawnkowalchuk.milo.platform.cloud.CloudFirebase
 import com.shawnkowalchuk.milo.platform.cloud.CloudUnlockCheck
@@ -43,6 +53,7 @@ import com.shawnkowalchuk.milo.platform.cloud.CloudUploads
 import com.shawnkowalchuk.milo.platform.cloud.FirestoreCloudStore
 import com.shawnkowalchuk.milo.platform.cloud.GoogleCloudSignIn
 import com.shawnkowalchuk.milo.platform.cloud.PlayBilling
+import com.shawnkowalchuk.milo.platform.cloud.ReplacedChangeNotification
 import com.shawnkowalchuk.milo.platform.system.readInstalledVersion
 import com.shawnkowalchuk.milo.platform.transfer.TransferOutcome
 import com.shawnkowalchuk.milo.platform.transfer.TransferRefusal
@@ -72,12 +83,14 @@ import kotlinx.coroutines.withContext
  * reads the trips, the sent reports and the settings, and writes none of them.
  *
  * @param mainRows the one-transaction read of the trips and the sent reports.
+ * @param tripTable the trips, for the other phones' trips this phone holds (ADR-017).
  * @param tableChanges one item each time the trips or the sent reports change.
  */
 class CloudObjects(
     private val appContext: Context,
     private val container: AppContainer,
     private val mainRows: MainTransferDao,
+    private val tripTable: TripDao,
     tableChanges: Flow<Unit>,
 ) {
     val firebase: CloudFirebase by lazy { CloudFirebase(appContext) }
@@ -111,6 +124,23 @@ class CloudObjects(
             },
             ledger = ledger,
             store = store,
+            shape = { snapshot ->
+                val phone = withContext(Dispatchers.IO) { install.id() }
+                snapshot.inFolder(
+                    cloudPhoneFolder(phone),
+                    cloudPhoneDocument(phone, phoneName(appContext), "android"),
+                ).withEdits(withContext(Dispatchers.IO) { tripTable.findFromOtherPhones() })
+                    .withShared(
+                        try {
+                            container.settingsStore.current()
+                        } catch (unreadable: IOException) {
+                            null
+                        },
+                    )
+            },
+            removable = { path ->
+                cloudRemovableBy(withContext(Dispatchers.IO) { install.id() }, path)
+            },
         )
     }
 
@@ -124,6 +154,26 @@ class CloudObjects(
             .map { }
 
     private val uploads = CloudUploads(appContext, account, merge(tableChanges, settingsChanges))
+
+    private val replacedNotification: ReplacedChangeNotification by lazy {
+        ReplacedChangeNotification(appContext, opens = MainActivity::class.java)
+    }
+
+    /**
+     * "Put back" on a trip whose history holds a change another phone's replaced (ADR-017):
+     * the trip takes that change again, and the upload sends it to every phone.
+     */
+    suspend fun putBack(tripId: Long): Boolean {
+        val done =
+            withContext(Dispatchers.IO) {
+                putBackReplaced(tripTable, tripId, container.clock(), phoneName(appContext))
+            }
+        if (done) {
+            log("Cloud backup: trip $tripId: the change that was replaced was put back.")
+            uploads.uploadNow()
+        }
+        return done
+    }
 
     /**
      * Reads which account is signed in, then has uploads follow it. Called once at the app's
@@ -139,6 +189,9 @@ class CloudObjects(
 
     /** The account in its file, for a screen opened before [start] has read it. */
     fun readAccount(): CloudAccount? = accountFile.read()
+
+    /** Dually came to the front: an upload, which brings in the other phones' changes. */
+    fun appOpened() = uploads.appOpened()
 
     /**
      * Google's sheet over [context], then Firebase, then whether the account holds the unlock
@@ -213,70 +266,60 @@ class CloudObjects(
     }
 
     /**
-     * How the backup stands for the account signed in, for the Online backup tile: whether this
-     * phone backs up to it, or another phone's trips are in it and the user is to choose
-     * (slice 1e, 2026-11-12). Asked when the tile opens and after each unlock.
+     * How the backup stands for the account signed in, for the Online backup tile (ADR-017):
+     * this phone backs up and holds the other phones' trips, or it has trips of its own while
+     * the others have theirs, and asks once whether to merge them. Asked when the tile opens and
+     * after each unlock; it runs an upload when nothing is to be asked.
      */
     suspend fun startBackup(): CloudStartResult {
         val account = signedIn.value?.takeIf { it.unlocked } ?: return CloudStartResult.Offline
-        val (start, copy) =
+        val others =
             try {
-                look(account)
+                readOtherPhones(store, account.id, withContext(Dispatchers.IO) { install.id() })
             } catch (unreachable: IOException) {
                 return CloudStartResult.Offline
             }
-        return when (start) {
-            CloudStart.BACK_UP -> {
-                if (account.backingUp != true) claim(account)
-                CloudStartResult.BackingUp
-            }
-
-            CloudStart.ASK -> {
-                if (account.backingUp != false) keep(account.copy(backingUp = false))
-                CloudStartResult.Choose(copy.trips)
-            }
-
-            CloudStart.MOVED -> {
-                keep(account.copy(backingUp = false))
-                CloudStartResult.Moved(copy.trips)
-            }
+        val own = ownFinished()
+        if (cloudAsksToMerge(own, others, account.backingUp)) {
+            if (account.backingUp != false) keep(account.copy(backingUp = false))
+            return CloudStartResult.Merge(own, others.tripCount)
         }
+        if (account.backingUp != true) keep(account.copy(backingUp = true))
+        uploads.uploadNow()
+        return CloudStartResult.BackingUp
+    }
+
+    /** "Merge": this phone's trips join the logbook, and it backs up from now on. */
+    suspend fun merge(): Boolean {
+        val account = signedIn.value?.takeIf { it.unlocked } ?: return false
+        keep(account.copy(backingUp = true))
+        log("Cloud backup: this phone's trips were merged into the logbook of the account.")
+        uploads.uploadNow()
+        return true
     }
 
     /**
-     * "Restore my trips here": the backup replaces what this phone holds, through the import
-     * (a safety copy first), and this phone backs up from then on. Asked first on the tile.
+     * "Use only the backup's trips": this phone's own trips are taken off it, through the
+     * import (a safety copy first) of a logbook with none, and it holds the other phones'
+     * trips from then on (ADR-017). Asked first on the tile.
      */
-    suspend fun restoreHere(): CloudRestoreResult {
+    suspend fun useBackupOnly(): CloudRestoreResult {
         val account = signedIn.value?.takeIf { it.unlocked }
             ?: return CloudRestoreResult.Failed("Not unlocked")
-        val copy =
-            try {
-                cloudCopyOf(withContext(Dispatchers.IO) { store.readAll(account.id) })
-            } catch (unreachable: IOException) {
-                return CloudRestoreResult.Offline
-            }
         val export =
-            try {
-                cloudRestoreExport(
-                    copy,
-                    container.clock(),
-                    ZoneId.systemDefault(),
-                    readInstalledVersion(appContext).name,
-                )
-            } catch (wrong: CloudRestoreException) {
-                log("Cloud backup: restore refused. ${wrong.message}")
-                return CloudRestoreResult.Failed(wrong.message.orEmpty())
-            }
-        val outcome = container.transfer.dataTransfer.restoreFromBackup(export)
-        return when (outcome) {
+            cloudRestoreExport(
+                cloudCopyOf(emptyMap()),
+                container.clock(),
+                ZoneId.systemDefault(),
+                readInstalledVersion(appContext).name,
+            )
+        return when (val outcome = container.transfer.dataTransfer.restoreFromBackup(export)) {
             is TransferOutcome.Imported -> {
-                // The ledger is what the backup holds now: the next upload sends only what
-                // differs. Then this phone takes the backup over.
-                withContext(Dispatchers.IO) { ledger.write(account.id, cloudLedgerOf(copy)) }
-                claim(account)
-                log("Cloud backup: ${outcome.done.trips} trips restored from the online backup.")
-                CloudRestoreResult.Restored(outcome.done.trips)
+                withContext(Dispatchers.IO) { ledger.write(account.id, emptyMap()) }
+                keep(account.copy(backingUp = true))
+                log("Cloud backup: this phone's own trips were set aside; it holds the logbook's.")
+                uploads.uploadNow()
+                CloudRestoreResult.Restored(0)
             }
 
             is TransferOutcome.Refused ->
@@ -289,27 +332,6 @@ class CloudObjects(
             null -> CloudRestoreResult.Failed("Another export or import is under way")
 
             else -> CloudRestoreResult.Failed("Import: $outcome")
-        }
-    }
-
-    /**
-     * "Back up this phone instead": this phone takes the backup over, and its next upload
-     * replaces what another phone left there with this phone's own trips.
-     *
-     * @return false if the backup could not be reached; nothing was changed then.
-     */
-    suspend fun backUpHere(): Boolean {
-        val account = signedIn.value?.takeIf { it.unlocked } ?: return false
-        return try {
-            val copy = cloudCopyOf(withContext(Dispatchers.IO) { store.readAll(account.id) })
-            // The ledger says what the backup holds, so that the upload removes the documents
-            // of the other phone that this one does not have.
-            withContext(Dispatchers.IO) { ledger.write(account.id, cloudLedgerOf(copy)) }
-            claim(account)
-            log("Cloud backup: this phone backs up to the account now, in place of another.")
-            true
-        } catch (unreachable: IOException) {
-            false
         }
     }
 
@@ -335,26 +357,9 @@ class CloudObjects(
         return true
     }
 
-    /** What the backup holds now, and what this phone is to do about it. */
-    private suspend fun look(account: CloudAccount): Pair<CloudStart, CloudCopy> {
-        val all = withContext(Dispatchers.IO) { store.readAll(account.id) }
-        val copy = cloudCopyOf(all)
-        val start =
-            cloudStart(
-                owner = all[CLOUD_OWNER]?.let(::cloudOwnerOf),
-                install = withContext(Dispatchers.IO) { install.id() },
-                backingUp = account.backingUp,
-                cloudHasTrips = copy.trips > 0,
-                uploadedHere = withContext(Dispatchers.IO) { ledger.read(account.id) }.isNotEmpty(),
-            )
-        return start to copy
-    }
-
-    /** Names this phone in the backup's owner document, and marks it backing up. */
-    private suspend fun claim(account: CloudAccount) {
-        val owner = cloudOwnerDocument(withContext(Dispatchers.IO) { install.id() })
-        withContext(Dispatchers.IO) { store.apply(account.id, listOf(owner), emptyList()) }
-        keep(account.copy(backingUp = true))
+    /** How many finished trips of its own this phone holds. */
+    private suspend fun ownFinished(): Int = withContext(Dispatchers.IO) {
+        tripTable.findOwn().count { it.status == TripStatus.FINISHED }
     }
 
     /**
@@ -370,29 +375,44 @@ class CloudObjects(
             log("Cloud backup: not signed in to Firebase as the account kept here. Not sent.")
             return ListenableWorker.Result.failure()
         }
-        // One phone backs up to an account (ADR-012): this one, or it stops here (slice 1e).
-        val start =
+        // Every phone backs up into its own folder (ADR-017), once it has joined the logbook.
+        val phone = withContext(Dispatchers.IO) { install.id() }
+        val others =
             try {
-                look(account).first
+                readOtherPhones(store, account.id, phone)
             } catch (unreachable: IOException) {
                 return ListenableWorker.Result.retry()
             }
-        when (start) {
-            CloudStart.BACK_UP -> if (account.backingUp != true) claim(account)
-
-            CloudStart.ASK -> {
-                if (account.backingUp != false) keep(account.copy(backingUp = false))
-                return ListenableWorker.Result.success()
+        if (cloudAsksToMerge(ownFinished(), others, account.backingUp)) {
+            if (account.backingUp != false) keep(account.copy(backingUp = false))
+            return ListenableWorker.Result.success()
+        }
+        if (account.backingUp != true) keep(account.copy(backingUp = true))
+        try {
+            withContext(Dispatchers.IO) {
+                val notices =
+                    syncLogbook(
+                        store,
+                        account.id,
+                        phone,
+                        phoneName(appContext),
+                        container.clock(),
+                        others,
+                        tripTable,
+                        ledger,
+                        ::log,
+                    )
+                if (notices.isNotEmpty()) replacedNotification.show(notices)
+                syncShared(store, account.id, container.settingsStore, ledger, ::log)
             }
-
-            CloudStart.MOVED -> {
-                keep(account.copy(backingUp = false))
-                log("Cloud backup: another phone backs up to this account now. This phone stopped.")
-                return ListenableWorker.Result.success()
-            }
+        } catch (unreachable: IOException) {
+            return ListenableWorker.Result.retry()
         }
         return when (uploadUntilQuiet(backup, account.id, ::log)) {
-            CloudUploadOutcome.DONE -> ListenableWorker.Result.success()
+            CloudUploadOutcome.DONE -> {
+                forgetEarlierOwner(account, phone)
+                ListenableWorker.Result.success()
+            }
 
             CloudUploadOutcome.TRY_LATER -> ListenableWorker.Result.retry()
 
@@ -405,6 +425,24 @@ class CloudObjects(
                 }
                 ListenableWorker.Result.failure()
             }
+        }
+    }
+
+    /**
+     * The backup an older version kept at the account's top named this phone as its owner:
+     * its documents were moved into this phone's folder by the run that just ended (the
+     * ledger's old paths were removed as the new ones were written), so the owner document
+     * goes too.
+     */
+    private suspend fun forgetEarlierOwner(account: CloudAccount, phone: String) {
+        try {
+            val earlier = store.readCollections(account.id, listOf(CLOUD_BACKUP))
+            if (earlier[CLOUD_OWNER]?.let(::cloudOwnerOf) == phone) {
+                store.apply(account.id, emptyList(), listOf(CLOUD_OWNER))
+                log("Cloud backup: this phone's backup moved into its own folder.")
+            }
+        } catch (unreachable: IOException) {
+            // Tried again after the next upload.
         }
     }
 
@@ -430,11 +468,20 @@ internal fun cloudBackupViewModelFactory(container: AppContainer): ViewModelProv
                 unlock = cloud::unlock,
                 restore = cloud::restore,
                 startBackup = cloud::startBackup,
-                restoreTrips = cloud::restoreHere,
-                backUpHere = cloud::backUpHere,
+                useBackupOnly = cloud::useBackupOnly,
+                merge = cloud::merge,
                 deleteAccount = cloud::deleteAccount,
                 eventLog = container.eventLogRepository,
                 clock = container.clock,
             )
         }
     }
+
+/**
+ * What this phone is called in the logbook (ADR-017): the name the owner gave it in Android's
+ * settings ("Shawn's Galaxy"), else its model.
+ */
+private fun phoneName(context: Context): String = android.provider.Settings.Global.getString(
+    context.contentResolver,
+    android.provider.Settings.Global.DEVICE_NAME,
+)?.takeIf { it.isNotBlank() } ?: android.os.Build.MODEL

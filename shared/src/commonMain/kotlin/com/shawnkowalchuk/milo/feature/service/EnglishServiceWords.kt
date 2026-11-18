@@ -4,8 +4,9 @@ import com.shawnkowalchuk.milo.core.text.Locale
 import com.shawnkowalchuk.milo.core.text.formatText
 
 // The Service screen's words in English, for the iPhone (2026-11-14), with the odometer tile's
-// that Service counts by: Android takes them from its string resources. Word for word, with
-// Android's escapes; EnglishReportWordsTest holds them to strings.xml.
+// that Service counts by and Home's odometer's (the same day): Android takes them from its
+// string resources. Word for word, with Android's escapes; EnglishReportWordsTest holds them to
+// strings.xml.
 
 /** The words' string resources, by their names in strings.xml, as the files hold them. */
 val ENGLISH_SERVICE_STRINGS: Map<String, String> = mapOf(
@@ -78,6 +79,16 @@ val ENGLISH_SERVICE_STRINGS: Map<String, String> = mapOf(
     "settings_odometer_example" to "123456",
     "settings_odometer_refused" to "Type the %1\$s the dashboard shows, such as 123456.",
     "settings_odometer_save" to "Save reading",
+    "home_odometer_title" to "Odometer",
+    "home_odometer_from_reading" to "Your last reading in Settings, plus every trip since",
+    "home_odometer_none" to
+        "Type the number on the dashboard in Settings once. Dually adds every trip to it from " +
+        "then on.",
+    "home_odometer_this_trip" to "+%1\$s this trip",
+    "distance_km" to "%1\$s km",
+    "distance_mi" to "%1\$s mi",
+    "distance_km_spoken" to "%1\$s kilometres",
+    "distance_mi_spoken" to "%1\$s miles",
     "action_cancel" to "Cancel",
     "settings_could_not_save" to "That change could not be saved. The Log screen says why.",
 )

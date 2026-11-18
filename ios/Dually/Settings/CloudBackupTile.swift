@@ -3,15 +3,16 @@ import DuallyShared
 import SwiftUI
 
 // The Online backup tile in Settings (phase 4h), Android's CloudBackupTile: what the backup is
-// and its price before it is bought; the account and "On" after; Restore here or Back up this
-// phone instead when another phone's trips are in it; Sign out and Delete. Every word comes from
+// and its price before it is bought; the account and "On" after; Merge, or Use only the
+// backup's trips, when this iPhone has trips of its own and the other phones theirs (ADR-017);
+// Sign out and Delete. Every word comes from
 // the shared code; the questions are asked before anything is replaced or deleted.
 struct CloudBackupTile: View {
     @StateObject private var model: CloudBackupModel
     @State private var asking: Asked?
 
     private enum Asked {
-        case restoreHere, backUpHere, delete
+        case useBackup, delete
     }
 
     init(core: DuallyCore) {
@@ -74,11 +75,11 @@ struct CloudBackupTile: View {
             if let restore = tile.restorePurchase {
                 WideButton(title: restore, filled: false) { model.restorePurchase() }
             }
-            if let restoreHere = tile.restoreHere {
-                WideButton(title: restoreHere.button, filled: true) { asking = .restoreHere }
+            if let merge = tile.merge {
+                WideButton(title: merge, filled: true) { model.merge() }
             }
-            if let backUpHere = tile.backUpHere {
-                WideButton(title: backUpHere.button, filled: false) { asking = .backUpHere }
+            if let useBackup = tile.useBackup {
+                WideButton(title: useBackup.button, filled: false) { asking = .useBackup }
             }
             if let signOut = tile.signOut {
                 WideButton(title: signOut, filled: false) { model.signOut() }
@@ -92,8 +93,7 @@ struct CloudBackupTile: View {
 
     private var question: CloudQuestion? {
         switch asking {
-        case .restoreHere: model.tile?.restoreHere
-        case .backUpHere: model.tile?.backUpHere
+        case .useBackup: model.tile?.useBackup
         case .delete: model.tile?.deleteAccount
         case nil: nil
         }
@@ -103,8 +103,7 @@ struct CloudBackupTile: View {
         let answered = asking
         asking = nil
         switch answered {
-        case .restoreHere: model.restoreHere()
-        case .backUpHere: model.backUpHere()
+        case .useBackup: model.useBackupOnly()
         case .delete: model.delete()
         case nil: break
         }
@@ -113,6 +112,7 @@ struct CloudBackupTile: View {
 
 /// The sign-in sheet before a purchase or a restore: Apple's own button, then Google's.
 private struct SignInSheet: View {
+    @Environment(\.colorScheme) private var colorScheme
     let words: CloudSignIn
     let cancel: String
     @ObservedObject var model: CloudBackupModel
@@ -129,7 +129,8 @@ private struct SignInSheet: View {
             SignInWithAppleButton(.signIn, onRequest: BackupSignIn.prepare) { result in
                 model.signedInWithApple(result)
             }
-            .signInWithAppleButtonStyle(.white)
+            // Apple's white button on the dark page, its black one on the light page.
+            .signInWithAppleButtonStyle(colorScheme == .light ? .black : .white)
             .frame(height: 46)
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             WideButton(title: words.google, filled: false) { model.signInWithGoogle() }

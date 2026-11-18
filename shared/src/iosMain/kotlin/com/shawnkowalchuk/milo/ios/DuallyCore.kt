@@ -1,21 +1,28 @@
 package com.shawnkowalchuk.milo.ios
 
 import com.shawnkowalchuk.milo.core.text.Locale
+import com.shawnkowalchuk.milo.core.time.compareDates
 import com.shawnkowalchuk.milo.core.time.systemZoneId
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.daySpan
 import com.shawnkowalchuk.milo.core.util.formatDistance
 import com.shawnkowalchuk.milo.core.util.formatMonthName
+import com.shawnkowalchuk.milo.core.util.formatShortDay
 import com.shawnkowalchuk.milo.core.util.formatTenths
+import com.shawnkowalchuk.milo.core.util.formatTimeOfDay
 import com.shawnkowalchuk.milo.core.util.localDateOf
 import com.shawnkowalchuk.milo.core.util.monthOf
 import com.shawnkowalchuk.milo.core.util.monthSpan
+import com.shawnkowalchuk.milo.core.util.usesTwelveHourClock
 import com.shawnkowalchuk.milo.data.MiloDatabase
 import com.shawnkowalchuk.milo.data.buildMiloDatabase
 import com.shawnkowalchuk.milo.data.buildPointsDatabase
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
+import com.shawnkowalchuk.milo.data.point.PointCleanup
 import com.shawnkowalchuk.milo.data.point.RawPointRepository
+import com.shawnkowalchuk.milo.data.point.RoomPointsFile
 import com.shawnkowalchuk.milo.data.report.SentReportRepository
+import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.ShownUnit
 import com.shawnkowalchuk.milo.data.settings.buildSettingsStore
 import com.shawnkowalchuk.milo.data.settings.buildShownUnit
@@ -34,11 +41,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import platform.Foundation.NSBundle
-import platform.Foundation.NSDate
 import platform.Foundation.NSLocale
 import platform.Foundation.currentLocale
 import platform.Foundation.localeIdentifier
-import platform.Foundation.timeIntervalSince1970
 
 /**
  * The door the iPhone app's Swift code comes through to the shared code (ADR-014, phase 4a).
@@ -70,12 +75,28 @@ class DuallyCore private constructor(
     val tripEdit: IosTripEdit,
     /** The Service screen, Home's service tiles and Settings' odometer (2026-11-14). */
     val service: IosService,
+    /** Home's odometer (2026-11-14). */
+    val homeOdometer: IosHomeOdometer,
     /** The CarPlay screen (phase 4f). */
     val car: IosCar,
     /** The online backup (phase 4h). */
     val cloud: IosCloud,
     private val shownUnit: ShownUnit,
+    private val settingsStore: SettingsStore,
 ) {
+    /**
+     * Dually's time at a moment of the clock that counts from the boot (`IosClock.elapsedMs`):
+     * what a GPS fix is dated by, so that a fix taken while the phone's date is set ahead is
+     * dated when it was taken (ADR-006).
+     */
+    fun timeAtElapsed(elapsedMs: Long): Long = IosClock.atElapsed(elapsedMs)
+
+    /** The vehicles (ADR-018): the Vehicles tile and the Shortcuts actions' vehicle. */
+    val vehicles: IosVehicles by lazy { IosVehicles(settingsStore, ::nowMs) }
+
+    /** Dually's time now (ADR-006): what Swift hands the shared code as "now". */
+    fun timeNow(): Long = nowMs()
+
     /** "km" or "mi", as Settings has it now: every distance the iPhone writes follows it. */
     fun unitWord(): String = unitWord(shownUnit.unit.value)
 
@@ -153,6 +174,75 @@ class DuallyCore private constructor(
         )
     }
 
+    /**
+     * Home's truck tile (2026-11-15), with when the automation said so: "Your Shortcuts
+     * automation said so today at 3:45 PM." Null before any automation has run.
+     */
+    suspend fun truckTile(nowMs: Long): TruckTileText? {
+        val tile = recorder.truckTile() ?: return null
+        val zone = systemZoneId()
+        val locale = phoneLocale()
+        val time = formatTimeOfDay(tile.heardAtMs, zone, locale, !usesTwelveHourClock(locale))
+        val day = localDateOf(tile.heardAtMs, zone)
+        val date =
+            if (compareDates(day, localDateOf(nowMs, zone)) ==
+                0
+            ) {
+                "today"
+            } else {
+                formatShortDay(day, locale)
+            }
+        return tile.copy(heard = "Your Shortcuts automation said so $date at $time.")
+    }
+
+    /** The monthly reminder and the daily check, planned as notifications (2026-11-15). */
+    val reminders: IosReminders by lazy {
+        IosReminders(
+            settings = settingsStore,
+            trips = TripRepository(database.tripDao()),
+            sent = SentReportRepository(database.sentReportDao()),
+            zone = ::systemZoneId,
+            locale = ::phoneLocale,
+        )
+    }
+
+    /** What's new and the first start (2026-11-16). */
+    val whatsNew: IosWhatsNew by lazy {
+        IosWhatsNew(
+            settings = settingsStore,
+            trips = TripRepository(database.tripDao()),
+            eventLog = EventLogRepository(database.eventLogDao()),
+            locale = ::phoneLocale,
+            clock = ::nowMs,
+        )
+    }
+
+    /** The connect and trip-start sounds (2026-11-16). */
+    val sounds: IosSounds by lazy {
+        IosSounds(settingsStore, EventLogRepository(database.eventLogDao()), ::nowMs) {
+            party.atTripStart()
+        }
+    }
+
+    /** The one-year party (2026-11-16). */
+    val party: IosParty by lazy {
+        IosParty(
+            TripRepository(database.tripDao()),
+            settingsStore,
+            EventLogRepository(database.eventLogDao()),
+            ::nowMs,
+            ::systemZoneId,
+        )
+    }
+
+    /** The mascot's greetings (2026-11-16). */
+    val mascot: IosMascot by lazy {
+        IosMascot(settingsStore, EventLogRepository(database.eventLogDao()), ::nowMs)
+    }
+
+    /** The Log screen (2026-11-15): the event log's lines, its chips, and its file to share. */
+    val log: IosLog by lazy { IosLog(EventLogRepository(database.eventLogDao())) }
+
     /** [metres] as Home writes a distance: "12.3", in the phone's language. */
     fun distanceText(metres: Double): String =
         formatDistance(metres, shownUnit.unit.value, phoneLocale())
@@ -170,6 +260,8 @@ class DuallyCore private constructor(
             val points = buildPointsDatabase()
             val settings = buildSettingsStore()
             val eventLog = EventLogRepository(database.eventLogDao())
+            // Dually's own clock says in the Log what the phone's clock did (ADR-006).
+            IosClock.logTo(eventLog)
             val clock = ::nowMs
             val tripRepository = TripRepository(database.tripDao())
             val ledger =
@@ -217,6 +309,7 @@ class DuallyCore private constructor(
                     clock = clock,
                     openTripStart = { addresses.openTripStart.value },
                     unit = { shownUnit.unit.value },
+                    sentReports = { SentReportRepository(database.sentReportDao()).currentSent() },
                 )
             val drivingAlert =
                 IosDrivingAlert(
@@ -250,6 +343,7 @@ class DuallyCore private constructor(
                     apple = cloud,
                     files = IosCloudFiles(),
                     mainRows = database.mainTransferDao(),
+                    trips = database.tripDao(),
                     settings = settings,
                     transfer = transfer,
                     eventLog = eventLog,
@@ -262,6 +356,7 @@ class DuallyCore private constructor(
                     clock = clock,
                     zone = ::systemZoneId,
                     locale = ::phoneLocale,
+                    notify = ::postReplacedNotice,
                 )
             return DuallyCore(
                 database,
@@ -279,6 +374,14 @@ class DuallyCore private constructor(
                     zone = ::systemZoneId,
                     locale = ::phoneLocale,
                     clock = clock,
+                    cleanup =
+                        PointCleanup(
+                            trips = tripRepository,
+                            points = RawPointRepository(points.rawPointDao()),
+                            file = RoomPointsFile(points),
+                            eventLog = eventLog,
+                            clock = clock,
+                        ),
                 ),
                 transfer,
                 IosWidget(tripRepository, settings, ::systemZoneId, ::phoneLocale),
@@ -298,6 +401,7 @@ class DuallyCore private constructor(
                     zone = ::systemZoneId,
                     locale = ::phoneLocale,
                 ),
+                IosHomeOdometer(settings, tripRepository, ::systemZoneId, ::phoneLocale),
                 IosCar(
                     recorder = recorder,
                     settings = settings,
@@ -309,6 +413,7 @@ class DuallyCore private constructor(
                 ),
                 backup,
                 shownUnit,
+                settings,
             )
         }
     }
@@ -328,10 +433,11 @@ data class HomeFigures(
 /** The phone's language, as the shared code takes it. */
 private fun phoneLocale(): Locale = Locale(NSLocale.currentLocale.localeIdentifier)
 
-/** The time now, as stored times are: milliseconds since 1970. */
-private fun nowMs(): Long = (NSDate().timeIntervalSince1970 * MILLIS_PER_SECOND).toLong()
-
-private const val MILLIS_PER_SECOND = 1000.0
+/**
+ * The time now, as stored times are: milliseconds since 1970, by Dually's own clock (since
+ * 2026-11-16, ADR-006), not the phone's, whose date can be set ahead by hand.
+ */
+private fun nowMs(): Long = IosClock.now()
 
 /** The app's version, "0.1.0", as an export names the app that wrote it. */
 private fun appVersion(): String =

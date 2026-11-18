@@ -54,8 +54,14 @@ internal fun TripLine.byHandNoteRes(): Int? = when (mark.takeIf { kind != TripKi
  * saved as, then that its figures are typed, then why it is not counted. The row joins them
  * with a middle dot: "7:42 – 8:06 AM · Business · edited".
  */
-internal fun TripLine.notesRes(): List<Int> =
-    listOfNotNull(categoryNoteRes(), byHandNoteRes(), leftOutNoteRes())
+internal fun TripLine.notesRes(): List<Int> = listOfNotNull(
+    R.string.trips_note_other_phone.takeIf { fromOtherPhone },
+    R.string.trips_note_locked.takeIf { readOnly && !fromOtherPhone },
+    R.string.trips_note_replaced.takeIf { canPutBack },
+    categoryNoteRes(),
+    byHandNoteRes(),
+    leftOutNoteRes(),
+)
 
 /** One thing that can be done with a listed trip: one button under its row. */
 internal sealed interface TripAction {
@@ -67,6 +73,9 @@ internal sealed interface TripAction {
 
     /** Marks the trip as [category], whatever the work schedule made of it. */
     data class Mark(val category: TripCategory) : TripAction
+
+    /** Brings back the change another phone's later change replaced (ADR-017). */
+    data object PutBack : TripAction
 
     /** Deletes, restores or counts the trip. */
     data class Correct(val correction: TripCorrection) : TripAction
@@ -86,6 +95,9 @@ internal sealed interface TripAction {
  * @param pressed whether this trip is the one whose buttons were brought up by a press.
  */
 internal fun TripLine.actions(pressed: Boolean): List<TripAction> {
+    // A month sent to the accountant is locked on every phone (ADR-017), and an older
+    // version's backup is read-only here.
+    if (readOnly) return emptyList()
     val counted = kind == TripKind.COUNTED
     val shown = counted && pressed
     val change = kind.correction?.takeIf { !counted || shown }
@@ -94,6 +106,7 @@ internal fun TripLine.actions(pressed: Boolean): List<TripAction> {
             if (editable) add(TripAction.Edit)
             add(TripAction.Label)
             markableAs.forEach { add(TripAction.Mark(it)) }
+            if (canPutBack) add(TripAction.PutBack)
         }
         if (change != null) add(TripAction.Correct(change))
     }
@@ -106,6 +119,8 @@ internal fun TripAction.wordsRes(): Int = when (this) {
     TripAction.Label -> R.string.trips_button_label
 
     is TripAction.Mark -> categoryWordsRes(category, ranPastSchedule = false)
+
+    TripAction.PutBack -> R.string.trips_button_put_back
 
     is TripAction.Correct ->
         when (correction) {
@@ -123,6 +138,7 @@ internal fun TripAction.spokenRes(): Int = when (this) {
     TripAction.Edit -> R.string.trips_action_edit
     TripAction.Label -> R.string.trips_action_label
     is TripAction.Mark -> category.markLabelRes()
+    TripAction.PutBack -> R.string.trips_action_put_back
     is TripAction.Correct -> correction.labelRes()
 }
 

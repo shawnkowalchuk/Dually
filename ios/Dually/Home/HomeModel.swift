@@ -9,18 +9,44 @@ import Foundation
 @MainActor
 final class HomeModel: ObservableObject {
     @Published private(set) var figures: HomeFigures?
+    /// The odometers as their wheels show them, one for each vehicle (ADR-018), the one a trip
+    /// with the truck is driven in counting.
+    @Published private(set) var odometers: [HomeOdometerText] = []
+    /// Today's finished trips, newest first, as Android's Home lists them.
+    @Published private(set) var today: TodayText?
+    /// What the last Shortcuts automation said of the truck, or nil before any has run.
+    @Published private(set) var truck: TruckTileText?
+    /// Last month's report while the monthly reminder says it is waiting, as Android's amber tile.
+    @Published private(set) var reportWaiting: ReminderPlan?
     /// The trip being recorded, or nil.
     @Published private(set) var recording: RecordingNow?
     @Published private(set) var failure: String?
     @Published private(set) var recordingFailure: String?
 
     private let session: TripSession
+    private var following: AnyCancellable?
+    private var turning: AnyCancellable?
     var location: LocationRecorder { session.location }
 
     init(session: TripSession) {
         self.session = session
         session.$recording.assign(to: &$recording)
         session.$failure.assign(to: &$recordingFailure)
+        // The odometer follows the trip being recorded, every two seconds at most: the wheels
+        // roll softly between its figures, as Android's do.
+        following = session.$recording
+            .throttle(for: .seconds(2), scheduler: RunLoop.main, latest: true)
+            .sink { [weak self] trip in
+                Task { await self?.readOdometer(trip) }
+            }
+        // Today's trips and the truck when a trip starts or ends, or its truck goes and comes
+        // back: an automation can do that while Home is open.
+        turning = session.$recording
+            .map { trip in trip.map { $0.waitingForTruck ? 2 : 1 } ?? 0 }
+            .removeDuplicates()
+            .sink { [weak self] _ in
+                Task { await self?.readTodayAndTruck() }
+            }
     }
 
     /// Reads everything again, as of now. A trip that was open when the app last stopped has its
@@ -56,8 +82,28 @@ final class HomeModel: ObservableObject {
 
     private func readFigures() async {
         do {
-            figures = try await session.core.homeFigures(nowMs: Int64(Date().timeIntervalSince1970 * 1000))
+            figures = try await session.core.homeFigures(nowMs: session.core.timeNow())
             failure = nil
+        } catch {
+            failure = error.localizedDescription
+        }
+        await readOdometer(session.recording)
+        await readTodayAndTruck()
+    }
+
+    private func readTodayAndTruck() async {
+        today = try? await session.core.trips.today()
+        truck = try? await session.core.truckTile(nowMs: session.core.timeNow())
+        let reminder = try? await session.core.reminders.reminderPlan(nowMs: session.core.timeNow())
+        reportWaiting = reminder?.dueNow == true ? reminder : nil
+    }
+
+    private func readOdometer(_ trip: RecordingNow?) async {
+        do {
+            odometers = try await session.core.homeOdometer.readAll(
+                trip: trip,
+                nowMs: session.core.timeNow()
+            )
         } catch {
             failure = error.localizedDescription
         }

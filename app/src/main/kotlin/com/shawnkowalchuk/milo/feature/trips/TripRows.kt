@@ -52,6 +52,7 @@ import java.util.Locale
  * @param onMark "Personal" or "Business" was pressed. Made at once: the other button undoes it.
  * @param onEdit "Edit" was pressed: the edit screen is opened for the trip.
  * @param onLabel "Label" was pressed: the trip's label is chosen in a dialog.
+ * @param onPutBack "Put back" was pressed: made at once, and undone by pressing it again.
  */
 internal class TripRowContext(
     val zone: ZoneId,
@@ -63,6 +64,7 @@ internal class TripRowContext(
     val onMark: (TripLine, TripCategory) -> Unit,
     val onEdit: (TripLine) -> Unit,
     val onLabel: (TripLine) -> Unit,
+    val onPutBack: (TripLine) -> Unit,
 )
 
 /**
@@ -172,7 +174,7 @@ private fun TripAction.asButton(trip: TripLine, context: TripRowContext): Action
             when (this) {
                 TripAction.Edit -> ActionKind.ACCENT
 
-                TripAction.Label, is TripAction.Mark -> ActionKind.PLAIN
+                TripAction.Label, is TripAction.Mark, TripAction.PutBack -> ActionKind.PLAIN
 
                 is TripAction.Correct ->
                     if (correction == TripCorrection.DELETE) {
@@ -186,6 +188,7 @@ private fun TripAction.asButton(trip: TripLine, context: TripRowContext): Action
                 TripAction.Edit -> ({ context.onEdit(trip) })
                 TripAction.Label -> ({ context.onLabel(trip) })
                 is TripAction.Mark -> ({ context.onMark(trip, category) })
+                TripAction.PutBack -> ({ context.onPutBack(trip) })
                 is TripAction.Correct -> ({ context.onAsk(trip, correction) })
             },
         spokenName = stringResource(spokenRes()),

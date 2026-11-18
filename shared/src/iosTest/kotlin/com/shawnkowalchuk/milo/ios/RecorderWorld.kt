@@ -34,8 +34,10 @@ internal class RecorderWorld {
     private val truck =
         object : TruckBelief {
             override var connected = false
+            override var connectedByReading = false
             override var connectHeardAtMs: Long? = null
             override var disconnectHeardAtMs: Long? = null
+            override var vehicle: String? = null
         }
 
     fun truckBelief(connected: Boolean) {
@@ -81,6 +83,8 @@ internal class RecorderWorld {
     fun sentReportDao() = database.sentReportDao()
 
     fun mainTransferDao() = database.mainTransferDao()
+
+    fun tripDao() = database.tripDao()
 
     fun pointsTransferDao() = points.pointsTransferDao()
 
