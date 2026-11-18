@@ -159,11 +159,12 @@ class TripEditViewModel(
     /** Checks the form and, if nothing is wrong with it, stores it. The screen then leaves. */
     fun onSave() = store { now ->
         val session = now.session
+        val stored = session.stored
         val result =
-            if (session.stored == null) {
+            if (stored == null) {
                 editing.add(now.form, session.schedule, session.zone)
             } else {
-                editing.save(session.stored, now.form, session.schedule, session.zone)
+                editing.save(stored, now.form, session.schedule, session.zone)
             }
         when (result) {
             SaveResult.Stored -> Stored.Done(now.form.startedAtMs(session.stored, session.zone))

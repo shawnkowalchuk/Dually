@@ -7,23 +7,19 @@ import SwiftUI
 // with the steps to make them and the check that each has run.
 struct SetupView: View {
     @ObservedObject var model: SetupModel
+    /// Back to where Setup was opened from.
+    let back: () -> Void
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
-                TopLine(screen: "Setup")
-                if let screen = model.screen {
-                    ReadyTile(screen: screen)
-                    ForEach(Array(screen.rows.enumerated()), id: \.offset) { _, row in
-                        SetupRowTile(row: row, model: model)
-                    }
+        PinnedScreen(title: "Setup", onBack: back) {
+            if let screen = model.screen {
+                ReadyTile(screen: screen)
+                ForEach(Array(screen.rows.enumerated()), id: \.offset) { _, row in
+                    SetupRowTile(row: row, model: model)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 24)
         }
-        .background(Palette.page.ignoresSafeArea())
         .task { model.refresh() }
         .onChange(of: scenePhase) { phase in
             // Back from the Shortcuts app or Settings: an automation may have run, a permission
@@ -110,8 +106,13 @@ private struct SetupRowTile: View {
                 model.choose(model.vehicle == .carplay ? .bluetooth : .carplay)
             }
         } else if let action = row.action, let button = row.button {
-            WideButton(title: button, filled: row.state == SetupState.needsYou) {
-                model.perform(action)
+            VStack(spacing: 8) {
+                WideButton(title: button, filled: row.state == SetupState.needsYou) {
+                    model.perform(action)
+                }
+                if let confirm = row.confirmButton, let confirmAction = row.confirmAction {
+                    WideButton(title: confirm, filled: false) { model.perform(confirmAction) }
+                }
             }
         }
     }

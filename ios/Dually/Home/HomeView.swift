@@ -7,64 +7,114 @@ import SwiftUI
 struct HomeView: View {
     @StateObject private var model: HomeModel
     @ObservedObject var setup: SetupModel
+    @ObservedObject var service: ServiceModel
     let openSetup: () -> Void
     @Environment(\.scenePhase) private var scenePhase
+    @State private var finishing: AlertText?
 
-    init(session: TripSession, setup: SetupModel, openSetup: @escaping () -> Void) {
+    init(session: TripSession, setup: SetupModel, service: ServiceModel, openSetup: @escaping () -> Void) {
         _model = StateObject(wrappedValue: HomeModel(session: session))
         self.setup = setup
+        self.service = service
         self.openSetup = openSetup
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
-                TopLine(screen: "Home")
-                if let screen = setup.screen, !screen.complete {
-                    SetupWarning(screen: screen, open: openSetup)
-                }
-                TripCard(model: model)
-                if model.location.authorization == .denied || model.location.authorization == .restricted {
-                    Text("Dually may not use the location. Allow it in the iPhone's Settings, Dually, Location, to record a trip.")
-                        .font(Typography.body(14))
-                        .foregroundStyle(Palette.amber)
-                }
-                HStack(spacing: 12) {
-                    FigureTile(
-                        label: "Today · Business",
-                        value: model.figures?.todayBusiness,
-                        note: model.figures.map { tripCount(Int($0.todayTrips)) }
-                    )
-                    FigureTile(
-                        label: model.figures?.monthName ?? " ",
-                        value: model.figures?.monthBusiness,
-                        note: "Business"
-                    )
-                }
-                if let failure = model.failure ?? model.recordingFailure {
-                    Text(failure)
-                        .font(Typography.body(14))
-                        .foregroundStyle(Palette.amber)
+        PinnedScreen(title: nil) {
+            if let screen = setup.screen, !screen.complete {
+                SetupWarning(screen: screen, open: openSetup)
+            }
+            TripCard(model: model)
+            if model.location.authorization == .denied || model.location.authorization == .restricted {
+                Text("Dually may not use the location. Allow it in the iPhone's Settings, Dually, Location, to record a trip.")
+                    .font(Typography.body(14))
+                    .foregroundStyle(Palette.amber)
+            }
+            HStack(spacing: 12) {
+                FigureTile(
+                    label: "Today · Business",
+                    value: model.figures?.todayBusiness,
+                    note: model.figures.map { tripCount(Int($0.todayTrips)) },
+                    unit: model.unitWord
+                )
+                FigureTile(
+                    label: model.figures?.monthName ?? " ",
+                    value: model.figures?.monthBusiness,
+                    note: "Business",
+                    unit: model.unitWord
+                )
+            }
+            // What service is soon or due, as Android's Home tiles: not while a trip records,
+            // when there is nothing to read while driving.
+            if model.recording == nil {
+                ForEach(service.text?.alerts ?? [], id: \.id) { alert in
+                    ServiceAlertTile(alert: alert) { finishing = alert }
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 24)
+            if let failure = model.failure ?? model.recordingFailure {
+                Text(failure)
+                    .font(Typography.body(14))
+                    .foregroundStyle(Palette.amber)
+            }
         }
-        .background(Palette.page.ignoresSafeArea())
         .task {
             setup.refresh()
             await model.refresh()
+            await service.load()
         }
         .onChange(of: scenePhase) { phase in
             if phase == .active {
                 setup.refresh()
-                Task { await model.refresh() }
+                Task {
+                    await model.cameToFront()
+                    await service.load()
+                }
             }
+        }
+        .onChange(of: model.recording == nil) { _ in Task { await service.load() } }
+        .confirmationDialog(
+            finishing?.doneTitle ?? "",
+            isPresented: Binding(get: { finishing != nil }, set: { if !$0 { finishing = nil } }),
+            titleVisibility: .visible,
+            presenting: finishing
+        ) { alert in
+            Button(serviceWords("home_service_done")) {
+                Task { await service.change { try await service.core.service.doneNow(id: alert.id) } }
+            }
+            Button(serviceWords("action_cancel"), role: .cancel) {}
+        } message: { _ in
+            Text(serviceWords("home_service_done_text"))
         }
     }
 
     private func tripCount(_ count: Int) -> String {
         count == 1 ? "1 trip" : "\(count) trips"
+    }
+}
+
+/// One service item that is soon or due: its name, its line, and Done, as Android's tile.
+private struct ServiceAlertTile: View {
+    let alert: AlertText
+    let done: () -> Void
+
+    var body: some View {
+        Tile {
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "wrench.and.screwdriver.fill")
+                    .foregroundStyle(Palette.amber)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(alert.name)
+                        .font(Typography.body(17, weight: .semibold))
+                        .foregroundStyle(Palette.text)
+                    Text(alert.line)
+                        .font(Typography.body(15))
+                        .foregroundStyle(Palette.amber)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            WideButton(title: serviceWords("home_service_done"), filled: true, action: done)
+        }
     }
 }
 
@@ -74,7 +124,7 @@ private struct TripCard: View {
 
     var body: some View {
         if let trip = model.recording {
-            RecordingCard(trip: trip, distance: model.distanceText(trip)) {
+            RecordingCard(trip: trip, distance: model.distanceText(trip), unit: model.unitWord) {
                 Task { await model.end() }
             }
         } else {
@@ -108,6 +158,7 @@ private struct TripCard: View {
 private struct RecordingCard: View {
     let trip: RecordingNow
     let distance: String
+    let unit: String
     let onEnd: () -> Void
 
     var body: some View {
@@ -117,7 +168,7 @@ private struct RecordingCard: View {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(distance)
                     .font(Typography.figure(40))
-                Text("km")
+                Text(unit)
                     .font(Typography.body(16))
             }
             TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -149,6 +200,7 @@ private struct FigureTile: View {
     let label: String
     let value: String?
     let note: String?
+    let unit: String
 
     var body: some View {
         Tile {
@@ -159,7 +211,7 @@ private struct FigureTile: View {
                 Text(value ?? "–")
                     .font(Typography.figure(28))
                     .foregroundStyle(Palette.text)
-                Text("km")
+                Text(unit)
                     .font(Typography.body(14))
                     .foregroundStyle(Palette.textSecondary)
             }

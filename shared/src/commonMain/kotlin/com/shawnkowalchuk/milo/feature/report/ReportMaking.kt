@@ -1,0 +1,218 @@
+package com.shawnkowalchuk.milo.feature.report
+
+import com.shawnkowalchuk.milo.core.odometer.DrivenTrip
+import com.shawnkowalchuk.milo.core.odometer.OdometerReading
+import com.shawnkowalchuk.milo.core.odometer.OdometerSpan
+import com.shawnkowalchuk.milo.core.odometer.drivenIn
+import com.shawnkowalchuk.milo.core.odometer.odometerOver
+import com.shawnkowalchuk.milo.core.odometer.odometerOverTrip
+import com.shawnkowalchuk.milo.core.odometer.ofVehicle
+import com.shawnkowalchuk.milo.core.report.MileageReport
+import com.shawnkowalchuk.milo.core.report.MonthTotal
+import com.shawnkowalchuk.milo.core.report.PersonalDriving
+import com.shawnkowalchuk.milo.core.report.ReportPeriod
+import com.shawnkowalchuk.milo.core.report.ReportRevision
+import com.shawnkowalchuk.milo.core.report.ReportSender
+import com.shawnkowalchuk.milo.core.report.ReportTrip
+import com.shawnkowalchuk.milo.core.report.VehicleOdometer
+import com.shawnkowalchuk.milo.core.report.reportDays
+import com.shawnkowalchuk.milo.core.report.wholeYear
+import com.shawnkowalchuk.milo.core.time.LocalDate
+import com.shawnkowalchuk.milo.core.time.ZoneId
+import com.shawnkowalchuk.milo.core.time.compareMonths
+import com.shawnkowalchuk.milo.core.time.yearMonth
+import com.shawnkowalchuk.milo.core.time.yearMonthOf
+import com.shawnkowalchuk.milo.core.util.DistanceUnit
+import com.shawnkowalchuk.milo.core.util.localDateOf
+import com.shawnkowalchuk.milo.core.util.sumOfTenths
+import com.shawnkowalchuk.milo.data.report.ReportSelection
+import com.shawnkowalchuk.milo.data.report.SentReport
+import com.shawnkowalchuk.milo.data.report.nextRevision
+import com.shawnkowalchuk.milo.data.report.period
+import com.shawnkowalchuk.milo.data.report.sentFor
+import com.shawnkowalchuk.milo.data.settings.MiloSettings
+import com.shawnkowalchuk.milo.data.settings.MissingDetail
+import com.shawnkowalchuk.milo.data.settings.missingForPdf
+import com.shawnkowalchuk.milo.data.settings.missingForSending
+import com.shawnkowalchuk.milo.data.settings.pairedVehicles
+import com.shawnkowalchuk.milo.data.settings.vehicleNamed
+
+// The report a press on the Report screen would make, and what each kind of press needs of the
+// settings first. Pure functions, so they are tested without a phone. Shared by both phones
+// since 2026-11-13: the iPhone's report is made by them too. They were part of
+// ReportUiState.kt until that file reached its size limit (ENGINEERING_STANDARDS section 3).
+
+/**
+ * The report for [period] as it would be made now.
+ *
+ * A period that was sent before makes this one a revision: it carries the next number and
+ * names the day the newest report before it was sent. That holds for a PDF that is only made to
+ * be looked at too, so that what he looks at is what would be sent.
+ *
+ * @param name printed as the sender. The caller decides what a report may be made without.
+ * @param sent every report sent so far.
+ * @param today the day the report is generated on, in [zone].
+ * @param truckTrips every trip that moved the truck's odometer, for its figures at the start
+ * and the end of the period (`odometerOver`).
+ *
+ * **The report is in the unit [settings] hold at this moment** (Shawn's answer of 2026-10-07,
+ * "Follow the setting"): its trips, its totals, the Personal figure and the odometer.
+ */
+fun mileageReport(
+    period: ReportPeriod,
+    selection: ReportSelection,
+    name: String,
+    settings: MiloSettings,
+    sent: List<SentReport>,
+    today: LocalDate,
+    zone: ZoneId,
+    truckTrips: List<DrivenTrip> = emptyList(),
+): MileageReport {
+    val sentBefore = sentFor(period, sent)
+    val unit = settings.distanceUnit
+    val options = settings.reportOptions
+    val listed =
+        (selection.trips + if (options.listPersonal) selection.personalTrips else emptyList())
+            .map { trip ->
+                // While the trip still names its vehicle by address, which is how its readings
+                // and its trips are found.
+                if (options.tripOdometer) {
+                    trip.copy(odometer = tripOdometer(trip, zone, settings, truckTrips))
+                } else {
+                    trip
+                }
+            }
+    return MileageReport(
+        sender = ReportSender(name, settings.reportCompany, settings.reportVehicle),
+        period = period,
+        generatedOn = today,
+        revision =
+            sentBefore.lastOrNull()?.let { last ->
+                ReportRevision(nextRevision(sentBefore), localDateOf(last.sentAtMs, zone))
+            },
+        zone = zone,
+        unit = unit,
+        days =
+            reportDays(
+                listed.map { it.copy(vehicle = it.vehicle?.let(settings::vehicleNamed)) },
+                zone,
+            ),
+        personal = PersonalDriving(selection.personalLeftOut, selection.personalTenths(unit)),
+        odometers = odometersOver(period, zone, settings, truckTrips),
+        listsPersonal = options.listPersonal,
+        showsBusinessShare = options.businessShare,
+        showsTripOdometer = options.tripOdometer,
+        months = period.wholeYear?.let { year -> yearMonths(year, selection, zone, unit, today) },
+    )
+}
+
+/**
+ * The twelve months of [year] for the year-end summary: each month's Business and Personal
+ * trips of [selection] by their start, added up as the report adds them up. A month after the
+ * one [today] is in has none.
+ */
+private fun yearMonths(
+    year: Int,
+    selection: ReportSelection,
+    zone: ZoneId,
+    unit: DistanceUnit,
+    today: LocalDate,
+): List<MonthTotal> {
+    fun byMonth(trips: List<ReportTrip>) =
+        trips.groupBy { localDateOf(it.startedAtMs, zone).yearMonth() }
+    val business = byMonth(selection.trips)
+    val personal = byMonth(selection.personalTrips)
+    return (1..MONTHS_IN_A_YEAR).map { month ->
+        val yearMonth = yearMonthOf(year, month)
+        if (compareMonths(yearMonth, today.yearMonth()) > 0) {
+            MonthTotal(yearMonth, null, null)
+        } else {
+            MonthTotal(
+                yearMonth,
+                sumOfTenths(business[yearMonth].orEmpty().map { it.distanceMetres }, unit),
+                sumOfTenths(personal[yearMonth].orEmpty().map { it.distanceMetres }, unit),
+            )
+        }
+    }
+}
+
+/**
+ * The odometer of the vehicle [trip] was in, at its start and its end (since 2026-10-16), from
+ * that vehicle's readings and trips; with no vehicle paired, from all of them, as the period's
+ * odometer is worked out. Null without a reading, or for a trip with no end.
+ */
+private fun tripOdometer(
+    trip: ReportTrip,
+    zone: ZoneId,
+    settings: MiloSettings,
+    truckTrips: List<DrivenTrip>,
+): OdometerSpan? {
+    val ended = trip.endedAtMs ?: return null
+    val unit = settings.distanceUnit
+    val readings = settings.odometerReadings
+    val vehicles = settings.pairedVehicles()
+    if (vehicles.isEmpty()) {
+        return odometerOverTrip(trip.startedAtMs, ended, zone, readings, truckTrips, unit)
+    }
+    val address = trip.vehicle ?: vehicles.first().address
+    val first = vehicles.first().address.equals(address, ignoreCase = true)
+    return odometerOverTrip(
+        trip.startedAtMs,
+        ended,
+        zone,
+        readings.ofVehicle(address, first),
+        truckTrips.drivenIn(address, first),
+        unit,
+    )
+}
+
+/**
+ * Each paired vehicle's odometer at the start and the end of [period] (one for each vehicle
+ * since 2026-10-08), from its own readings and trips; with no vehicle paired, the one odometer
+ * of every reading and trip, as it was before.
+ */
+private fun odometersOver(
+    period: ReportPeriod,
+    zone: ZoneId,
+    settings: MiloSettings,
+    truckTrips: List<DrivenTrip>,
+): List<VehicleOdometer> {
+    val unit = settings.distanceUnit
+    val readings = settings.odometerReadings
+    fun over(ofVehicle: List<OdometerReading>, driven: List<DrivenTrip>) =
+        odometerOver(period.firstDay, period.lastDay, zone, ofVehicle, driven, unit)
+    val vehicles = settings.pairedVehicles()
+    if (vehicles.isEmpty()) {
+        return listOfNotNull(over(readings, truckTrips)?.let { VehicleOdometer(null, it) })
+    }
+    return vehicles.mapIndexedNotNull { index, vehicle ->
+        val first = index == 0
+        over(
+            readings.ofVehicle(vehicle.address, first),
+            truckTrips.drivenIn(vehicle.address, first),
+        )
+            ?.let { VehicleOdometer(vehicle.name ?: vehicle.address, it) }
+    }
+}
+
+/** What a press needs of the settings before it may make a file. */
+enum class ReportNeed {
+    /** A CSV: nothing. It prints no name and goes wherever Shawn shares it. */
+    NOTHING,
+
+    /** A PDF to look at: the name that is printed on it. */
+    PDF,
+
+    /** A PDF to send: the name, and the address it is sent to. */
+    SENDING,
+    ;
+
+    /** What of it [settings] lack. */
+    fun missingIn(settings: MiloSettings): List<MissingDetail> = when (this) {
+        NOTHING -> emptyList()
+        PDF -> settings.missingForPdf()
+        SENDING -> settings.missingForSending()
+    }
+}
+
+private const val MONTHS_IN_A_YEAR = 12

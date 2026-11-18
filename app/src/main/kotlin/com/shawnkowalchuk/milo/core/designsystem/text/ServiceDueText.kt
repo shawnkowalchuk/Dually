@@ -2,14 +2,15 @@ package com.shawnkowalchuk.milo.core.designsystem.text
 
 import com.shawnkowalchuk.milo.R
 import com.shawnkowalchuk.milo.core.odometer.formatOdometer
+import com.shawnkowalchuk.milo.core.service.DueWording
 import com.shawnkowalchuk.milo.core.service.ServiceDue
 import com.shawnkowalchuk.milo.core.service.ServiceItem
+import com.shawnkowalchuk.milo.core.service.dueLine
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.formatMediumDay
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.Locale
-import kotlin.math.absoluteValue
 
 // When a service item is due, in words (since 2026-10-16). In one place because three write it:
 // the Service screen, its notification and Home's tile. The words are handed in as a function
@@ -37,8 +38,7 @@ fun kmText(km: Long, unit: DistanceUnit, locale: Locale, words: Words): String =
     words(distanceRes(unit), arrayOf(formatOdometer(kmToShown(km, unit), locale)))
 
 /**
- * When [item] is due, in one line: overdue first, by distance and then by time; then due in a
- * distance, on a day, or both, whichever comes first.
+ * When [item] is due, in one line: the sentence [dueLine] chooses, in Android's words.
  */
 fun serviceDueText(
     item: ServiceItem,
@@ -47,25 +47,21 @@ fun serviceDueText(
     locale: Locale,
     words: Words,
 ): String {
-    val kmLeft = due.kmLeft
-    val daysLeft = due.daysLeft
-    val dueOn = due.dueOn?.let { formatMediumDay(it, locale) }
-    fun km(value: Long) = kmText(value, unit, locale, words)
-    return when {
-        kmLeft != null && kmLeft <= 0 ->
-            words(R.string.service_overdue_by, arrayOf(km(kmLeft.absoluteValue)))
+    val line = dueLine(item, due)
+    val km = line.km?.let { kmText(it, unit, locale, words) }
+    val day = line.day?.let { formatMediumDay(it, locale) }
+    return when (line.wording) {
+        DueWording.OVERDUE_BY -> words(R.string.service_overdue_by, arrayOf(km.orEmpty()))
 
-        daysLeft != null && daysLeft <= 0 && dueOn != null ->
-            words(R.string.service_overdue_since, arrayOf(dueOn))
+        DueWording.OVERDUE_SINCE -> words(R.string.service_overdue_since, arrayOf(day.orEmpty()))
 
-        kmLeft != null && dueOn != null ->
-            words(R.string.service_due_in_or_on, arrayOf(km(kmLeft), dueOn))
+        DueWording.DUE_IN_OR_ON ->
+            words(R.string.service_due_in_or_on, arrayOf(km.orEmpty(), day.orEmpty()))
 
-        kmLeft != null -> words(R.string.service_due_in, arrayOf(km(kmLeft)))
+        DueWording.DUE_IN -> words(R.string.service_due_in, arrayOf(km.orEmpty()))
 
-        dueOn != null -> words(R.string.service_due_on, arrayOf(dueOn))
+        DueWording.DUE_ON -> words(R.string.service_due_on, arrayOf(day.orEmpty()))
 
-        // A distance to go by and nothing to count it from.
-        else -> words(R.string.service_due_no_reading, arrayOf(km(item.everyKm?.toLong() ?: 0)))
+        DueWording.NO_READING -> words(R.string.service_due_no_reading, arrayOf(km.orEmpty()))
     }
 }

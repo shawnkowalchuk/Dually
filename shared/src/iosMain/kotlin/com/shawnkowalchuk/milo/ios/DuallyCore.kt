@@ -15,10 +15,16 @@ import com.shawnkowalchuk.milo.data.buildMiloDatabase
 import com.shawnkowalchuk.milo.data.buildPointsDatabase
 import com.shawnkowalchuk.milo.data.eventlog.EventLogRepository
 import com.shawnkowalchuk.milo.data.point.RawPointRepository
+import com.shawnkowalchuk.milo.data.report.SentReportRepository
+import com.shawnkowalchuk.milo.data.settings.ShownUnit
 import com.shawnkowalchuk.milo.data.settings.buildSettingsStore
+import com.shawnkowalchuk.milo.data.settings.buildShownUnit
+import com.shawnkowalchuk.milo.data.transfer.DataExport
+import com.shawnkowalchuk.milo.data.transfer.DataImport
 import com.shawnkowalchuk.milo.data.trip.TripCorrections
 import com.shawnkowalchuk.milo.data.trip.TripRepository
 import com.shawnkowalchuk.milo.data.trip.categoryTotals
+import com.shawnkowalchuk.milo.feature.tripedit.TripEditing
 import com.shawnkowalchuk.milo.platform.address.TripAddresses
 import com.shawnkowalchuk.milo.platform.trip.TripLedger
 import com.shawnkowalchuk.milo.platform.trip.TripRuleSettings
@@ -26,6 +32,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import platform.Foundation.NSBundle
 import platform.Foundation.NSDate
 import platform.Foundation.NSLocale
 import platform.Foundation.currentLocale
@@ -50,7 +58,27 @@ class DuallyCore private constructor(
     private val automations: TruckBelief,
     /** The driving alert (phase 4d, third part). */
     val drivingAlert: IosDrivingAlert,
+    /** The Settings screen (phase 4g). */
+    val settings: IosSettings,
+    /** The report for the accountant (phase 4g). */
+    val report: IosReport,
+    /** Export all data and Import data (phase 4g). */
+    val transfer: IosTransfer,
+    /** The home-screen widget's figures (phase 4i). */
+    val widget: IosWidget,
+    /** The edit screen: a trip's times, addresses and distance by hand, or a missed trip. */
+    val tripEdit: IosTripEdit,
+    /** The Service screen, Home's service tiles and Settings' odometer (2026-11-14). */
+    val service: IosService,
+    /** The CarPlay screen (phase 4f). */
+    val car: IosCar,
+    /** The online backup (phase 4h). */
+    val cloud: IosCloud,
+    private val shownUnit: ShownUnit,
 ) {
+    /** "km" or "mi", as Settings has it now: every distance the iPhone writes follows it. */
+    fun unitWord(): String = unitWord(shownUnit.unit.value)
+
     /**
      * The Setup screen (phase 4d, second part) for what iOS reports, with the check that each
      * automation has run.
@@ -60,6 +88,8 @@ class DuallyCore private constructor(
         precise: Boolean,
         alwaysAsked: Boolean,
         vehicle: VehicleLink?,
+        startMade: Boolean,
+        endMade: Boolean,
         motion: Permission,
         notifications: Permission,
     ): SetupScreen = setupScreen(
@@ -69,6 +99,8 @@ class DuallyCore private constructor(
         vehicle = vehicle,
         connectHeardAtMs = automations.connectHeardAtMs,
         disconnectHeardAtMs = automations.disconnectHeardAtMs,
+        startMade = startMade,
+        endMade = endMade,
         motion = motion,
         notifications = notifications,
         nowMs = nowMs(),
@@ -101,7 +133,7 @@ class DuallyCore private constructor(
     suspend fun homeFigures(nowMs: Long): HomeFigures {
         val zone = systemZoneId()
         val locale = phoneLocale()
-        val unit = DistanceUnit.KILOMETRES
+        val unit = shownUnit.unit.value
         val today = daySpan(localDateOf(nowMs, zone), zone)
         val month = monthOf(nowMs, zone)
         val monthSpan = monthSpan(month, zone)
@@ -123,7 +155,7 @@ class DuallyCore private constructor(
 
     /** [metres] as Home writes a distance: "12.3", in the phone's language. */
     fun distanceText(metres: Double): String =
-        formatDistance(metres, DistanceUnit.KILOMETRES, phoneLocale())
+        formatDistance(metres, shownUnit.unit.value, phoneLocale())
 
     companion object {
         /**
@@ -131,8 +163,9 @@ class DuallyCore private constructor(
          * calls it once, when it starts.
          *
          * @param placeFinder Apple's geocoder, from Swift, for the addresses of trips.
+         * @param cloud Firebase, from Swift, for the online backup. Nothing starts it here.
          */
-        fun open(placeFinder: ApplePlaceFinder): DuallyCore {
+        fun open(placeFinder: ApplePlaceFinder, cloud: AppleCloud): DuallyCore {
             val database = buildMiloDatabase()
             val points = buildPointsDatabase()
             val settings = buildSettingsStore()
@@ -155,6 +188,9 @@ class DuallyCore private constructor(
                     truck,
                     clock,
                 )
+            // The app's scope: what the shared code follows for as long as the app runs.
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+            val shownUnit = buildShownUnit(settings, { eventLog }, scope, clock).also { it.start() }
             val network = IosNetworkStatus()
             val addresses =
                 TripAddresses(
@@ -169,7 +205,7 @@ class DuallyCore private constructor(
                     //  event log cannot take either (its database unreadable) is lost. See
                     //  docs/FINDINGS_LOG.md (2026-11-13).
                     unlogged = { _, _ -> },
-                    scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+                    scope = scope,
                 )
             val trips =
                 IosTrips(
@@ -180,6 +216,7 @@ class DuallyCore private constructor(
                     locale = ::phoneLocale,
                     clock = clock,
                     openTripStart = { addresses.openTripStart.value },
+                    unit = { shownUnit.unit.value },
                 )
             val drivingAlert =
                 IosDrivingAlert(
@@ -191,7 +228,88 @@ class DuallyCore private constructor(
                     zone = ::systemZoneId,
                     clock = clock,
                 )
-            return DuallyCore(database, recorder, trips, addresses, truck, drivingAlert)
+            val transfer =
+                IosTransfer(
+                    export =
+                        DataExport(
+                            main = database.mainTransferDao(),
+                            points = points.pointsTransferDao(),
+                            settings = settings,
+                            appVersion = appVersion(),
+                            clock = clock,
+                            zone = ::systemZoneId,
+                        ),
+                    import = DataImport(database.mainTransferDao(), points.pointsTransferDao()),
+                    settings = settings,
+                    eventLog = eventLog,
+                    zone = ::systemZoneId,
+                    clock = clock,
+                )
+            val backup =
+                IosCloud(
+                    apple = cloud,
+                    files = IosCloudFiles(),
+                    mainRows = database.mainTransferDao(),
+                    settings = settings,
+                    transfer = transfer,
+                    eventLog = eventLog,
+                    changes =
+                        database.invalidationTracker
+                            .createFlow("trips", "sent_reports")
+                            .map { },
+                    scope = scope,
+                    appVersion = appVersion(),
+                    clock = clock,
+                    zone = ::systemZoneId,
+                    locale = ::phoneLocale,
+                )
+            return DuallyCore(
+                database,
+                recorder,
+                trips,
+                addresses,
+                truck,
+                drivingAlert,
+                IosSettings(settings, ::phoneLocale),
+                IosReport(
+                    trips = tripRepository,
+                    sent = SentReportRepository(database.sentReportDao()),
+                    settings = settings,
+                    eventLog = eventLog,
+                    zone = ::systemZoneId,
+                    locale = ::phoneLocale,
+                    clock = clock,
+                ),
+                transfer,
+                IosWidget(tripRepository, settings, ::systemZoneId, ::phoneLocale),
+                IosTripEdit(
+                    editing = TripEditing(tripRepository, settings, eventLog, clock),
+                    unit = { shownUnit.unit.value },
+                    zone = ::systemZoneId,
+                    locale = ::phoneLocale,
+                    clock = clock,
+                ),
+                IosService(
+                    settings = settings,
+                    trips = tripRepository,
+                    recorder = recorder,
+                    eventLog = eventLog,
+                    clock = clock,
+                    zone = ::systemZoneId,
+                    locale = ::phoneLocale,
+                ),
+                IosCar(
+                    recorder = recorder,
+                    settings = settings,
+                    trips = tripRepository,
+                    eventLog = eventLog,
+                    clock = clock,
+                    zone = ::systemZoneId,
+                    locale = ::phoneLocale,
+                ),
+                backup,
+                shownUnit,
+            )
         }
     }
 }
@@ -214,3 +332,8 @@ private fun phoneLocale(): Locale = Locale(NSLocale.currentLocale.localeIdentifi
 private fun nowMs(): Long = (NSDate().timeIntervalSince1970 * MILLIS_PER_SECOND).toLong()
 
 private const val MILLIS_PER_SECOND = 1000.0
+
+/** The app's version, "0.1.0", as an export names the app that wrote it. */
+private fun appVersion(): String =
+    NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleShortVersionString") as? String
+        ?: "unknown"

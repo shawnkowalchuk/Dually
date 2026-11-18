@@ -641,6 +641,8 @@ or the iOS build fails. Moved so far: `core/trip/` (2026-11-12) and every other 
 
 **The iPhone app, `ios/`** (since 2026-11-13, phase 4a; ADR-014). An Xcode project, `ios/Dually.xcodeproj`, for iOS 16 and later, bundle ID `top.dually.triptracker`, written in Swift with SwiftUI. Its one target syncs the folder `ios/Dually/` (Xcode 16's synchronized folders: a file put there is in the app, with no list of files to keep). Its first build step, "Build the shared Kotlin code", runs `./gradlew :shared:embedAndSignAppleFrameworkForXcode`, which builds `:shared` as the static framework `DuallyShared` for the device or simulator Xcode is building for; Swift imports it as `DuallyShared`. Swift reaches the shared code through one door, `DuallyCore` (`shared/src/iosMain/.../ios/`), whose `suspend` functions Swift calls with `await` and which hands back text ready to show, formatted by the shared rules. The iPhone opens the same database as Android, `milo.db` at the same version, in the app's Application Support folder (`buildMiloDatabase()` in iosMain). `ios/Dually/DesignSystem/` holds the colours and typefaces under the same names and values as `core/designsystem/`; a value changed in one is changed in the other in the same pull request. The typefaces are bundled in `ios/Dually/Fonts/` with their licences. Swift and the Objective-C header treat warnings as errors, as the Android build does.
 
+**The Live Activity's extension (since 2026-11-13, phase 4e).** A second target, `DuallyLiveActivity` (a widget extension, `top.dually.triptracker.LiveActivity`, iOS 16.1 and later), embedded in the app, draws the trip on the Lock Screen and in the Dynamic Island from `ios/DuallyLiveActivity/`. It does not link the shared Kotlin code: the app hands it ready text (`TripActivityAttributes`). What both targets use is in `ios/Shared/`, a folder synced into both: the design system (`DesignSystem/`, `Fonts/`, moved there from `ios/Dually/` so the activity looks like the app) and the activity's data and its End trip intent (`LiveActivity/`). The intent runs in the app's process (iOS runs a `LiveActivityIntent` there), through a `TripStopper` the app defines; the extension's `TripStopper` is an empty stand-in that never runs. The extension's build number must equal the app's: both targets' `CURRENT_PROJECT_VERSION` go up together.
+
 **Signing and TestFlight (since 2026-11-13).** The app target signs automatically with the team of 2795748 Alberta Ltd. (`DEVELOPMENT_TEAM = 3GA4CQ43F4`, an identifier, not a secret), using the Apple account signed in to Xcode on Shawn's Mac; no key or password is in the repository. A build for TestFlight is archived and uploaded from that Mac:
 
 ```
@@ -652,7 +654,7 @@ xcodebuild -exportArchive -archivePath ios/build/Dually.xcarchive \
   -allowProvisioningUpdates
 ```
 
-The build number (`CURRENT_PROJECT_VERSION`) goes up by one for each upload; App Store Connect refuses a number it has seen. An upload that says "Upload succeeded" can still be refused while Apple processes it: the refusal comes by email to the account holder, and the build never shows in TestFlight. A build step, "Check the Shortcuts actions' words", stops a build whose App Intent titles or descriptions name an Apple device, the reason build 1 was refused. `ios/Dually/PrivacyInfo.xcprivacy` is Apple's privacy manifest (no tracking, no data collected, and the reasons for the defaults, file dates and time-since-boot it reads), and `Info.plist` says the app uses no encryption beyond Apple's own (`ITSAppUsesNonExemptEncryption` false), so no export paperwork is asked for each build.
+The build number (`CURRENT_PROJECT_VERSION`) goes up by one for each upload; App Store Connect refuses a number it has seen. An upload that says "Upload succeeded" can still be refused while Apple processes it: the refusal comes by email to the account holder, and the build never shows in TestFlight. A build step, "Check the Shortcuts actions' words", stops a build whose App Intent titles or descriptions name an Apple device, the reason build 1 was refused. `ios/Dually/PrivacyInfo.xcprivacy` is Apple's privacy manifest (no tracking; since 2026-11-14 the online backup's data, linked to the account and for the app's working only; and the reasons for the defaults, file dates and time-since-boot it reads), and `Info.plist` says the app uses no encryption beyond Apple's own (`ITSAppUsesNonExemptEncryption` false), so no export paperwork is asked for each build.
 
 **Dates, languages and exact numbers in `:shared`** (since 2026-11-13). The rules count with
 dates, write words in the phone's language and do exact decimal sums, which on Android are
@@ -806,7 +808,11 @@ platform/trip/       # TripController, TripService, GPS recording, notifications
                      #   the same day the address lookup itself (TripAddresses,
                      #   AddressLookup, AddressLine, AddressLogText); Android's geocoder,
                      #   network check and TripAddressesOnAndroid stay in the app. Also
-                     #   since that day the driving alert's rules and log words
+                     #   since that day (phase 4g) the report's assembly
+                     #   (feature/report/ReportMaking.kt), its English words
+                     #   (core/report/EnglishReportWords.kt), and the export and import
+                     #   (data/transfer/DataExport, DataImport, ExportReader, JsonScanner,
+                     #   behind core/io/Reader). Also since that day the driving alert's rules and log words
                      #   (platform/driving/DrivingAlertRules.kt, DrivingLogText.kt) and
                      #   TruckReading (platform/bluetooth/TruckConnectionSource.kt)
 platform/party/      # the one-year party between the trip service and Home (2026-10-10):

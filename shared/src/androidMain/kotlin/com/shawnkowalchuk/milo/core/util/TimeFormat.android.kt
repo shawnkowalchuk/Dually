@@ -100,3 +100,6 @@ actual fun formatLongDay(date: LocalDate, locale: Locale): String =
 
 actual fun formatFullMonthName(month: YearMonth, locale: Locale): String =
     month.month.getDisplayName(TextStyle.FULL, locale)
+
+actual fun formatShortMonthName(month: YearMonth, locale: Locale): String =
+    DateTimeFormatter.ofPattern("MMM", locale).format(month)

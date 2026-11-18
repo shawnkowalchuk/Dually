@@ -3,7 +3,8 @@
 
     website/icon-512.png   the mark on a full square of 512 by 512, for the Google Play
                            listing, which rounds the corners itself
-    website/og-image.png   the picture a shared link shows, 1,200 by 630
+    website/og-dually.png  the picture a shared link shows, 1,200 by 630 (og-image.png until
+                           2026-11-15: a picture that changes gets another name)
 
 The mark is a dark D on Hi-Vis Orange, the owner's design of 2026-10-13. Its shape, its two
 colours and the corner of its square are the ones in website/mark.svg, and the picture's
@@ -49,7 +50,7 @@ D_INNER = (18, 20)
 OVERSAMPLE = 3
 
 HEADLINE = ("Fire up the truck.", "Dually's already", "counting.")
-UNDER_IT = ("Free for Android. Starts a trip when", "your phone connects to the truck.")
+UNDER_IT = ("Free for Android and iPhone. Starts a trip", "when your phone connects to the truck.")
 ADDRESS = "dually.top"
 
 
@@ -142,7 +143,7 @@ def main(argv):
         return 2
     folder = Path(argv[1]) if len(argv) == 2 else SITE
     folder.mkdir(parents=True, exist_ok=True)
-    for name, picture in (("icon-512.png", icon()), ("og-image.png", link_picture())):
+    for name, picture in (("icon-512.png", icon()), ("og-dually.png", link_picture())):
         picture.save(folder / name, optimize=True)
         print(f"Wrote {folder / name}.")
     return 0

@@ -6,17 +6,58 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D0A100000000000000000301 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = D0A100000000000000000311 /* FirebaseAuth */; };
+		D0A100000000000000000302 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = D0A100000000000000000312 /* FirebaseFirestore */; };
+		D0A100000000000000000303 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = D0A100000000000000000313 /* GoogleSignIn */; };
+		D0B100000000000000000201 /* DuallyLiveActivity.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D0B1000000000000000000A1 /* DuallyLiveActivity.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D0B100000000000000000211 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D0A100000000000000000151 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D0B1000000000000000000C1;
+			remoteInfo = DuallyLiveActivity;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D0B100000000000000000221 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				D0B100000000000000000201 /* DuallyLiveActivity.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		D0A1000000000000000000A1 /* Dually.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dually.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0B1000000000000000000A1 /* DuallyLiveActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DuallyLiveActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
 		D0A1000000000000000000B1 /* Exceptions for "Dually" folder in "Dually" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Dually.entitlements,
 				Info.plist,
 			);
 			target = D0A1000000000000000000C1 /* Dually */;
+		};
+		D0B1000000000000000000B1 /* Exceptions for "DuallyLiveActivity" folder in "DuallyLiveActivity" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				DuallyLiveActivity.entitlements,
+				Info.plist,
+			);
+			target = D0B1000000000000000000C1 /* DuallyLiveActivity */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -29,10 +70,33 @@
 			path = Dually;
 			sourceTree = "<group>";
 		};
+		D0B1000000000000000000D1 /* DuallyLiveActivity */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D0B1000000000000000000B1 /* Exceptions for "DuallyLiveActivity" folder in "DuallyLiveActivity" target */,
+			);
+			path = DuallyLiveActivity;
+			sourceTree = "<group>";
+		};
+		D0B1000000000000000000D2 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		D0A1000000000000000000E1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D0A100000000000000000301 /* FirebaseAuth in Frameworks */,
+				D0A100000000000000000302 /* FirebaseFirestore in Frameworks */,
+				D0A100000000000000000303 /* GoogleSignIn in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D0B1000000000000000000E1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -46,6 +110,8 @@
 			isa = PBXGroup;
 			children = (
 				D0A1000000000000000000D1 /* Dually */,
+				D0B1000000000000000000D2 /* Shared */,
+				D0B1000000000000000000D1 /* DuallyLiveActivity */,
 				D0A100000000000000000101 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -54,6 +120,7 @@
 			isa = PBXGroup;
 			children = (
 				D0A1000000000000000000A1 /* Dually.app */,
+				D0B1000000000000000000A1 /* DuallyLiveActivity.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,18 +137,48 @@
 				D0A100000000000000000131 /* Sources */,
 				D0A1000000000000000000E1 /* Frameworks */,
 				D0A100000000000000000141 /* Resources */,
+				D0B100000000000000000221 /* Embed Foundation Extensions */,
+				D0A100000000000000000123 /* Add the online backup's Firebase settings */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D0B100000000000000000231 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D0A1000000000000000000D1 /* Dually */,
+				D0B1000000000000000000D2 /* Shared */,
+			);
+			name = Dually;
+			packageProductDependencies = (
+				D0A100000000000000000311 /* FirebaseAuth */,
+				D0A100000000000000000312 /* FirebaseFirestore */,
+				D0A100000000000000000313 /* GoogleSignIn */,
+			);
+			productName = Dually;
+			productReference = D0A1000000000000000000A1 /* Dually.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D0B1000000000000000000C1 /* DuallyLiveActivity */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D0B100000000000000000111 /* Build configuration list for PBXNativeTarget "DuallyLiveActivity" */;
+			buildPhases = (
+				D0B100000000000000000131 /* Sources */,
+				D0B1000000000000000000E1 /* Frameworks */,
+				D0B100000000000000000141 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				D0A1000000000000000000D1 /* Dually */,
+				D0B1000000000000000000D1 /* DuallyLiveActivity */,
+				D0B1000000000000000000D2 /* Shared */,
 			);
-			name = Dually;
-			productName = Dually;
-			productReference = D0A1000000000000000000A1 /* Dually.app */;
-			productType = "com.apple.product-type.application";
+			name = DuallyLiveActivity;
+			productName = DuallyLiveActivity;
+			productReference = D0B1000000000000000000A1 /* DuallyLiveActivity.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -96,6 +193,9 @@
 					D0A1000000000000000000C1 = {
 						CreatedOnToolsVersion = 26.0;
 					};
+					D0B1000000000000000000C1 = {
+						CreatedOnToolsVersion = 26.0;
+					};
 				};
 			};
 			buildConfigurationList = D0A100000000000000000161 /* Build configuration list for PBXProject "Dually" */;
@@ -107,18 +207,30 @@
 			);
 			mainGroup = D0A1000000000000000000F1;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D0A100000000000000000321 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				D0A100000000000000000322 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D0A100000000000000000101 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				D0A1000000000000000000C1 /* Dually */,
+				D0B1000000000000000000C1 /* DuallyLiveActivity */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		D0A100000000000000000141 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D0B100000000000000000141 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -164,7 +276,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Apple refuses a build whose Shortcuts actions name its devices in their titles or\n# descriptions (ITMS-90626; build 1 was refused for \"iPhone\"). This stops such a build here.\nif grep -rnE --include='*.swift' -A3 'IntentDescription\\(|: LocalizedStringResource = ' \"$SRCROOT/Dually\" | grep -iE 'iphone|ipad|ipod|apple watch'; then\n  echo \"error: a Shortcuts action's title or description names an Apple device, which Apple refuses (ITMS-90626)\"\n  exit 1\nfi\n";
+			shellScript = "# Apple refuses a build whose Shortcuts actions name its devices in their titles or\n# descriptions (ITMS-90626; build 1 was refused for \"iPhone\"). This stops such a build here.\nif grep -rnE --include='*.swift' -A3 'IntentDescription\\(|: LocalizedStringResource = ' \"$SRCROOT/Dually\" \"$SRCROOT/Shared\" | grep -iE 'iphone|ipad|ipod|apple watch'; then\n  echo \"error: a Shortcuts action's title or description names an Apple device, which Apple refuses (ITMS-90626)\"\n  exit 1\nfi\n";
+		};
+		D0A100000000000000000123 /* Add the online backup's Firebase settings */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
+			);
+			name = "Add the online backup's Firebase settings";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# The online backup's Firebase settings (ADR-012, ADR-016) are kept outside the repository, in\n# ~/keys, and copied into the app here, with the Google sign-in's address scheme. A Release\n# build without them stops; a Debug build without them has no backup to offer.\nKEYS=\"$HOME/keys/dually-GoogleService-Info.plist\"\nCOPY=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/GoogleService-Info.plist\"\nINFO=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\nif [ ! -f \"$KEYS\" ]; then\n  if [ \"$CONFIGURATION\" = \"Release\" ]; then\n    echo \"error: $KEYS is missing: a Release build needs the online backup's Firebase settings (ADR-016)\"\n    exit 1\n  fi\n  rm -f \"$COPY\"\n  exit 0\nfi\nset -e\ncp \"$KEYS\" \"$COPY\"\nSCHEME=$(/usr/libexec/PlistBuddy -c \"Print :REVERSED_CLIENT_ID\" \"$KEYS\")\n/usr/libexec/PlistBuddy -c \"Delete :CFBundleURLTypes\" \"$INFO\" >/dev/null 2>&1 || true\n/usr/libexec/PlistBuddy -c \"Add :CFBundleURLTypes array\" -c \"Add :CFBundleURLTypes:0 dict\" -c \"Add :CFBundleURLTypes:0:CFBundleURLSchemes array\" -c \"Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string $SCHEME\" \"$INFO\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -176,7 +308,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D0B100000000000000000131 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D0B100000000000000000231 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D0B1000000000000000000C1 /* DuallyLiveActivity */;
+			targetProxy = D0B100000000000000000211 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		D0A100000000000000000171 /* Debug */ = {
@@ -240,19 +387,20 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 3GA4CQ43F4;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 6;
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)";
 				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = Dually/Dually.entitlements;
 				INFOPLIST_FILE = Dually/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Dually;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = NO;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
@@ -275,19 +423,20 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 3GA4CQ43F4;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 6;
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)";
 				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = Dually/Dually.entitlements;
 				INFOPLIST_FILE = Dually/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Dually;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = NO;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
@@ -298,6 +447,62 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		D0B100000000000000000191 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 6;
+				DEVELOPMENT_TEAM = 3GA4CQ43F4;
+				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = DuallyLiveActivity/DuallyLiveActivity.entitlements;
+				INFOPLIST_FILE = DuallyLiveActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Dually;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = top.dually.triptracker.LiveActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		D0B1000000000000000001A1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 6;
+				DEVELOPMENT_TEAM = 3GA4CQ43F4;
+				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = DuallyLiveActivity/DuallyLiveActivity.entitlements;
+				INFOPLIST_FILE = DuallyLiveActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Dually;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = top.dually.triptracker.LiveActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -325,7 +530,52 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		D0B100000000000000000111 /* Build configuration list for PBXNativeTarget "DuallyLiveActivity" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D0B100000000000000000191 /* Debug */,
+				D0B1000000000000000001A1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+/* Begin XCRemoteSwiftPackageReference section */
+		D0A100000000000000000321 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = exactVersion;
+				version = 13.2.0;
+			};
+		};
+		D0A100000000000000000322 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = exactVersion;
+				version = 10.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D0A100000000000000000311 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D0A100000000000000000321 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		D0A100000000000000000312 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D0A100000000000000000321 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		D0A100000000000000000313 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D0A100000000000000000322 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D0A100000000000000000151 /* Project object */;
 }

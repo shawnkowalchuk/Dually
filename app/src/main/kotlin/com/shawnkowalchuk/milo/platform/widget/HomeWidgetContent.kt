@@ -7,6 +7,7 @@ import com.shawnkowalchuk.milo.core.util.AppLook
 import com.shawnkowalchuk.milo.core.util.DistanceUnit
 import com.shawnkowalchuk.milo.core.util.TimeSpan
 import com.shawnkowalchuk.milo.core.util.daysSpan
+import com.shawnkowalchuk.milo.core.util.formatShortMonthName
 import com.shawnkowalchuk.milo.core.util.localDateOf
 import com.shawnkowalchuk.milo.core.util.monthSpan
 import com.shawnkowalchuk.milo.data.trip.Trip
@@ -17,7 +18,6 @@ import com.shawnkowalchuk.milo.platform.trip.TripActivity
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 // What the home-screen widget shows (Shawn's request of 2026-10-07), decided from the trip
@@ -125,7 +125,7 @@ private fun widgetDollars(
         locale,
     )
     return WidgetDollars(
-        monthLabel = DateTimeFormatter.ofPattern("MMM", locale).format(month),
+        monthLabel = formatShortMonthName(month, locale),
         month = priced(inMonth),
         yearLabel = month.year.toString(),
         year = priced(yearTrips),
