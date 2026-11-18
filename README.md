@@ -41,6 +41,7 @@
 - Show every distance in kilometres or miles, the report included: one setting, "Units", in Settings.
 - Send the report: Dually opens the email app with the PDF attached, and you press send. Back in Dually, answer "I sent it", and the mascot runs across the foot of the screen, brakes and slides out, with a whirr and a squeal that stay silent when the phone is on silent or on vibrate.
 - Export and import all data as one file. Android's own backup carries the rest.
+- Buy the optional online backup once (no subscription) and every trip is copied, without its GPS route, to Dually's server in Canada after each change. On a new phone, sign in and restore. Every phone signed in to the same account, Android or iPhone, keeps one logbook: a trip recorded on one shows up on the others, and any of them can change it.
 
 <p align="center">
   <img src="website/screenshots/dually-report-sample.png" width="520" alt="A sample report: the Business and Personal kilometres at the top, then each day's trips with their times, addresses and kilometres, the total, and lines to sign"><br>
@@ -51,12 +52,12 @@
 
 1. On the phone, open the [latest release](https://github.com/shawnkowalchuk/Dually/releases/latest) and download the `.apk` file under "Assets".
 2. Open the downloaded file. The first time, Android asks you to allow the app you opened it with (your browser or Files) to **install unknown apps**: allow it, go back, and press Install. Developer options are not needed.
-3. Google Play Protect may warn that the app is from an unknown developer, or offer to scan it. That is because Dually is not on the Play Store; choose to install anyway if you trust it.
+3. Google Play Protect may warn that the app is from an unknown developer, or offer to scan it. That is because this copy does not come from the Play Store; choose to install anyway if you trust it, or install Dually from [Google Play](https://play.google.com/store/apps/details?id=top.dually.triptracker) instead.
 4. Open Dually. A first page says what it does; **OK** leads to Setup: work through it (the permissions, then pairing your truck) and press **Done, go to Settings** at its end.
 
 **To update,** install the newer APK over the old one: your trips and settings stay. Never uninstall Dually to update it, because that deletes every trip.
 
-**Worth knowing first:** Dually is built and tested on one Xiaomi phone. On other phones the automatic start depends on how hard the maker stops apps in the background; Setup shows what it can check. The Android Auto screen is not expected to show on a car's display for an app installed this way (Android Auto shows apps from the Play Store). The phone side works the same with or without it.
+**Worth knowing first:** Dually is built and tested on one Xiaomi phone. On other phones the automatic start depends on how hard the maker stops apps in the background; Setup shows what it can check. The Android Auto screen is not expected to show on a car's display for an app installed this way (Android Auto shows apps from the Play Store): for the car screen, install Dually from Google Play. The phone side works the same with or without it.
 
 ## Privacy
 
@@ -64,16 +65,22 @@ Dually is **private by default**: it needs no account, and with its optional onl
 
 ## How it is built
 
-Native Kotlin (2.4, with warnings as errors), Jetpack Compose with Material 3, Navigation 3, Room 3 on bundled SQLite, DataStore, the fused location provider, the Car App Library for the Android Auto screen, and Google Play's In-App Review library for its review card. One Gradle module, manual dependency injection, no backend. Every dependency is pinned to its latest stable release and kept current by Dependabot. CI runs gitleaks, Spotless with ktlint, Android Lint, the unit tests (over 2,000, all plain JVM tests) and a debug build on every pull request.
+**Android:** native Kotlin (2.4, with warnings as errors), Jetpack Compose with Material 3, Navigation 3, Room 3 on bundled SQLite, DataStore, the fused location provider, the Car App Library for the Android Auto screen, and Google Play's In-App Review library for its review card.
+
+**iPhone:** SwiftUI, with CarPlay, a Live Activity and Shortcuts actions. The trip rules, the distances, the report, the database and the backup are not written twice: they are Kotlin, shared with Android through a Kotlin Multiplatform module (`shared/`, ADR-014).
+
+**The optional online backup** (ADR-012, ADR-013): Google Firebase, with Sign in with Google (and with Apple on the iPhone), Cloud Firestore in Montréal, and Cloud Functions that check the purchase with Google Play and the App Store. It is off until bought; without it Dually connects to nothing of its own.
+
+Manual dependency injection. Every dependency is pinned to its latest stable release and kept current by Dependabot. CI runs gitleaks, Spotless with ktlint, Android Lint, the unit tests (over 2,000), a debug build, and the backup's security-rule and purchase-check tests on every pull request.
 
 It was built with an AI coding assistant working from a small set of documents that are the project's memory: the rules (`docs/ENGINEERING_STANDARDS.md`), the map (`docs/ARCHITECTURE.md`), every feature and how it works, each with its status (`docs/APP_ENCYCLOPEDIA.md`), a dated journal of every change and decision (`docs/FINDINGS_LOG.md`), and the checks only the phone can run (`docs/DEVICE_TEST_CHECKLIST.md`). [For developers](#for-developers) has more.
 
 ## Status
 
-Version 0.1.0, in daily use on the owner's phone since 2026-10-06.
+Version 1.0.1, the same number on both phones since 2026-11-17 (the APK above is 1.0.1, build 17). On Google Play since November 2026 and on the App Store since 2026-11-16. In daily use on the owner's phone since 2026-10-06.
 
-- **Proven in the truck:** pairing the truck; trips started by the truck's Bluetooth and ended by its disconnect (2026-10-06); the parked rule ending a trip, and the watch starting the next one when the truck moved (2026-10-07); Start by hand; the Setup checklist's permission rows.
-- **Built and unit tested, not yet seen on the phone:** among others the Android Auto screen (it has run nowhere), the home-screen widget, emailing the report, the driving alert and the daily check.
+- **Proven in the truck:** pairing the truck; trips started by the truck's Bluetooth and ended by its disconnect (2026-10-06); the parked rule ending a trip, and the watch starting the next one when the truck moved (2026-10-07); Start by hand; the Setup checklist's permission rows; the Android Auto screen on the truck's display, from a Google Play copy (November 2026).
+- **Built and unit tested, not yet seen on the phone:** among others the home-screen widget, emailing the report, the driving alert and the daily check.
 
 Each entry of `docs/APP_ENCYCLOPEDIA.md` opens with a status line that says what the phone has proven, and `docs/DEVICE_TEST_CHECKLIST.md` lists what it still has to show.
 
