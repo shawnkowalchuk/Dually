@@ -24,6 +24,11 @@
 
 ## Log
 
+### 2026-11-17
+
+**`[CHANGE]` The privacy page: Email support and the App Store review link on the iPhone** (merged 2026-11-17, the day iPhone 1.0.1 went to App Review)
+The iPhone gets Android's Email support row and a Review on the App Store link in 1.0.1 (built on `app/multi-phone`, FINDINGS_LOG there), and no Buy me a coffee tile (Guideline 3.1.1). The policy said the iPhone had none of these tiles. This pull request stays a draft until 1.0.1 goes to App Review, which reads the policy; at its merge the "last changed" date and the sitemap's date for /privacy are set to that day.
+
 ### 2026-11-16
 
 **`[CHANGE]` The website: the App Store's and Google Play's own badges in place of the plain buttons** (APP_ENCYCLOPEDIA, Website)
