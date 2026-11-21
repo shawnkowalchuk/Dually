@@ -51,15 +51,17 @@ interface SentReportDao {
 
     /**
      * Stores [report] with the revision number that is next for its kind and days
-     * ([nextRevision]). The read and the insert share a transaction, so two reports for one
-     * period can never be given the same number.
+     * ([nextRevision]), or with [report]'s own number if that is higher: the number after the
+     * other phones' reports of the period, which this table does not hold (issue #164). The read
+     * and the insert share a transaction, so two reports for one period can never be given the
+     * same number here.
      *
      * @return the row as stored, with its id and its revision.
      */
     @Transaction
     suspend fun insertAsNextRevision(report: SentReport): SentReport {
         val sentBefore = findFor(report.kind, report.firstDay, report.lastDay)
-        val numbered = report.copy(revision = nextRevision(sentBefore))
+        val numbered = report.copy(revision = maxOf(report.revision, nextRevision(sentBefore)))
         return numbered.copy(id = insert(numbered))
     }
 }

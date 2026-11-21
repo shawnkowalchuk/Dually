@@ -18,6 +18,7 @@ import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.ShownUnit
 import com.shawnkowalchuk.milo.data.settings.buildSettingsStore
 import com.shawnkowalchuk.milo.data.settings.buildShownUnit
+import com.shawnkowalchuk.milo.data.settings.otherPhonesSent
 import com.shawnkowalchuk.milo.data.sound.buildOwnSoundStore
 import com.shawnkowalchuk.milo.data.trip.TripCategoryCatchUp
 import com.shawnkowalchuk.milo.data.trip.TripRepository
@@ -108,7 +109,8 @@ class AppContainer(context: Context, private val trustedClock: TrustedClock) {
 
     /** The reports Shawn has said he sent. A month is "submitted" because of a row in it. */
     val sentReportRepository: SentReportRepository by lazy {
-        SentReportRepository(miloDatabase.sentReportDao())
+        // With the other phones' sent reports, from the online backup (issue #164).
+        SentReportRepository(miloDatabase.sentReportDao(), settingsStore.otherPhonesSent())
     }
 
     val settingsStore: SettingsStore by lazy { buildSettingsStore(appContext) }

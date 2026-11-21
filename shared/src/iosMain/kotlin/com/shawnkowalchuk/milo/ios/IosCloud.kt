@@ -33,6 +33,7 @@ import com.shawnkowalchuk.milo.data.cloud.putBackReplaced
 import com.shawnkowalchuk.milo.data.cloud.readOtherPhones
 import com.shawnkowalchuk.milo.data.cloud.restoreFrom
 import com.shawnkowalchuk.milo.data.cloud.syncLogbook
+import com.shawnkowalchuk.milo.data.cloud.syncOtherPhonesSent
 import com.shawnkowalchuk.milo.data.cloud.syncShared
 import com.shawnkowalchuk.milo.data.cloud.unlockAnswer
 import com.shawnkowalchuk.milo.data.cloud.uploadUntilQuiet
@@ -543,6 +544,9 @@ class IosCloud internal constructor(
                         files,
                         ::log,
                     )
+                // A month sent on another phone (issue #164): Swift plans the reminders again
+                // after every upload, which takes back this month's.
+                syncOtherPhonesSent(others, settings, ::log)
                 syncShared(store, account.id, settings, files, ::log)
                 if (notices.isNotEmpty()) tellReplaced(notices)
             } catch (unreachable: IOException) {

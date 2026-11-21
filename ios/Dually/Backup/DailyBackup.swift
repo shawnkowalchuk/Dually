@@ -37,6 +37,8 @@ enum DailyBackup {
                 return
             }
             let done = (try? await core.cloud.upload(reason: "the daily upload"))?.boolValue ?? false
+            // A month another phone sent stops its reminder here too (issue #164).
+            await Reminders.plan(core: core)
             task.setTaskCompleted(success: done)
         }
         task.expirationHandler = { upload.cancel() }

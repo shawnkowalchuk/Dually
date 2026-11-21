@@ -37,6 +37,7 @@ import com.shawnkowalchuk.milo.data.cloud.putBackReplaced
 import com.shawnkowalchuk.milo.data.cloud.readOtherPhones
 import com.shawnkowalchuk.milo.data.cloud.restoreFrom
 import com.shawnkowalchuk.milo.data.cloud.syncLogbook
+import com.shawnkowalchuk.milo.data.cloud.syncOtherPhonesSent
 import com.shawnkowalchuk.milo.data.cloud.syncShared
 import com.shawnkowalchuk.milo.data.cloud.unlockAfter
 import com.shawnkowalchuk.milo.data.cloud.uploadUntilQuiet
@@ -403,6 +404,11 @@ class CloudObjects(
                         ::log,
                     )
                 if (notices.isNotEmpty()) replacedNotification.show(notices)
+                if (syncOtherPhonesSent(others, container.settingsStore, ::log)) {
+                    // A month sent on another phone: the reminder looks again, and takes back
+                    // its notification for that month (issue #164).
+                    container.reports.reminder.look(OTHER_PHONES_SENT)
+                }
                 syncShared(store, account.id, container.settingsStore, ledger, ::log)
             }
         } catch (unreachable: IOException) {
@@ -485,3 +491,6 @@ private fun phoneName(context: Context): String = android.provider.Settings.Glob
     context.contentResolver,
     android.provider.Settings.Global.DEVICE_NAME,
 )?.takeIf { it.isNotBlank() } ?: android.os.Build.MODEL
+
+/** Why the monthly reminder looks again after a sync, in its Log line. */
+private const val OTHER_PHONES_SENT = "another phone's sent reports came in"

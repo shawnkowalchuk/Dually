@@ -395,6 +395,11 @@ private struct SentListTile: View {
                                 .font(Typography.body(13))
                                 .foregroundStyle(Palette.textSecondary)
                         }
+                        if report.fromOtherPhone {
+                            Text("Sent from your other phone")
+                                .font(Typography.body(13))
+                                .foregroundStyle(Palette.textSecondary)
+                        }
                     }
                     Spacer()
                     Text(report.distance)

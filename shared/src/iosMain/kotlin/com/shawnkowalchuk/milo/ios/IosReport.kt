@@ -36,6 +36,7 @@ import com.shawnkowalchuk.milo.data.point.PointCleanup
 import com.shawnkowalchuk.milo.data.point.offersCleanup
 import com.shawnkowalchuk.milo.data.report.SentReport
 import com.shawnkowalchuk.milo.data.report.SentReportRepository
+import com.shawnkowalchuk.milo.data.report.fromOtherPhone
 import com.shawnkowalchuk.milo.data.report.printedTenths
 import com.shawnkowalchuk.milo.data.report.selectForReport
 import com.shawnkowalchuk.milo.data.settings.MissingDetail
@@ -140,6 +141,7 @@ class IosReport internal constructor(
                     formatTenths(report.printedTenths, localeNow) + " " +
                         unitWord(report.distanceUnit),
                 revision = report.revision.takeIf { it > 1 }?.let { "Revision $it" },
+                fromOtherPhone = report.fromOtherPhone,
             )
         }
     }
@@ -328,6 +330,8 @@ data class SentReportText(
     val distance: String,
     /** "Revision 2", or null for the first. */
     val revision: String?,
+    /** Recorded as sent on another phone of the online backup account (issue #164). */
+    val fromOtherPhone: Boolean = false,
 )
 
 /** The offer to delete a sent month's GPS points: Swift writes [bytes] as the phone writes a size. */

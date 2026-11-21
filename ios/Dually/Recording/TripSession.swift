@@ -80,6 +80,8 @@ final class TripSession: ObservableObject {
         }
         Task {
             _ = try? await core.cloud.upload(reason: reason)
+            // A month another phone sent stops its reminder here too (issue #164).
+            await Reminders.plan(core: core)
             if task != .invalid { UIApplication.shared.endBackgroundTask(task) }
         }
     }

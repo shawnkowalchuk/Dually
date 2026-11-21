@@ -21,7 +21,8 @@ fun sentFor(period: ReportPeriod, sent: List<SentReport>): List<SentReport> {
     val lastDay = period.lastDay.epochDay()
     return sent
         .filter { it.kind == period.kind && it.firstDay == firstDay && it.lastDay == lastDay }
-        .sortedWith(compareBy<SentReport> { it.revision }.thenBy { it.id })
+        // Two phones can each hold a report of one revision (issue #164): the earlier sent first.
+        .sortedWith(compareBy<SentReport> { it.revision }.thenBy { it.sentAtMs }.thenBy { it.id })
 }
 
 /**

@@ -2,6 +2,7 @@ package com.shawnkowalchuk.milo.feature.report
 
 import com.shawnkowalchuk.milo.core.report.ReportPeriod
 import com.shawnkowalchuk.milo.data.report.SentReport
+import com.shawnkowalchuk.milo.data.report.fromOtherPhone
 import com.shawnkowalchuk.milo.data.report.nextRevision
 import com.shawnkowalchuk.milo.data.report.period
 import com.shawnkowalchuk.milo.data.report.removalEffect
@@ -26,4 +27,5 @@ internal fun SentReport.asLine(sent: List<SentReport>): SentLine = SentLine(
     unit = distanceUnit,
     revision = revision,
     removal = removalEffect(this, sent),
+    fromOtherPhone = fromOtherPhone,
 )

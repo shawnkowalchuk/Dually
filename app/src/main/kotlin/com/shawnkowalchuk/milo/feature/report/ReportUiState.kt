@@ -49,6 +49,8 @@ data class ReportSummary(
  * not follow a later change of the unit in Settings.
  * @param removal what removing this report from the list would do, which the question says
  * before it is removed.
+ * @param fromOtherPhone recorded as sent on another phone of the online backup account (issue
+ * #164): the line says so, and has no Remove, since it is removed on that phone.
  */
 data class SentLine(
     val id: Long,
@@ -59,6 +61,7 @@ data class SentLine(
     val unit: DistanceUnit,
     val revision: Int,
     val removal: RemovalEffect,
+    val fromOtherPhone: Boolean = false,
 )
 
 /**

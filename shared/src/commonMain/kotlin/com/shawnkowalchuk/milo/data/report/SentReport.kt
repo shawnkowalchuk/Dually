@@ -71,6 +71,14 @@ data class SentReport(
 )
 
 /**
+ * Whether another phone of the online backup account recorded this report as sent (issue #164):
+ * those are kept apart from this phone's own table with negative ids (`otherPhonesSent`). It
+ * counts here as the phone's own does (the month is submitted, its trips are locked, no
+ * reminder), and is listed, but it is removed only on the phone that sent it.
+ */
+val SentReport.fromOtherPhone: Boolean get() = id < 0
+
+/**
  * The total the report printed, in tenths of the unit it was printed in ([SentReport.distanceUnit]):
  * the figure itself, exactly, because [SentReport.distanceMetres] was made from it.
  */

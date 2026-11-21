@@ -182,6 +182,13 @@ private fun SentRow(line: SentLine, state: ReportUiState.Ready, onRemove: () -> 
                     color = quiet,
                 )
             }
+            if (line.fromOtherPhone) {
+                Text(
+                    text = stringResource(R.string.report_sent_other_phone),
+                    style = MiloTheme.textStyles.tileLabel,
+                    color = quiet,
+                )
+            }
         }
         Column(
             horizontalAlignment = Alignment.End,
@@ -196,11 +203,14 @@ private fun SentRow(line: SentLine, state: ReportUiState.Ready, onRemove: () -> 
                 modifier = Modifier.semantics { contentDescription = spoken },
                 style = MaterialTheme.typography.titleSmall,
             )
-            RowButton(
-                text = stringResource(R.string.report_remove),
-                onClick = onRemove,
-                enabled = !state.working,
-            )
+            // Another phone's report is removed on that phone (issue #164).
+            if (!line.fromOtherPhone) {
+                RowButton(
+                    text = stringResource(R.string.report_remove),
+                    onClick = onRemove,
+                    enabled = !state.working,
+                )
+            }
         }
     }
 }

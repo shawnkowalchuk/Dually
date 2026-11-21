@@ -1,10 +1,15 @@
 package com.shawnkowalchuk.milo.data.cloud
 
 import com.shawnkowalchuk.milo.core.trip.TripStatus
+import com.shawnkowalchuk.milo.data.report.SentReport
+import com.shawnkowalchuk.milo.data.settings.SettingsStore
+import com.shawnkowalchuk.milo.data.settings.keepOtherPhonesSent
 import com.shawnkowalchuk.milo.data.transfer.EXPORT_FORMAT_VERSION
 import com.shawnkowalchuk.milo.data.transfer.ExportJson
 import com.shawnkowalchuk.milo.data.transfer.ExportedTrip
+import com.shawnkowalchuk.milo.data.transfer.problem
 import com.shawnkowalchuk.milo.data.transfer.toExported
+import com.shawnkowalchuk.milo.data.transfer.toSentReport
 import com.shawnkowalchuk.milo.data.transfer.toTrip
 import com.shawnkowalchuk.milo.data.trip.Trip
 import com.shawnkowalchuk.milo.data.trip.TripDao
@@ -78,14 +83,49 @@ fun cloudTripsOf(documents: Map<String, String>): List<Trip> =
         .filter { it.status == TripStatus.FINISHED }
 
 /**
+ * The sent reports among [documents] (any paths: one folder's `backup`), as the phone that
+ * recorded them has them (issue #164). A document that cannot be read, or is of a newer format,
+ * gives none, and a report that is not right is left out: one bad document must not stop the
+ * sync, and leaves only that phone's reports out here.
+ */
+fun cloudSentReportsOf(documents: Map<String, String>): List<SentReport> {
+    val json =
+        documents.entries
+            .firstOrNull { (path, _) ->
+                path == CLOUD_SENT_REPORTS || path.endsWith("/$CLOUD_SENT_REPORTS")
+            }
+            ?.value ?: return emptyList()
+    val document =
+        try {
+            ExportJson.decodeFromString(CloudSentReports.serializer(), json)
+        } catch (unreadable: SerializationException) {
+            return emptyList()
+        } catch (unreadable: IllegalArgumentException) {
+            return emptyList()
+        }
+    if (document.formatVersion > EXPORT_FORMAT_VERSION) return emptyList()
+    return document.sentReports
+        .filter { it.problem(document.formatVersion) == null }
+        .map { it.toSentReport() }
+}
+
+/**
  * The other phones of an account, as their folders were read.
  *
  * @param trips by phone, its finished trips with that phone's own ids.
  * @param names by phone, what it is called.
+ * @param sentReports by phone, the reports it recorded as sent, with its own ids (issue #164).
  */
-data class OtherPhones(val trips: Map<String, List<Trip>>, val names: Map<String, String>) {
+data class OtherPhones(
+    val trips: Map<String, List<Trip>>,
+    val names: Map<String, String>,
+    val sentReports: Map<String, List<SentReport>> = emptyMap(),
+) {
     /** How many trips they hold together. */
     val tripCount: Int get() = trips.values.sumOf { it.size }
+
+    /** Every report they recorded as sent, all phones' in one list. */
+    val sentList: List<SentReport> get() = sentReports.values.flatten()
 }
 
 /**
@@ -99,11 +139,16 @@ suspend fun readOtherPhones(store: CloudStore, account: String, install: String)
     val records = store.readCollections(account, listOf(CLOUD_PHONES))
     val trips = mutableMapOf<String, List<Trip>>()
     val names = mutableMapOf<String, String>()
+    val sent = mutableMapOf<String, List<SentReport>>()
     for ((path, json) in records) {
         val phone = path.removePrefix("$CLOUD_PHONES/")
         if (phone == install || phone.contains('/')) continue
-        trips[phone] =
-            cloudTripsOf(store.readCollections(account, listOf("$path/$CLOUD_TRIPS")))
+        val folder = store.readCollections(
+            account,
+            listOf("$path/$CLOUD_TRIPS", "$path/$CLOUD_BACKUP"),
+        )
+        trips[phone] = cloudTripsOf(folder)
+        sent[phone] = cloudSentReportsOf(folder)
         names[phone] = cloudPhoneOf(json)?.name ?: "Another phone"
     }
     val earlier = store.readCollections(account, listOf(CLOUD_TRIPS, CLOUD_BACKUP))
@@ -115,9 +160,30 @@ suspend fun readOtherPhones(store: CloudStore, account: String, install: String)
             val phone = if (owner == null) LEGACY_PHONE else "$LEGACY_PHONE:$owner"
             trips[phone] = earlierTrips
             names[phone] = "Your other phone"
+            sent[phone] = cloudSentReportsOf(earlier)
         }
     }
-    return OtherPhones(trips, names)
+    return OtherPhones(trips, names, sent)
+}
+
+/**
+ * After [syncLogbook], on both phones: keeps the reports the other phones recorded as sent
+ * (issue #164), so that a month sent on any phone is submitted on this one too: its trips are
+ * locked, and the monthly reminder stops for it.
+ *
+ * @return whether they changed, for the phone to look at its reminder again.
+ */
+suspend fun syncOtherPhonesSent(
+    others: OtherPhones,
+    settings: SettingsStore,
+    log: suspend (String) -> Unit,
+): Boolean {
+    val reports = others.sentList
+    val changed = settings.keepOtherPhonesSent(reports)
+    if (changed) {
+        log("Cloud backup: the other phones' sent reports came in, ${reports.size} in all.")
+    }
+    return changed
 }
 
 /**

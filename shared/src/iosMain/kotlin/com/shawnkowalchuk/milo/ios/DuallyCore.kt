@@ -26,6 +26,7 @@ import com.shawnkowalchuk.milo.data.settings.SettingsStore
 import com.shawnkowalchuk.milo.data.settings.ShownUnit
 import com.shawnkowalchuk.milo.data.settings.buildSettingsStore
 import com.shawnkowalchuk.milo.data.settings.buildShownUnit
+import com.shawnkowalchuk.milo.data.settings.otherPhonesSent
 import com.shawnkowalchuk.milo.data.transfer.DataExport
 import com.shawnkowalchuk.milo.data.transfer.DataImport
 import com.shawnkowalchuk.milo.data.trip.TripCorrections
@@ -200,7 +201,7 @@ class DuallyCore private constructor(
         IosReminders(
             settings = settingsStore,
             trips = TripRepository(database.tripDao()),
-            sent = SentReportRepository(database.sentReportDao()),
+            sent = SentReportRepository(database.sentReportDao(), settingsStore.otherPhonesSent()),
             zone = ::systemZoneId,
             locale = ::phoneLocale,
         )
@@ -309,7 +310,10 @@ class DuallyCore private constructor(
                     clock = clock,
                     openTripStart = { addresses.openTripStart.value },
                     unit = { shownUnit.unit.value },
-                    sentReports = { SentReportRepository(database.sentReportDao()).currentSent() },
+                    sentReports = {
+                        SentReportRepository(database.sentReportDao(), settings.otherPhonesSent())
+                            .currentSent()
+                    },
                 )
             val drivingAlert =
                 IosDrivingAlert(
@@ -368,7 +372,10 @@ class DuallyCore private constructor(
                 IosSettings(settings, ::phoneLocale),
                 IosReport(
                     trips = tripRepository,
-                    sent = SentReportRepository(database.sentReportDao()),
+                    sent = SentReportRepository(
+                        database.sentReportDao(),
+                        settings.otherPhonesSent(),
+                    ),
                     settings = settings,
                     eventLog = eventLog,
                     zone = ::systemZoneId,
